@@ -40,3 +40,9 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+/services/banking/.venv/
+__pycache__/
+.pytest_cache/
+/output/
+/.playwright-cli/
+*.tsbuildinfo

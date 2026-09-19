@@ -1,0 +1,4 @@
+# Optional original Chainlit frontend ONLY: install in a separate environment.
+# Its Uptrace/Traceloop telemetry pins conflict with the studio's supported
+# Splunk instrumentor. The studio runs server.py / FastAPI, not this frontend.
+chainlit~=2.5.5

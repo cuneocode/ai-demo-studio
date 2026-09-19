@@ -1,0 +1,81 @@
+import asyncio
+import importlib
+import sys
+from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+from fastapi.testclient import TestClient
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import server
+
+
+@pytest.fixture
+def client(monkeypatch):
+    monkeypatch.delenv("GALILEO_API_KEY", raising=False)
+    monkeypatch.setattr(server.defense, "mode", "off")
+    async def controls_off(*args, **kwargs):
+        return None
+    monkeypatch.setattr(server.runtime_controls, "check", controls_off)
+    server.sessions.clear()
+    return TestClient(server.app)
+
+
+def test_validation_and_missing_service(client, monkeypatch):
+    monkeypatch.setattr(server, "graph", None)
+    assert client.post("/api/banking/chat", json={"message": ""}).status_code == 422
+    assert client.post("/api/banking/chat", json={"message": "x" * 4001}).status_code == 422
+    assert client.post("/api/banking/chat", json={"message": "hello"}).status_code == 503
+
+
+def test_sessions_and_error_redaction(client, monkeypatch):
+    class Graph:
+        class Checkpointer:
+            async def aget_state(self, config):
+                return SimpleNamespace(values={"messages": []})
+
+            async def adelete_thread(self, sid):
+                return None
+
+        checkpointer = Checkpointer()
+
+        async def aget_state(self, config):
+            return await self.checkpointer.aget_state(config)
+
+        async def ainvoke(self, payload, config):
+            if payload["messages"][0].content == "fail":
+                raise ValueError("SECRET_PROVIDER_TOKEN")
+            return {"messages": [SimpleNamespace(content="Your mock credit score is 550.")]}
+    monkeypatch.setattr(server, "graph", Graph())
+    first = client.post("/api/banking/chat", json={"message": "score"}).json()
+    assert "550" in first["answer"]
+    second = client.post("/api/banking/chat", json={"message": "again", "session_id": first["session_id"]}).json()
+    assert second["session_id"] == first["session_id"]
+    other = client.post("/api/banking/chat", json={"message": "score"}).json()
+    assert other["session_id"] != first["session_id"]
+    error = client.post("/api/banking/chat", json={"message": "fail"})
+    assert error.status_code == 502
+    assert "SECRET" not in error.text
+    assert client.post("/api/banking/chat", json={"message": "hi", "session_id": "00000000-0000-0000-0000-000000000000"}).status_code == 404
+
+
+def test_local_document_retrieval(monkeypatch):
+    monkeypatch.delenv("PINECONE_API_KEY", raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("MODEL_NAME", "test-model")
+    from src.galileo_langgraph_fsi_agent.tools.pinecone_retrieval_tool import PineconeRetrievalTool
+    from src.galileo_langgraph_fsi_agent.tools.credit_score_tool import CreditScoreTool
+    result = PineconeRetrievalTool("unused").invoke({"query": "Orbit annual fee", "k": 8})
+    assert "orbit-credit-card" in result
+    assert "celestial" in result
+    assert "550" in CreditScoreTool().invoke({})
+    with pytest.raises(ValueError):
+        PineconeRetrievalTool("unused").invoke({"query": "card", "k": 100})
+
+
+def test_trace_reports_executed_tools():
+    trace = server.ExecutionTrace()
+    asyncio.run(trace.on_tool_start({"name": "credit_score_retrieval"}, "{}"))
+    asyncio.run(trace.on_tool_end("Document 1 — orbit.md:\nAnnual fee: $0"))
+    assert trace.events == [{"name": "credit_score_retrieval", "kind": "tool"}]
+    assert trace.sources[0]["title"] == "orbit.md"

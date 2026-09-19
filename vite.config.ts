@@ -6,6 +6,8 @@ import { sites } from "./build/sites-vite-plugin";
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
   "00000000-0000-4000-8000-000000000000";
 
+// LOCAL DEVELOPMENT ONLY: keep deployment bindings empty until the user explicitly
+// authorizes hosting. Production services may change, but must retain the UI theme.
 const { d1, r2 } = hostingConfig;
 
 // macOS Seatbelt blocks FSEvents, so Codex previews need polling for HMR.
@@ -44,9 +46,11 @@ export default defineConfig(async () => {
   const { cloudflare } = await import("@cloudflare/vite-plugin");
 
   return {
-    server: isCodexSeatbeltSandbox
-      ? { watch: { useFsEvents: false, usePolling: true } }
-      : undefined,
+    server: {
+      host: "127.0.0.1",
+      proxy: { "/api/banking": { target: "http://127.0.0.1:8011", changeOrigin: false, timeout: 120000, proxyTimeout: 120000 } },
+      ...(isCodexSeatbeltSandbox ? { watch: { useFsEvents: false, usePolling: true } } : {}),
+    },
     plugins: [
       vinext(),
       sites(),

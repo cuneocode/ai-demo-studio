@@ -1,0 +1,27 @@
+// Local orchestration only. Services and deployment may evolve; preserve the UI theme.
+import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+const root = fileURLToPath(new URL('../', import.meta.url));
+const python = `${root}services/banking/.venv/bin/python`;
+if (!existsSync(python)) {
+  console.error('Run npm run banking:install before starting the studio.');
+  process.exit(1);
+}
+const children = [
+  spawn(python, ['-m', 'uvicorn', 'server:app', '--host', '127.0.0.1', '--port', '8011'], { cwd: `${root}services/banking`, stdio: 'inherit' }),
+  spawn(process.execPath, [`${root}node_modules/.bin/vinext`, 'dev', '--port', '3000', '--strictPort'], { cwd: root, stdio: 'inherit', env: { ...process.env, WRANGLER_LOG_PATH: '.wrangler/wrangler.log' } }),
+];
+let stopping = false;
+function stop(code = 0) {
+  if (stopping) return;
+  stopping = true;
+  children.forEach(child => child.kill('SIGTERM'));
+  setTimeout(() => process.exit(code), 800);
+}
+children.forEach(child => {
+  child.on('error', () => stop(1));
+  child.on('exit', code => stop(code ?? 1));
+});
+process.on('SIGINT', () => stop());
+process.on('SIGTERM', () => stop());
