@@ -1,0 +1,29 @@
+paths:
+  data_dir: /data
+  output_dir: /workspace/output
+  partition_dir: /tmp/fraud_partitions
+
+models:
+  - kind: GNN_XGBoost
+    gpu: single
+    num_gpus: 1
+    hyperparameters:
+      gnn:
+        hidden_channels: 64
+        num_gnn_layers: 2
+        num_neighbors: [15, 10]
+        encoder: sage
+        dropout: 0.1
+        epochs: 4
+        batch_size: 2048
+        learning_rate: 0.005
+        save_node_embeddings: false
+        emb_dtype: float16
+        final_fit_epochs: 0
+        skip_gnn_train: true
+      xgb:
+        num_boost_round: 200
+        max_depth: 6
+        learning_rate: 0.1
+        eval_metric: [auc, aucpr, logloss]
+        early_stopping_rounds: 30

@@ -3,14 +3,26 @@ import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../', import.meta.url));
-const python = `${root}services/banking/.venv/bin/python`;
-if (!existsSync(python)) {
+const bankingPython = `${root}services/banking/.venv/bin/python`;
+const fraudPython = `${root}services/fraud/.venv/bin/python`;
+const briefingPython = `${root}services/briefing/.venv/bin/python`;
+if (!existsSync(bankingPython)) {
   console.error('Run npm run banking:install before starting the studio.');
   process.exit(1);
 }
+if (!existsSync(fraudPython)) {
+  console.error('Run npm run fraud:install before starting the studio.');
+  process.exit(1);
+}
+if (!existsSync(briefingPython)) {
+  console.error('Run npm run briefing:install before starting the studio.');
+  process.exit(1);
+}
 const children = [
-  spawn(python, ['-m', 'uvicorn', 'server:app', '--host', '127.0.0.1', '--port', '8011'], { cwd: `${root}services/banking`, stdio: 'inherit' }),
-  spawn(process.execPath, [`${root}node_modules/.bin/vinext`, 'dev', '--port', '3000', '--strictPort'], { cwd: root, stdio: 'inherit', env: { ...process.env, WRANGLER_LOG_PATH: '.wrangler/wrangler.log' } }),
+  spawn(bankingPython, ['-m', 'uvicorn', 'server:app', '--host', '127.0.0.1', '--port', '8011'], { cwd: `${root}services/banking`, stdio: 'inherit' }),
+  spawn(fraudPython, ['-m', 'uvicorn', 'server:app', '--host', '127.0.0.1', '--port', '8012'], { cwd: `${root}services/fraud`, stdio: 'inherit' }),
+  spawn(briefingPython, ['-m', 'uvicorn', 'server:app', '--host', '127.0.0.1', '--port', '8013'], { cwd: `${root}services/briefing`, stdio: 'inherit' }),
+  spawn(process.execPath, [`${root}node_modules/.bin/vinext`, 'dev', '--port', process.env.STUDIO_PORT || '4200', '--strictPort'], { cwd: root, stdio: 'inherit', env: { ...process.env, WRANGLER_LOG_PATH: '.wrangler/wrangler.log' } }),
 ];
 let stopping = false;
 function stop(code = 0) {

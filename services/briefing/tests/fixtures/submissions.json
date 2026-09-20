@@ -1,0 +1,15 @@
+{
+  "cik": "0000019617",
+  "name": "JPMORGAN CHASE & CO",
+  "tickers": ["JPM"],
+  "exchanges": ["NYSE"],
+  "filings": {
+    "recent": {
+      "accessionNumber": ["0000019617-25-000270", "0000019617-25-000100", "0000019617-24-000400"],
+      "filingDate": ["2025-02-14", "2025-01-15", "2024-02-16"],
+      "reportDate": ["2024-12-31", "2024-12-31", "2023-12-31"],
+      "form": ["10-K", "10-K/A", "8-K"],
+      "primaryDocument": ["jpm-20241231.htm", "jpm-20241231a.htm", "jpm-8k.htm"]
+    }
+  }
+}

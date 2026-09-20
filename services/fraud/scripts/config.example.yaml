@@ -1,0 +1,14 @@
+# Example training config for nvcr.io/nvidia/cugraph/financial-fraud-training:3.0.0
+# Replace paths and encoder settings for a real graph export. The studio does not
+# read this file at request time.
+models:
+  - kind: GNN_XGBoost
+    hyperparameters:
+      gnn:
+        hidden_channels: 128
+        num_gnn_layers: 2
+        num_neighbors: [25, 10]
+        encoder: sage
+        dropout: 0.0
+        save_node_embeddings: true
+        emb_dtype: float16

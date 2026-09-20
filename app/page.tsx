@@ -2,7 +2,10 @@
 
 import { useMemo, useState } from "react";
 import BankingDemo from "./BankingDemo";
+import FraudDemo from "./FraudDemo";
+import CompanyBriefing from "./CompanyBriefing";
 import ArchitectureMap from "./ArchitectureMap";
+import { companySwitcherLabel, loadCompanyProfile, type StoredCompanyProfile } from "./company-profile";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
@@ -12,6 +15,7 @@ import {
   Bell,
   Boxes,
   BrainCircuit,
+  Building2,
   Check,
   ChevronDown,
   CircleGauge,
@@ -43,7 +47,7 @@ import {
   X,
 } from "lucide-react";
 
-type View = "overview" | "library" | "stories";
+type View = "overview" | "library" | "stories" | "briefing";
 type Category = "All" | "Risk & compliance" | "Wealth & advisory" | "Operations";
 
 type UseCase = {
@@ -60,7 +64,7 @@ type UseCase = {
 };
 
 type UseCaseFrame = {
-  liveExperience?: "banking";
+  liveExperience?: "banking" | "fraud" | "briefing";
   transformation: {
     friction: string;
     aiShift: string;
@@ -120,15 +124,15 @@ const useCases: UseCase[] = [
   },
   {
     id: "fraud-modeling",
-    title: "Fraud model operations",
-    category: "Operations",
-    description: "Enrich alerts, compare models, and detect drift before it affects decisions.",
-    outcome: "Observable, explainable model decisions.",
+    title: "Transaction fraud scoring",
+    category: "Risk & compliance",
+    description: "Score a payment on a graph neighborhood and inspect Shapley evidence.",
+    outcome: "Explainable fraud scores without a notebook.",
     icon: CircleGauge,
     accent: "mint",
-    solutions: ["Splunk Observability", "AI Infrastructure"],
-    signal: "Model signal",
-    stage: "Concept",
+    solutions: ["AI Infrastructure", "Splunk Observability", "AI Defense"],
+    signal: "Graph scoring",
+    stage: "Interactive",
   },
   {
     id: "client-advisory",
@@ -165,6 +169,18 @@ const useCases: UseCase[] = [
     solutions: ["AI Infrastructure", "Splunk Observability"],
     signal: "Data enrichment",
     stage: "Concept",
+  },
+  {
+    id: "company-briefing",
+    title: "Company briefing",
+    category: "Operations",
+    description: "Extract objectives, risks, obligations, AI initiatives, and XBRL metrics from an EDGAR filing or uploaded annual report.",
+    outcome: "Presenter-owned company context after a human accept-gate.",
+    icon: Building2,
+    accent: "violet",
+    solutions: ["AI Defense", "Splunk Observability", "AI Infrastructure"],
+    signal: "Filing extract",
+    stage: "Interactive",
   },
 ];
 
@@ -266,39 +282,30 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
     primaryAction: "Open next investigation",
   },
   "fraud-modeling": {
+    liveExperience: "fraud",
     transformation: {
-      friction: "Model drift and alert quality are reviewed across disconnected operational tools.",
-      aiShift: "AI correlates performance signals, isolates affected segments, and explains likely causes.",
-      humanControl: "Model owners approve thresholds, deployment changes, and rollback decisions.",
+      friction: "Each payment is scored in isolation, so a clean customer at a compromised merchant looks safe.",
+      aiShift: "GraphSAGE + XGBoost scores the payment from the account–merchant neighborhood; Captum Shapley explains the risk. The score path does not enter Cisco AI Defense.",
+      humanControl: "The score is not a fraud flag. An analyst reviews evidence and owns hold, review, or clear.",
     },
     architecture: {
       process: [
-        { title: "Build features", detail: "Behavior, device, and account data" },
-        { title: "Score transactions", detail: "Real-time fraud decision" },
-        { title: "Investigate alerts", detail: "Review high-risk activity" },
-        { title: "Update models", detail: "Monitor drift and performance" },
+        { title: "Select a payment", detail: "Held-out TabFormer card events" },
+        { title: "Score the graph edge", detail: "Neighborhood + transaction features" },
+        { title: "Inspect evidence", detail: "Probability + Shapley groups" },
+        { title: "Decide disposition", detail: "Analyst-owned hold / review / clear" },
       ],
       ai: [
-        { point: "01 → 02", label: "Accelerated scoring", detail: "GPU inference evaluates high-dimensional features inside the decision window." },
-        { point: "02 → 03", label: "RAG + case context", detail: "Retrieve history, device signals, prior alerts, rules, and model explanations." },
-        { point: "03 → 04", label: "Model operations agent", detail: "Compare cohorts, explain drift, and propose investigation or rollback steps." },
+        { point: "01 → 02", label: "GraphSAGE + XGBoost + Shapley", detail: "The live HTTP sidecar embeds the TabFormer neighborhood, classifies with XGBoost, and returns Captum Shapley groups. This hop never calls an LLM or AI Defense." },
+        { point: "02 → 03", label: "Threshold band", detail: "hold ≥ 0.50, review ≥ 0.35, otherwise clear. The probability is evidence, not a fraud flag." },
+        { point: "03 → 04", label: "Optional narrative", detail: "Off unless FRAUD_ENABLE_NARRATIVE=true. AI Defense inspects only this draft. Deny or LLM failure omits the text; the score still releases." },
       ],
     },
-    metrics: [
-      { label: "Active models", value: "03", detail: "All serving traffic" },
-      { label: "Drift alerts", value: "01", detail: "Review required" },
-      { label: "Alerts reviewed", value: "86%", detail: "Current cycle" },
-    ],
-    rows: [
-      { name: "Card-not-present v4", stage: "Population drift", signal: "+8.2% PSI", status: "Review", tone: "review" },
-      { name: "Account takeover v2", stage: "Performance", signal: "Precision 92.8%", status: "Stable", tone: "ready" },
-      { name: "ACH mule v1", stage: "Shadow mode", signal: "Validation running", status: "Pending", tone: "pending" },
-    ],
-    workbenchLabel: "Model finding",
-    workbenchTitle: "Card-not-present v4",
-    workbenchSummary: "International e-commerce traffic shifted beyond the monitored baseline. Precision remains within tolerance.",
-    evidence: ["PSI 0.082", "Precision stable", "Segment isolated"],
-    primaryAction: "Review drift alert",
+    metrics: [], rows: [], evidence: [],
+    workbenchLabel: "Fraud scoring",
+    workbenchTitle: "Graph payment scorer",
+    workbenchSummary: "Score TabFormer payments with GraphSAGE + XGBoost and review Shapley evidence.",
+    primaryAction: "Review next alert",
   },
   "client-advisory": {
     transformation: {
@@ -405,6 +412,32 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
     evidence: ["Payment message", "Entity graph", "Account history"],
     primaryAction: "Investigate exception",
   },
+  "company-briefing": {
+    liveExperience: "briefing",
+    transformation: {
+      friction: "Presenters assemble issuer context from 10-Ks, tables, and notes by hand.",
+      aiShift: "A Deep Agent navigates the filing TOC, reads titled nodes, and pulls XBRL facts. No open-web browse.",
+      humanControl: "Nothing is stored until the presenter clicks Use this company. Refresh and clear do not skip that gate.",
+    },
+    architecture: {
+      process: [
+        { title: "Select issuer or upload", detail: "Ticker/name via EDGAR or PDF/HTML/TXT" },
+        { title: "Navigate the filing", detail: "TOC nodes + companyfacts" },
+        { title: "Review grounded themes", detail: "Cite-or-abstain + Defense verdict" },
+        { title: "Accept company context", detail: "Presenter-owned localStorage write" },
+      ],
+      ai: [
+        { point: "01 → 02", label: "Ingest + TOC navigator", detail: "EDGAR fetch or staged upload becomes titled nodes. No vector index over the filing." },
+        { point: "02 → 03", label: "Theme subagents + XBRL", detail: "Isolated specialists read bounded nodes. Metrics come from companyfacts, not LLM arithmetic." },
+        { point: "03 → 04", label: "Grounding + accept-gate", detail: "Ungrounded claims are dropped. Studio context is written only after Use this company." },
+      ],
+    },
+    metrics: [], rows: [], evidence: [],
+    workbenchLabel: "Company briefing",
+    workbenchTitle: "Filing extract",
+    workbenchSummary: "Review a grounded issuer profile, then accept it before the tenant switcher changes.",
+    primaryAction: "Extract briefing",
+  },
 };
 
 const storySteps = [
@@ -416,9 +449,34 @@ const storySteps = [
 
 const navItems: { id: View; label: string; icon: LucideIcon }[] = [
   { id: "overview", label: "Overview", icon: Home },
+  { id: "briefing", label: "Company briefing", icon: Building2 },
   { id: "library", label: "Use case library", icon: Library },
   { id: "stories", label: "Story builder", icon: Workflow },
 ];
+
+function liveExperienceLabel(experience?: UseCaseFrame["liveExperience"]) {
+  if (experience === "banking") return "Live AI · fictional bank";
+  if (experience === "fraud") return "Live scoring · TabFormer GNN+XGB";
+  if (experience === "briefing") return "Live extract · EDGAR + upload";
+  return "Prototype data";
+}
+
+function focusLiveExperience(experience?: UseCaseFrame["liveExperience"]) {
+  if (experience === "banking") {
+    document.getElementById("banking-experience")?.scrollIntoView({ behavior: "smooth" });
+    document.querySelector<HTMLInputElement>(".chat-composer input")?.focus({ preventScroll: true });
+    return;
+  }
+  if (experience === "fraud") {
+    document.getElementById("fraud-experience")?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("score-payment")?.focus({ preventScroll: true });
+    return;
+  }
+  if (experience === "briefing") {
+    document.getElementById("briefing-experience")?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("company-briefing-query")?.focus({ preventScroll: true });
+  }
+}
 
 function CiscoMark() {
   return (
@@ -562,11 +620,15 @@ function UseCaseWorkspace({
   inStory,
   onBack,
   onAdd,
+  companyProfile,
+  onCompanyProfileChange,
 }: {
   useCase: UseCase;
   inStory: boolean;
   onBack: () => void;
   onAdd: () => void;
+  companyProfile: StoredCompanyProfile | null;
+  onCompanyProfileChange: (profile: StoredCompanyProfile | null) => void;
 }) {
   const frame = useCaseFrames[useCase.id];
   const Icon = useCase.icon;
@@ -585,9 +647,9 @@ function UseCaseWorkspace({
           </div>
         </div>
         <div className="heading-actions">
-          <span className="prototype-chip"><StatusDot tone="amber" /> {frame.liveExperience ? "Live AI · fictional bank" : "Prototype data"}</span>
+          <span className="prototype-chip"><StatusDot tone="amber" /> {liveExperienceLabel(frame.liveExperience)}</span>
           <button className="secondary-button" onClick={onAdd}>{inStory ? <><Check size={16} /> In story</> : <><Plus size={16} /> Add to story</>}</button>
-          <button className="primary-button" onClick={frame.liveExperience ? () => { document.getElementById("banking-experience")?.scrollIntoView({ behavior: "smooth" }); document.querySelector<HTMLInputElement>('.chat-composer input')?.focus({ preventScroll: true }); } : undefined}>{frame.primaryAction} <ArrowRight size={16} /></button>
+          <button className="primary-button" onClick={frame.liveExperience ? () => focusLiveExperience(frame.liveExperience) : undefined}>{frame.primaryAction} <ArrowRight size={16} /></button>
         </div>
       </header>
 
@@ -596,6 +658,12 @@ function UseCaseWorkspace({
       {frame.liveExperience === "banking" ? <section id="banking-experience">
         <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Banking assistant</h2></div><span>Fictional products · mock score 550</span></div>
         <BankingDemo embedded inStory={inStory} onBack={onBack} onAdd={onAdd} />
+      </section> : frame.liveExperience === "fraud" ? <section id="fraud-experience">
+        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Fraud scoring</h2></div><span>TabFormer GNN+XGB · score is not a flag</span></div>
+        <FraudDemo embedded inStory={inStory} onBack={onBack} onAdd={onAdd} />
+      </section> : frame.liveExperience === "briefing" ? <section id="briefing-experience">
+        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Company briefing</h2></div><span>EDGAR + upload only · accept before store</span></div>
+        <CompanyBriefing embedded inStory={inStory} onBack={onBack} onAdd={onAdd} profile={companyProfile} onProfileChange={onCompanyProfileChange} />
       </section> : <>
       <div className="experience-label">
         <div><span className="eyebrow">ILLUSTRATIVE EXPERIENCE</span><h2>How the use case could appear</h2></div>
@@ -668,6 +736,7 @@ export default function HomePage() {
   const [launcherOpen, setLauncherOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [storyItems, setStoryItems] = useState<string[]>(["kyc-processing", "sar-support", "client-advisory"]);
+  const [companyProfile, setCompanyProfile] = useState<StoredCompanyProfile | null>(() => loadCompanyProfile());
 
   const openUseCase = (item: UseCase) => {
     setSelectedCase(item);
@@ -698,7 +767,10 @@ export default function HomePage() {
           <CiscoMark />
           <div className="brand-copy"><strong>FSI</strong><span>AI Demo Studio</span></div>
           <span className="top-divider" />
-          <button className="tenant-switcher">Global Financial Services <ChevronDown size={14} /></button>
+          <button className="tenant-switcher" onClick={() => switchView("briefing")} aria-label="Open company briefing">
+            <span>{companySwitcherLabel(companyProfile)}</span>
+            <ChevronDown size={14} />
+          </button>
         </div>
         <nav className="product-nav" aria-label="Product areas">
           <button className="app-launcher-button" aria-label="Open app launcher" onClick={() => setLauncherOpen(true)}><Grid2X2 size={18} /></button>
@@ -752,7 +824,22 @@ export default function HomePage() {
               inStory={storyItems.includes(selectedCase.id)}
               onBack={() => { setSelectedCase(null); setActiveView("library"); }}
               onAdd={() => setStoryItems(items => items.includes(selectedCase.id) ? items : [...items, selectedCase.id])}
+              companyProfile={companyProfile}
+              onCompanyProfileChange={setCompanyProfile}
             />
+          )}
+
+          {!selectedCase && activeView === "briefing" && (
+            <>
+              <div className="page-heading">
+                <div>
+                  <span className="breadcrumb">FSI AI Demo Studio <span>/</span> Company briefing</span>
+                  <h1>Company briefing</h1>
+                  <p>Extract a grounded issuer profile from EDGAR or an uploaded annual report. Studio context is stored only after you accept it.</p>
+                </div>
+              </div>
+              <CompanyBriefing profile={companyProfile} onProfileChange={setCompanyProfile} />
+            </>
           )}
 
           {!selectedCase && activeView === "overview" && (

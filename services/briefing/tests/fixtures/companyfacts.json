@@ -1,0 +1,49 @@
+{
+  "cik": 19617,
+  "entityName": "JPMORGAN CHASE & CO",
+  "facts": {
+    "us-gaap": {
+      "Revenues": {
+        "label": "Revenues",
+        "units": {
+          "USD": [
+            {"end": "2023-12-31", "val": 155000000000, "accn": "0000019617-24-000200", "fy": 2023, "fp": "FY", "form": "10-K"},
+            {"end": "2024-12-31", "val": 169430000000, "accn": "0000019617-25-000270", "fy": 2024, "fp": "FY", "form": "10-K"}
+          ]
+        }
+      },
+      "NetIncomeLoss": {
+        "label": "Net income (loss)",
+        "units": {
+          "USD": [
+            {"end": "2024-12-31", "val": 49430000000, "accn": "0000019617-25-000270", "fy": 2024, "fp": "FY", "form": "10-K"}
+          ]
+        }
+      },
+      "Assets": {
+        "label": "Assets",
+        "units": {
+          "USD": [
+            {"end": "2024-12-31", "val": 4000000000000, "accn": "0000019617-25-000270", "fy": 2024, "fp": "FY", "form": "10-K"}
+          ]
+        }
+      },
+      "Liabilities": {
+        "label": "Liabilities",
+        "units": {
+          "USD": [
+            {"end": "2024-12-31", "val": 3700000000000, "accn": "0000019617-25-000270", "fy": 2024, "fp": "FY", "form": "10-K"}
+          ]
+        }
+      },
+      "StockholdersEquity": {
+        "label": "Stockholders' equity",
+        "units": {
+          "USD": [
+            {"end": "2024-12-31", "val": 300000000000, "accn": "0000019617-25-000270", "fy": 2024, "fp": "FY", "form": "10-K"}
+          ]
+        }
+      }
+    }
+  }
+}

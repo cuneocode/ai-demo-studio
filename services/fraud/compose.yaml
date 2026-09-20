@@ -1,0 +1,18 @@
+# Live NVIDIA GraphSAGE + XGBoost sidecar. Artifacts are gitignored.
+services:
+  fraud-gnn:
+    image: ${FRAUD_TRAIN_IMAGE:-nvcr.io/nvidia/cugraph/financial-fraud-training:3.0.0}
+    container_name: fsi-fraud-gnn
+    gpus: all
+    shm_size: 8g
+    ports:
+      - "127.0.0.1:${FRAUD_INFER_PORT:-8000}:8000"
+    environment:
+      FRAUD_OUTPUT: /workspace/output
+      FRAUD_GRAPH_DATA: /data
+    volumes:
+      - ./.cache/train:/workspace/output:ro
+      - ./.cache/graph/test_gnn:/data:ro
+      - ./scripts/infer_server.py:/workspace/infer_server.py:ro
+    entrypoint: ["python3", "/workspace/infer_server.py"]
+    profiles: ["gnn"]

@@ -77,7 +77,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--blue); outl
 .brand-copy strong { font-size: 17px; letter-spacing: .12em; color: #fff; }
 .brand-copy span { color: #c4d0da; font-size: var(--font-control); }
 .top-divider { width: 1px; height: 28px; background: #334353; margin-left: 3px; }
-.tenant-switcher { gap: 7px; border: 0; background: transparent; padding: 8px; color: #c6d1dc; font-size: var(--font-control); cursor: pointer; }
+.tenant-switcher { gap: 7px; border: 0; background: transparent; padding: 8px; color: #c6d1dc; font-size: var(--font-control); cursor: pointer; max-width: min(320px, 28vw); }
+.tenant-switcher > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .product-nav { gap: 6px; justify-content: center; }
 .product-nav button, .top-actions > button {
   border: 1px solid transparent;
@@ -659,8 +660,10 @@ kbd { border: 1px solid #344653; background: #17232e; color: var(--muted); font:
 .business-ai-map .insertion-label { margin-top: 26px; }
 .business-ai-map .capability-lane { width: 100%; margin-bottom: 26px; }
 .business-ai-map .workflow-node:not(:last-child)::after { content: "→"; position: absolute; right: -13px; top: 45%; color: var(--muted); }
-#banking-experience { scroll-margin-top: 85px; }
-.banking-demo.banking-embedded { padding: 22px 0 0; max-width: none; }
+#banking-experience, #briefing-experience { scroll-margin-top: 85px; }
+.banking-demo.banking-embedded,
+.fraud-demo.fraud-embedded,
+.briefing-demo.briefing-embedded { padding: 22px 0 0; max-width: none; }
 
 /* Readable layouts take precedence over fitting every node above the fold. */
 .sidebar { overflow-y: auto; }

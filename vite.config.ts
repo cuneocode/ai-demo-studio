@@ -48,10 +48,34 @@ export default defineConfig(async () => {
   return {
     server: {
       host: "127.0.0.1",
-      proxy: { "/api/banking": { target: "http://127.0.0.1:8011", changeOrigin: false, timeout: 120000, proxyTimeout: 120000 } },
+      port: Number(process.env.STUDIO_PORT || 4200),
+      proxy: {
+        "/api/banking": { target: "http://127.0.0.1:8011", changeOrigin: false, timeout: 120000, proxyTimeout: 120000 },
+        "/api/fraud": { target: "http://127.0.0.1:8012", changeOrigin: false, timeout: 180000, proxyTimeout: 180000 },
+        "/api/briefing": { target: "http://127.0.0.1:8013", changeOrigin: false, timeout: 240000, proxyTimeout: 240000 },
+      },
       ...(isCodexSeatbeltSandbox ? { watch: { useFsEvents: false, usePolling: true } } : {}),
     },
     plugins: [
+      {
+        name: "briefing-upload-limit",
+        configureServer(viteServer) {
+          viteServer.middlewares.use((req, res, next) => {
+            if (!req.url?.startsWith("/api/briefing")) {
+              next();
+              return;
+            }
+            const length = Number(req.headers["content-length"] || 0);
+            if (length > 45 * 1024 * 1024) {
+              res.statusCode = 413;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ detail: "Upload a PDF, HTML, or TXT annual report (40 MB or less)." }));
+              return;
+            }
+            next();
+          });
+        },
+      },
       vinext(),
       sites(),
       cloudflare({

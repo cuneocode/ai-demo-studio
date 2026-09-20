@@ -1,0 +1,30 @@
+[project]
+name = "fsi-company-briefing"
+version = "0.1.0"
+description = "Studio Deep Agent sidecar for company briefings from EDGAR or uploaded filings"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "beautifulsoup4>=4.12",
+  "deepagents>=0.2.0",
+  "edgartools>=2.0.0",
+  "fastapi>=0.115.13,<0.116",
+  "httpx>=0.28,<0.29",
+  "langchain[openai]>=0.3.18",
+  "langgraph>=0.4.7",
+  "lxml>=5.0",
+  "pdfplumber>=0.11",
+  "pypdf>=5.0",
+  "python-dotenv>=1.1.0",
+  "python-multipart>=0.0.20",
+  "truststore>=0.10,<0.11",
+  "uvicorn>=0.34.3,<0.35",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.4.1,<9.0.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

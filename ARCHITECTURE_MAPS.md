@@ -9,7 +9,20 @@ relationships with responsive card grids or hide edges at small breakpoints.
 - Brahe's **Implemented system** is a code-derived topology, not a live health
   dashboard. Its source is `services/banking/server.py` and the local agent/tool
   modules. Provider availability and credentials are not asserted by the map.
-- The other architectures, and Brahe's **Proposed Cisco deployment**, are design
+- Fraud scoring's **Implemented system** is likewise code-derived from
+  `services/fraud/server.py`. The default backend is a fixture/cache scorer.
+  Triton, production HTTP, and narratives are configured alternatives. The score
+  is not a fraud flag. AI Defense applies only to optional narratives.
+- Company briefing's **Implemented system** is code-derived from
+  `services/briefing/server.py` and the Deep Agent modules. Ingest is EDGAR or
+  upload; navigation is a filing TOC plus node files, not a vector index. Metrics
+  come from SEC companyfacts or verbatim tables. Cisco AI Defense inspects model
+  hops only. EDGAR, upload, PDF extract, TOC, XBRL, and the grounding verifier
+  never enter the Inspection API. The map does not assert live SEC or OpenAI
+  availability. The presenter accept-gate is required before studio context is
+  stored. Fail-closed: unknown/ambiguous issuer, no annual report, empty PDF,
+  inspection deny, ungrounded-only themes, or model/tool error.
+- The other architectures, and the **Proposed Cisco deployment** views, are design
   proposals. Brahe now has application-enforced AI Defense and conditional Splunk
   instrumentation/export; consult runtime health and per-request evidence rather
   than infer delivery from the diagram. Authentication and private model serving
@@ -38,10 +51,11 @@ online. Keep conditional integrations clearly separate from running components.
 ## Verification
 
 Run `node --test tests/architecture.test.mjs` (Node with TypeScript stripping),
-`npm run lint`, `npm run build`, and `npm run banking:test`.
+`npm run lint`, `npm run build`, `npm run banking:test`, and `npm run fraud:test`.
 
-Browser QA covers all seven use cases and all four proposed perspectives,
-implemented banking execution/retrieval, readable node and edge labels, selection,
+Browser QA covers all eight use cases and all four proposed perspectives,
+implemented banking execution/retrieval, implemented fraud scoring/backends,
+implemented briefing agent execution/filing retrieval, readable node and edge labels, selection,
 pan/zoom, full-screen Escape/focus restoration, and narrow-view page overflow.
 Diagrams intentionally scroll at 100%; do not auto-fit text into illegibility.
 

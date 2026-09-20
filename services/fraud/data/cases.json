@@ -1,0 +1,52 @@
+[
+  {
+    "id": "txn-clean-pos",
+    "label": "Neighborhood grocery · card present",
+    "account": "****4421",
+    "merchant": "Harbor Market #18",
+    "amount": 42.18,
+    "channel": "pos",
+    "neighborhood": "Merchant chargeback rate 0.4% · account has 14 prior clears here",
+    "hint": "A clean local purchase. Neighborhood signal should stay protective."
+  },
+  {
+    "id": "txn-compromised-merchant",
+    "label": "First purchase at high-chargeback merchant",
+    "account": "****1188",
+    "merchant": "Orbit Digital Goods",
+    "amount": 286.40,
+    "channel": "cnp",
+    "neighborhood": "Merchant 50/200 chargebacks this month · customer history is clean",
+    "hint": "This is the GNN story: a clean customer at a compromised merchant."
+  },
+  {
+    "id": "txn-mule-ach",
+    "label": "Rapid outbound ACH after inbound credits",
+    "account": "****9033",
+    "merchant": "Same-day ACH disbursement",
+    "amount": 4750.00,
+    "channel": "ach",
+    "neighborhood": "Account received 6 inbound credits in 36 hours · new device",
+    "hint": "Mule-style velocity. Amount and account neighborhood should dominate."
+  },
+  {
+    "id": "txn-cnp-review",
+    "label": "International card-not-present",
+    "account": "****7740",
+    "merchant": "Northwind Outdoor Co.",
+    "amount": 612.90,
+    "channel": "cnp",
+    "neighborhood": "First CNP from this device country · merchant otherwise stable",
+    "hint": "Elevated but not decisive. Expect a review band, not an automatic hold."
+  },
+  {
+    "id": "txn-subscription",
+    "label": "Known recurring subscription",
+    "account": "****4421",
+    "merchant": "Celestial Media Monthly",
+    "amount": 14.99,
+    "channel": "recurring",
+    "neighborhood": "Same merchant, amount, and cadence for 11 cycles",
+    "hint": "Recurring legitimate pattern. Channel and merchant history should protect."
+  }
+]

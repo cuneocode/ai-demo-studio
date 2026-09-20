@@ -1,0 +1,22 @@
+[project]
+name = "fsi-fraud-scoring"
+version = "0.1.0"
+description = "Studio adapter for NVIDIA financial fraud scoring"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "fastapi>=0.115.13,<0.116",
+  "httpx>=0.28,<0.29",
+  "numpy>=2.5.3",
+  "pandas>=3.0.6",
+  "python-dotenv>=1.1.0",
+  "uvicorn>=0.34.3,<0.35",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.4.1,<9.0.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

@@ -1,0 +1,56 @@
+# Local Nemotron Super NVFP4 for optional fraud narratives.
+# Official DGX Spark recipe: vLLM cu130-nightly + Marlin. Does not replace :8000 GNN.
+services:
+  nemotron-super:
+    image: ${NEMOTRON_IMAGE:-vllm/vllm-openai:cu130-nightly}
+    container_name: ${NEMOTRON_NAME:-fsi-nemotron-super}
+    gpus: all
+    ipc: host
+    shm_size: 16g
+    ports:
+      - "127.0.0.1:${NEMOTRON_PORT:-8003}:8000"
+    environment:
+      HF_TOKEN: ${HF_TOKEN}
+      HUGGING_FACE_HUB_TOKEN: ${HF_TOKEN}
+      VLLM_NVFP4_GEMM_BACKEND: marlin
+      VLLM_FLASHINFER_ALLREDUCE_BACKEND: trtllm
+      VLLM_USE_FLASHINFER_MOE_FP4: "0"
+    volumes:
+      - ${HOME}/.cache/huggingface:/root/.cache/huggingface
+      - ./super_v3_reasoning_parser.py:/app/super_v3_reasoning_parser.py:ro
+    command:
+      - --model
+      - ${NEMOTRON_MODEL:-nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4}
+      - --served-model-name
+      - ${NEMOTRON_MODEL:-nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4}
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --async-scheduling
+      - --dtype
+      - auto
+      - --kv-cache-dtype
+      - fp8
+      - --tensor-parallel-size
+      - "1"
+      - --trust-remote-code
+      - --gpu-memory-utilization
+      - "0.78"
+      - --enable-chunked-prefill
+      - --max-num-seqs
+      - "2"
+      - --max-model-len
+      - "16384"
+      - --max-num-batched-tokens
+      - "16384"
+      - --moe-backend
+      - marlin
+      - --mamba_ssm_cache_dtype
+      - float32
+      - --quantization
+      - fp4
+      - --reasoning-parser-plugin
+      - /app/super_v3_reasoning_parser.py
+      - --reasoning-parser
+      - super_v3
