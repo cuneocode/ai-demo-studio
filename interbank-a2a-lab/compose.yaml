@@ -1,0 +1,175 @@
+name: interbank-a2a
+
+# Two banks, each with its own Deep Agent, AI gateway (agentgateway), Cisco AI Defense
+# enforcement service, and telemetry collector. The banks share only the `interbank`
+# network, and only their gateways are attached to it.
+
+x-python: &python
+  image: interbank-a2a-demo:0.2.0
+  user: "${LAB_UID:-1000}:${LAB_GID:-1000}"
+  init: true
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs: ["/tmp:rw,noexec,nosuid,size=128m"]
+  restart: unless-stopped
+  env_file: [.runtime/vendor.env]
+
+x-model: &model
+  MODEL_NAME: nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
+  SPLUNK_AO_HOME_DIR: /tmp/.splunk
+  EVENT_SINK_URL: http://demo:8090/events
+
+x-gateway: &gateway
+  image: cr.agentgateway.dev/agentgateway:v1.6.0@sha256:9d3e6044ddcdc0878b1787f77bd401252b95e22684203fb5e874c4c42d2ed90c
+  user: "${LAB_UID:-1000}:${LAB_GID:-1000}"
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs: ["/tmp:rw,noexec,nosuid,size=32m"]
+  restart: unless-stopped
+
+x-collector: &collector
+  image: quay.io/signalfx/splunk-otel-collector:0.161.0@sha256:6cc58d3dca1e76464a043e060aca36fb44e0c7e283e7ad900aec873646014b84
+  user: "${LAB_UID:-1000}:${LAB_GID:-1000}"
+  command: ["--config=/etc/otel/collector.yaml"]
+  env_file: [.runtime/vendor.env]
+  restart: unless-stopped
+
+services:
+  # ---------------------------------------------------------------- Bank A ----
+  bank-a-agent:
+    <<: *python
+    command: bank_a.agent
+    environment:
+      <<: *model
+      ORGANIZATION: bank-a
+      SERVICE_NAME: bank-a-agent
+      MODEL_BASE_URL: http://vllm-a:8000/v1
+      PUBLIC_URL: https://bank-a-gateway:9443/
+      EGRESS_GATEWAY_URL: https://bank-a-gateway:8443
+      EGRESS_CA_FILE: /runtime/bank-a-ca.crt
+      EGRESS_TOKEN_FILE: /runtime/egress.jwt
+      TLS_CERT_FILE: /runtime/agent.crt
+      TLS_KEY_FILE: /runtime/agent.key
+      TLS_CLIENT_CA_FILE: /runtime/bank-a-ca.crt
+      GATEWAY_JWKS_FILE: /runtime/gateway-jwks.json
+    volumes: [./.runtime/roles/bank-a-agent:/runtime:ro]
+    networks: [bank-a-internal, bank-a-egress, vllm-a, events]
+    healthcheck: &agent-health
+      test: ["CMD", "python", "-c", "import ssl,urllib.request as u; c=ssl.create_default_context(cafile='/runtime/bank-a-ca.crt'); c.load_cert_chain('/runtime/agent.crt','/runtime/agent.key'); u.urlopen('https://bank-a-agent:9443/health',context=c,timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 40
+
+  bank-a-gateway:
+    <<: *gateway
+    command: ["-f", "/config/gateway.yaml"]
+    volumes:
+      - ./gateways/bank-a.yaml:/config/gateway.yaml:ro
+      - ./.runtime/roles/bank-a-gateway:/runtime:ro
+    networks: [bank-a-internal, bank-a-console, bank-a-policy, bank-a-telemetry, interbank]
+    depends_on: [policy-a, otel-collector-a]
+
+  policy-a:
+    <<: *python
+    command: policy.extproc
+    environment:
+      ORGANIZATION: bank-a
+      SERVICE_NAME: bank-a-ai-defense
+      SPLUNK_AO_HOME_DIR: /tmp/.splunk
+      EVENT_SINK_URL: http://demo:8090/events
+    networks: [bank-a-policy, bank-a-egress, events]
+
+  otel-collector-a:
+    <<: *collector
+    volumes:
+      - ./otel/collector.yaml:/etc/otel/collector.yaml:ro
+      - ./evidence/telemetry/bank-a:/evidence
+    networks: [bank-a-telemetry, bank-a-egress]
+
+  # ---------------------------------------------------------------- Bank B ----
+  bank-b-agent:
+    <<: *python
+    command: bank_b.agent
+    environment:
+      <<: *model
+      ORGANIZATION: bank-b
+      SERVICE_NAME: bank-b-agent
+      MODEL_BASE_URL: http://vllm-b:8000/v1
+      PUBLIC_URL: https://bank-b-gateway:9443/
+      EGRESS_GATEWAY_URL: https://bank-b-gateway:8443
+      EGRESS_CA_FILE: /runtime/bank-b-ca.crt
+      EGRESS_TOKEN_FILE: /runtime/egress.jwt
+      TLS_CERT_FILE: /runtime/agent.crt
+      TLS_KEY_FILE: /runtime/agent.key
+      TLS_CLIENT_CA_FILE: /runtime/bank-b-ca.crt
+      GATEWAY_JWKS_FILE: /runtime/gateway-jwks.json
+    volumes: [./.runtime/roles/bank-b-agent:/runtime:ro]
+    networks: [bank-b-internal, bank-b-egress, vllm-b, events]
+    healthcheck:
+      <<: *agent-health
+      test: ["CMD", "python", "-c", "import ssl,urllib.request as u; c=ssl.create_default_context(cafile='/runtime/bank-b-ca.crt'); c.load_cert_chain('/runtime/agent.crt','/runtime/agent.key'); u.urlopen('https://bank-b-agent:9443/health',context=c,timeout=3)"]
+
+  bank-b-gateway:
+    <<: *gateway
+    command: ["-f", "/config/gateway.yaml"]
+    volumes:
+      - ./gateways/bank-b.yaml:/config/gateway.yaml:ro
+      - ./.runtime/roles/bank-b-gateway:/runtime:ro
+    networks: [bank-b-internal, bank-b-policy, bank-b-telemetry, interbank]
+    depends_on: [policy-b, otel-collector-b]
+
+  policy-b:
+    <<: *python
+    command: policy.extproc
+    environment:
+      ORGANIZATION: bank-b
+      SERVICE_NAME: bank-b-ai-defense
+      SPLUNK_AO_HOME_DIR: /tmp/.splunk
+      EVENT_SINK_URL: http://demo:8090/events
+    networks: [bank-b-policy, bank-b-egress, events]
+
+  otel-collector-b:
+    <<: *collector
+    volumes:
+      - ./otel/collector.yaml:/etc/otel/collector.yaml:ro
+      - ./evidence/telemetry/bank-b:/evidence
+    networks: [bank-b-telemetry, bank-b-egress]
+
+  # ------------------------------------------------- operations console + UI ----
+  demo:
+    <<: *python
+    command: demo.server
+    environment:
+      ORGANIZATION: bank-a
+      SERVICE_NAME: operations-console
+      SPLUNK_AO_HOME_DIR: /tmp/.splunk
+      EVENT_SINK_URL: http://127.0.0.1:8090/events
+      EVIDENCE_DIR: /evidence
+      CONSOLE_TOKEN_FILE: /runtime/console.jwt
+    volumes:
+      - ./.runtime/roles/console:/runtime:ro
+      - ./evidence:/evidence
+      - ./gateways:/app/gateways:ro
+      - ./otel:/app/otel:ro
+      - ./compose.yaml:/app/compose.yaml:ro
+      - ./bank_a/records.sql:/app/bank_a/records.sql:ro
+      - ./bank_b/records.sql:/app/bank_b/records.sql:ro
+    networks: [bank-a-console, bank-a-egress, events]
+    ports: ["127.0.0.1:8088:8090"]
+
+networks:
+  bank-a-internal: {internal: true}
+  bank-a-console: {internal: true}
+  bank-a-policy: {internal: true}
+  bank-a-telemetry: {internal: true}
+  bank-a-egress: {}
+  bank-b-internal: {internal: true}
+  bank-b-policy: {internal: true}
+  bank-b-telemetry: {internal: true}
+  bank-b-egress: {}
+  interbank: {internal: true}
+  events: {internal: true}
+  vllm-a: {external: true, name: a2a-lab-vllm-a}
+  vllm-b: {external: true, name: a2a-lab-vllm-b}

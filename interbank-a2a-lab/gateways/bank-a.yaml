@@ -1,0 +1,156 @@
+# yaml-language-server: $schema=https://agentgateway.dev/schema/config
+# Bank A AI gateway (agentgateway v1.6.0, standalone).
+#
+#   :8443  egress   Bank A agent        -> Bank B gateway :9443
+#   :9443  ingress  Bank B gateway      -> Bank A agent
+#   :7443  ingress  Operations console  -> Bank A agent
+#
+# Every route: JWT admission, Cisco AI Defense on request AND response (ExtProc,
+# fail closed), caller token replaced by a gateway-signed token, mTLS (TLS 1.3).
+
+frontendPolicies:
+  tracing:
+    host: otel-collector-a:4317
+    randomSampling: true
+    resources:
+      service.name: '"bank-a-gateway"'
+      organization.name: '"bank-a"'
+    # GenAI semantic conventions, so Splunk Agent Observability shows the A2A
+    # JSON-RPC request this gateway proxied. agentgateway 1.6 does not record a
+    # response body that ExtProc buffered, so the output is the status; the
+    # response text is on the child Cisco AI Defense "response" span.
+    attributes:
+      gen_ai.operation.name: '"invoke_workflow"'
+      gen_ai.workflow.name: '"bank-a-gateway"'
+      gen_ai.conversation.id: 'request.headers["x-investigation-id"]'
+      gen_ai.input.messages: >-
+        toJson([{"role": "user", "parts": [{"type": "text",
+        "content": request.method + " " + request.path + "\n" + string(request.body)}]}])
+      gen_ai.output.messages: >-
+        toJson([{"role": "assistant", "finish_reason": "stop",
+        "parts": [{"type": "text", "content": "HTTP " + string(response.code)
+        + " (response text: see the Cisco AI Defense response span)"}]}])
+
+binds:
+- port: 8443
+  listeners:
+  - name: bank-a-egress-to-bank-b
+    protocol: HTTPS
+    tls:
+      cert: /runtime/gateway.crt
+      key: /runtime/gateway.key
+      root: /runtime/bank-a-ca.crt          # only Bank A workloads may connect
+      minTLSVersion: TLS_V1_3
+    routes:
+    - name: to-bank-b-agent
+      policies:
+        a2a: {}
+        jwtAuth:
+          mode: strict
+          issuer: lab://bank-a-internal
+          audiences: [bank-a-gateway]
+          jwks: {file: /runtime/internal-jwks.json}
+        authorization:
+          rules: ['jwt.sub == "bank-a-agent"']
+        extProc:                              # Cisco AI Defense: outbound to Bank B
+          host: policy-a:9001
+          failureMode: failClosed
+          processingOptions: &inspect-bodies
+            requestHeaderMode: send
+            requestBodyMode: buffered
+            responseHeaderMode: send
+            responseBodyMode: buffered
+            requestTrailerMode: skip
+            responseTrailerMode: skip
+            allowModeOverride: false
+        backendTLS:
+          cert: /runtime/gateway.crt
+          key: /runtime/gateway.key
+          root: /runtime/bank-b-ca.crt
+          hostname: bank-b-gateway
+        backendAuth:                          # Bank A's agent token never leaves Bank A
+          jwtSign:
+            signingKey: {file: /runtime/partner-signing.key}
+            alg: ES256
+            kid: bank-a-partner-1
+            claims: {iss: lab://bank-a-gateway, sub: bank-a, aud: bank-b-gateway}
+            ttl: 120s
+        timeout: {requestTimeout: 900s}
+      backends:
+      - host: bank-b-gateway:9443
+
+- port: 9443
+  listeners:
+  - name: bank-a-ingress-from-bank-b
+    protocol: HTTPS
+    tls:
+      cert: /runtime/gateway.crt
+      key: /runtime/gateway.key
+      root: /runtime/bank-b-ca.crt          # only Bank B's gateway may connect
+      minTLSVersion: TLS_V1_3
+    routes:
+    - name: from-bank-b-to-bank-a-agent
+      policies:
+        a2a: {}
+        jwtAuth:
+          mode: strict
+          issuer: lab://bank-b-gateway
+          audiences: [bank-a-gateway]
+          jwks: {file: /runtime/bank-b-partner-jwks.json}
+        authorization:
+          rules: ['jwt.sub == "bank-b"']
+        extProc:                              # Cisco AI Defense: inbound from Bank B
+          host: policy-a:9002
+          failureMode: failClosed
+          processingOptions: *inspect-bodies
+        backendTLS: &to-bank-a-agent
+          cert: /runtime/gateway.crt
+          key: /runtime/gateway.key
+          root: /runtime/bank-a-ca.crt
+          hostname: bank-a-agent
+        backendAuth:
+          jwtSign:
+            signingKey: {file: /runtime/backend-signing.key}
+            alg: ES256
+            kid: bank-a-backend-1
+            claims: {iss: lab://bank-a-gateway, sub: bank-b, aud: bank-a-agent}
+            ttl: 120s
+        timeout: {requestTimeout: 900s}
+      backends:
+      - host: bank-a-agent:9443
+
+- port: 7443
+  listeners:
+  - name: bank-a-ingress-from-console
+    protocol: HTTPS
+    tls:
+      cert: /runtime/gateway.crt
+      key: /runtime/gateway.key
+      root: /runtime/bank-a-ca.crt
+      minTLSVersion: TLS_V1_3
+    routes:
+    - name: from-console-to-bank-a-agent
+      policies:
+        a2a: {}
+        jwtAuth:
+          mode: strict
+          issuer: lab://bank-a-internal
+          audiences: [bank-a-gateway]
+          jwks: {file: /runtime/internal-jwks.json}
+        authorization:
+          rules: ['jwt.sub == "operations-console"']
+        extProc:                              # Cisco AI Defense: investigation kickoff
+          host: policy-a:9003
+          failureMode: failClosed
+          processingOptions: *inspect-bodies
+        backendTLS: *to-bank-a-agent
+        backendAuth:
+          jwtSign:
+            signingKey: {file: /runtime/backend-signing.key}
+            alg: ES256
+            kid: bank-a-backend-1
+            claims: {iss: lab://bank-a-gateway, sub: operations-console, aud: bank-a-agent}
+            ttl: 120s
+        timeout: {requestTimeout: 900s}
+      backends:
+      - host: bank-a-agent:9443

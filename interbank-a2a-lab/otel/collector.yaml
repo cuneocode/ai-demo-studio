@@ -1,0 +1,33 @@
+# Each bank's collector receives its gateway's OTLP spans and forwards them to
+# Splunk Agent Observability. Agents and the AI Defense service export directly with
+# SplunkAOSpanProcessor; the gateway needs a collector to attach the API key header.
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+processors:
+  batch:
+    timeout: 2s
+
+exporters:
+  # Same routing headers SplunkAOSpanProcessor sends (the wire name is still `logstream`).
+  otlp_http/splunk_ao:
+    traces_endpoint: ${env:SPLUNK_AO_API_URL}/otel/v1/traces
+    headers:
+      Splunk-AO-API-Key: ${env:SPLUNK_AO_API_KEY}
+      project: ${env:SPLUNK_AO_PROJECT}
+      logstream: ${env:SPLUNK_AO_AGENT_STREAM}
+  file/traces:
+    path: /evidence/gateway-traces.jsonl
+    rotation:
+      max_megabytes: 32
+      max_backups: 3
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp_http/splunk_ao, file/traces]

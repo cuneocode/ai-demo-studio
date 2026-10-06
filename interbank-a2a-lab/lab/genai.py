@@ -1,0 +1,152 @@
+"""OpenInference -> OpenTelemetry GenAI semantic conventions, applied at export.
+
+The OpenInference LangChain instrumentor records model, tool, and graph spans with
+`llm.*`, `tool.*`, and `input.value`/`output.value` attributes. Splunk Agent
+Observability types spans and shows their content from the GenAI conventions
+(`gen_ai.operation.name`, `gen_ai.input.messages`, `gen_ai.tool.call.arguments`, ...),
+so each span is translated before it is exported. Spans without an OpenInference
+kind are exported unchanged.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+from collections import defaultdict
+from collections.abc import Sequence
+from typing import Any
+
+from opentelemetry.sdk.trace import ReadableSpan
+from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
+
+_DROP = ("llm.input_messages.", "llm.output_messages.", "llm.tools.", "input.", "output.",
+         "llm.token_count.", "llm.invocation_parameters")
+_MESSAGE = re.compile(r"^llm\.(input|output)_messages\.(\d+)\.message\.(.+)$")
+_TOOL_CALL = re.compile(r"^tool_calls\.(\d+)\.tool_call\.(.+)$")
+
+
+def _json(value: Any) -> Any:
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except ValueError:
+            return value
+    return value
+
+
+def _messages(attrs: dict[str, Any], direction: str) -> list[dict]:
+    fields: dict[int, dict[str, Any]] = defaultdict(dict)
+    for key, value in attrs.items():
+        match = _MESSAGE.match(key)
+        if match and match[1] == direction:
+            fields[int(match[2])][match[3]] = value
+    messages = []
+    for index in sorted(fields):
+        field = fields[index]
+        role = str(field.get("role", "user" if direction == "input" else "assistant"))
+        calls: dict[int, dict[str, Any]] = defaultdict(dict)
+        for key, value in field.items():
+            match = _TOOL_CALL.match(key)
+            if match:
+                calls[int(match[1])][match[2]] = value
+        parts: list[dict[str, Any]] = []
+        if role == "tool":
+            parts.append({"type": "tool_call_response", "id": field.get("tool_call_id"),
+                          "response": field.get("content", "")})
+        elif field.get("content"):
+            parts.append({"type": "text", "content": field["content"]})
+        for call in (calls[i] for i in sorted(calls)):
+            parts.append({"type": "tool_call", "id": call.get("id"),
+                          "name": call.get("function.name"),
+                          "arguments": _json(call.get("function.arguments"))})
+        messages.append({"role": role, "parts": parts})
+    return messages
+
+
+def _last_message_text(value: Any) -> str:
+    """The newest message in a LangGraph state payload, else the payload as text."""
+    payload = _json(value)
+    if isinstance(payload, dict) and isinstance(payload.get("messages"), list) and payload["messages"]:
+        last = payload["messages"][-1]
+        if isinstance(last, list) and last:
+            last = last[-1]
+        if isinstance(last, dict):
+            message = last.get("kwargs") or last
+            content = message.get("content")
+            if isinstance(content, str) and content:
+                return content
+            calls = message.get("tool_calls") or []
+            if calls:
+                return "\n".join(f"{c.get('name')}({json.dumps(c.get('args'), default=str)})"
+                                 for c in calls if isinstance(c, dict))
+    if payload in (None, "", {}, []):
+        return ""
+    return value if isinstance(value, str) else json.dumps(payload, default=str)
+
+
+def _text_messages(role: str, text: str) -> str:
+    return json.dumps([{"role": role, "parts": [{"type": "text", "content": text}]}])
+
+
+def translate(span: ReadableSpan, agent_names: frozenset[str]) -> ReadableSpan:
+    attrs = dict(span.attributes or {})
+    kind = attrs.get("openinference.span.kind")
+    if not kind:
+        return span
+    out = {k: v for k, v in attrs.items() if not k.startswith(_DROP)}
+    if kind == "LLM":
+        out["gen_ai.operation.name"] = "chat"
+        out["gen_ai.provider.name"] = attrs.get("llm.provider", "openai")
+        if "llm.model_name" in attrs:
+            out["gen_ai.request.model"] = out["gen_ai.response.model"] = attrs["llm.model_name"]
+        out["gen_ai.input.messages"] = json.dumps(_messages(attrs, "input"))
+        output = _messages(attrs, "output")
+        for message in output:
+            message["finish_reason"] = attrs.get("llm.finish_reason", "stop")
+        out["gen_ai.output.messages"] = json.dumps(output)
+        for source, target in (("prompt", "input_tokens"), ("completion", "output_tokens")):
+            if f"llm.token_count.{source}" in attrs:
+                out[f"gen_ai.usage.{target}"] = int(attrs[f"llm.token_count.{source}"])
+        tools = [_json(v) for k, v in sorted(attrs.items()) if k.startswith("llm.tools.")]
+        if tools:
+            out["gen_ai.tool.definitions"] = json.dumps(tools)
+    elif kind == "TOOL":
+        out["gen_ai.operation.name"] = "execute_tool"
+        out["gen_ai.tool.name"] = attrs.get("tool.name", span.name)
+        if "tool.description" in attrs:
+            out["gen_ai.tool.description"] = attrs["tool.description"]
+        out["gen_ai.tool.call.arguments"] = str(attrs.get("input.value", ""))
+        result = _json(attrs.get("output.value", ""))
+        if isinstance(result, dict):
+            result = (result.get("data") or result).get("content", result)
+        out["gen_ai.tool.call.result"] = result if isinstance(result, str) else json.dumps(result)
+    else:
+        agent = span.name in agent_names
+        out["gen_ai.operation.name"] = "invoke_agent" if agent else "invoke_workflow"
+        out["gen_ai.agent.name" if agent else "gen_ai.workflow.name"] = span.name
+        # Middleware hooks often take or return nothing; say so rather than export blanks.
+        out["gen_ai.input.messages"] = _text_messages(
+            "user", _last_message_text(attrs.get("input.value")) or "(no input)")
+        out["gen_ai.output.messages"] = _text_messages(
+            "assistant", _last_message_text(attrs.get("output.value")) or "(no state update)")
+    return ReadableSpan(
+        name=span.name, context=span.context, parent=span.parent, resource=span.resource,
+        attributes=out, events=span.events, links=span.links, kind=span.kind,
+        status=span.status, start_time=span.start_time, end_time=span.end_time,
+        instrumentation_scope=span.instrumentation_scope,
+    )
+
+
+class GenAIExporter(SpanExporter):
+    def __init__(self, delegate: SpanExporter, agent_names: Sequence[str] = ()) -> None:
+        self.delegate = delegate
+        self.agent_names = frozenset(agent_names)
+
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        return self.delegate.export([translate(s, self.agent_names) for s in spans])
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return self.delegate.force_flush(timeout_millis)
+
+    def shutdown(self) -> None:
+        self.delegate.shutdown()

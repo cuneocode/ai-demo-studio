@@ -1,0 +1,43 @@
+[project]
+name = "interbank-a2a-settlement-demo"
+version = "0.2.0"
+description = "Two banks' Deep Agents investigate a failed settlement over A2A through agentgateway with Cisco AI Defense and Splunk Agent Observability"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "a2a-sdk[http-server]==1.2.2",
+  "agent-control-sdk==8.11.0",
+  "cryptography==46.0.3",
+  "deepagents==0.7.22",
+  "fastapi==0.119.1",
+  "grpcio==1.84.0",
+  "httpx==0.28.1",
+  "langchain==1.4.3",
+  "langchain-openai==1.6.7",
+  "openinference-instrumentation-langchain==0.1.78",
+  "opentelemetry-api==1.45.0",
+  "opentelemetry-exporter-otlp-proto-http==1.45.0",
+  "opentelemetry-proto==1.45.0",
+  "opentelemetry-sdk==1.45.0",
+  "pyjwt[crypto]==2.13.0",
+  "splunk-ao==0.4.0",
+  "uvicorn[standard]==0.38.0",
+  "xds-protos==1.84.0",
+]
+
+[dependency-groups]
+dev = [
+  "pytest==8.4.2",
+  "pytest-asyncio==1.2.0",
+  "ruff==0.14.1",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
