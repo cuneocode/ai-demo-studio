@@ -61,6 +61,16 @@ def test_http_get_requires_user_agent_and_sec_host(monkeypatch, tmp_path):
         edgar.http_get("https://example.com/secret")
 
 
+def test_git_identity_is_the_fallback_sec_contact(monkeypatch):
+    monkeypatch.delenv("SEC_USER_AGENT", raising=False)
+    monkeypatch.setattr(edgar, "git_contact", lambda: "Dev Person dev@example.com")
+    assert edgar.user_agent() == "Dev Person dev@example.com"
+    assert edgar.sec_health()["contact"] == "git"
+    monkeypatch.setenv("SEC_USER_AGENT", "Studio Contact studio@example.com")
+    assert edgar.user_agent() == "Studio Contact studio@example.com"
+    assert edgar.sec_health()["contact"] == "env"
+
+
 def test_http_get_maps_sec_http_errors(monkeypatch, tmp_path):
     monkeypatch.setenv("SEC_USER_AGENT", "FSI-Test test@example.com")
     monkeypatch.setenv("BRIEFING_CACHE", str(tmp_path))

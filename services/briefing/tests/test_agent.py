@@ -126,3 +126,11 @@ def test_constructed_graph_excludes_execute_and_general_purpose(monkeypatch, tmp
             node = getattr(node, "bound", None)
     assert "- objectives:" in description
     assert "- general-purpose:" not in description
+
+
+def test_briefing_schema_treats_null_fields_as_absent():
+    from agent import CompanyBriefing
+
+    briefing = CompanyBriefing.model_validate({"company": {"name": None, "ticker": None}, "risks": {"status": "ready", "facts": [{"text": "x", "excerpt": None}]}})
+    assert briefing.company.name == ""
+    assert briefing.risks.facts[0].excerpt == ""

@@ -1,9 +1,11 @@
 """Public SEC fair-access client. Tests monkeypatch HTTP, not the live site."""
 from __future__ import annotations
 
+import functools
 import json
 import os
 import re
+import subprocess
 import threading
 import time
 from pathlib import Path
@@ -56,8 +58,23 @@ def cache_root() -> Path:
     return Path(__file__).resolve().parent / ".cache"
 
 
+@functools.cache
+def git_contact() -> str:
+    """SEC fair access needs a real contact; the developer's git identity is one."""
+    def config(key: str) -> str:
+        try:
+            return subprocess.run(["git", "config", key], capture_output=True, text=True, timeout=2).stdout.strip()
+        except (OSError, subprocess.SubprocessError):
+            return ""
+
+    email = config("user.email")
+    if "@" not in email:
+        return ""
+    return f"{config('user.name') or 'FSI AI Demo Studio'} {email}"
+
+
 def user_agent() -> str:
-    return os.getenv("SEC_USER_AGENT", "").strip()
+    return os.getenv("SEC_USER_AGENT", "").strip() or git_contact()
 
 
 def sec_health() -> dict:
@@ -66,6 +83,7 @@ def sec_health() -> dict:
     return {
         "status": "configured" if configured else "missing_user_agent",
         "user_agent_set": configured,
+        "contact": "env" if os.getenv("SEC_USER_AGENT", "").strip() else "git" if configured else None,
         "tickers_cached": tickers.is_file(),
     }
 
@@ -102,7 +120,7 @@ def http_get(url: str, *, binary: bool = False, timeout: float = 30.0):
     """Single HTTP seam for tests to monkeypatch."""
     ua = user_agent()
     if not ua:
-        raise EdgarError("SEC_USER_AGENT is not configured.", 503)
+        raise EdgarError("Set SEC_USER_AGENT (\"Your Name you@example.com\") or a git user.email.", 503)
     host = urlparse(url).hostname or ""
     if not host.endswith("sec.gov"):
         raise EdgarError("Only SEC hosts are allowed.", 502)

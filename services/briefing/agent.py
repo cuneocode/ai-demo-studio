@@ -6,7 +6,7 @@ import json
 import shutil
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from grounding import ground_briefing
 from model_backend import model_settings
@@ -39,13 +39,22 @@ class AgentIncomplete(RuntimeError):
     """Raised when ainvoke finished without ingesting or navigating a filing."""
 
 
-class CompanyIdentity(BaseModel):
+class _Lenient(BaseModel):
+    """The model sometimes sends null for a field it could not fill; treat that as absent."""
+
+    @model_validator(mode="before")
+    @classmethod
+    def _drop_nulls(cls, data):
+        return {key: value for key, value in data.items() if value is not None} if isinstance(data, dict) else data
+
+
+class CompanyIdentity(_Lenient):
     name: str = ""
     ticker: str | None = None
     cik: str | None = None
 
 
-class PeriodInfo(BaseModel):
+class PeriodInfo(_Lenient):
     form: str | None = None
     filed_at: str | None = Field(default=None, alias="filedAt")
     period_of_report: str | None = Field(default=None, alias="periodOfReport")
@@ -54,7 +63,7 @@ class PeriodInfo(BaseModel):
     model_config = {"populate_by_name": True}
 
 
-class SourceInfo(BaseModel):
+class SourceInfo(_Lenient):
     kind: str = "edgar"
     label: str = ""
     url: str | None = None
@@ -62,7 +71,7 @@ class SourceInfo(BaseModel):
     accession: str | None = None
 
 
-class CitationFact(BaseModel):
+class CitationFact(_Lenient):
     text: str = ""
     item: str = ""
     node_id: str = ""
@@ -70,13 +79,13 @@ class CitationFact(BaseModel):
     source_url: str = ""
 
 
-class ThemeSection(BaseModel):
+class ThemeSection(_Lenient):
     status: str = "abstain"
     reason: str | None = None
     facts: list[CitationFact] = Field(default_factory=list)
 
 
-class MetricItem(BaseModel):
+class MetricItem(_Lenient):
     label: str
     value: float | int | str | None = None
     unit: str | None = None
@@ -88,7 +97,7 @@ class MetricItem(BaseModel):
     node_id: str | None = None
 
 
-class CompanyBriefing(BaseModel):
+class CompanyBriefing(_Lenient):
     company: CompanyIdentity = Field(default_factory=CompanyIdentity)
     period: PeriodInfo = Field(default_factory=PeriodInfo)
     source: SourceInfo = Field(default_factory=SourceInfo)
