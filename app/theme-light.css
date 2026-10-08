@@ -40,3 +40,18 @@ html:root[data-theme="light"] .launcher-overlay { color: #0f1b2d; }
 html:root[data-theme="light"] .launcher-overlay { background: rgba(243, 246, 250, 0.92); }
 html:root[data-theme="light"] .shell-scrim { background: rgba(15, 23, 42, 0.22); }
 html:root[data-theme="light"] .presenter-bar, html:root[data-theme="light"] .shell-popover, html:root[data-theme="light"] .shell-drawer { background: #ffffff; box-shadow: 0 20px 50px rgba(15, 23, 42, 0.14); }
+
+/* Source excerpts are highlighted with github-dark inline colours, so the code surface stays dark in both themes. */
+html:root[data-theme="light"] .src-view { background: #0f1726; color: #e6edf3; box-shadow: inset 0 0 0 1px #1e293b; }
+html:root[data-theme="light"] .src-no { color: #8291a7; }
+html:root[data-theme="light"] .src-line:hover { background: rgba(155, 184, 255, 0.1); }
+html:root[data-theme="light"] .ib-evidence { background: rgba(15, 23, 42, 0.42); }
+html:root[data-theme="light"] .ib-evidence .map-source { box-shadow: -16px 0 48px rgba(15, 23, 42, 0.22); }
+
+html:root[data-theme="light"] .ib-integrations-head p,
+html:root[data-theme="light"] .ib-integration-copy p { color: #334155; }
+html:root[data-theme="light"] .ib-integration-copy strong { color: #0f1b2d; }
+html:root[data-theme="light"] .ib-integration-grid { border-color: #d5dfeb; background: #ffffff; }
+html:root[data-theme="light"] .ib-integration-grid article + article { border-top-color: #e3e9f2; }
+html:root[data-theme="light"] .ib-integration-sources button { border-color: #c3d0e1; background: #f7f9fc; color: #0f1b2d; box-shadow: 0 1px 1px rgba(15, 23, 42, 0.04); }
+html:root[data-theme="light"] .ib-integration-sources button:hover { background: #ffffff; border-color: var(--integration); }

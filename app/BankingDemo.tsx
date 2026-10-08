@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import "./banking.css";
 import BankingRuntimeDetails from "./BankingRuntimeDetails";
+import RunStats, { agentTraceIntegration, defenseFacts, defenseFrom, defenseIntegration, DEFENSE_TILES, traceFacts, usageFrom, startRun, useRunLedger, type ObservedRun, type StatsCard } from "./RunStats";
+import { useStudioNav } from "./studio-nav";
 import suggestions from "./banking-scenarios.json";
 
 type TraceStep = { name: string; kind: string };
@@ -61,6 +63,9 @@ export default function BankingDemo({ onBack, onAdd, inStory, embedded = false }
   const [healthFailed, setHealthFailed] = useState(false);
   const [showSystem, setShowSystem] = useState(false);
   const [showTrace, setShowTrace] = useState(false);
+  const ledger = useRunLedger();
+  const { links } = useStudioNav();
+  const stats = useMemo(() => bankingStats(health, healthFailed, links?.agentObservability), [health, healthFailed, links?.agentObservability]);
 
   useEffect(() => {
     fetch("/api/banking/health", { signal: AbortSignal.timeout(10000) })
@@ -77,17 +82,22 @@ export default function BankingDemo({ onBack, onAdd, inStory, embedded = false }
     if (!message || loading) return;
     setInput(""); setError(""); setErrorMeta(undefined); setLoading(true);
     setMessages((current) => [...current, { role: "user", text: message }]);
+    const run = startRun("turn", message);
+    ledger.record(run);
+    let settled = false;
     try {
       const response = await fetch("/api/banking/chat", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message, ...(sessionId ? { session_id: sessionId } : {}) }),
         signal: AbortSignal.timeout(155000),
       });
-      if (!response.ok) { const detail = await response.text().catch(() => ""); let body: { detail?: string; message?: string; session_reset?: boolean; security?: IntegrationStatus; controls?: ResponseControls; telemetry?: { splunk?: ErrorMeta["splunk"] } } = {}; try { body = JSON.parse(detail); } catch { /* non-JSON error body */ } if (body.session_reset) setSessionId(undefined); setErrorMeta({ security: body.security, controls: body.controls, splunk: body.telemetry?.splunk }); throw new Error(body.detail || body.message || `Brahe Bank could not respond (${response.status}).`); }
+      if (!response.ok) { const detail = await response.text().catch(() => ""); let body: { detail?: string; message?: string; session_reset?: boolean; security?: IntegrationStatus; controls?: ResponseControls; telemetry?: { splunk?: ErrorMeta["splunk"] } } = {}; try { body = JSON.parse(detail); } catch { /* non-JSON error body */ } if (body.session_reset) setSessionId(undefined); ledger.record(observeTurn(run, response.status, body)); settled = true; setErrorMeta({ security: body.security, controls: body.controls, splunk: body.telemetry?.splunk }); throw new Error(body.detail || body.message || `Brahe Bank could not respond (${response.status}).`); }
       const data = await response.json();
+      ledger.record(observeTurn(run, response.status, data));
       setSessionId(data.session_id);
       setMessages((current) => [...current, { role: "assistant", text: data.answer || "I don't have an answer for that yet.", sources: data.sources, trace: data.trace, duration: data.duration_ms, telemetry: { ...data.telemetry, security: data.security, controls: data.controls } }]);
     } catch (cause) {
+      if (!settled) ledger.record({ ...run, status: "failed", note: "No response from the service" });
       setError(cause instanceof DOMException && cause.name === "TimeoutError" ? "The request timed out. Try again." : cause instanceof Error ? cause.message : "Something went wrong. Try again.");
     } finally { setLoading(false); }
   }
@@ -124,9 +134,62 @@ export default function BankingDemo({ onBack, onAdd, inStory, embedded = false }
           {showTrace && messages.some((message) => message.trace?.length) && <div className="trace-card"><strong><GitBranch size={14} /> Last executed trace</strong>{[...messages].reverse().find((message) => message.trace?.length)?.trace?.map((step, index) => <div className="trace-row" key={`${step.name}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span><div><b>{step.name}</b><small>{step.kind}</small></div><CheckCircle2 size={13} /></div>)}</div>}
         </aside>
       </section>
+      <RunStats ledger={ledger} {...stats} empty="Ask a question. Each turn's model calls, tools, controls, and AI Defense verdicts land here." />
       {!embedded && inStory && <div className="story-context"><span>STORY MODE</span> This interactive slice demonstrates the customer-assistance path.</div>}
     </div>
   );
+}
+
+type TurnBody = { trace?: TraceStep[]; duration_ms?: number; usage?: unknown; security?: unknown; controls?: ResponseControls; telemetry?: { galileo?: string; splunk?: { status?: string; trace_id?: string; span_count?: number } } };
+
+/** One chat turn from the banking service's own response, including refusals that carry the same accounting. */
+function observeTurn(run: ObservedRun, status: number, body: TurnBody): ObservedRun {
+  const checks = body.controls?.checks ?? [];
+  const blocked = status === 403 || status === 422;
+  return {
+    ...run,
+    status: status < 300 ? "completed" : blocked ? "blocked" : "failed",
+    durationMs: body.duration_ms,
+    ...usageFrom(body.usage),
+    toolCalls: body.trace ? body.trace.filter((step) => step.kind === "tool").length : undefined,
+    counts: {
+      handoffs: body.trace ? body.trace.filter((step) => step.kind === "handoff").length : undefined,
+      controls: body.controls ? checks.length : undefined,
+      controlsBlocked: body.controls ? checks.filter((check) => check.status === "blocked").length : undefined,
+    },
+    agentTrace: body.telemetry?.galileo,
+    otlp: body.telemetry?.splunk?.status,
+    traceId: body.telemetry?.splunk?.trace_id,
+    spans: body.telemetry?.splunk?.span_count,
+    defense: defenseFrom(body.security),
+  };
+}
+
+function bankingStats(health: Health | null, failed: boolean, link?: string | null): { observability: StatsCard; defense: StatsCard } {
+  const reachable = !failed;
+  return {
+    observability: {
+      integration: agentTraceIntegration(health?.galileo, reachable, link),
+      tiles: [
+        { label: "LLM calls", value: (run) => run.llmCalls, hint: "Supervisor and agent model calls; Agent Control's judge is not counted" },
+        { label: "Tool calls", value: (run) => run.toolCalls },
+        { label: "Handoffs", value: (run) => run.counts?.handoffs },
+        { label: "Tokens in", value: (run) => run.inputTokens, format: "tokens" },
+        { label: "Tokens out", value: (run) => run.outputTokens, format: "tokens" },
+        { label: "Controls", value: (run) => run.counts?.controls, hint: "Agent Control evaluations" },
+        { label: "Denials", value: (run) => run.counts?.controlsBlocked, alert: "deny", hint: "Agent Control blocks" },
+        { label: "Latency", value: (run) => run.durationMs, format: "ms", total: "avg", hint: "Measured by the banking service" },
+      ],
+      facts: traceFacts,
+      source: "From each /api/banking/chat response: the graph's own callbacks count model and tool calls, and tokens are what the provider reported.",
+    },
+    defense: {
+      integration: defenseIntegration(health?.security, "model input and output", reachable),
+      tiles: DEFENSE_TILES,
+      facts: defenseFacts,
+      source: "From the security summary on each response: one inspection per model input and output.",
+    },
+  };
 }
 
 function LandmarkMark() { return <span className="landmark-mark"><span /><span /><span /><span /></span>; }

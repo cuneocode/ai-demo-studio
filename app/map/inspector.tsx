@@ -30,7 +30,7 @@ export type SourceAttribution = {
   disclosure?: SelectedDisclosure;
 };
 
-function ResizeHandle({ width, onWidth }: { width: number; onWidth: (width: number) => void }) {
+function ResizeHandle({ width, onWidth, max = 640 }: { width: number; onWidth: (width: number) => void; max?: number }) {
   return (
     <div
       className="map-resize"
@@ -40,7 +40,7 @@ function ResizeHandle({ width, onWidth }: { width: number; onWidth: (width: numb
       onPointerDown={(event) => {
         const startX = event.clientX;
         const startWidth = width;
-        const move = (pointer: PointerEvent) => onWidth(Math.min(640, Math.max(360, startWidth + startX - pointer.clientX)));
+        const move = (pointer: PointerEvent) => onWidth(Math.min(max, Math.max(360, startWidth + startX - pointer.clientX)));
         const up = () => {
           window.removeEventListener("pointermove", move);
           window.removeEventListener("pointerup", up);
@@ -87,6 +87,7 @@ export function SourceInspector({
   labels,
   attribution,
   width,
+  maxWidth,
   drawer,
   onWidth,
   onSelect,
@@ -97,6 +98,7 @@ export function SourceInspector({
   labels?: Record<string, string>;
   attribution?: SourceAttribution | null;
   width: number;
+  maxWidth?: number;
   drawer: boolean;
   onWidth: (width: number) => void;
   onSelect: (id: string) => void;
@@ -130,7 +132,7 @@ export function SourceInspector({
   return (
     <aside className={`map-source ${drawer ? "is-drawer" : ""} ${expanded ? "is-expanded-source" : ""}`} style={drawer ? undefined : { width }} aria-label="Source inspector">
       {drawer ? null : (
-        <ResizeHandle width={width} onWidth={onWidth} />
+        <ResizeHandle width={width} onWidth={onWidth} max={maxWidth} />
       )}
       <div className="map-source-bar">
         <div className="map-source-title">

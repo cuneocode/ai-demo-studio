@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   Activity,
   Check,
@@ -38,6 +38,9 @@ import {
   type StoredResearchNote,
   type WealthHealth,
 } from "./research-note";
+import RunStats, { startRun, useRunLedger } from "./RunStats";
+import { useStudioNav } from "./studio-nav";
+import { observeWealth, wealthService, wealthStats, type WealthService } from "./wealth-stats";
 import "./advisory.css";
 
 type Props = {
@@ -66,6 +69,10 @@ export default function ClientAdvisory({
   const accepted = brief !== undefined ? brief : loadAdvisoryBrief();
   const note = researchNote !== undefined ? researchNote : loadResearchNote();
   const [health, setHealth] = useState<WealthHealth | null>(null);
+  const [service, setService] = useState<WealthService | null>(null);
+  const ledger = useRunLedger();
+  const { links } = useStudioNav();
+  const stats = useMemo(() => wealthStats(service, "/api/wealth/advisory/brief", links?.agentObservability), [service, links?.agentObservability]);
   const [holdings, setHoldings] = useState<HoldingInput[]>(accepted?.holdings?.length ? accepted.holdings : defaultHoldings(companyProfile, note || undefined));
   const [clientNotes, setClientNotes] = useState("");
   const [loading, setLoading] = useState(false);
@@ -75,8 +82,8 @@ export default function ClientAdvisory({
   useEffect(() => {
     fetch("/api/wealth/health", { signal: AbortSignal.timeout(10000) })
       .then((response) => response.ok ? response.json() : Promise.reject(new Error("Health check unavailable")))
-      .then((body) => setHealth(normalizeWealthHealth(body)))
-      .catch(() => setHealth({ ready: false, perimeter: "Yahoo + FRED allowlist only", nim: { status: "down" } }));
+      .then((body) => { setHealth(normalizeWealthHealth(body)); setService(wealthService(body)); })
+      .catch(() => { setHealth({ ready: false, perimeter: "Yahoo + FRED allowlist only", nim: { status: "down" } }); setService({ reachable: false }); });
   }, []);
 
   const displayed = draft || accepted?.brief || null;
@@ -97,6 +104,9 @@ export default function ClientAdvisory({
     }
     setLoading(true);
     setError("");
+    const run = startRun("brief", `Meeting brief · ${rows.map((item) => item.ticker.trim().toUpperCase()).join(", ")}`);
+    ledger.record(run);
+    let settled = false;
     try {
       const response = await fetch("/api/wealth/advisory/brief", {
         method: "POST",
@@ -110,11 +120,16 @@ export default function ClientAdvisory({
         signal: AbortSignal.timeout(180000),
       });
       const text = await response.text();
+      let payload: unknown = {};
+      try { payload = text ? JSON.parse(text) : {}; } catch { /* non-JSON error body */ }
+      ledger.record(observeWealth(run, response.status, payload));
+      settled = true;
       if (!response.ok) throw new Error(parseApiError(text, response.status));
       const next = normalizeAdvisory(text ? JSON.parse(text) : {});
       if (!next) throw new Error("The advisory service returned an empty brief.");
       setDraft(next);
     } catch (cause) {
+      if (!settled) ledger.record({ ...run, status: "failed" });
       setError(cause instanceof DOMException && cause.name === "TimeoutError"
         ? "The meeting brief timed out. Holdings metrics may still be retried."
         : cause instanceof Error ? cause.message : "Brief failed. Try again.");
@@ -301,6 +316,7 @@ export default function ClientAdvisory({
           </>
         )}
       </div>
+      <RunStats ledger={ledger} {...stats} empty="Request a meeting brief. Its model calls and AI Defense verdicts land here." />
       {embedded && inStory && <div className="advisory-story"><span>STORY MODE</span> The advisor gate stays on the brief. Clearing the company profile does not wipe this meeting note.</div>}
     </div>
   );

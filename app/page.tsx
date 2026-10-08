@@ -11,6 +11,8 @@ import ArchitectureMap from "./ArchitectureMap";
 import StudioSettings, { ModelChip } from "./StudioSettings";
 import { ControlsPage, HelpDrawer, PresenterBar, ServiceBell, TelemetryPage } from "./StudioShell";
 import { momentReady, platformSummary, useStudioStatus } from "./studio-status";
+import { StudioNavContext } from "./studio-nav";
+import { IllustrativeRunStats } from "./RunStats";
 import { setTheme, useTheme } from "./theme";
 import { loadCompanyProfile, type StoredCompanyProfile } from "./company-profile";
 import { loadResearchNote, switcherContextLabel, type StoredResearchNote } from "./research-note";
@@ -690,6 +692,25 @@ function StoryMap({ compact = false }: { compact?: boolean }) {
   );
 }
 
+type ExampleStats = { observability: { label: string; value: string }[]; defense: { label: string; value: string }[] };
+const exampleDefense = (checks: number, blocked: number) => [
+  { label: "Inspections", value: String(checks) }, { label: "Blocked", value: String(blocked) }, { label: "Errors", value: "0" }, { label: "Event IDs", value: String(checks) },
+];
+const ILLUSTRATIVE_STATS: Record<string, ExampleStats> = {
+  "kyc-processing": {
+    observability: [{ label: "LLM calls", value: "6" }, { label: "Tool calls", value: "9" }, { label: "Input tokens", value: "14.2k" }, { label: "Output tokens", value: "1.8k" }, { label: "Latency", value: "18 s" }],
+    defense: exampleDefense(4, 0),
+  },
+  "sar-support": {
+    observability: [{ label: "LLM calls", value: "8" }, { label: "Tool calls", value: "12" }, { label: "Input tokens", value: "21.5k" }, { label: "Output tokens", value: "3.1k" }, { label: "Latency", value: "26 s" }],
+    defense: exampleDefense(6, 1),
+  },
+  "transaction-llm": {
+    observability: [{ label: "LLM calls", value: "3" }, { label: "Tool calls", value: "4" }, { label: "Input tokens", value: "5.6k" }, { label: "Output tokens", value: "620" }, { label: "Latency", value: "7 s" }],
+    defense: exampleDefense(2, 0),
+  },
+};
+
 function UseCaseWorkspace({
   useCase,
   inStory,
@@ -874,7 +895,7 @@ function UseCaseWorkspace({
           <div className="workbench-heading">
             <span className="workbench-icon"><BrainCircuit size={19} /></span>
             <div><span className="eyebrow">AI-ASSISTED REVIEW</span><h2>{frame.workbenchLabel}</h2></div>
-            <span className="trace-chip"><Activity size={12} /> Trace active</span>
+            <span className="trace-chip"><Activity size={12} /> Example trace</span>
           </div>
           <div className="workbench-body">
             <span className="workbench-kicker">SELECTED ITEM</span>
@@ -888,6 +909,8 @@ function UseCaseWorkspace({
           <div className="workbench-actions"><button className="secondary-button" onClick={() => selectTab("architecture", { reveal: true })}><Network size={15} /> View evidence in the architecture</button></div>
         </aside>
       </div>
+
+      <IllustrativeRunStats {...(ILLUSTRATIVE_STATS[useCase.id] ?? ILLUSTRATIVE_STATS["transaction-llm"])} />
 
       </> : null}
       </div>
@@ -1018,8 +1041,11 @@ export default function HomePage() {
     return [...pages, ...cases].filter((item) => `${item.title} ${item.detail} ${"text" in item ? item.text : ""}`.toLowerCase().includes(normalized)).slice(0, 8);
   }, [launcherQuery, switchView, openUseCase]);
   const closeLauncher = () => { setLauncherOpen(false); setLauncherQuery(""); };
+  const links = status?.links ?? null;
+  const studioNav = useMemo(() => ({ openSettings, links }), [openSettings, links]);
 
   return (
+    <StudioNavContext.Provider value={studioNav}>
     <div className={`app-shell${collapsed ? " sidebar-collapsed" : ""}${presenting !== null ? " presenting" : ""}`}>
       <header className="topbar">
         <div className="brand-lockup">
@@ -1320,5 +1346,6 @@ export default function HomePage() {
       )}
 
     </div>
+    </StudioNavContext.Provider>
   );
 }

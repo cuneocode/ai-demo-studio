@@ -34,6 +34,7 @@ import {
   type IssuerCandidate,
   type StoredCompanyProfile,
 } from "./company-profile";
+import RunStats, { defenseFacts, defenseFrom, defenseIntegration, DEFENSE_TILES, traceFacts, usageFrom, startRun, useRunLedger, type ObservedRun, type StatsCard } from "./RunStats";
 import "./briefing.css";
 
 type CompanyBriefingProps = {
@@ -99,14 +100,17 @@ export default function CompanyBriefing({
   const [error, setError] = useState("");
   const [candidates, setCandidates] = useState<IssuerCandidate[] | null>(null);
   const [draft, setDraft] = useState<CompanyBriefingRecord | null>(null);
+  const [service, setService] = useState<ServiceHealth | null>(null);
+  const ledger = useRunLedger();
+  const stats = useMemo(() => briefingStats(service), [service]);
   const lastRequest = useRef<{ query?: string; cik?: string; file?: File | null }>({});
   const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch("/api/briefing/health", { signal: AbortSignal.timeout(10000) })
       .then((response) => response.ok ? response.json() : Promise.reject(new Error("Health check unavailable")))
-      .then((body) => setHealth(normalizeHealth(body)))
-      .catch(() => setHealth({ ready: false, perimeter: "EDGAR + upload only", detail: "Briefing service unavailable" }));
+      .then((body) => { setHealth(normalizeHealth(body)); setService({ reachable: true, security: body?.security, splunk: body?.splunk?.status }); })
+      .catch(() => { setHealth({ ready: false, perimeter: "EDGAR + upload only", detail: "Briefing service unavailable" }); setService({ reachable: false }); });
   }, []);
 
   const displayed = draft || accepted?.briefing || null;
@@ -158,6 +162,9 @@ export default function CompanyBriefing({
     setError("");
     setCandidates(null);
     lastRequest.current = { query: options.query, cik: options.cik, file: options.file };
+    const run = startRun("briefing", `${options.query || options.file?.name || `CIK ${options.cik}`}${options.refresh ? " · refresh" : ""}`);
+    ledger.record(run);
+    let settled = false;
     try {
       const body = new FormData();
       if (options.query) body.append("query", options.query);
@@ -177,16 +184,22 @@ export default function CompanyBriefing({
       if (!response.ok) {
         const parsed = parseApiError(text, response.status);
         if (parsed.candidates.length > 1) {
+          ledger.discard(run.id);
           setCandidates(parsed.candidates);
           setError("Multiple issuers match that name. Pick one to continue.");
           return;
         }
+        ledger.record(observeBriefing(run, response.status, payload));
+        settled = true;
         throw new Error(parsed.message);
       }
+      ledger.record(observeBriefing(run, response.status, payload));
+      settled = true;
       const briefing = normalizeAnalyzeResponse(payload, { query: options.query, filename: options.file?.name });
       if (!briefing) throw new Error("The briefing service returned an empty extract.");
       setDraft(briefing);
     } catch (cause) {
+      if (!settled) ledger.record({ ...run, status: "failed" });
       setError(cause instanceof DOMException && cause.name === "TimeoutError"
         ? "The extract timed out. Try again or upload the filing."
         : cause instanceof SyntaxError
@@ -493,7 +506,66 @@ export default function CompanyBriefing({
           </>
         )}
       </div>
+      <RunStats ledger={ledger} {...stats} empty="Extract a company. The Deep Agent's model calls, tools, and AI Defense verdicts land here." />
       {embedded && inStory && <div className="briefing-story"><span>STORY MODE</span> Company context stays local until the presenter accepts it. Other demos are unchanged.</div>}
     </div>
   );
+}
+
+type ServiceHealth = { reachable: boolean; security?: { status?: string; mode?: string; fail_open?: boolean }; splunk?: string };
+
+const list = (value: unknown) => (Array.isArray(value) ? value.length : undefined);
+
+/** One analyze call from the raw response. A cached replay ran no model and no inspection, so it reports none. */
+function observeBriefing(run: ObservedRun, status: number, payload: unknown): ObservedRun {
+  const body = (payload && typeof payload === "object" ? payload : {}) as Record<string, unknown>;
+  const trail = (body.trail && typeof body.trail === "object" ? body.trail : {}) as Record<string, unknown>;
+  const splunk = ((body.telemetry as { splunk?: Record<string, unknown> } | undefined)?.splunk ?? {}) as { status?: string; trace_id?: string; span_count?: number };
+  const cached = body.cached === true;
+  const defense = defenseFrom(body.security);
+  return {
+    ...run,
+    status: cached ? "cached" : status < 300 ? "completed" : status === 403 ? "blocked" : "failed",
+    durationMs: typeof body.duration_ms === "number" ? body.duration_ms : undefined,
+    ...usageFrom(body.usage),
+    // A replay's trail belongs to the original run; nothing was called or read this time.
+    toolCalls: cached ? 0 : list(trail.tools),
+    counts: { nodes: cached ? 0 : list(trail.nodes_read) },
+    otlp: splunk.status,
+    traceId: splunk.trace_id,
+    spans: splunk.span_count,
+    defense: cached ? { mode: defense?.mode, status: "cached_replay", checks: 0, blocked: 0, errors: 0, eventIds: [] } : defense,
+    note: cached ? "Cached replay · no model calls, inspections, or export" : undefined,
+  };
+}
+
+function briefingStats(service: ServiceHealth | null): { observability: StatsCard; defense: StatsCard } {
+  const reachable = service?.reachable !== false;
+  const otlp = service?.splunk === "configured";
+  return {
+    observability: {
+      integration: !reachable
+        ? { state: "unknown", summary: "Service not reachable", notice: "The briefing service is not answering." }
+        : otlp
+          ? { state: "on", summary: "OTLP spans to Splunk Observability Cloud · Agent Observability SDK not wired in yet" }
+          : { state: "not_instrumented", summary: "Agent Observability SDK not wired into this service yet",
+              notice: "No traces leave this service: optional OTLP export is not configured. The figures below are measured by the briefing service.", settings: "st-splunk-otel" },
+      tiles: [
+        { label: "LLM calls", value: (run) => run.llmCalls },
+        { label: "Tool calls", value: (run) => run.toolCalls },
+        { label: "Nodes read", value: (run) => run.counts?.nodes, hint: "Filing sections the Deep Agent opened" },
+        { label: "Tokens in", value: (run) => run.inputTokens, format: "tokens" },
+        { label: "Tokens out", value: (run) => run.outputTokens, format: "tokens" },
+        { label: "Latency", value: (run) => run.durationMs, format: "ms", total: "avg", hint: "Measured by the briefing service" },
+      ],
+      facts: traceFacts,
+      source: "From each /api/briefing/analyze response: model calls and tokens are counted at the model client, tools and nodes from the agent's trail.",
+    },
+    defense: {
+      integration: defenseIntegration(service?.security, "filing text, model input, and the briefing", reachable),
+      tiles: DEFENSE_TILES,
+      facts: defenseFacts,
+      source: "From the security summary on each analyze response.",
+    },
+  };
 }

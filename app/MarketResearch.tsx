@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   Activity,
   Check,
@@ -31,6 +31,9 @@ import {
   type StoredResearchNote,
   type WealthHealth,
 } from "./research-note";
+import RunStats, { startRun, useRunLedger } from "./RunStats";
+import { useStudioNav } from "./studio-nav";
+import { observeWealth, wealthService, wealthStats, type WealthService } from "./wealth-stats";
 import "./research.css";
 
 type Props = {
@@ -46,6 +49,10 @@ function defenseLabel(health?: WealthHealth | null, analyze?: ResearchAnalyze | 
   const mode = current?.mode || health?.security?.mode;
   if (mode === "off" || current?.status === "disabled") return "Disabled";
   return current?.verdict || current?.status || "Not reported";
+}
+
+function parsed(text: string): unknown {
+  try { return text ? JSON.parse(text) : {}; } catch { return {}; }
 }
 
 function cacheAge(analyze?: ResearchAnalyze | null) {
@@ -73,6 +80,10 @@ export default function MarketResearch({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [draft, setDraft] = useState<ResearchAnalyze | null>(null);
+  const [service, setService] = useState<WealthService | null>(null);
+  const ledger = useRunLedger();
+  const { links } = useStudioNav();
+  const stats = useMemo(() => wealthStats(service, "/api/wealth/research/analyze", links?.agentObservability), [service, links?.agentObservability]);
   const [tickerSyncKey, setTickerSyncKey] = useState(`${profileTicker}|idle`);
   const nextTickerSyncKey = `${profileTicker}|${draft ? "draft" : "idle"}`;
   if (nextTickerSyncKey !== tickerSyncKey) {
@@ -83,8 +94,8 @@ export default function MarketResearch({
   useEffect(() => {
     fetch("/api/wealth/health", { signal: AbortSignal.timeout(10000) })
       .then((response) => response.ok ? response.json() : Promise.reject(new Error("Health check unavailable")))
-      .then((body) => setHealth(normalizeWealthHealth(body)))
-      .catch(() => setHealth({ ready: false, perimeter: "Yahoo + FRED allowlist only", detail: "Wealth service unavailable", nim: { status: "down" } }));
+      .then((body) => { setHealth(normalizeWealthHealth(body)); setService(wealthService(body)); })
+      .catch(() => { setHealth({ ready: false, perimeter: "Yahoo + FRED allowlist only", detail: "Wealth service unavailable", nim: { status: "down" } }); setService({ reachable: false }); });
   }, []);
 
   const displayed = draft || accepted?.analyze || null;
@@ -100,6 +111,9 @@ export default function MarketResearch({
     if (preset) setTicker(symbol);
     setLoading(true);
     setError("");
+    const run = startRun("research", `${symbol} research${refresh ? " · refresh" : ""}`);
+    ledger.record(run);
+    let settled = false;
     try {
       const response = await fetch("/api/wealth/research/analyze", {
         method: "POST",
@@ -108,11 +122,14 @@ export default function MarketResearch({
         signal: AbortSignal.timeout(180000),
       });
       const text = await response.text();
+      ledger.record(observeWealth(run, response.status, parsed(text)));
+      settled = true;
       if (!response.ok) throw new Error(parseApiError(text, response.status));
       const next = normalizeAnalyze(text ? JSON.parse(text) : {}, symbol);
       if (!next) throw new Error("The research service returned an empty snapshot.");
       setDraft(next);
     } catch (cause) {
+      if (!settled) ledger.record({ ...run, status: "failed" });
       setError(cause instanceof DOMException && cause.name === "TimeoutError"
         ? "Analyze timed out. Try again or use cache if a snapshot already exists."
         : cause instanceof Error ? cause.message : "Analyze failed. Try again.");
@@ -327,6 +344,7 @@ export default function MarketResearch({
           </>
         )}
       </div>
+      <RunStats ledger={ledger} {...stats} empty="Analyze a ticker. The note's model calls and AI Defense verdicts land here." />
       {embedded && inStory && <div className="research-story"><span>STORY MODE</span> Research notes stay local until you accept them. Clearing the company profile does not wipe this note.</div>}
     </div>
   );

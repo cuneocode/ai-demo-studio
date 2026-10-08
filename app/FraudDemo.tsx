@@ -19,6 +19,7 @@ import {
 import "./banking.css";
 import "./fraud.css";
 import FraudRuntimeDetails, { type FraudHealth } from "./FraudRuntimeDetails";
+import RunStats, { defenseFacts, defenseFrom, defenseIntegration, DEFENSE_TILES, usageFrom, startRun, useRunLedger, type Integration, type ObservedRun, type StatsCard } from "./RunStats";
 
 type CaseItem = {
   id: string;
@@ -38,7 +39,8 @@ type ScoreResult = {
   decision: "clear" | "review" | "hold";
   shap: ShapItem[];
   backend: string;
-  narrative?: { status: string; text?: string | null; security?: { status?: string } };
+  narrative?: { status: string; text?: string | null; security?: { status?: string }; usage?: unknown };
+  security?: unknown;
   duration_ms?: number;
 };
 type FraudDemoProps = { onBack: () => void; onAdd: () => void; inStory: boolean; embedded?: boolean };
@@ -62,6 +64,8 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
   const [score, setScore] = useState<ScoreResult | null>(null);
   const [includeNarrative, setIncludeNarrative] = useState(true);
   const [showSystem, setShowSystem] = useState(false);
+  const ledger = useRunLedger();
+  const stats = useMemo(() => fraudStats(health, healthFailed), [health, healthFailed]);
 
   useEffect(() => {
     fetch("/api/fraud/health", { signal: AbortSignal.timeout(10000) })
@@ -86,6 +90,8 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
     if (!selected || loading) return;
     setLoading(true);
     setError("");
+    const run = startRun("score", `${selected.label} · ${includeNarrative ? "score + narrative" : "score only"}`);
+    ledger.record(run);
     try {
       const response = await fetch("/api/fraud/score", {
         method: "POST",
@@ -97,8 +103,11 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
         const body = await response.json().catch(() => ({}));
         throw new Error(body.detail || `Scoring failed (${response.status}).`);
       }
-      setScore(await response.json());
+      const result = await response.json() as ScoreResult;
+      ledger.record(observeScore(run, result));
+      setScore(result);
     } catch (cause) {
+      ledger.record({ ...run, status: "failed", note: "No score was returned" });
       setError(cause instanceof DOMException && cause.name === "TimeoutError"
         ? "Scoring timed out. Try again."
         : cause instanceof Error ? cause.message : "Scoring failed. Try again.");
@@ -253,7 +262,50 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
           </div>
         </aside>
       </section>
+      <RunStats ledger={ledger} {...stats} empty="Score a case. The narrative's model call and its AI Defense inspection land here." />
       {!embedded && inStory && <div className="story-context"><span>STORY MODE</span> This slice shows graph scoring before investigation or SAR drafting.</div>}
     </div>
   );
+}
+
+/** A score response as the fraud service reported it: the score itself never touches an LLM or AI Defense. */
+function observeScore(run: ObservedRun, result: ScoreResult): ObservedRun {
+  const narrativeOff = result.narrative?.status === "disabled";
+  return {
+    ...run,
+    status: "completed",
+    durationMs: result.duration_ms,
+    ...(narrativeOff ? { llmCalls: 0, inputTokens: 0, outputTokens: 0 } : usageFrom(result.narrative?.usage)),
+    defense: defenseFrom(result.security ?? result.narrative?.security),
+    note: narrativeOff ? "Narrative off · nothing for AI Defense to inspect" : undefined,
+  };
+}
+
+function withNarrativeNotice(integration: Integration, health: FraudHealth | null): Integration {
+  if (integration.state !== "on" || !health?.narrative?.status || health.narrative.status === "configured") return integration;
+  return { ...integration, notice: "No narrative model is configured, so this service has nothing for AI Defense to inspect." };
+}
+
+function fraudStats(health: FraudHealth | null, failed: boolean): { observability: StatsCard; defense: StatsCard } {
+  return {
+    observability: {
+      integration: failed
+        ? { state: "unknown", summary: "Service not reachable", notice: "The fraud service is not answering." }
+        : { state: "not_instrumented", summary: "Scoring is GraphSAGE + XGBoost, not an agent",
+            notice: "The fraud service sends no traces to Splunk Agent Observability. These figures are measured by the service itself." },
+      tiles: [
+        { label: "Latency", value: (run) => run.durationMs, format: "ms", total: "avg", hint: "Score, SHAP, and narrative, measured by the fraud service" },
+        { label: "LLM calls", value: (run) => run.llmCalls, hint: "Narrative model calls; scoring makes none" },
+        { label: "Tokens in", value: (run) => run.inputTokens, format: "tokens" },
+        { label: "Tokens out", value: (run) => run.outputTokens, format: "tokens" },
+      ],
+      source: "From each /api/fraud/score response. Tokens are what the narrative model's provider reported.",
+    },
+    defense: {
+      integration: withNarrativeNotice(defenseIntegration(health?.security, "narrative only; the score is never inspected", !failed), health),
+      tiles: DEFENSE_TILES,
+      facts: defenseFacts,
+      source: "From the security summary on each score response: one inspection per narrative prompt and per narrative.",
+    },
+  };
 }

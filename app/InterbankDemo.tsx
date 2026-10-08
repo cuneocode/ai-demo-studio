@@ -2,7 +2,6 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
-  ArrowUpRight,
   CircleAlert,
   CodeXml,
   Landmark,
@@ -15,6 +14,7 @@ import {
 } from "lucide-react";
 import { SourceInspector } from "./map/inspector.tsx";
 import { interbankEvidence } from "./map/interbank-evidence.ts";
+import RunStats, { defenseFacts, useRunLedger, type Integration, type ObservedRun, type StatsCard } from "./RunStats";
 import "./banking.css";
 import "./interbank.css";
 
@@ -88,7 +88,13 @@ function viewerFor(keys: string[]): Viewer | null {
 }
 
 function EvidencePanel({ viewer, onSelect, onClose }: { viewer: Viewer; onSelect: (id: string) => void; onClose: () => void }) {
-  const [width, setWidth] = useState(620);
+  const [width, setWidth] = useState(() => Math.min(960, Math.round(window.innerWidth * 0.7)));
+  const [viewport, setViewport] = useState(() => window.innerWidth);
+  useEffect(() => {
+    const onResize = () => setViewport(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
@@ -102,7 +108,8 @@ function EvidencePanel({ viewer, onSelect, onClose }: { viewer: Viewer; onSelect
         sourceIds={viewer.ids}
         labels={Object.fromEntries(viewer.ids.map((id) => [id, evidenceLabel(id)]))}
         attribution={{ subject: viewer.title, platforms: [], mechanism: item ? `${item.symbol} in ${item.file}` : "", effect: item?.proves ?? "" }}
-        width={width}
+        width={Math.min(width, viewport - 40)}
+        maxWidth={viewport - 40}
         drawer={false}
         onWidth={setWidth}
         onSelect={onSelect}
@@ -162,6 +169,7 @@ function toLine(event: LabEvent): Line | null {
       if (tool === "query_settlement_records") return line("ROWS", body.startsWith("Rejected") ? "warn" : "result", rowsLabel(body), ["records"], { hidden: body });
       return line("RESULT", "result", `${tool} returned`, ["deep-agent-builder"], { hidden: body });
     case "db.query":
+    case "llm.call":
       return null;
     case "control": {
       const controls = (data.controls ?? []) as { control: string; matched: boolean }[];
@@ -328,6 +336,105 @@ function Wire({ lines, run, expanded, toggle, onSource }: { lines: Line[]; run: 
   );
 }
 
+const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
+const AGENT_KINDS = new Set(["agent.thinking", "agent.tool_call", "agent.message"]);
+
+/** Everything here is counted from the run's own events, as far as they have been shown. */
+function observeRun(run: Run, visible: LabEvent[], replaying: boolean, traceId: string | undefined, runtime: Runtime | null): ObservedRun {
+  const of = (kind: string) => visible.filter((event) => event.kind === kind);
+  const llm = of("llm.call");
+  const running = replaying || run.status === "running";
+  // Lab builds before llm.call events existed still show agent activity; their model calls are unknown, not zero.
+  const agentsRan = visible.some((event) => AGENT_KINDS.has(event.kind));
+  const llmCalls = llm.length ? llm.length : agentsRan || running ? undefined : 0;
+  const tokens = (key: string) => {
+    if (llmCalls === 0) return 0;
+    const values = llm.map((event) => event.data?.[key]).filter(isNumber);
+    return values.length ? values.reduce((a, b) => a + b, 0) : undefined;
+  };
+  const guardrails = of("guardrail");
+  const blocked = guardrails.filter((event) => event.status === "denied").length;
+  const errors = guardrails.filter((event) => event.status !== "allowed" && event.status !== "denied").length;
+  const checks = guardrails.length - errors;
+  const eventIds = [...new Set(guardrails.map((event) => event.data?.event_id).filter((id): id is string => typeof id === "string" && Boolean(id)))];
+  const controls = of("control");
+  const started = Date.parse(run.started_at);
+  const finished = run.finished_at ? Date.parse(run.finished_at) : NaN;
+  return {
+    id: run.id,
+    label: run.prompt,
+    status: running ? "running" : run.status,
+    replay: replaying,
+    startedAt: started,
+    durationMs: !running && Number.isFinite(finished) ? finished - started : undefined,
+    traceId,
+    llmCalls,
+    inputTokens: tokens("input_tokens"),
+    outputTokens: tokens("output_tokens"),
+    toolCalls: of("agent.tool_call").length,
+    counts: {
+      a2a: of("a2a.send").length,
+      sql: of("db.query").length,
+      controls: controls.length,
+      controlsDenied: controls.filter((event) => event.status === "denied").length,
+      thoughts: of("agent.thinking").length,
+    },
+    defense: {
+      mode: runtime?.ai_defense.mode,
+      status: running ? undefined : errors ? "inspection_unavailable" : blocked ? "blocked" : checks ? "allowed" : "not_checked",
+      checks, blocked, errors, eventIds,
+    },
+  };
+}
+
+function interbankStats(labUp: boolean | null, runtime: Runtime | null): { observability: StatsCard; defense: StatsCard } {
+  const offline: Integration | null = labUp === false
+    ? { state: "unknown", summary: "Lab offline", notice: "The interbank lab is not running. Start it with npm run interbank:up, then reload." }
+    : !runtime ? { state: "unknown", summary: "Checking the lab…" } : null;
+  const ao: Integration = offline ?? (runtime!.observability.project
+    ? { state: "on", summary: `Project ${runtime!.observability.project} · stream ${runtime!.observability.agent_stream}`,
+        link: runtime!.observability.console_url ? { label: "Open Splunk Agent Observability", href: runtime!.observability.console_url } : undefined }
+    : { state: "missing", summary: "Not configured", notice: "The lab has no Splunk Agent Observability project. Add the API key in Studio settings.", settings: "st-splunk-ao" });
+  const mode = runtime?.ai_defense.mode ?? "";
+  const defense: Integration = offline ?? (/^off\b/i.test(mode)
+    ? { state: "off", summary: "Off", notice: "AI Defense is off at the gateways. Enable it in Studio settings.", settings: "st-ai-defense" }
+    : { state: "on", summary: `${mode.charAt(0).toUpperCase()}${mode.slice(1)}${runtime!.ai_defense.region ? ` · ${runtime!.ai_defense.region}` : ""} · every gateway hop` });
+  return {
+    observability: {
+      integration: ao,
+      tiles: [
+        { label: "LLM calls", value: (run) => run.llmCalls },
+        { label: "Tool calls", value: (run) => run.toolCalls },
+        { label: "Tokens in", value: (run) => run.inputTokens, format: "tokens" },
+        { label: "Tokens out", value: (run) => run.outputTokens, format: "tokens" },
+        { label: "A2A sends", value: (run) => run.counts?.a2a },
+        { label: "SQL queries", value: (run) => run.counts?.sql },
+        { label: "Controls", value: (run) => run.counts?.controls, hint: "Agent Control evaluations" },
+        { label: "Denials", value: (run) => run.counts?.controlsDenied, alert: "deny", hint: "Agent Control denials" },
+        { label: "Reasoning", value: (run) => run.counts?.thoughts, hint: "Reasoning summaries" },
+        { label: "Latency", value: (run) => run.durationMs, format: "ms", total: "avg" },
+      ],
+      facts: (run) => [
+        { label: "Session", value: run?.id, mono: true },
+        { label: "Trace", value: run?.traceId, mono: true },
+      ],
+      source: "Counted from this run's events. One trace covers the Ops desk, both gateways, every AI Defense hop, both Deep Agents, and each control; the session is the run ID.",
+      footer: (run) => run && <span>Verify from a terminal: <code>npm run interbank:verify -- {run.id}{run.status === "blocked" ? " blocked" : ""}</code></span>,
+    },
+    defense: {
+      integration: defense,
+      tiles: [
+        { label: "Inspections", value: (run) => run.defense?.checks, hint: "Gateway inspections that returned a verdict" },
+        { label: "Blocked", value: (run) => run.defense?.blocked, alert: "deny" },
+        { label: "Errors", value: (run) => run.defense?.errors, alert: "warn", hint: "Inspections that failed closed without a verdict" },
+        { label: "Event IDs", value: (run) => run.defense?.eventIds?.length },
+      ],
+      facts: defenseFacts,
+      source: "Counted from the ExtProc verdicts both banks' gateways emitted for this run.",
+    },
+  };
+}
+
 export default function InterbankDemo({ embedded = false }: InterbankDemoProps) {
   const [labUp, setLabUp] = useState<boolean | null>(null);
   const [runtime, setRuntime] = useState<Runtime | null>(null);
@@ -429,16 +536,13 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
   const replaying = shown !== null && shown < events.length;
   const effectiveRun = run && replaying ? { ...run, status: "running" as const } : run;
   const lastAgentLane = [...visible].reverse().map(laneOf).find((lane) => lane !== "wire");
-  const counts = useMemo(() => ({
-    inspections: visible.filter((e) => e.kind === "guardrail").length,
-    blocked: visible.filter((e) => e.kind === "guardrail" && e.status !== "allowed").length + visible.filter((e) => e.kind === "control" && e.status === "denied").length,
-    controls: visible.filter((e) => e.kind === "control").length,
-    hops: visible.filter((e) => e.kind === "a2a.send").length,
-    queries: visible.filter((e) => e.kind === "db.query").length,
-    thoughts: visible.filter((e) => e.kind === "agent.thinking").length,
-  }), [visible]);
   const traceId = run?.trace_id ?? visible.find((e) => e.trace_id)?.trace_id;
   const done = effectiveRun && effectiveRun.status !== "running";
+  const ledger = useRunLedger();
+  const { record } = ledger;
+  const observed = useMemo(() => (run ? observeRun(run, visible, replaying, traceId, runtime) : null), [run, visible, replaying, traceId, runtime]);
+  useEffect(() => { if (observed) record(observed); }, [observed, record]);
+  const stats = useMemo(() => interbankStats(labUp, runtime), [labUp, runtime]);
 
   return (
     <div className={`banking-demo interbank-demo ${embedded ? "banking-embedded" : ""}`}>
@@ -492,26 +596,6 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
           </> : <p>{effectiveRun ? "The report appears when Bank A's agent replies to the Ops desk." : "Start or replay an investigation to see the joint report."}</p>}
         </div>
         <aside className="ib-side">
-          <div className="proof-card ib-trace">
-            <span className="review-kicker">SPLUNK AGENT OBSERVABILITY</span>
-            <dl className="fact-grid">
-              <div><dt>Session</dt><dd><code>{run?.id ?? "—"}</code></dd></div>
-              <div><dt>Trace</dt><dd><code>{traceId ?? "—"}</code></dd></div>
-              <div><dt>Project</dt><dd>{runtime?.observability.project ?? "—"}</dd></div>
-              <div><dt>Agent Stream</dt><dd>{runtime?.observability.agent_stream ?? "—"}</dd></div>
-            </dl>
-            <div className="ib-counts">
-              <span><strong>{counts.inspections}</strong> AI Defense inspections</span>
-              <span><strong>{counts.controls}</strong> Agent Control checks</span>
-              <span><strong>{counts.hops}</strong> A2A sends</span>
-              <span><strong>{counts.queries}</strong> SQL queries</span>
-              <span><strong>{counts.thoughts}</strong> reasoning summaries</span>
-              <span className={counts.blocked ? "deny" : ""}><strong>{counts.blocked}</strong> blocked</span>
-            </div>
-            <p>One trace covers the Ops desk, both gateways, every AI Defense hop, both Deep Agents, every LLM and tool call, and each control execution. The session is the run ID.</p>
-            {runtime?.observability.console_url && <a href={runtime.observability.console_url} target="_blank" rel="noreferrer">Open Splunk Agent Observability <ArrowUpRight size={14} /></a>}
-            {run && <small>Check the trace from a terminal: <code>npm run interbank:verify -- {run.id}{run.status === "blocked" ? " blocked" : ""}</code></small>}
-          </div>
           {runtime && <div className="proof-card ib-runtime">
             <span className="review-kicker">RUNTIME</span>
             <dl className="fact-grid">
@@ -526,6 +610,8 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
         </aside>
       </section>
 
+      <RunStats ledger={ledger} {...stats} empty="Start or replay an investigation. Counts fill in as each event arrives." />
+
       <section className="proof-card ib-integrations" aria-label="Integration points">
         <div className="ib-integrations-head">
           <span className="review-kicker"><SquareTerminal size={13} /> INTEGRATION POINTS · SOURCE AND CONFIGURATION</span>
@@ -534,9 +620,8 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
         <div className="ib-integration-grid">
           {INTEGRATION_POINTS.map((point) => (
             <article key={point.integration} className={`integration-${point.integration}`}>
-              <strong>{point.title}</strong>
-              <p>{point.detail}</p>
-              <div>{point.ids.map((id) => <button key={id} onClick={() => openSources([id])}><CodeXml size={13} /> {EVIDENCE[id]?.title ?? id}</button>)}</div>
+              <div className="ib-integration-copy"><strong>{point.title}</strong><p>{point.detail}</p></div>
+              <div className="ib-integration-sources">{point.ids.map((id) => <button key={id} onClick={() => openSources([id])}><CodeXml size={15} /> {EVIDENCE[id]?.title ?? id}</button>)}</div>
             </article>
           ))}
         </div>
