@@ -23,6 +23,7 @@ _DROP = ("llm.input_messages.", "llm.output_messages.", "llm.tools.", "input.", 
          "llm.token_count.", "llm.invocation_parameters")
 _MESSAGE = re.compile(r"^llm\.(input|output)_messages\.(\d+)\.message\.(.+)$")
 _TOOL_CALL = re.compile(r"^tool_calls\.(\d+)\.tool_call\.(.+)$")
+_CONTENT = re.compile(r"^contents\.(\d+)\.message_content\.(.+)$")
 
 
 def _json(value: Any) -> Any:
@@ -45,16 +46,21 @@ def _messages(attrs: dict[str, Any], direction: str) -> list[dict]:
         field = fields[index]
         role = str(field.get("role", "user" if direction == "input" else "assistant"))
         calls: dict[int, dict[str, Any]] = defaultdict(dict)
+        contents: dict[int, dict[str, Any]] = defaultdict(dict)
         for key, value in field.items():
-            match = _TOOL_CALL.match(key)
-            if match:
+            if match := _TOOL_CALL.match(key):
                 calls[int(match[1])][match[2]] = value
+            elif match := _CONTENT.match(key):
+                contents[int(match[1])][match[2]] = value
+        # Responses API messages carry text as content blocks, not a single string.
+        content = field.get("content") or "\n".join(
+            str(c["text"]) for c in (contents[i] for i in sorted(contents)) if c.get("text"))
         parts: list[dict[str, Any]] = []
         if role == "tool":
             parts.append({"type": "tool_call_response", "id": field.get("tool_call_id"),
-                          "response": field.get("content", "")})
-        elif field.get("content"):
-            parts.append({"type": "text", "content": field["content"]})
+                          "response": content})
+        elif content:
+            parts.append({"type": "text", "content": content})
         for call in (calls[i] for i in sorted(calls)):
             parts.append({"type": "tool_call", "id": call.get("id"),
                           "name": call.get("function.name"),
@@ -73,6 +79,9 @@ def _last_message_text(value: Any) -> str:
         if isinstance(last, dict):
             message = last.get("kwargs") or last
             content = message.get("content")
+            if isinstance(content, list):
+                content = "\n".join(str(b.get("text")) for b in content
+                                    if isinstance(b, dict) and b.get("type") == "text")
             if isinstance(content, str) and content:
                 return content
             calls = message.get("tool_calls") or []
@@ -82,6 +91,22 @@ def _last_message_text(value: Any) -> str:
     if payload in (None, "", {}, []):
         return ""
     return value if isinstance(value, str) else json.dumps(payload, default=str)
+
+
+def reasoning_summaries(content: Any) -> list[str]:
+    """Reasoning summary texts from a Responses API message's content blocks."""
+    blocks = content if isinstance(content, list) else []
+    return [s["text"] for b in blocks if isinstance(b, dict) and b.get("type") == "reasoning"
+            for s in b.get("summary") or [] if isinstance(s, dict) and s.get("text")]
+
+
+def _output_reasoning(attrs: dict[str, Any]) -> list[str]:
+    payload = _json(attrs.get("output.value"))
+    try:
+        message = payload["generations"][0][0]["message"]
+    except (KeyError, IndexError, TypeError):
+        return []
+    return reasoning_summaries((message.get("kwargs") or message).get("content"))
 
 
 def _text_messages(role: str, text: str) -> str:
@@ -101,6 +126,11 @@ def translate(span: ReadableSpan, agent_names: frozenset[str]) -> ReadableSpan:
             out["gen_ai.request.model"] = out["gen_ai.response.model"] = attrs["llm.model_name"]
         out["gen_ai.input.messages"] = json.dumps(_messages(attrs, "input"))
         output = _messages(attrs, "output")
+        reasoning = [{"type": "reasoning", "content": text} for text in _output_reasoning(attrs)]
+        if reasoning:
+            if not output:
+                output = [{"role": "assistant", "parts": []}]
+            output[0]["parts"] = reasoning + output[0]["parts"]
         for message in output:
             message["finish_reason"] = attrs.get("llm.finish_reason", "stop")
         out["gen_ai.output.messages"] = json.dumps(output)

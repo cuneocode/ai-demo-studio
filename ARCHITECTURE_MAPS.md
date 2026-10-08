@@ -22,6 +22,19 @@ relationships with responsive card grids or hide edges at small breakpoints.
   availability. The presenter accept-gate is required before studio context is
   stored. Fail-closed: unknown/ambiguous issuer, no annual report, empty PDF,
   inspection deny, ungrounded-only themes, or model/tool error.
+- Interbank settlement investigation's **Implemented system** is code-derived from
+  `services/interbank` (compose, gateway YAML, agents, policy, collector). Only the
+  two gateways cross between banks. Cisco AI Defense runs as an ExtProc on every
+  gateway listener (request and response, fail closed: 403 on violation, 503 when
+  inspection is unavailable). Splunk Agent Control evaluates each outbound A2A
+  message inside the agent before it reaches the gateway. Agents export spans with
+  `SplunkAOSpanProcessor`; gateways export through a per-bank collector; W3C
+  context crosses every hop, so one investigation is one trace and one session.
+  Agents are read-only and people approve remediation. **Trust & data preparation**
+  is offline (`labctl up`); the lab's certificates are self-signed for local use.
+  Nodes with `code` open the real file in the source viewer
+  (`services/interbank/demo/sources.py`). The map does not assert that OpenAI,
+  AI Defense, or Splunk are reachable.
 - The other architectures, and the **Proposed Cisco deployment** views, are design
   proposals. Brahe now has application-enforced AI Defense and conditional Splunk
   instrumentation/export; consult runtime health and per-request evidence rather
@@ -53,9 +66,10 @@ online. Keep conditional integrations clearly separate from running components.
 Run `node --test tests/architecture.test.mjs` (Node with TypeScript stripping),
 `npm run lint`, `npm run build`, `npm run banking:test`, and `npm run fraud:test`.
 
-Browser QA covers all eight use cases and all four proposed perspectives,
+Browser QA covers all nine use cases and all four proposed perspectives,
 implemented banking execution/retrieval, implemented fraud scoring/backends,
-implemented briefing agent execution/filing retrieval, readable node and edge labels, selection,
+implemented briefing agent execution/filing retrieval, implemented interbank
+agent-to-agent execution/trust preparation and its source viewer, readable node and edge labels, selection,
 pan/zoom, full-screen Escape/focus restoration, and narrow-view page overflow.
 Diagrams intentionally scroll at 100%; do not auto-fit text into illegibility.
 

@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from 'react';
-import { Maximize2, Minimize2, Minus, Plus, RotateCcw, ArrowUpRight, X } from 'lucide-react';
-import { bankingKnowledge, bankingRuntime, briefingKnowledge, briefingRuntime, capabilityDiagram, deploymentDiagram, fraudKnowledge, fraudRuntime, knowledgeDiagram, profiles, proposedRuntime, securityDiagram, sources, type Diagram, type DiagramEdge, type FrameMapping } from './architecture-model';
+import { Maximize2, Minimize2, Minus, Plus, RotateCcw, ArrowUpRight, CodeXml, X } from 'lucide-react';
+import { bankingKnowledge, bankingRuntime, briefingKnowledge, briefingRuntime, capabilityDiagram, deploymentDiagram, fraudKnowledge, fraudRuntime, interbankKnowledge, interbankRuntime, knowledgeDiagram, profiles, proposedRuntime, securityDiagram, sources, type Diagram, type DiagramEdge, type FrameMapping, type NodeSide } from './architecture-model';
+import SourceViewer, { useSourceCatalog } from './SourceViewer';
 import './architecture.css';
 
 const NODE_W=240, NODE_H=128;
 type Lens='execution'|'knowledge'|'security'|'deployment';
+function sidePoint(node:{x:number;y:number},side:NodeSide):[number,number] {
+ return side==='top'?[node.x+NODE_W/2,node.y]:side==='bottom'?[node.x+NODE_W/2,node.y+NODE_H]:side==='left'?[node.x,node.y+NODE_H/2]:[node.x+NODE_W,node.y+NODE_H/2];
+}
 // Explicit ports and waypoints preserve topology at every viewport size. Never
 // hide edges at breakpoints or turn this canvas into a grid of unrelated cards.
 export function edgeGeometry(edge:DiagramEdge, graph:Diagram) {
@@ -15,6 +19,7 @@ export function edgeGeometry(edge:DiagramEdge, graph:Diagram) {
  if(edge.ports==='down'){start=[a.x+NODE_W/2,a.y+NODE_H];end=[b.x+NODE_W/2,b.y];}
  if(edge.ports==='up'){start=[a.x+NODE_W/2,a.y];end=[b.x+NODE_W/2,b.y+NODE_H];}
  if(edge.ports==='left'){start=[a.x,a.y+NODE_H/2];end=[b.x+NODE_W,b.y+NODE_H/2];}
+ if(edge.anchors){start=sidePoint(a,edge.anchors[0]);end=sidePoint(b,edge.anchors[1]);}
  const points=[start,...(edge.via||[]),end];
  const label=edge.labelAt||[(start[0]+end[0])/2,(start[1]+end[1])/2] as [number,number];
  const labelWidth=!edge.labelAt&&!edge.via&&start[1]===end[1]?Math.max(64,Math.abs(end[0]-start[0])-12):undefined;
@@ -24,20 +29,22 @@ export function edgeGeometry(edge:DiagramEdge, graph:Diagram) {
 export default function ArchitectureMap({caseId,title,frame}:{caseId:string;title:string;frame:FrameMapping}) {
  const [view,setView]=useState<'capability'|'architecture'>('capability');
  const [lens,setLens]=useState<Lens>('execution');
- const liveImplemented=caseId==='brahe-bank'||caseId==='fraud-modeling'||caseId==='company-briefing';
+ const liveImplemented=caseId==='brahe-bank'||caseId==='fraud-modeling'||caseId==='company-briefing'||caseId==='interbank-a2a';
  const [system,setSystem]=useState<'running'|'proposed'>(liveImplemented?'running':'proposed');
  const [zoom,setZoom]=useState(1);
  const [expanded,setExpanded]=useState(false);
  const [selection,setSelection]=useState<string|null>(null);
  const [step,setStep]=useState(0);
+ const [viewer,setViewer]=useState<{ids:string[];initial:number}|null>(null);
+ const catalog=useSourceCatalog(caseId==='interbank-a2a');
  const scroll=useRef<HTMLDivElement>(null);
  const expandButton=useRef<HTMLButtonElement>(null);
  const panel=useRef<HTMLElement>(null);
  const drag=useRef<{x:number;y:number;left:number;top:number}|null>(null);
  const prefix=useId().replaceAll(':','');
- const runningGraph=caseId==='fraud-modeling'?(lens==='knowledge'?fraudKnowledge():fraudRuntime()):caseId==='company-briefing'?(lens==='knowledge'?briefingKnowledge():briefingRuntime()):(lens==='knowledge'?bankingKnowledge():bankingRuntime());
+ const runningGraph=caseId==='interbank-a2a'?(lens==='knowledge'?interbankKnowledge():interbankRuntime()):caseId==='fraud-modeling'?(lens==='knowledge'?fraudKnowledge():fraudRuntime()):caseId==='company-briefing'?(lens==='knowledge'?briefingKnowledge():briefingRuntime()):(lens==='knowledge'?bankingKnowledge():bankingRuntime());
  const graph:Diagram=view==='capability'?capabilityDiagram(frame,step,caseId):system==='running'?runningGraph:lens==='knowledge'?knowledgeDiagram(caseId):lens==='security'?securityDiagram(caseId):lens==='deployment'?deploymentDiagram(caseId):proposedRuntime(caseId);
- const liveCapability=view==='capability'&&(caseId==='fraud-modeling'||caseId==='company-briefing');
+ const liveCapability=view==='capability'&&(caseId==='fraud-modeling'||caseId==='company-briefing'||caseId==='interbank-a2a');
  const liveDeepDive=view==='architecture'&&system==='running';
  const selected=graph.nodes.find(n=>n.id===selection);
  const connected=new Set(selection?[selection,...graph.edges.filter(e=>e.from===selection||e.to===selection).flatMap(e=>[e.from,e.to])]:[]);
@@ -73,9 +80,10 @@ export default function ArchitectureMap({caseId,title,frame}:{caseId:string;titl
      {system==='running'&&caseId==='brahe-bank'&&<div className="map-lenses" role="group" aria-label="Implemented perspective"><button className={lens==='execution'?'active':''} aria-pressed={lens==='execution'} onClick={()=>{setLens('execution');reset();}}>Agent execution</button><button className={lens==='knowledge'?'active':''} aria-pressed={lens==='knowledge'} onClick={()=>{setLens('knowledge');reset();}}>Retrieval alternatives</button></div>}
      {system==='running'&&caseId==='fraud-modeling'&&<div className="map-lenses" role="group" aria-label="Implemented perspective"><button className={lens==='execution'?'active':''} aria-pressed={lens==='execution'} onClick={()=>{setLens('execution');reset();}}>Scoring execution</button><button className={lens==='knowledge'?'active':''} aria-pressed={lens==='knowledge'} onClick={()=>{setLens('knowledge');reset();}}>Scoring backends</button></div>}
      {system==='running'&&caseId==='company-briefing'&&<div className="map-lenses" role="group" aria-label="Implemented perspective"><button className={lens==='execution'?'active':''} aria-pressed={lens==='execution'} onClick={()=>{setLens('execution');reset();}}>Agent execution</button><button className={lens==='knowledge'?'active':''} aria-pressed={lens==='knowledge'} onClick={()=>{setLens('knowledge');reset();}}>Filing retrieval</button></div>}
+     {system==='running'&&caseId==='interbank-a2a'&&<div className="map-lenses" role="group" aria-label="Implemented perspective"><button className={lens==='execution'?'active':''} aria-pressed={lens==='execution'} onClick={()=>{setLens('execution');reset();}}>Agent-to-agent execution</button><button className={lens==='knowledge'?'active':''} aria-pressed={lens==='knowledge'} onClick={()=>{setLens('knowledge');reset();}}>Trust & data preparation</button></div>}
      {system==='proposed'&&<div className="map-lenses" role="group" aria-label="Architecture perspective">{(['execution','knowledge','security','deployment'] as Lens[]).map(l=><button key={l} aria-pressed={lens===l} className={lens===l?'active':''} onClick={()=>{setLens(l);reset();}}>{{execution:'Execution',knowledge:'Knowledge & data',security:'Security & telemetry',deployment:'Deployment'}[l]}</button>)}</div>}
    </div>}
-   <div className="map-context"><span className={`map-status ${liveDeepDive||liveCapability?'implemented':''}`}>{liveDeepDive?'Code-verified topology':liveCapability?(caseId==='fraud-modeling'?'Live score path':'Live briefing path'):'Proposed design'}</span><h3>{graph.title}</h3><p>{graph.note}</p></div>
+   <div className="map-context"><span className={`map-status ${liveDeepDive||liveCapability?'implemented':''}`}>{liveDeepDive?'Code-verified topology':liveCapability?(({'fraud-modeling':'Live score path','interbank-a2a':'Live A2A path'} as Record<string,string>)[caseId]??'Live briefing path'):'Proposed design'}</span><h3>{graph.title}</h3><p>{graph.note}</p></div>
    {view==='capability'&&<div className="transformation-summary"><p><span>Before</span>{frame.transformation.friction}</p><p><span>With AI</span>{frame.transformation.aiShift}</p><p><span>Human authority</span>{frame.transformation.humanControl}</p></div>}
    {view==='capability'&&<div className="map-step-picker" role="group" aria-label="Business step focus">{frame.architecture.process.map((p,i)=><button key={p.title} aria-pressed={step===i} onClick={()=>{setStep(i);setSelection(null);}}><span>{i+1}</span>{p.title}</button>)}</div>}
    <div className="map-toolbar"><div className="map-legend"><span className="data">Data / request</span><span className="control">Control / verdict</span><span className="telemetry">Telemetry</span><span className="placement">Placement</span></div><div className="map-zoom"><button aria-label="Zoom out" disabled={zoom<=.6} onClick={()=>setZoom(z=>Math.max(.6,Math.round((z-.1)*10)/10))}><Minus size={16}/></button><output aria-label="Diagram zoom">{Math.round(zoom*100)}%</output><button aria-label="Zoom in" disabled={zoom>=1.6} onClick={()=>setZoom(z=>Math.min(1.6,Math.round((z+.1)*10)/10))}><Plus size={16}/></button><button aria-label="Reset diagram view" onClick={reset}><RotateCcw size={16}/></button></div></div>
@@ -87,10 +95,11 @@ export default function ArchitectureMap({caseId,title,frame}:{caseId:string;titl
        {graph.boundaries?.map(b=><div key={b.title} className="map-boundary" style={{left:b.x,top:b.y,width:b.width,height:b.height}}><span>{b.title}</span></div>)}
        <svg className="map-edges" width={graph.width} height={graph.height} aria-hidden="true"><defs>{['data','control','telemetry','placement'].map(kind=><marker key={kind} id={`${prefix}-${kind}`} markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" className={`arrow-${kind}`}/></marker>)}</defs>{graph.edges.map((edge,i)=>{const geometry=edgeGeometry(edge,graph),kind=edge.kind||'data';return <g key={i} className={`map-edge ${kind} ${selection&&edge.from!==selection&&edge.to!==selection?'dim':''}`}><path d={geometry.path} markerEnd={`url(#${prefix}-${kind})`}/></g>;})}</svg>
        {graph.edges.map((edge,i)=>{const {label,labelWidth}=edgeGeometry(edge,graph);return <button key={i} className={`map-edge-label ${edge.kind||'data'} ${selection&&edge.from!==selection&&edge.to!==selection?'dim':''}`} style={{left:label[0],top:label[1],maxWidth:labelWidth??170}} aria-label={`${graph.nodes.find(n=>n.id===edge.from)?.title}: ${edge.label} → ${graph.nodes.find(n=>n.id===edge.to)?.title}`} onClick={()=>setSelection(edge.from)}>{edge.label}</button>;})}
-       {graph.nodes.map(node=><button key={node.id} className={`map-node ${node.kind||'service'} ${selection===node.id?'selected':''} ${selection&&!connected.has(node.id)?'dim':''}`} style={{left:node.x,top:node.y,width:NODE_W,height:NODE_H}} aria-pressed={selection===node.id} onClick={()=>setSelection(selection===node.id?null:node.id)}><span className="node-type">{{service:'Service',ai:'AI capability',store:'Data / state',human:'Business / human',cisco:'Cisco platform',failure:'Exception'}[node.kind||'service']}</span><strong>{node.title}</strong><span className="node-subtitle">{node.subtitle}</span></button>)}
+       {graph.nodes.map(node=><button key={node.id} className={`map-node ${node.kind||'service'} ${selection===node.id?'selected':''} ${selection&&!connected.has(node.id)?'dim':''}`} style={{left:node.x,top:node.y,width:NODE_W,height:NODE_H}} aria-pressed={selection===node.id} onClick={()=>setSelection(selection===node.id?null:node.id)}><span className="node-type">{{service:'Service',ai:'AI capability',store:'Data / state',human:'Business / human',cisco:'Cisco platform',failure:'Exception'}[node.kind||'service']}</span><strong>{node.title}</strong><span className="node-subtitle">{node.subtitle}</span>{node.code&&<span className="node-code" aria-hidden="true">{'</>'}</span>}</button>)}
      </div></div>
    </div>
-   <div className="map-inspector" aria-live="polite">{selected?<><div><strong>{selected.title}</strong><button className="map-icon-button" aria-label="Clear diagram selection" onClick={()=>setSelection(null)}><X size={16}/></button></div><p>{selected.detail}</p><ul>{graph.edges.filter(e=>e.from===selected.id||e.to===selected.id).map((edge,i)=><li key={i}>{graph.nodes.find(n=>n.id===edge.from)?.title} <span>— {edge.label} →</span> {graph.nodes.find(n=>n.id===edge.to)?.title}</li>)}</ul>{selected.source&&<a href={selected.source} target="_blank" rel="noreferrer">Supporting documentation <ArrowUpRight size={14}/></a>}</>:<p>Drag to pan · select a component to inspect its connections · full screen keeps the system in view.</p>}</div>
+   <div className="map-inspector" aria-live="polite">{selected?<><div><strong>{selected.title}</strong><button className="map-icon-button" aria-label="Clear diagram selection" onClick={()=>setSelection(null)}><X size={16}/></button></div><p>{selected.detail}</p><ul>{graph.edges.filter(e=>e.from===selected.id||e.to===selected.id).map((edge,i)=><li key={i}>{graph.nodes.find(n=>n.id===edge.from)?.title} <span>— {edge.label} →</span> {graph.nodes.find(n=>n.id===edge.to)?.title}</li>)}</ul>{selected.source&&<a href={selected.source} target="_blank" rel="noreferrer">Supporting documentation <ArrowUpRight size={14}/></a>}{selected.code&&<div className="map-code-links"><span>Source & configuration</span><div>{selected.code.map((id,i)=><button key={id} aria-label={`Open source: ${catalog?.sources[id]?.title??id}`} onClick={()=>setViewer({ids:selected.code!,initial:i})}><CodeXml size={15}/><span>{catalog?.sources[id]?.title??id}<br/><small>{catalog?.sources[id]?`services/interbank/${catalog.sources[id].path}`:''}</small></span></button>)}</div></div>}</>:<p>Drag to pan · select a component to inspect its connections · full screen keeps the system in view.</p>}</div>
    {view==='architecture'&&system==='proposed'&&<details className="map-assumptions"><summary>Design assumptions & references</summary><p>{profiles[caseId].note} Identity integration, data residency, model sizing, retention, failure budgets and high availability require deployment validation. Cisco components shown here are not connected to the local demo.</p><div>{Object.values(sources).map(s=><a key={s.url} href={s.url} target="_blank" rel="noreferrer">{s.title}<ArrowUpRight size={14}/></a>)}</div></details>}
+ {viewer&&<SourceViewer ids={viewer.ids} initial={viewer.initial} onClose={()=>setViewer(null)}/>}
  </section>;
 }

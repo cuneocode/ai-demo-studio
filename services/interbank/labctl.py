@@ -4,7 +4,7 @@
   python3 labctl.py up                 # credentials, controls, build, start
   python3 labctl.py kickoff allowed    # investigation that runs to completion
   python3 labctl.py kickoff blocked    # kickoff Cisco AI Defense blocks at Bank A's gateway
-  python3 labctl.py verify <run-id>    # check the trace in Splunk Agent Observability
+  python3 labctl.py verify <run-id> [blocked]  # check the trace in Splunk Agent Observability
   python3 labctl.py status | logs | down
 
 Credentials are generated into .runtime/ (git-ignored, mode 0600) and mounted per
@@ -36,8 +36,7 @@ ROOT = Path(__file__).resolve().parent
 RUNTIME = ROOT / ".runtime"
 PKI = RUNTIME / "pki"
 ROLES = RUNTIME / "roles"
-FSI_ENV = Path(os.environ.get("FSI_ENV", Path.home() / "FSI-AI-demo-platfrom/.env"))
-MODEL_CONTAINER = "fsi-nemotron-super"
+FSI_ENV = Path(os.environ.get("FSI_ENV", ROOT.parents[1] / ".env"))
 IMAGE = "interbank-a2a-demo:0.2.0"
 DEMO_URL = "http://127.0.0.1:8088"
 PROJECT = "Interbank A2A Settlement Demo"
@@ -68,7 +67,8 @@ def import_vendor_env() -> None:
             key, value = line.split("=", 1)
             source[key.strip()] = value.strip().strip("'\"")
     missing = [k for k in ("GALILEO_API_KEY", "GALILEO_CONSOLE_URL", "AIDEFENSE_API_KEY",
-                           "AGENT_CONTROL_URL") if not source.get(k)]
+                           "AGENT_CONTROL_URL", "OPENAI_API_KEY", "MODEL_NAME")
+               if not source.get(k)]
     if missing:
         raise SystemExit(f"{FSI_ENV} is missing {', '.join(missing)}")
     console = source["GALILEO_CONSOLE_URL"].rstrip("/")
@@ -88,8 +88,15 @@ def import_vendor_env() -> None:
         "AIDEFENSE_API_KEY": source["AIDEFENSE_API_KEY"],
         "AIDEFENSE_REGION": source.get("AIDEFENSE_REGION", "us-west-2"),
         "AIDEFENSE_TIMEOUT": source.get("AIDEFENSE_TIMEOUT", "30"),
+        "MODEL_NAME": source["MODEL_NAME"],
+        "MODEL_REASONING_EFFORT": source.get("MODEL_REASONING_EFFORT", "medium"),
     }
     write_private(RUNTIME / "vendor.env", "".join(f"{k}={v}\n" for k, v in values.items()))
+    # Only the two agent containers mount model.env, the OpenAI credential.
+    model = {"MODEL_API_KEY": source["OPENAI_API_KEY"]}
+    if source.get("OPENAI_BASE_URL"):
+        model["MODEL_BASE_URL"] = source["OPENAI_BASE_URL"]
+    write_private(RUNTIME / "model.env", "".join(f"{k}={v}\n" for k, v in model.items()))
 
 
 # --------------------------------------------------------------------- PKI ----
@@ -215,17 +222,24 @@ def generate_credentials() -> None:
 
 # ------------------------------------------------------------------ docker ----
 
-def ensure_model_networks() -> None:
-    """Attach the existing vLLM container to one private network per bank (no restart)."""
-    state = sh("docker", "inspect", "-f", "{{.State.Running}}", MODEL_CONTAINER, capture=True)
-    if state.stdout.strip() != "true":
-        raise SystemExit(f"{MODEL_CONTAINER} is not running")
-    for network, alias in (("a2a-lab-vllm-a", "vllm-a"), ("a2a-lab-vllm-b", "vllm-b")):
-        if sh("docker", "network", "inspect", network, check=False, capture=True).returncode:
-            sh("docker", "network", "create", network)
-        info = json.loads(sh("docker", "network", "inspect", network, capture=True).stdout)[0]
-        if MODEL_CONTAINER not in {c["Name"] for c in info.get("Containers", {}).values()}:
-            sh("docker", "network", "connect", "--alias", alias, network, MODEL_CONTAINER)
+def extra_egress_roots() -> str:
+    """Roots of a TLS-inspecting corporate proxy (e.g. Cisco Secure Access) the host trusts."""
+    if os.environ.get("EXTRA_CA_FILE"):
+        return Path(os.environ["EXTRA_CA_FILE"]).read_text(encoding="utf-8")
+    if sys.platform != "darwin":
+        return ""
+    found = sh("security", "find-certificate", "-a", "-c", "Cisco Secure Access Root CA", "-p",
+               "/Library/Keychains/System.keychain", check=False, capture=True)
+    return found.stdout if found.returncode == 0 else ""
+
+
+def write_egress_bundle() -> None:
+    """Public roots plus any proxy roots, for the agents' calls to the OpenAI API."""
+    public = sh("docker", "run", "--rm", "--entrypoint", "python", IMAGE, "-c",
+                "import certifi; print(open(certifi.where()).read())", capture=True).stdout
+    bundle = public + extra_egress_roots()
+    for bank in BANKS:
+        write_private(ROLES / f"{bank}-agent" / "egress-ca-bundle.pem", bundle)
 
 
 def run_tool(module: str, *args: str) -> None:
@@ -241,8 +255,8 @@ def up(_: argparse.Namespace) -> None:
     write_private(ROOT / ".env", f"LAB_UID={os.getuid()}\nLAB_GID={os.getgid()}\n")
     import_vendor_env()
     generate_credentials()
-    ensure_model_networks()
     sh("docker", "build", "-t", IMAGE, ".")
+    write_egress_bundle()
     run_tool("tools.setup_controls")
     compose("up", "-d", "--remove-orphans", "--force-recreate")
     for _ in range(90):
@@ -277,7 +291,7 @@ def kickoff(args: argparse.Namespace) -> None:
 
 
 def verify(args: argparse.Namespace) -> None:
-    run_tool("tools.verify_splunk", args.run_id)
+    run_tool("tools.verify_splunk", args.run_id, *([args.mode] if args.mode else []))
 
 
 def status(_: argparse.Namespace) -> None:
@@ -301,6 +315,8 @@ def main() -> None:
     start.set_defaults(func=kickoff)
     check = commands.add_parser("verify")
     check.add_argument("run_id")
+    check.add_argument("mode", nargs="?", choices=["blocked"],
+                       help="expect only the console, Bank A gateway and AI Defense spans")
     check.set_defaults(func=verify)
     for name, func in (("status", status), ("logs", logs), ("down", down)):
         commands.add_parser(name).set_defaults(func=func)

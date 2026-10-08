@@ -69,8 +69,9 @@ async def main(run_id: str) -> int:
     }
     if "blocked" not in sys.argv[2:]:
         expected |= {
-            "Bank A agent": "bank-a-agent handles" in names,
-            "Bank B agent": "bank-b-agent handles" in names,
+            "Bank A agent": "a2a.server.on_message_send bank-a-agent" in names,
+            "Bank B agent": "a2a.server.on_message_send bank-b-agent" in names,
+            "A2A client spans": "a2a.client.send_message" in names,
             "LLM spans": by_type.get("llm", 0) > 0,
             "tool spans": by_type.get("tool", 0) > 0,
             "Agent Control spans": "Splunk Agent Control" in names,

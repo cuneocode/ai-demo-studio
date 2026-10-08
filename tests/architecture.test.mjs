@@ -1,11 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { bankingKnowledge, bankingRuntime, briefingKnowledge, briefingRuntime, capabilityDiagram, deploymentDiagram, fraudKnowledge, fraudRuntime, knowledgeDiagram, profiles, proposedRuntime, securityDiagram } from '../app/architecture-model.ts';
+import { execFileSync } from 'node:child_process';
+import { bankingKnowledge, bankingRuntime, briefingKnowledge, briefingRuntime, capabilityDiagram, deploymentDiagram, fraudKnowledge, fraudRuntime, interbankKnowledge, interbankRuntime, knowledgeDiagram, profiles, proposedRuntime, securityDiagram } from '../app/architecture-model.ts';
 
 const sample={transformation:{friction:'Before',aiShift:'After',humanControl:'Review'},architecture:{process:Array.from({length:4},(_,i)=>({title:`Step ${i}`,detail:'Business step'})),ai:Array.from({length:3},(_,i)=>({point:`${i} → ${i+1}`,label:`AI ${i}`,detail:'Capability'}))}};
 const fraudFrame={transformation:{friction:'Before',aiShift:'After',humanControl:'Review'},architecture:{process:[{title:'Select a payment',detail:'Held-out TabFormer card events'},{title:'Score the graph edge',detail:'Neighborhood + transaction features'},{title:'Inspect evidence',detail:'Probability + Shapley groups'},{title:'Decide disposition',detail:'Analyst-owned hold / review / clear'}],ai:[{point:'01 → 02',label:'GraphSAGE + XGBoost + Shapley',detail:'Score path never enters AI Defense.'},{point:'02 → 03',label:'Threshold band',detail:'hold ≥ 0.50'},{point:'03 → 04',label:'Optional narrative',detail:'AI Defense inspects only this hop.'}]}};
 const briefingFrame={transformation:{friction:'Before',aiShift:'After',humanControl:'Review'},architecture:{process:[{title:'Identify the issuer',detail:'Ticker, name, or upload'},{title:'Ingest the annual report',detail:'EDGAR 10-K or uploaded file'},{title:'Extract grounded themes',detail:'TOC nodes + companyfacts'},{title:'Accept studio context',detail:'Presenter-owned accept-gate'}],ai:[{point:'01 → 02',label:'Deep Agent supervisor',detail:'Plans and delegates. Never reads filing nodes.'},{point:'02 → 03',label:'Theme subagents',detail:'read_filing_node plus XBRL facts.'},{point:'03 → 04',label:'Ground and accept',detail:'Cite-or-abstain verifier, then Use this company.'}]}};
-const graphs=[bankingRuntime(),bankingKnowledge(),fraudRuntime(),fraudKnowledge(),briefingRuntime(),briefingKnowledge(),...Object.keys(profiles).flatMap(id=>[proposedRuntime(id),knowledgeDiagram(id),securityDiagram(id),deploymentDiagram(id)]),...[0,1,2,3,99,-1].map(i=>capabilityDiagram(sample,i)),...[0,1,2,3,99,-1].map(i=>capabilityDiagram(fraudFrame,i,'fraud-modeling')),...[0,1,2,3,99,-1].map(i=>capabilityDiagram(briefingFrame,i,'company-briefing'))];
+const interbankFrame={transformation:{friction:'Before',aiShift:'After',humanControl:'Review'},architecture:{process:[{title:'Open the failed settlement',detail:'Ops desk kickoff'},{title:'Investigate own records',detail:'Read-only SQL'},{title:'Coordinate with the counterparty',detail:'A2A through both gateways'},{title:'Approve remediation',detail:'Named teams decide'}],ai:[{point:'01 → 02',label:'Bank A Deep Agent',detail:'Plans and queries.'},{point:'02 → 03',label:'Counterparty agent over A2A',detail:'Bank B answers.'},{point:'03 → 04',label:'Joint report',detail:'Report only.'}]}};
+const graphs=[interbankRuntime(),interbankKnowledge(),...[0,1,2,3,99,-1].map(i=>capabilityDiagram(interbankFrame,i,'interbank-a2a')),bankingRuntime(),bankingKnowledge(),fraudRuntime(),fraudKnowledge(),briefingRuntime(),briefingKnowledge(),...Object.keys(profiles).flatMap(id=>[proposedRuntime(id),knowledgeDiagram(id),securityDiagram(id),deploymentDiagram(id)]),...[0,1,2,3,99,-1].map(i=>capabilityDiagram(sample,i)),...[0,1,2,3,99,-1].map(i=>capabilityDiagram(fraudFrame,i,'fraud-modeling')),...[0,1,2,3,99,-1].map(i=>capabilityDiagram(briefingFrame,i,'company-briefing'))];
 for(const graph of graphs)test(`Valid connected diagram: ${graph.title}`,()=>{
  const ids=new Set(graph.nodes.map(n=>n.id));assert.equal(ids.size,graph.nodes.length);
  for(const node of graph.nodes){assert.ok(node.title&&node.detail);assert.ok(node.x>=0&&node.y>=0);assert.ok(node.x+240<=graph.width,`${node.id} outside width`);assert.ok(node.y+128<=graph.height,`${node.id} outside height`);assert.ok(graph.edges.some(e=>e.from===node.id||e.to===node.id),`${node.id} disconnected`);}
@@ -98,4 +100,42 @@ test('Briefing capability keeps Defense off EDGAR/filesystem and on model hops',
   assert.ok(graph.nodes.find(n=>n.id==='defense')?.detail.includes('Filing bytes never enter'));
   assert.ok(graph.note.includes('does not assert live SEC or OpenAI'));
  }
+});
+test('Interbank: AI Defense on every gateway listener, fail closed',()=>{
+ const live=interbankRuntime();
+ for(const listener of ['a-in','a-out','b-in','b-out'])assert.ok(live.edges.some(e=>e.from===listener&&e.to===`${listener[0]}-policy`&&e.kind==='control'),`${listener} lacks ExtProc`);
+ for(const policy of ['a-policy','b-policy']){assert.ok(live.edges.some(e=>e.from===policy&&e.to==='aidefense'));assert.ok(live.edges.some(e=>e.from===policy&&e.to===`${policy[0]}-blocked`&&e.label.includes('503')));}
+ assert.ok(live.note.includes('fail closed'));
+});
+test('Interbank: Agent Control gates egress, and only gateways cross banks',()=>{
+ const live=interbankRuntime();
+ for(const bank of ['a','b']){
+  assert.ok(live.edges.some(e=>e.from===`${bank}-control`&&e.to===`${bank}-out`&&e.label.startsWith('allow')));
+  assert.ok(live.edges.some(e=>e.from===`${bank}-control`&&e.to===`${bank}-blocked`&&e.label.includes('NOT SENT')));
+  assert.ok(live.edges.some(e=>e.from===`${bank}-control`&&e.to===`${bank}-ac`));
+  assert.ok(!live.edges.some(e=>e.from===`${bank}-agent`&&e.to===`${bank}-out`),'agent bypasses Agent Control');
+ }
+ const bank=id=>id.startsWith('a-')?'a':id.startsWith('b-')?'b':null;
+ const crossing=live.edges.filter(e=>bank(e.from)&&bank(e.to)&&bank(e.from)!==bank(e.to)).map(e=>`${e.from}>${e.to}`).sort();
+ assert.deepEqual(crossing,['a-out>b-in','b-out>a-in']);
+ assert.ok(live.nodes.some(n=>n.kind==='human'&&/read-only/.test(n.detail)));
+});
+test('Interbank: both agents, both gateways, and AI Defense reach one Splunk trace',()=>{
+ const live=interbankRuntime();
+ const telemetry=new Set(live.edges.filter(e=>e.kind==='telemetry').map(e=>e.from));
+ for(const id of ['a-agent','b-agent','a-policy','b-policy','a-collector','b-collector','console'])assert.ok(telemetry.has(id),`${id} has no telemetry`);
+ assert.ok(live.edges.some(e=>e.from==='a-out'&&e.to==='a-collector'));assert.ok(live.edges.some(e=>e.from==='b-in'&&e.to==='b-collector'));
+ assert.ok(live.nodes.find(n=>n.id==='splunk')?.detail.includes('one trace'));
+});
+test('Interbank: preparation is offline and credentials stay out of source',()=>{
+ const knowledge=interbankKnowledge();
+ assert.ok(knowledge.note.startsWith('Offline: labctl up'));
+ assert.ok(knowledge.nodes.some(n=>n.kind==='failure'));
+ assert.ok(knowledge.nodes.find(n=>n.id==='env')?.detail.includes('never enter source'));
+});
+test('Interbank: every code link resolves to a real excerpt',()=>{
+ const catalog=JSON.parse(execFileSync('python3',['services/interbank/demo/sources.py','--catalog'],{encoding:'utf8'}));
+ const ids=[interbankRuntime(),interbankKnowledge(),capabilityDiagram(interbankFrame,1,'interbank-a2a')].flatMap(g=>g.nodes.flatMap(n=>n.code??[]));
+ assert.ok(ids.length>20);
+ for(const id of ids)assert.ok(catalog.sources[id],`unknown source ${id}`);
 });
