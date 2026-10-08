@@ -9,6 +9,9 @@
  * text to fit a diagram: reflow or scroll its canvas. Secondary text must remain
  * high-contrast on dark surfaces. Frontend/backend evolution must retain this.
  * Do not introduce cyan or generic neon “AI” styling.
+ * Dark is the source of truth. Light mode (html[data-theme="light"]) is derived
+ * from these colours at build time by scripts/postcss-light-theme.mjs; put only
+ * what that mapping can't infer in theme-light.css.
  */
 :root {
   --bg: #0a1019;

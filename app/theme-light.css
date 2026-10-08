@@ -1,0 +1,39 @@
+/*
+ * Light theme. Colours are derived from the dark stylesheets at build time by
+ * scripts/postcss-light-theme.mjs; this file only covers what a colour mapping
+ * cannot know, such as white text on a filled accent. The extra html:root
+ * keeps these ahead of the derived rules regardless of stylesheet order.
+ */
+html:root[data-theme="light"] { color-scheme: light; }
+html:root:not([data-theme="light"]) { color-scheme: dark; }
+
+html:root[data-theme="light"] body {
+  background:
+    radial-gradient(circle at 85% 0%, rgba(96, 140, 235, 0.14), transparent 40%),
+    radial-gradient(circle at 10% 100%, rgba(137, 109, 208, 0.07), transparent 35%),
+    #f3f6fa;
+}
+
+html:root[data-theme="light"] .primary-button,
+html:root[data-theme="light"] .product-nav button.active,
+html:root[data-theme="light"] .filter-row button.active {
+  color: #ffffff;
+  border-color: #2563eb;
+  background: #2563eb;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.22);
+}
+html:root[data-theme="light"] .primary-button:hover { background: #1d4ed8; filter: none; }
+html:root[data-theme="light"] .button-count { color: #2563eb; background: #ffffff; }
+
+html:root[data-theme="light"] .topbar { background: rgba(255, 255, 255, 0.86); border-bottom-color: #e2e8f0; box-shadow: 0 1px 0 rgba(15, 23, 42, 0.03); }
+html:root[data-theme="light"] .sidebar { background: rgba(255, 255, 255, 0.82); border-right-color: #e2e8f0; box-shadow: none; }
+html:root[data-theme="light"] .side-nav button.active { background: #e8effd; color: #0f1b2d; box-shadow: inset 0 0 0 1px #bcd0f7; }
+html:root[data-theme="light"] .side-nav button.active svg { color: #2563eb; }
+html:root[data-theme="light"] .brand-copy strong { color: #0f1b2d; }
+html:root[data-theme="light"] .cisco-mark span { background: #2563eb; box-shadow: none; }
+
+html:root[data-theme="light"] .avatar,
+html:root[data-theme="light"] .launcher-overlay { color: #0f1b2d; }
+html:root[data-theme="light"] .launcher-overlay { background: rgba(243, 246, 250, 0.92); }
+html:root[data-theme="light"] .shell-scrim { background: rgba(15, 23, 42, 0.22); }
+html:root[data-theme="light"] .presenter-bar, html:root[data-theme="light"] .shell-popover, html:root[data-theme="light"] .shell-drawer { background: #ffffff; box-shadow: 0 20px 50px rgba(15, 23, 42, 0.14); }

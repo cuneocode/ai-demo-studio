@@ -144,3 +144,18 @@ test("prototype queue rows select the workbench item", async ({ page }) => {
   await page.getByRole("button", { name: "View evidence in the architecture" }).click();
   await expect(page.locator("#architecture-explorer")).toBeInViewport();
 });
+
+test("the theme toggle switches to light mode and the choice survives a reload", async ({ page }) => {
+  await open(page);
+  const background = () => page.evaluate(() => getComputedStyle(document.querySelector(".sidebar")!).backgroundColor);
+  const dark = await background();
+  await page.getByRole("button", { name: "Switch to light theme" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  expect(await background()).not.toBe(dark);
+
+  await page.reload({ waitUntil: "networkidle" });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await page.getByRole("button", { name: "Switch to dark theme" }).click();
+  await expect(page.locator("html")).not.toHaveAttribute("data-theme", "light");
+  expect(await background()).toBe(dark);
+});

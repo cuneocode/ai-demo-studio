@@ -11,6 +11,7 @@ import ArchitectureMap from "./ArchitectureMap";
 import StudioSettings, { ModelChip } from "./StudioSettings";
 import { ControlsPage, HelpDrawer, PresenterBar, ServiceBell, TelemetryPage } from "./StudioShell";
 import { momentReady, platformSummary, useStudioStatus } from "./studio-status";
+import { setTheme, useTheme } from "./theme";
 import { loadCompanyProfile, type StoredCompanyProfile } from "./company-profile";
 import { loadResearchNote, switcherContextLabel, type StoredResearchNote } from "./research-note";
 import { loadAdvisoryBrief, type StoredAdvisoryBrief } from "./advisory-brief";
@@ -38,6 +39,7 @@ import {
   Library,
   LockKeyhole,
   Menu,
+  Moon,
   Network,
   PanelLeftClose,
   PanelLeftOpen,
@@ -51,6 +53,7 @@ import {
   Shield,
   ShieldCheck,
   Sparkles,
+  Sun,
   Trash2,
   WalletCards,
   Workflow,
@@ -838,6 +841,7 @@ export default function HomePage() {
   const [editingStory, setEditingStory] = useState(false);
   const [dragging, setDragging] = useState<string | null>(null);
   const { status } = useStudioStatus();
+  const theme = useTheme();
   const platform = platformSummary(status);
 
   useEffect(() => {
@@ -958,6 +962,7 @@ export default function HomePage() {
         </nav>
         <div className="top-actions">
           <span className="demo-mode"><StatusDot /> Demo mode</span>
+          <button aria-label={theme === "light" ? "Switch to dark theme" : "Switch to light theme"} title={theme === "light" ? "Dark theme" : "Light theme"} onClick={() => setTheme(theme === "light" ? "dark" : "light")}>{theme === "light" ? <Moon size={18} /> : <Sun size={18} />}</button>
           <button aria-label="Help: run this demo" onClick={() => setHelpOpen(true)}><CircleHelp size={18} /></button>
           <ServiceBell status={status} onOpenSettings={() => openSettings("st-services")} />
         </div>

@@ -50,15 +50,19 @@ import {
 } from "./scene-model.ts";
 import { frameScene, panBoundsIntoView, sceneBounds, type Bounds, type Viewport } from "./viewport.ts";
 import "./map.css";
+import { useTheme, type Theme } from "../theme.ts";
 
-const stroke: Record<RelationshipKind, string> = {
-  businessSequence: "#9bb8ff",
-  support: "#8ea0b8",
-  request: "#9bb8ff",
-  return: "#8fd0b0",
-  control: "#ddbd83",
-  telemetry: "#bd9ee5",
-  hosting: "#aab4c6",
+type EdgePalette = { kinds: Record<RelationshipKind, string>; secondary: string; active: string; dots: string };
+
+const EDGE_PALETTES: Record<Theme, EdgePalette> = {
+  dark: {
+    kinds: { businessSequence: "#9bb8ff", support: "#8ea0b8", request: "#9bb8ff", return: "#8fd0b0", control: "#ddbd83", telemetry: "#bd9ee5", hosting: "#aab4c6" },
+    secondary: "#66768c", active: "#c2d3ff", dots: "rgba(120,140,170,0.28)",
+  },
+  light: {
+    kinds: { businessSequence: "#3a68d6", support: "#7b8aa0", request: "#3a68d6", return: "#2f8a63", control: "#a87a26", telemetry: "#7a52c4", hosting: "#7d889a" },
+    secondary: "#b3bdca", active: "#1d4ed8", dots: "rgba(70,90,120,0.22)",
+  },
 };
 
 const relevanceClass: Record<FocusRelevance, string> = { active: "is-active", context: "is-context", secondary: "is-secondary" };
@@ -133,6 +137,7 @@ function buildGraph(
   transitionNodeIds: ReadonlySet<string>,
   transitionEdgeIds: ReadonlySet<string>,
   fillDeclaredHeights = false,
+  palette: EdgePalette = EDGE_PALETTES.dark,
 ) {
   const usedPorts = new Map<string, Set<string>>();
   for (const edge of layout.edges) {
@@ -198,7 +203,7 @@ function buildGraph(
   });
   const edges: Edge[] = layout.edges.map((edge) => {
     const relevance = edgeRelevanceFor(catalog, edge, platformFocus, activeMode);
-    const edgeStroke = relevance === "secondary" ? "#66768c" : relevance === "active" ? "#c2d3ff" : stroke[edge.kind];
+    const edgeStroke = relevance === "secondary" ? palette.secondary : relevance === "active" ? palette.active : palette.kinds[edge.kind];
     return {
     id: edge.id,
     source: edge.sourceInstanceId,
@@ -215,6 +220,7 @@ function buildGraph(
 }
 
 function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
+  const theme = useTheme();
   const flow = useReactFlow();
   const root = catalog.scenes[catalog.rootSceneId];
   const system: ContinuousSystem | undefined = continuousSystems[catalog.id];
@@ -308,7 +314,8 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
     localTransition?.nodeIds ?? new Set(),
     localTransition?.edgeIds ?? new Set(),
     Boolean(system?.fillDeclaredHeights),
-  ), [catalog, continuous, scene, laid, localTransition, mode, platformFocus, onMeasure, system]);
+    EDGE_PALETTES[theme],
+  ), [catalog, continuous, scene, laid, localTransition, mode, platformFocus, onMeasure, system, theme]);
   const focusPlatform = catalog.platforms?.find((item) => item.id === platformFocus) ?? null;
   const systemExpanded = continuous && nav.expandedGroupIds.length > 0;
   const isOverview = continuous ? !systemExpanded : scene.id === catalog.rootSceneId;
@@ -1003,7 +1010,7 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
             deleteKeyCode={null}
             zoomOnDoubleClick={false}
             selectionOnDrag={false}
-            colorMode="dark"
+            colorMode={theme}
             minZoom={0.45}
             maxZoom={1.35}
             proOptions={{ hideAttribution: true }}
@@ -1012,7 +1019,7 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
             onMoveStart={handleFlowMoveStart}
             onMoveEnd={handleFlowMoveEnd}
           >
-            <Background variant={BackgroundVariant.Dots} color="rgba(120,140,170,0.28)" gap={28} size={1} />
+            <Background variant={BackgroundVariant.Dots} color={EDGE_PALETTES[theme].dots} gap={28} size={1} />
             <ViewportPortal>
               <div className="map-guides">
                 {scene.guides?.map((guide) => <div key={guide.label} className="map-guide" style={{ left: guide.x, width: guide.width }}>{guide.label}</div>)}
