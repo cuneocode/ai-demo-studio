@@ -1,0 +1,99 @@
+// /api/studio/status: one read-only snapshot for the studio shell (service
+// bell, Cisco platform rows, Controls, Telemetry, help, story readiness).
+// It passes on status fields only; no setting value beyond URLs and names.
+import type { IncomingMessage, ServerResponse } from "node:http";
+import { KEY_NAMES } from "../app/studio-models.ts";
+import type { StudioStatus, UseCaseHealth } from "../app/studio-status.ts";
+import { envValue } from "./studio-env.ts";
+import { fetchText, send } from "./studio-http.ts";
+import { loadRegistry } from "./studio-models-api.ts";
+import { settingsSnapshot } from "./studio-settings-api.ts";
+import { INTERBANK, SERVICES } from "./studio-services.ts";
+
+type Json = Record<string, unknown>;
+const object = (value: unknown): Json => (value && typeof value === "object" && !Array.isArray(value) ? value as Json : {});
+const text = (value: unknown) => (typeof value === "string" ? value.slice(0, 200) : "");
+const names = (value: unknown) => (Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").slice(0, 8) : []);
+
+async function getJson(url: string, timeout = 2000): Promise<unknown> {
+  try {
+    const { status, text: body } = await fetchText(url, { timeout });
+    return status === 200 ? JSON.parse(body) : null;
+  } catch {
+    return null;
+  }
+}
+
+function serviceHealth(id: string, label: string, raw: unknown): UseCaseHealth {
+  if (!raw) return { id, label, up: false, ready: false, detail: "Not running", aiDefense: null, agentControl: null, tracing: null, otel: null };
+  const health = object(raw);
+  const security = object(health.security);
+  const observability = object(health.observability);
+  const controls = object(health.controls ?? observability.controls);
+  const model = object(health.nim);
+  const ready = health.ready !== false;
+  const detail = ready ? "" : text(health.detail) || (text(model.status) === "down" ? "Model endpoint is not answering" : text(health.error) || "Not ready");
+  return {
+    id, label, up: true, ready, detail,
+    aiDefense: security.status ? { status: text(security.status), mode: text(security.mode) } : null,
+    agentControl: controls.status ? { status: text(controls.status), names: names(controls.names) } : null,
+    tracing: text(object(observability.tracing).status) || text(health.galileo) || null,
+    otel: text(object(health.splunk).status) || null,
+  };
+}
+
+async function probeModels() {
+  const { registry } = loadRegistry();
+  return Promise.all(Object.entries(registry.providers).filter(([, provider]) => provider.kind === "vllm").map(async ([id, provider]) => {
+    const key = (KEY_NAMES as readonly string[]).includes(provider.apiKeyEnv) ? envValue(provider.apiKeyEnv) : "";
+    let up = false;
+    try {
+      const { status } = await fetchText(`${provider.baseUrl}/models`, { timeout: 2000, headers: key ? { authorization: `Bearer ${key}` } : {} });
+      up = status === 200;
+    } catch { /* reported as down */ }
+    return { id, label: provider.label, host: new URL(provider.baseUrl).host, up };
+  }));
+}
+
+async function build(): Promise<StudioStatus> {
+  const [services, lab, runtime, runs, models] = await Promise.all([
+    Promise.all(SERVICES.map(async (spec) => serviceHealth(spec.id, spec.label, await getJson(`http://127.0.0.1:${spec.port}${spec.health}`)))),
+    getJson(`http://127.0.0.1:${INTERBANK.port}${INTERBANK.health}`),
+    getJson(`http://127.0.0.1:${INTERBANK.port}/api/runtime`),
+    getJson(`http://127.0.0.1:${INTERBANK.port}/api/runs`),
+    probeModels(),
+  ]);
+  const defense = object(object(runtime).ai_defense);
+  const observability = object(object(runtime).observability);
+  const realm = envValue("SPLUNK_REALM");
+  return {
+    checkedAt: new Date().toISOString(),
+    services,
+    interbank: {
+      up: Boolean(lab),
+      aiDefense: defense.mode ? { mode: text(defense.mode), region: text(defense.region), hops: Object.values(object(defense.hops)).flatMap(names).length } : null,
+      agentControl: text(object(object(runtime).agent_control).step) || null,
+      project: text(observability.project) || null,
+      stream: text(observability.agent_stream) || null,
+      runs: (Array.isArray(runs) ? runs : []).slice(0, 5).map((run) => {
+        const item = object(run);
+        return { id: text(item.id), status: text(item.status), startedAt: text(item.started_at), traceId: text(item.trace_id) || null, prompt: text(item.prompt).slice(0, 120) };
+      }),
+    },
+    models,
+    links: {
+      agentObservability: envValue("GALILEO_CONSOLE_URL") || "https://console.multitenant.galileocloud.io",
+      splunkObservability: /^[a-z]+\d+$/.test(realm) ? `https://app.${realm}.signalfx.com/#/apm` : null,
+    },
+    readiness: settingsSnapshot().readiness,
+  };
+}
+
+// The shell polls from several places; one probe round serves them all.
+let cached: { at: number; value: Promise<StudioStatus> } | null = null;
+
+export async function handleStatus(request: IncomingMessage, response: ServerResponse) {
+  if (request.method !== "GET") return send(response, 405, { error: "Method not allowed." });
+  if (!cached || Date.now() - cached.at > 3000) cached = { at: Date.now(), value: build() };
+  send(response, 200, await cached.value);
+}

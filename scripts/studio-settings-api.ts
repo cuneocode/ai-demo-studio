@@ -13,7 +13,7 @@ function settingStates(): Record<string, SettingState> {
   }));
 }
 
-function snapshot() {
+export function settingsSnapshot() {
   const settings = settingStates();
   return { file: ".env", settings, readiness: readiness(settings, modelState) };
 }
@@ -33,7 +33,7 @@ function save(input: unknown) {
   if (unknown) return { status: 422, body: { error: `${unknown} is not a studio setting.` } };
   const emptied = Object.entries(body?.set ?? {}).filter(([, raw]) => typeof raw === "string" && !raw.trim()).map(([name]) => name);
   updateEnvFile(set, [...clear, ...emptied]);
-  return { status: 200, body: snapshot() };
+  return { status: 200, body: settingsSnapshot() };
 }
 
 /** A value typed but not yet saved, else the saved one. */
@@ -102,7 +102,7 @@ async function services(input: unknown) {
 }
 
 export async function handleSettings(request: IncomingMessage, response: ServerResponse, route: "settings" | "check" | "services") {
-  if (request.method === "GET" && route === "settings") return send(response, 200, snapshot());
+  if (request.method === "GET" && route === "settings") return send(response, 200, settingsSnapshot());
   if (request.method === "GET" && route === "services") return send(response, 200, await serviceStatus());
   if (request.method !== (route === "settings" ? "PUT" : "POST")) return send(response, 405, { error: "Method not allowed." });
   const refusal = writeRefusal(request);

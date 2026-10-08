@@ -34,7 +34,7 @@ export function shellEnv(): NodeJS.ProcessEnv {
   const store = globalThis as typeof globalThis & { __studioShellEnv?: NodeJS.ProcessEnv };
   if (!store.__studioShellEnv) {
     const file = readEnvFile();
-    store.__studioShellEnv = Object.fromEntries(Object.entries(process.env).filter(([name, value]) => file.get(name) !== value));
+    store.__studioShellEnv = Object.fromEntries(Object.entries(process.env).filter(([name, value]) => file.get(name) !== value)) as NodeJS.ProcessEnv;
   }
   return store.__studioShellEnv;
 }

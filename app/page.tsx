@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import BankingDemo from "./BankingDemo";
 import FraudDemo from "./FraudDemo";
 import CompanyBriefing from "./CompanyBriefing";
@@ -9,16 +9,19 @@ import ClientAdvisory from "./ClientAdvisory";
 import InterbankDemo from "./InterbankDemo";
 import ArchitectureMap from "./ArchitectureMap";
 import StudioSettings, { ModelChip } from "./StudioSettings";
+import { ControlsPage, HelpDrawer, PresenterBar, ServiceBell, TelemetryPage } from "./StudioShell";
+import { momentReady, platformSummary, useStudioStatus } from "./studio-status";
 import { loadCompanyProfile, type StoredCompanyProfile } from "./company-profile";
 import { loadResearchNote, switcherContextLabel, type StoredResearchNote } from "./research-note";
 import { loadAdvisoryBrief, type StoredAdvisoryBrief } from "./advisory-brief";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
+  ArrowDown,
   ArrowLeft,
   ArrowRight,
+  ArrowUp,
   ArrowUpRight,
-  Bell,
   Boxes,
   BrainCircuit,
   Building2,
@@ -37,6 +40,7 @@ import {
   Menu,
   Network,
   PanelLeftClose,
+  PanelLeftOpen,
   Play,
   Plus,
   Radio,
@@ -46,14 +50,14 @@ import {
   Settings2,
   Shield,
   ShieldCheck,
-  SlidersHorizontal,
   Sparkles,
+  Trash2,
   WalletCards,
   Workflow,
   X,
 } from "lucide-react";
 
-type View = "overview" | "library" | "stories" | "briefing" | "settings";
+type View = "overview" | "library" | "stories" | "briefing" | "settings" | "controls" | "telemetry";
 type Category = "All" | "Risk & compliance" | "Wealth & advisory" | "Operations";
 
 type UseCase = {
@@ -481,6 +485,18 @@ const navItems: { id: View; label: string; icon: LucideIcon }[] = [
   { id: "settings", label: "Studio settings", icon: Settings2 },
 ];
 
+const shellPages: { id: View; label: string; icon: LucideIcon }[] = [
+  { id: "controls", label: "Controls", icon: Shield },
+  { id: "telemetry", label: "Telemetry", icon: Activity },
+];
+
+const COLLAPSED_KEY = "fsi-studio.sidebar-collapsed";
+
+type Solution = "AI Defense" | "Splunk observability" | "AI Infrastructure";
+const SOLUTIONS: Solution[] = ["AI Defense", "Splunk observability", "AI Infrastructure"];
+const solutionOf = (name: string): Solution | null =>
+  name.includes("AI Defense") ? "AI Defense" : name.includes("AI Infrastructure") ? "AI Infrastructure" : /Splunk|Galileo/.test(name) ? "Splunk observability" : null;
+
 function liveExperienceLabel(experience?: UseCaseFrame["liveExperience"]) {
   if (experience === "banking") return "Live AI · fictional bank";
   if (experience === "fraud") return "Live scoring · TabFormer GNN+XGB";
@@ -688,6 +704,13 @@ function UseCaseWorkspace({
 }) {
   const frame = useCaseFrames[useCase.id];
   const Icon = useCase.icon;
+  const [selectedRow, setSelectedRow] = useState(0);
+  const row = frame.rows[selectedRow];
+  // The frame's workbench copy describes its first queue item; other items show their queue fields.
+  const workbench = selectedRow === 0 || !row
+    ? { title: frame.workbenchTitle, summary: frame.workbenchSummary, evidence: frame.evidence }
+    : { title: row.name, summary: `${row.stage}: ${row.signal}.`, evidence: [row.stage, row.signal, `Status: ${row.status}`] };
+  const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   return (
     <div className="case-frame-page">
@@ -706,7 +729,7 @@ function UseCaseWorkspace({
           <span className="prototype-chip"><StatusDot tone="amber" /> {liveExperienceLabel(frame.liveExperience)}</span>
           <ModelChip experience={frame.liveExperience} onOpen={onOpenModels} />
           <button className="secondary-button" onClick={onAdd}>{inStory ? <><Check size={16} /> In story</> : <><Plus size={16} /> Add to story</>}</button>
-          <button className="primary-button" onClick={frame.liveExperience ? () => focusLiveExperience(frame.liveExperience) : undefined}>{frame.primaryAction} <ArrowRight size={16} /></button>
+          <button className="primary-button" onClick={() => (frame.liveExperience ? focusLiveExperience(frame.liveExperience) : scrollTo("illustrative-experience"))}>{frame.primaryAction} <ArrowRight size={16} /></button>
         </div>
       </header>
 
@@ -730,10 +753,10 @@ function UseCaseWorkspace({
         <InterbankDemo embedded inStory={inStory} onBack={onBack} onAdd={onAdd} />
       </section> : null}
 
-      <ArchitectureMap key={useCase.id} caseId={useCase.id} title={useCase.title} frame={frame} />
+      <div id="architecture-explorer"><ArchitectureMap key={useCase.id} caseId={useCase.id} title={useCase.title} frame={frame} /></div>
 
       {!frame.liveExperience ? <>
-      <div className="experience-label">
+      <div className="experience-label" id="illustrative-experience">
         <div><span className="eyebrow">ILLUSTRATIVE EXPERIENCE</span><h2>How the use case could appear</h2></div>
         <span>Frontend and data are prototype-only</span>
       </div>
@@ -753,23 +776,22 @@ function UseCaseWorkspace({
         <section className="case-queue-panel">
           <div className="case-panel-heading">
             <div><span className="eyebrow">WORK QUEUE</span><h2>Priority items</h2></div>
-            <button className="icon-button" aria-label="Queue settings"><SlidersHorizontal size={17} /></button>
           </div>
-          <div className="case-table" role="table" aria-label={`${useCase.title} priority work queue`}>
+          <div className="case-table" role="grid" aria-label={`${useCase.title} priority work queue`}>
             <div className="case-table-header" role="row">
               <span role="columnheader">Item</span><span role="columnheader">Stage</span><span role="columnheader">Signal</span><span role="columnheader">Status</span><span />
             </div>
-            {frame.rows.map((row) => (
-              <button className="case-table-row" role="row" key={row.name}>
-                <strong role="cell">{row.name}</strong>
-                <span role="cell">{row.stage}</span>
-                <span role="cell">{row.signal}</span>
-                <em className={row.tone} role="cell"><StatusDot tone={row.tone === "ready" ? "mint" : row.tone === "review" ? "amber" : "violet"} />{row.status}</em>
+            {frame.rows.map((item, index) => (
+              <button className={`case-table-row${index === selectedRow ? " selected" : ""}`} role="row" aria-selected={index === selectedRow} key={item.name} onClick={() => setSelectedRow(index)}>
+                <strong role="gridcell">{item.name}</strong>
+                <span role="gridcell">{item.stage}</span>
+                <span role="gridcell">{item.signal}</span>
+                <em className={item.tone} role="gridcell"><StatusDot tone={item.tone === "ready" ? "mint" : item.tone === "review" ? "amber" : "violet"} />{item.status}</em>
                 <ArrowRight size={15} />
               </button>
             ))}
           </div>
-          <div className="queue-footer"><span>Showing highest-priority items</span><button>Open full queue <ArrowRight size={14} /></button></div>
+          <div className="queue-footer"><span>Showing highest-priority items · select one to review it</span></div>
         </section>
 
         <aside className="ai-workbench-panel">
@@ -780,14 +802,14 @@ function UseCaseWorkspace({
           </div>
           <div className="workbench-body">
             <span className="workbench-kicker">SELECTED ITEM</span>
-            <h3>{frame.workbenchTitle}</h3>
-            <p>{frame.workbenchSummary}</p>
+            <h3>{workbench.title}</h3>
+            <p>{workbench.summary}</p>
             <div className="evidence-list">
-              {frame.evidence.map((item) => <span key={item}><Check size={13} />{item}</span>)}
+              {workbench.evidence.map((item) => <span key={item}><Check size={13} />{item}</span>)}
             </div>
             <div className="workbench-recommendation"><Sparkles size={16} /><div><small>SUGGESTED ACTION</small><strong>{frame.primaryAction}</strong></div></div>
           </div>
-          <div className="workbench-actions"><button className="secondary-button">View evidence</button><button className="primary-button">Continue <ArrowRight size={15} /></button></div>
+          <div className="workbench-actions"><button className="secondary-button" onClick={() => scrollTo("architecture-explorer")}><Network size={15} /> View evidence in the architecture</button></div>
         </aside>
       </div>
 
@@ -807,39 +829,116 @@ export default function HomePage() {
   const [companyProfile, setCompanyProfile] = useState<StoredCompanyProfile | null>(null);
   const [researchNote, setResearchNote] = useState<StoredResearchNote | null>(null);
   const [advisoryBrief, setAdvisoryBrief] = useState<StoredAdvisoryBrief | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [presenting, setPresenting] = useState<number | null>(null);
+  const [launcherQuery, setLauncherQuery] = useState("");
+  const [liveOnly, setLiveOnly] = useState(false);
+  const [solution, setSolution] = useState<Solution | "">("");
+  const [editingStory, setEditingStory] = useState(false);
+  const [dragging, setDragging] = useState<string | null>(null);
+  const { status } = useStudioStatus();
+  const platform = platformSummary(status);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       setCompanyProfile(loadCompanyProfile());
       setResearchNote(loadResearchNote());
       setAdvisoryBrief(loadAdvisoryBrief());
+      setCollapsed(localStorage.getItem(COLLAPSED_KEY) === "1");
     });
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  const openUseCase = (item: UseCase) => {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setLauncherQuery("");
+        setLauncherOpen((open) => !open);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  const toggleCollapsed = () => setCollapsed((value) => {
+    localStorage.setItem(COLLAPSED_KEY, value ? "0" : "1");
+    return !value;
+  });
+
+  const openUseCase = useCallback((item: UseCase) => {
     setSelectedCase(item);
     requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" })));
-  };
+  }, []);
 
   const filteredCases = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return useCases.filter((item) => {
       const matchesFilter = filter === "All" || item.category === filter;
       const matchesQuery = !normalized || `${item.title} ${item.description} ${item.solutions.join(" ")}`.toLowerCase().includes(normalized);
-      return matchesFilter && matchesQuery;
+      const matchesLive = !liveOnly || Boolean(useCaseFrames[item.id]?.liveExperience);
+      const matchesSolution = !solution || item.solutions.some((name) => solutionOf(name) === solution);
+      return matchesFilter && matchesQuery && matchesLive && matchesSolution;
     });
-  }, [filter, query]);
+  }, [filter, query, liveOnly, solution]);
 
-  const switchView = (view: View) => {
+  const switchView = useCallback((view: View) => {
     setSelectedCase(null);
     setActiveView(view);
     setSidebarOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  const openSettings = useCallback((section?: string) => {
+    switchView("settings");
+    if (section) setTimeout(() => document.getElementById(section)?.scrollIntoView({ behavior: "smooth", block: "start" }), 250);
+  }, [switchView]);
+
+  const openCaseById = (id: string) => {
+    const item = useCases.find((candidate) => candidate.id === id);
+    if (item) { setSidebarOpen(false); openUseCase(item); }
   };
 
+  const story = storyItems.map((id) => useCases.find((candidate) => candidate.id === id)).filter((item): item is UseCase => Boolean(item));
+  const storyStates = story.map((item) => momentReady(status, item.id, Boolean(useCaseFrames[item.id]?.liveExperience)));
+  const storyReady = story.length ? Math.round((storyStates.filter((state) => state.ready).length / story.length) * 100) : 0;
+
+  const present = (index: number) => {
+    if (index < 0 || index >= story.length) return;
+    setPresenting(index);
+    openUseCase(story[index]);
+  };
+  const startPresenting = () => {
+    if (!story.length) return;
+    document.documentElement.requestFullscreen?.().catch(() => undefined);
+    present(0);
+  };
+  const stopPresenting = useCallback(() => {
+    setPresenting(null);
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => undefined);
+    switchView("stories");
+  }, [switchView]);
+
+  const moveStoryItem = (id: string, to: number) => setStoryItems((items) => {
+    const from = items.indexOf(id);
+    if (from < 0 || to < 0 || to >= items.length) return items;
+    const next = [...items];
+    next.splice(to, 0, ...next.splice(from, 1));
+    return next;
+  });
+
+  const launcherResults = useMemo(() => {
+    const normalized = launcherQuery.trim().toLowerCase();
+    if (!normalized) return [];
+    const pages = [...navItems, ...shellPages].map((item) => ({ key: `view-${item.id}`, icon: item.icon, title: item.label, detail: "Page", open: () => switchView(item.id) }));
+    const cases = useCases.map((item) => ({ key: `case-${item.id}`, icon: item.icon, title: item.title, detail: `${item.category} · ${useCaseFrames[item.id]?.liveExperience ? "Live" : "Prototype"}`, open: () => openUseCase(item), text: `${item.description} ${item.solutions.join(" ")}` }));
+    return [...pages, ...cases].filter((item) => `${item.title} ${item.detail} ${"text" in item ? item.text : ""}`.toLowerCase().includes(normalized)).slice(0, 8);
+  }, [launcherQuery, switchView, openUseCase]);
+  const closeLauncher = () => { setLauncherOpen(false); setLauncherQuery(""); };
+
   return (
-    <div className="app-shell">
+    <div className={`app-shell${collapsed ? " sidebar-collapsed" : ""}${presenting !== null ? " presenting" : ""}`}>
       <header className="topbar">
         <div className="brand-lockup">
           <button className="mobile-menu" aria-label="Toggle navigation" onClick={() => setSidebarOpen(!sidebarOpen)}><Menu size={20} /></button>
@@ -852,16 +951,15 @@ export default function HomePage() {
           </button>
         </div>
         <nav className="product-nav" aria-label="Product areas">
-          <button className="app-launcher-button" aria-label="Open app launcher" onClick={() => setLauncherOpen(true)}><Grid2X2 size={18} /></button>
-          <button className="active"><CircleGauge size={17} /> Studio</button>
-          <button><Shield size={17} /> Controls</button>
-          <button><Activity size={17} /> Telemetry</button>
+          <button className="app-launcher-button" aria-label="Open app launcher" title="Search (⌘K)" onClick={() => setLauncherOpen(true)}><Grid2X2 size={18} /></button>
+          <button className={selectedCase || !["controls", "telemetry"].includes(activeView) ? "active" : ""} aria-current={selectedCase || !["controls", "telemetry"].includes(activeView) ? "page" : undefined} aria-label="Studio" onClick={() => switchView("overview")}><CircleGauge size={17} /><span>Studio</span></button>
+          <button className={!selectedCase && activeView === "controls" ? "active" : ""} aria-current={!selectedCase && activeView === "controls" ? "page" : undefined} aria-label="Controls" onClick={() => switchView("controls")}><Shield size={17} /><span>Controls</span></button>
+          <button className={!selectedCase && activeView === "telemetry" ? "active" : ""} aria-current={!selectedCase && activeView === "telemetry" ? "page" : undefined} aria-label="Telemetry" onClick={() => switchView("telemetry")}><Activity size={17} /><span>Telemetry</span></button>
         </nav>
         <div className="top-actions">
           <span className="demo-mode"><StatusDot /> Demo mode</span>
-          <button aria-label="Help"><CircleHelp size={18} /></button>
-          <button className="notification-button" aria-label="Notifications"><Bell size={18} /><span /></button>
-          <button className="avatar" aria-label="User profile">JC</button>
+          <button aria-label="Help: run this demo" onClick={() => setHelpOpen(true)}><CircleHelp size={18} /></button>
+          <ServiceBell status={status} onOpenSettings={() => openSettings("st-services")} />
         </div>
       </header>
 
@@ -872,7 +970,7 @@ export default function HomePage() {
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
-                <button key={item.id} className={!selectedCase && activeView === item.id ? "active" : ""} onClick={() => switchView(item.id)}>
+                <button key={item.id} className={!selectedCase && activeView === item.id ? "active" : ""} title={collapsed ? item.label : undefined} onClick={() => switchView(item.id)}>
                   <Icon size={18} /><span>{item.label}</span>
                   {item.id === "stories" && <em>{storyItems.length}</em>}
                 </button>
@@ -880,18 +978,18 @@ export default function HomePage() {
             })}
             <span className="nav-separator" />
             <span className="nav-group-label">Explore by domain</span>
-            <button onClick={() => { setFilter("Risk & compliance"); switchView("library"); }}><LockKeyhole size={18} /><span>Risk & compliance</span></button>
-            <button onClick={() => { setFilter("Wealth & advisory"); switchView("library"); }}><Landmark size={18} /><span>Wealth & advisory</span></button>
-            <button onClick={() => { setFilter("Operations"); switchView("library"); }}><Boxes size={18} /><span>Operations</span></button>
+            <button title={collapsed ? "Risk & compliance" : undefined} onClick={() => { setFilter("Risk & compliance"); switchView("library"); }}><LockKeyhole size={18} /><span>Risk & compliance</span></button>
+            <button title={collapsed ? "Wealth & advisory" : undefined} onClick={() => { setFilter("Wealth & advisory"); switchView("library"); }}><Landmark size={18} /><span>Wealth & advisory</span></button>
+            <button title={collapsed ? "Operations" : undefined} onClick={() => { setFilter("Operations"); switchView("library"); }}><Boxes size={18} /><span>Operations</span></button>
           </nav>
 
           <div className="sidebar-platform">
             <span className="nav-group-label">Cisco platform</span>
-            <div><ShieldCheck size={17} /><span>AI Defense</span><StatusDot /></div>
-            <div><Activity size={17} /><span>Agent Observability</span><StatusDot tone="violet" /></div>
-            <div><ServerCog size={17} /><span>AI Infrastructure</span><StatusDot tone="blue" /></div>
+            <button title={`AI Defense: ${platform.defense.detail}`} onClick={() => switchView("controls")}><ShieldCheck size={17} /><span>AI Defense<small>{platform.defense.detail}</small></span><StatusDot tone={platform.defense.tone} /></button>
+            <button title={`Agent Observability: ${platform.observability.detail}`} onClick={() => switchView("telemetry")}><Activity size={17} /><span>Agent Observability<small>{platform.observability.detail}</small></span><StatusDot tone={platform.observability.tone} /></button>
+            <button title={`AI Infrastructure: ${platform.infrastructure.detail}`} onClick={() => openSettings("st-models")}><ServerCog size={17} /><span>AI Infrastructure<small>{platform.infrastructure.detail}</small></span><StatusDot tone={platform.infrastructure.tone} /></button>
           </div>
-          <button className="collapse-button" aria-label="Collapse navigation"><PanelLeftClose size={17} /> Collapse</button>
+          <button className="collapse-button" aria-label={collapsed ? "Expand navigation" : "Collapse navigation"} aria-expanded={!collapsed} onClick={toggleCollapsed}>{collapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}<span>{collapsed ? "Expand" : "Collapse"}</span></button>
         </aside>
 
         {sidebarOpen && <button className="sidebar-scrim" aria-label="Close navigation" onClick={() => setSidebarOpen(false)} />}
@@ -899,6 +997,7 @@ export default function HomePage() {
         <main className="main-content">
           {selectedCase && (
             <UseCaseWorkspace
+              key={selectedCase.id}
               useCase={selectedCase}
               inStory={storyItems.includes(selectedCase.id)}
               onBack={() => { setSelectedCase(null); setActiveView("library"); }}
@@ -914,6 +1013,8 @@ export default function HomePage() {
           )}
 
           {!selectedCase && activeView === "settings" && <StudioSettings />}
+          {!selectedCase && activeView === "controls" && <ControlsPage status={status} onOpenCase={openCaseById} onOpenSettings={() => openSettings("st-ai-defense")} />}
+          {!selectedCase && activeView === "telemetry" && <TelemetryPage status={status} onOpenCase={openCaseById} onOpenSettings={() => openSettings("st-splunk-ao")} />}
 
           {!selectedCase && activeView === "briefing" && (
             <>
@@ -992,18 +1093,24 @@ export default function HomePage() {
                 <button className="primary-button" onClick={() => switchView("stories")}><Workflow size={17} /> Open story builder <span className="button-count">{storyItems.length}</span></button>
               </div>
               <section className="library-toolbar">
-                <label className="search-box"><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search use cases, outcomes, or Cisco solutions" /><kbd>⌘ K</kbd></label>
+                <label className="search-box"><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search use cases, outcomes, or Cisco solutions" aria-label="Search use cases" /><kbd title="Search everything">⌘ K</kbd></label>
                 <div className="filter-row" aria-label="Use case filters">
                   {(["All", "Risk & compliance", "Wealth & advisory", "Operations"] as Category[]).map((item) => (
                     <button key={item} className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</button>
                   ))}
                 </div>
-                <button className="filter-button" aria-label="More filters"><SlidersHorizontal size={18} /></button>
+                <div className="library-extra">
+                  <button aria-pressed={liveOnly} onClick={() => setLiveOnly(!liveOnly)}>Live only</button>
+                  <select aria-label="Cisco solution" value={solution} onChange={(event) => setSolution(event.target.value as Solution | "")}>
+                    <option value="">All Cisco solutions</option>
+                    {SOLUTIONS.map((name) => <option key={name} value={name}>{name}</option>)}
+                  </select>
+                </div>
               </section>
               <div className="library-summary"><span><strong>{filteredCases.length}</strong> use cases</span><span>Modular and searchable</span></div>
               <section className="library-grid">
                 {filteredCases.map((item) => <UseCaseCard key={item.id} useCase={item} onOpen={openUseCase} />)}
-                {filteredCases.length === 0 && <div className="empty-state"><Search size={26} /><h2>No matching use cases</h2><p>Try a broader search or reset the category filter.</p><button className="secondary-button" onClick={() => { setQuery(""); setFilter("All"); }}>Reset filters</button></div>}
+                {filteredCases.length === 0 && <div className="empty-state"><Search size={26} /><h2>No matching use cases</h2><p>Try a broader search or reset the category filter.</p><button className="secondary-button" onClick={() => { setQuery(""); setFilter("All"); setLiveOnly(false); setSolution(""); }}>Reset filters</button></div>}
               </section>
             </>
           )}
@@ -1016,34 +1123,49 @@ export default function HomePage() {
                   <h1>Build a demo story</h1>
                   <p>Sequence use cases and choose where to show the supporting technology.</p>
                 </div>
-                <div className="heading-actions"><button className="secondary-button"><Settings2 size={17} /> Story settings</button><button className="primary-button"><Play size={16} fill="currentColor" /> Present story</button></div>
+                <div className="heading-actions"><button className="primary-button" disabled={!story.length} onClick={startPresenting}><Play size={16} fill="currentColor" /> Present story</button></div>
               </div>
 
               <section className="story-builder-panel">
                 <div className="story-builder-top">
                   <div><span className="eyebrow">GUIDED STORY 01</span><h2>Client lifecycle</h2><p>From onboarding to personalized advice.</p></div>
-                  <div className="story-score"><span>Demo readiness</span><strong>82%</strong><div><i /></div></div>
+                  <div className="story-score" title={storyStates.filter((state) => !state.ready).map((state) => state.reason).join("; ") || "Every moment is ready"}><span>Demo readiness</span><strong>{storyReady}%</strong><div><i style={{ width: `${storyReady}%` }} /></div><small>{storyStates.filter((state) => state.ready).length} of {story.length} moments ready</small></div>
                 </div>
                 <StoryMap />
                 <div className="story-builder-bottom">
                   <div><BrainCircuit size={18} /><span><strong>Business view</strong> Focus on client and employee outcomes.</span></div>
                   <div><Network size={18} /><span><strong>Platform view</strong> Show security, telemetry, and infrastructure.</span></div>
-                  <button><Plus size={17} /> Add a moment</button>
                 </div>
               </section>
 
               <div className="builder-grid">
                 <section className="story-outline">
-                  <div className="section-heading"><div><span className="eyebrow">RUN OF SHOW</span><h2>Story outline</h2></div><button className="text-button">Edit sequence <ArrowRight size={15} /></button></div>
-                  {storyItems.map((id, index) => {
-                    const item = useCases.find((candidate) => candidate.id === id)!;
+                  <div className="section-heading"><div><span className="eyebrow">RUN OF SHOW</span><h2>Story outline</h2></div><button className="text-button" aria-pressed={editingStory} onClick={() => setEditingStory(!editingStory)}>{editingStory ? <><Check size={15} /> Done</> : <>Edit sequence <ArrowRight size={15} /></>}</button></div>
+                  {story.map((item, index) => {
                     const Icon = item.icon;
+                    const state = storyStates[index];
                     return (
-                      <div className="outline-item" key={id}>
-                        <span className="drag-handle">⠿</span><span className={`outline-icon ${item.accent}`}><Icon size={18} /></span>
-                        <div><small>MOMENT {index + 1}</small><strong>{item.title}</strong><p>{item.outcome}</p></div>
-                        <span className="outline-time">{index === 0 ? "05" : "04"} min</span>
-                        <button aria-label={`Open ${item.title}`} onClick={() => openUseCase(item)}><ArrowUpRight size={17} /></button>
+                      <div
+                        className={`outline-item${editingStory ? " editing" : ""}${dragging === item.id ? " dragging" : ""}`}
+                        key={item.id}
+                        draggable={editingStory}
+                        onDragStart={(event) => { setDragging(item.id); event.dataTransfer.effectAllowed = "move"; }}
+                        onDragOver={(event) => { if (dragging && dragging !== item.id) { event.preventDefault(); event.currentTarget.classList.add("drop-target"); } }}
+                        onDragLeave={(event) => event.currentTarget.classList.remove("drop-target")}
+                        onDrop={(event) => { event.preventDefault(); event.currentTarget.classList.remove("drop-target"); if (dragging) moveStoryItem(dragging, index); setDragging(null); }}
+                        onDragEnd={() => setDragging(null)}
+                      >
+                        {editingStory ? <span className="drag-handle" aria-hidden="true">⠿</span> : <span />}
+                        <span className={`outline-icon ${item.accent}`}><Icon size={18} /></span>
+                        <div><small>MOMENT {index + 1}</small><strong>{item.title}</strong><p>{item.outcome}</p><span className={`moment-state ${state.ready ? "ok" : "warn"}`}><StatusDot tone={state.ready ? "mint" : "amber"} />{state.reason}</span></div>
+                        {editingStory ? (
+                          <span className="outline-edit">
+                            <button aria-label={`Move ${item.title} up`} disabled={index === 0} onClick={() => moveStoryItem(item.id, index - 1)}><ArrowUp size={15} /></button>
+                            <button aria-label={`Move ${item.title} down`} disabled={index === story.length - 1} onClick={() => moveStoryItem(item.id, index + 1)}><ArrowDown size={15} /></button>
+                            <button className="remove" aria-label={`Remove ${item.title} from the story`} onClick={() => setStoryItems((items) => items.filter((id) => id !== item.id))}><Trash2 size={15} /></button>
+                          </span>
+                        ) : <span className="outline-time">{index === 0 ? "05" : "04"} min</span>}
+                        {editingStory ? <span /> : <button aria-label={`Open ${item.title}`} onClick={() => openUseCase(item)}><ArrowUpRight size={17} /></button>}
                       </div>
                     );
                   })}
@@ -1054,7 +1176,7 @@ export default function HomePage() {
                   <h2>Talk track</h2>
                   <div className="presenter-card"><span className="presenter-tag">OPENING</span><p>One governed AI foundation across the client lifecycle.</p></div>
                   <div className="talk-track"><span><Check size={15} /> Start with client and employee outcomes</span><span><Check size={15} /> Show architecture when relevant</span><span><Check size={15} /> Close with end-to-end observability</span></div>
-                  <button className="secondary-button"><Eye size={17} /> Preview presenter mode</button>
+                  <button className="secondary-button" disabled={!story.length} onClick={startPresenting}><Play size={16} fill="currentColor" /> Present from moment 1</button>
                 </section>
               </div>
             </>
@@ -1063,17 +1185,55 @@ export default function HomePage() {
       </div>
 
       {launcherOpen && (
-        <div className="launcher-overlay" role="dialog" aria-modal="true" aria-label="App launcher">
-          <button className="launcher-close" onClick={() => setLauncherOpen(false)} aria-label="Close app launcher"><X size={22} /></button>
+        <div className="launcher-overlay" role="dialog" aria-modal="true" aria-label="App launcher" onKeyDown={(event) => { if (event.key === "Escape") closeLauncher(); }}>
+          <button className="launcher-close" onClick={closeLauncher} aria-label="Close app launcher"><X size={22} /></button>
           <div className="launcher-content">
-            <label className="launcher-search"><Search size={20} /><input autoFocus placeholder="Search demos, stories, and platform tools..." /><kbd>⌘ + F</kbd></label>
-            <div className="launcher-columns">
-              <div><h2>Workspace</h2>{navItems.map((item) => { const Icon = item.icon; return <button key={item.id} onClick={() => { switchView(item.id); setLauncherOpen(false); }}><Icon size={18} /><span>{item.label}</span><ArrowRight size={15} /></button>; })}</div>
-              <div><h2>Use case domains</h2><button onClick={() => { setFilter("Risk & compliance"); switchView("library"); setLauncherOpen(false); }}><LockKeyhole size={18} /><span>Risk & compliance</span><ArrowRight size={15} /></button><button onClick={() => { setFilter("Wealth & advisory"); switchView("library"); setLauncherOpen(false); }}><Landmark size={18} /><span>Wealth & advisory</span><ArrowRight size={15} /></button><button onClick={() => { setFilter("Operations"); switchView("library"); setLauncherOpen(false); }}><Boxes size={18} /><span>Operations</span><ArrowRight size={15} /></button></div>
-              <div><h2>Cisco solutions</h2><button><ShieldCheck size={18} /><span>AI Defense</span><StatusDot /></button><button><Activity size={18} /><span>Agent Observability</span><StatusDot tone="violet" /></button><button><ServerCog size={18} /><span>AI Infrastructure</span><StatusDot tone="blue" /></button></div>
-            </div>
+            <label className="launcher-search">
+              <Search size={20} />
+              <input
+                autoFocus
+                aria-label="Search demos and pages"
+                value={launcherQuery}
+                onChange={(event) => setLauncherQuery(event.target.value)}
+                onKeyDown={(event) => { if (event.key === "Enter" && launcherResults[0]) { launcherResults[0].open(); closeLauncher(); } }}
+                placeholder="Search use cases and pages..."
+              />
+              <kbd>Esc</kbd>
+            </label>
+            {launcherQuery.trim() ? (
+              <div className="launcher-results" role="list" aria-label="Search results">
+                {launcherResults.length === 0 ? <p>No use cases or pages match “{launcherQuery.trim()}”.</p> : launcherResults.map((result, index) => {
+                  const Icon = result.icon;
+                  return <button key={result.key} role="listitem" className={index === 0 ? "active" : ""} onClick={() => { result.open(); closeLauncher(); }}><Icon size={18} /><span>{result.title}<small>{result.detail}</small></span><ArrowRight size={15} /></button>;
+                })}
+              </div>
+            ) : (
+              <div className="launcher-columns">
+                <div><h2>Workspace</h2>{[...navItems, ...shellPages].map((item) => { const Icon = item.icon; return <button key={item.id} onClick={() => { switchView(item.id); closeLauncher(); }}><Icon size={18} /><span>{item.label}</span><ArrowRight size={15} /></button>; })}</div>
+                <div><h2>Use case domains</h2><button onClick={() => { setFilter("Risk & compliance"); switchView("library"); closeLauncher(); }}><LockKeyhole size={18} /><span>Risk & compliance</span><ArrowRight size={15} /></button><button onClick={() => { setFilter("Wealth & advisory"); switchView("library"); closeLauncher(); }}><Landmark size={18} /><span>Wealth & advisory</span><ArrowRight size={15} /></button><button onClick={() => { setFilter("Operations"); switchView("library"); closeLauncher(); }}><Boxes size={18} /><span>Operations</span><ArrowRight size={15} /></button></div>
+                <div><h2>Cisco solutions</h2>
+                  <button onClick={() => { switchView("controls"); closeLauncher(); }}><ShieldCheck size={18} /><span>AI Defense<small className="launcher-detail"> · {platform.defense.detail}</small></span><StatusDot tone={platform.defense.tone} /></button>
+                  <button onClick={() => { switchView("telemetry"); closeLauncher(); }}><Activity size={18} /><span>Agent Observability<small className="launcher-detail"> · {platform.observability.detail}</small></span><StatusDot tone={platform.observability.tone} /></button>
+                  <button onClick={() => { openSettings("st-models"); closeLauncher(); }}><ServerCog size={18} /><span>AI Infrastructure<small className="launcher-detail"> · {platform.infrastructure.detail}</small></span><StatusDot tone={platform.infrastructure.tone} /></button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+      )}
+
+      {helpOpen && <HelpDrawer status={status} onClose={() => setHelpOpen(false)} onOpenSettings={() => openSettings()} />}
+
+      {presenting !== null && story[presenting] && (
+        <PresenterBar
+          index={presenting}
+          total={story.length}
+          title={story[presenting].title}
+          talk={[story[presenting].outcome, useCaseFrames[story[presenting].id].transformation.aiShift, useCaseFrames[story[presenting].id].transformation.humanControl]}
+          onPrev={() => present(presenting - 1)}
+          onNext={() => (presenting === story.length - 1 ? stopPresenting() : present(presenting + 1))}
+          onExit={stopPresenting}
+        />
       )}
 
     </div>

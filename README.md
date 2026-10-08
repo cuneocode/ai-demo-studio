@@ -112,6 +112,12 @@ The settings API is served by the Node layer in front of the worker (the Vite de
 server and `scripts/start-studio.mjs`), because it writes to disk and manages
 processes. It accepts same-origin JSON writes only.
 
+The top bar's **Controls** and **Telemetry** pages, the service bell, the help
+drawer, the Cisco platform rows, and the story builder's readiness score all read
+`/api/studio/status`: a read-only snapshot of each service's health (AI Defense
+mode, Agent Control, tracing and export status, recent interbank runs) that never
+includes setting values beyond URLs and names.
+
 ## Useful Commands
 
 - `npm run dev`: start local development
