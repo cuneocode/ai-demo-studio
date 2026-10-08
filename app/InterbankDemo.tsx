@@ -13,7 +13,8 @@ import {
   SquareTerminal,
   X,
 } from "lucide-react";
-import SourceViewer, { integrationClass, useSourceCatalog } from "./SourceViewer";
+import { SourceInspector } from "./map/inspector.tsx";
+import { interbankEvidence } from "./map/interbank-evidence.ts";
 import "./banking.css";
 import "./interbank.css";
 
@@ -48,6 +49,68 @@ const HOPS: Record<string, string> = {
   "ingress-from-bank-a": "Bank A → Bank B · ingress :9443",
   "egress-to-bank-a": "Bank B → Bank A · egress :8443",
 };
+
+/** Each source button opens the same captured evidence the architecture explorer cites. */
+const EVIDENCE: Record<string, { title: string; ids: string[] }> = {
+  "bank-a-agent": { title: "Bank A coordinator", ids: ["interbank.bank-a.coordinator"] },
+  "bank-b-agent": { title: "Bank B investigator", ids: ["interbank.bank-b.investigator"] },
+  "deep-agent-builder": { title: "Deep Agent and model", ids: ["interbank.agents.build", "interbank.agents.model"] },
+  telemetry: { title: "Tracing and handoff", ids: ["interbank.telemetry.setup", "interbank.telemetry.handoff", "interbank.telemetry.session"] },
+  genai: { title: "GenAI span export", ids: ["interbank.genai.exporter"] },
+  "agent-control": { title: "Agent Control evaluation", ids: ["interbank.controls.outbound"] },
+  "controls-setup": { title: "Agent Control definition", ids: ["interbank.controls.setup"] },
+  "partner-tool": { title: "Partner tool", ids: ["interbank.partner-tool"] },
+  "a2a-send": { title: "A2A client", ids: ["interbank.a2a.send", "interbank.a2a.mtls"] },
+  "a2a-receive": { title: "A2A server", ids: ["interbank.a2a.receive", "interbank.a2a.server"] },
+  records: { title: "Read-only records tool", ids: ["interbank.records"] },
+  "bank-a-records": { title: "Read-only records tool", ids: ["interbank.records"] },
+  "bank-b-records": { title: "Read-only records tool", ids: ["interbank.records"] },
+  "bank-a-gateway": { title: "Bank A gateway", ids: ["interbank.gw-a.console-listener", "interbank.gw-a.egress", "interbank.gw-a.egress-token", "interbank.gw.tracing"] },
+  "bank-b-gateway": { title: "Bank B gateway", ids: ["interbank.gw-b.ingress", "interbank.gw-b.ingress-extproc"] },
+  "ai-defense-extproc": { title: "AI Defense ExtProc", ids: ["interbank.extproc.text", "interbank.extproc.verdict", "interbank.extproc.hops"] },
+  "ai-defense-api": { title: "Inspection API call", ids: ["interbank.defense.inspect"] },
+  collector: { title: "Gateway collector", ids: ["interbank.collector"] },
+  console: { title: "Operations console", ids: ["interbank.console.kickoff"] },
+  compose: { title: "Containers and networks", ids: ["interbank.compose"] },
+  pki: { title: "Per-bank CAs and tokens", ids: ["interbank.labctl.pki"] },
+};
+
+const evidenceLabel = (id: string) => {
+  const item = interbankEvidence[id];
+  return item ? `${item.file.split("/").pop()} · ${item.symbol}` : id;
+};
+
+type Viewer = { title: string; ids: string[]; current: string };
+
+function viewerFor(keys: string[]): Viewer | null {
+  const ids = [...new Set(keys.flatMap((key) => EVIDENCE[key]?.ids ?? []))];
+  return ids.length ? { title: EVIDENCE[keys[0]]?.title ?? "Source evidence", ids, current: ids[0] } : null;
+}
+
+function EvidencePanel({ viewer, onSelect, onClose }: { viewer: Viewer; onSelect: (id: string) => void; onClose: () => void }) {
+  const [width, setWidth] = useState(620);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  const item = interbankEvidence[viewer.current];
+  return (
+    <div className="ib-evidence" role="dialog" aria-modal="true" aria-label={`${viewer.title} source`} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <SourceInspector
+        sourceId={viewer.current}
+        sourceIds={viewer.ids}
+        labels={Object.fromEntries(viewer.ids.map((id) => [id, evidenceLabel(id)]))}
+        attribution={{ subject: viewer.title, platforms: [], mechanism: item ? `${item.symbol} in ${item.file}` : "", effect: item?.proves ?? "" }}
+        width={width}
+        drawer={false}
+        onWidth={setWidth}
+        onSelect={onSelect}
+        onClose={onClose}
+      />
+    </div>
+  );
+}
 
 const INTEGRATION_POINTS: { integration: string; title: string; detail: string; ids: string[] }[] = [
   { integration: "deepagents", title: "LangChain Deep Agents", detail: "create_deep_agent, prompts, tools, and the Responses API model with reasoning summaries.", ids: ["deep-agent-builder", "bank-a-agent", "bank-b-agent"] },
@@ -279,8 +342,9 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState("");
-  const [viewer, setViewer] = useState<string[] | null>(null);
-  const catalog = useSourceCatalog();
+  const [viewer, setViewer] = useState<Viewer | null>(null);
+  const openSources = useCallback((keys: string[]) => setViewer(viewerFor(keys)), []);
+  const closeSources = useCallback(() => setViewer(null), []);
 
   const loadHistory = useCallback(() => {
     fetch("/api/interbank/runs", { signal: AbortSignal.timeout(8000) }).then((r) => (r.ok ? r.json() : [])).then(setHistory).catch(() => undefined);
@@ -414,9 +478,9 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
       </section>
 
       <section className="ib-stage" aria-label="Agents and gateways">
-        <Terminal lane="a" lines={lanes.a} run={effectiveRun} active={effectiveRun?.status === "running" && lastAgentLane === "a"} expanded={expanded} toggle={toggle} onSource={setViewer} />
-        <Wire lines={lanes.wire} run={effectiveRun} expanded={expanded} toggle={toggle} onSource={setViewer} />
-        <Terminal lane="b" lines={lanes.b} run={effectiveRun} active={effectiveRun?.status === "running" && lastAgentLane === "b"} expanded={expanded} toggle={toggle} onSource={setViewer} />
+        <Terminal lane="a" lines={lanes.a} run={effectiveRun} active={effectiveRun?.status === "running" && lastAgentLane === "a"} expanded={expanded} toggle={toggle} onSource={openSources} />
+        <Wire lines={lanes.wire} run={effectiveRun} expanded={expanded} toggle={toggle} onSource={openSources} />
+        <Terminal lane="b" lines={lanes.b} run={effectiveRun} active={effectiveRun?.status === "running" && lastAgentLane === "b"} expanded={expanded} toggle={toggle} onSource={openSources} />
       </section>
 
       <section className="ib-results">
@@ -465,19 +529,19 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
       <section className="proof-card ib-integrations" aria-label="Integration points">
         <div className="ib-integrations-head">
           <span className="review-kicker"><SquareTerminal size={13} /> INTEGRATION POINTS · SOURCE AND CONFIGURATION</span>
-          <p>Every <CodeXml size={13} /> button opens the real file, with the integration code highlighted.</p>
+          <p>Every <CodeXml size={13} /> button opens the same captured excerpt the architecture map cites, and says when the file has changed since.</p>
         </div>
         <div className="ib-integration-grid">
           {INTEGRATION_POINTS.map((point) => (
-            <article key={point.integration} className={integrationClass(point.integration)}>
+            <article key={point.integration} className={`integration-${point.integration}`}>
               <strong>{point.title}</strong>
               <p>{point.detail}</p>
-              <div>{point.ids.map((id, i) => <button key={id} onClick={() => setViewer([...point.ids.slice(i), ...point.ids.slice(0, i)])}><CodeXml size={13} /> {catalog?.sources[id]?.title ?? id}</button>)}</div>
+              <div>{point.ids.map((id) => <button key={id} onClick={() => openSources([id])}><CodeXml size={13} /> {EVIDENCE[id]?.title ?? id}</button>)}</div>
             </article>
           ))}
         </div>
       </section>
-      {viewer && <SourceViewer ids={viewer} onClose={() => setViewer(null)} />}
+      {viewer && <EvidencePanel viewer={viewer} onSelect={(current) => setViewer({ ...viewer, current })} onClose={closeSources} />}
     </div>
   );
 }

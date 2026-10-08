@@ -47,7 +47,7 @@ function relationshipRecords(caseId: string, map: ZoomMap): ModelRelationship[] 
 }
 
 export function enableContinuousCatalog(catalog: CaseScenes): CaseScenes {
-  if (catalog.id === "brahe-bank") return catalog;
+  if (catalog.id === "brahe-bank" || catalog.id === "interbank-a2a") return catalog;
   const map = zoomMaps[catalog.id];
   if (!map) return catalog;
   const added = relationshipRecords(catalog.id, map);

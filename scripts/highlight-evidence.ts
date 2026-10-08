@@ -5,10 +5,13 @@ import { createHighlighter } from "shiki";
 import { evidence } from "../app/map/evidence.ts";
 
 const revision = execFileSync("git", ["rev-parse", "--short", "HEAD"], { encoding: "utf8" }).trim();
-const highlighter = await createHighlighter({ themes: ["github-dark"], langs: ["python"] });
+const highlighter = await createHighlighter({ themes: ["github-dark"], langs: ["python", "yaml", "sql"] });
 const artifacts: Record<string, unknown> = {};
+const languages: Record<string, "python" | "yaml" | "sql"> = { py: "python", yaml: "yaml", yml: "yaml", sql: "sql" };
 
 for (const item of Object.values(evidence)) {
+  const lang = languages[item.file.split(".").pop() ?? ""];
+  if (!lang) throw new Error(`${item.id} has no highlighter for ${item.file}`);
   const text = readFileSync(item.file, "utf8");
   const lines = text.split(/\r?\n/);
   if (item.start < 1 || item.end > lines.length || item.end < item.start) {
@@ -18,7 +21,7 @@ for (const item of Object.values(evidence)) {
   const symbol = item.symbol.split(".").pop() ?? item.symbol;
   const nearby = lines.slice(Math.max(0, item.start - 80), item.end).join("\n");
   if (!nearby.includes(symbol)) throw new Error(`${item.id} range ${item.start}-${item.end} does not look like ${item.symbol}`);
-  const { tokens } = highlighter.codeToTokens(excerpt, { lang: "python", theme: "github-dark" });
+  const { tokens } = highlighter.codeToTokens(excerpt, { lang, theme: "github-dark" });
   const html = tokens.map((line, index) => {
     const spans = line.map((token) => `<span style="color:${token.color ?? "#e4edf8"}">${escapeHtml(token.content)}</span>`).join("");
     const lineNo = item.start + index;

@@ -1,6 +1,5 @@
-import { execFile } from "node:child_process";
 import vinext from "vinext";
-import { defineConfig, type ViteDevServer } from "vite";
+import { defineConfig } from "vite";
 import hostingConfig from "./.openai/hosting.json";
 import { sites } from "./build/sites-vite-plugin";
 
@@ -77,26 +76,6 @@ export default defineConfig(async () => {
               return;
             }
             next();
-          });
-        },
-      },
-      {
-        // Source excerpts are read from the files on disk, so the code viewer works
-        // whether or not the lab's containers are running.
-        name: "interbank-sources",
-        configureServer(viteServer: ViteDevServer) {
-          viteServer.middlewares.use("/api/interbank/sources", (req, res) => {
-            const id = (req.url || "/").split("?")[0].replace(/^\//, "") || "--catalog";
-            if (id !== "--catalog" && !/^[a-z0-9-]+$/.test(id)) {
-              res.statusCode = 404;
-              res.end();
-              return;
-            }
-            execFile("python3", ["services/interbank/demo/sources.py", id], { maxBuffer: 8 * 1024 * 1024 }, (error, stdout) => {
-              res.setHeader("Content-Type", "application/json");
-              res.statusCode = error ? 404 : 200;
-              res.end(error ? JSON.stringify({ detail: "unknown source" }) : stdout);
-            });
           });
         },
       },

@@ -28,6 +28,7 @@ export type SceneNodeData = {
   capabilityLines?: { id: string; text: string; relevance: FocusRelevance }[];
   attribution?: { name: string; label: string; role: string; relevance: FocusRelevance }[];
   onMeasure?: (instanceId: string, width: number, height: number) => void;
+  minHeight?: number;
   onExplore?: () => void;
   onSource?: () => void;
 };
@@ -85,7 +86,7 @@ function Body({ data, selected, kind }: { data: SceneNodeData; selected?: boolea
     return () => window.clearTimeout(timer);
   }, [instanceId, onMeasure, portKey, representationKey]);
   return (
-    <div ref={cardRef} className={`map-node ${kind} ${data.compact ? "is-compact" : ""} ${data.dense ? "is-dense" : ""} ${selected ? "is-selected" : ""}`} data-instance-id={data.instanceId} data-representation-key={representationKey} data-relevance={data.nodeRelevance ?? "context"}>
+    <div ref={cardRef} className={`map-node ${kind} ${data.compact ? "is-compact" : ""} ${data.dense ? "is-dense" : ""} ${selected ? "is-selected" : ""}`} data-instance-id={data.instanceId} data-representation-key={representationKey} data-relevance={data.nodeRelevance ?? "context"} style={data.minHeight ? { minHeight: data.minHeight } : undefined}>
       <Ports along={data.portAlong} used={data.ports} />
       <strong title={data.technicalLabel}>{data.displayLabel}</strong>
       {data.serviceLabel && data.serviceLabel !== data.displayLabel && !data.attribution?.some((item) => item.name === data.serviceLabel) ? <small>{data.serviceLabel}</small> : null}
@@ -141,7 +142,7 @@ function GroupNodeView({ data, selected }: NodeProps) {
       <Ports along={item.portAlong} used={item.ports} />
       <div className="map-group-header">
         <strong>{item.displayLabel}</strong>
-        <button type="button" data-action="collapse">Collapse</button>
+        {item.expandGroupId ? <button type="button" data-action="collapse">Collapse</button> : item.supportingText ? <small>{item.supportingText}</small> : null}
       </div>
     </div>
   );

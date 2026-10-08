@@ -15,8 +15,8 @@ import {
 } from "@xyflow/react";
 import { Maximize2, Minimize2, Minus, Plus } from "lucide-react";
 import "@xyflow/react/dist/style.css";
-import { BRAHE_GROUPS, collapseBraheGroup, normalizeBraheExpansion, projectBraheSystem, type BraheGroupId } from "./brahe-system.ts";
 import { catalogs, resolveScene, type Catalog } from "./catalog.ts";
+import { continuousSystems, type ContinuousSystem } from "./continuous.ts";
 import { begin, enterScene, restoreTo, type Shell, type TransitionHost, type Veil } from "./controller.ts";
 import { edgeTypes } from "./edges.tsx";
 import {
@@ -132,6 +132,7 @@ function buildGraph(
   onMeasure: (instanceId: string, width: number, height: number) => void,
   transitionNodeIds: ReadonlySet<string>,
   transitionEdgeIds: ReadonlySet<string>,
+  fillDeclaredHeights = false,
 ) {
   const usedPorts = new Map<string, Set<string>>();
   for (const edge of layout.edges) {
@@ -191,6 +192,7 @@ function buildGraph(
       portAlong: layout.portAlong[node.instanceId],
       ports: [...(usedPorts.get(node.instanceId) ?? [])],
       onMeasure,
+      minHeight: fillDeclaredHeights && !(node.role === "group" && node.expanded) ? node.height : undefined,
     } satisfies SceneNodeData,
     };
   });
@@ -215,8 +217,8 @@ function buildGraph(
 function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
   const flow = useReactFlow();
   const root = catalog.scenes[catalog.rootSceneId];
-  const braheContinuous = catalog.id === "brahe-bank";
-  const continuous = braheContinuous || Boolean(catalog.projectionRelationshipIds?.length);
+  const system: ContinuousSystem | undefined = continuousSystems[catalog.id];
+  const continuous = Boolean(system) || Boolean(catalog.projectionRelationshipIds?.length);
   const [mode, setMode] = useState<Mode>(root.modes.includes("implemented") ? "implemented" : "proposed");
   const [nav, setNav] = useState<NavState>(() => initialNav(root.id, root.businessStepId));
   const [layouts, setLayouts] = useState<Record<string, LayoutResult>>(() => ({ [root.id]: authoredLayout(root) }));
@@ -256,11 +258,11 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
   }, []);
   const scene = useMemo(
     () => continuous
-      ? braheContinuous
-        ? projectBraheSystem(nav.expandedGroupIds, mode)
+      ? system
+        ? system.project(nav.expandedGroupIds, mode)
         : projectGenericSystem(catalog, nav.expandedGroupIds, mode)
       : catalog.scenes[nav.sceneId] ?? root,
-    [braheContinuous, catalog, continuous, mode, nav.expandedGroupIds, nav.sceneId, root],
+    [system, catalog, continuous, mode, nav.expandedGroupIds, nav.sceneId, root],
   );
   const measurementKey = `${scene.id}:${mode}:${contentRevision(scene)}`;
   const representationGeneration = `${mode}:${nav.expandedGroupIds.join(">") || "overview"}:${scene.nodes.length}:${scene.relationships.length}`;
@@ -305,7 +307,8 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
     continuous ? ignoreMeasurement : onMeasure,
     localTransition?.nodeIds ?? new Set(),
     localTransition?.edgeIds ?? new Set(),
-  ), [catalog, continuous, scene, laid, localTransition, mode, platformFocus, onMeasure]);
+    Boolean(system?.fillDeclaredHeights),
+  ), [catalog, continuous, scene, laid, localTransition, mode, platformFocus, onMeasure, system]);
   const focusPlatform = catalog.platforms?.find((item) => item.id === platformFocus) ?? null;
   const systemExpanded = continuous && nav.expandedGroupIds.length > 0;
   const isOverview = continuous ? !systemExpanded : scene.id === catalog.rootSceneId;
@@ -350,7 +353,7 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
       const explorer = controls.getCanvas()?.closest("[data-testid='architecture-explorer']");
       if (!explorer?.contains(event.target as globalThis.Node)) return;
       event.preventDefault();
-      if (controls.catalog.id === "brahe-bank") {
+      if (continuousSystems[controls.catalog.id]) {
         const snapshot = controls.getNav().interactionHistory.at(-1);
         if (snapshot) {
           controls.dispatch({ type: "restoreInteraction" });
@@ -378,8 +381,8 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
       if (navRef.current.phase !== "idle" || navRef.current.history.length > 0) return;
       didFit.current = true;
       const live = continuous
-        ? braheContinuous
-          ? projectBraheSystem(navRef.current.expandedGroupIds, mode)
+        ? system
+          ? system.project(navRef.current.expandedGroupIds, mode)
           : projectGenericSystem(catalog, navRef.current.expandedGroupIds, mode)
         : catalog.scenes[navRef.current.sceneId];
       const layout = continuous ? authoredLayout(live) : layoutsRef.current[live.id] ?? authoredLayout(live);
@@ -390,7 +393,7 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
       publishZoom(viewport.zoom);
     });
     return () => cancelAnimationFrame(frameId);
-  }, [braheContinuous, catalog, continuous, flow, mode, publishZoom]);
+  }, [system, catalog, continuous, flow, mode, publishZoom]);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -416,17 +419,8 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
       framedPanelKey.current = null;
       return;
     }
-    const groupOccurrence: Record<string, string> = {
-      [BRAHE_GROUPS.assistant]: "brahe.assistant",
-      [BRAHE_GROUPS.check]: "brahe.stage.check",
-      [BRAHE_GROUPS.requestInspection]: "brahe.check.inspect",
-      [BRAHE_GROUPS.build]: "brahe.stage.build",
-      [BRAHE_GROUPS.hosting]: "brahe.build.host",
-      [BRAHE_GROUPS.return]: "brahe.stage.return",
-      [BRAHE_GROUPS.answerInspection]: "brahe.return.inspect",
-    };
     const deepest = nav.expandedGroupIds.at(-1);
-    const targetId = nav.selectedId ?? (deepest ? groupOccurrence[deepest] : "brahe.assistant");
+    const targetId = nav.selectedId ?? (system ? (deepest ? system.occurrences[deepest] : system.rootOccurrenceId) : undefined);
     if (!targetId) return;
     let innerFrame = 0;
     const frameId = requestAnimationFrame(() => {
@@ -449,7 +443,7 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
       cancelAnimationFrame(frameId);
       cancelAnimationFrame(innerFrame);
     };
-  }, [environmentOpen, flow, laid.nodes, narrow, nav.expandedGroupIds, nav.selectedId, nav.sourceSelection, scene, sourceWidth]);
+  }, [environmentOpen, flow, laid.nodes, narrow, nav.expandedGroupIds, nav.selectedId, nav.sourceSelection, scene, sourceWidth, system]);
 
   useEffect(() => {
     if (!expanded) return;
@@ -540,7 +534,7 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const absolute = absoluteSceneNodes(projectedNodes).map((node) => ({ ...node, parentId: undefined }));
-    if (!braheContinuous) {
+    if (!system) {
       const primary = primaryGroupId(catalog.id);
       const coreExpanded = groupId.startsWith(`${catalog.id}.group.core.`);
       const primaryOccurrence = projectedNodes.find((node) => node.expandGroupId === primary && node.expanded)?.instanceId;
@@ -575,42 +569,18 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
       if (duration === 0) publishZoom(viewport.zoom);
       return;
     }
-    const prefixes: Record<string, string[]> = {
-      [BRAHE_GROUPS.assistant]: ["brahe."],
-      [BRAHE_GROUPS.check]: ["brahe.check", "brahe.scope", "brahe.stage.build", "brahe.stage.return", "brahe.ask", "brahe.review", "brahe.assistant"],
-      [BRAHE_GROUPS.requestInspection]: ["brahe.inspect.request", "brahe.check", "brahe.scope", "brahe.stage.build", "brahe.assistant"],
-      [BRAHE_GROUPS.build]: ["brahe.build", "brahe.assistant"],
-      [BRAHE_GROUPS.hosting]: ["brahe.host", "brahe.build", "brahe.stage.return", "brahe.assistant"],
-      [BRAHE_GROUPS.return]: ["brahe.return", "brahe.answer", "brahe.stage.check", "brahe.stage.build", "brahe.review", "brahe.assistant"],
-      [BRAHE_GROUPS.answerInspection]: ["brahe.return.inspect", "brahe.answer", "brahe.stage.build", "brahe.review", "brahe.assistant"],
-    };
-    const wanted = prefixes[groupId] ?? ["brahe."];
-    const exact: Partial<Record<string, Set<string>>> = {
-      [BRAHE_GROUPS.check]: new Set(["brahe.assistant", "brahe.stage.check", "brahe.check.question", "brahe.check.inspect", "brahe.scope.evaluate", "brahe.scope.control", "brahe.scope.decision", "brahe.scope.stop", "brahe.stage.build"]),
-      [BRAHE_GROUPS.requestInspection]: new Set(["brahe.assistant", "brahe.stage.check", "brahe.check.question", "brahe.check.inspect", "brahe.inspect.request.call", "brahe.service.ai-defense", "brahe.inspect.request.apply", "brahe.scope.evaluate", "brahe.scope.control", "brahe.scope.decision", "brahe.scope.stop", "brahe.stage.build"]),
-      [BRAHE_GROUPS.build]: new Set(["brahe.stage.check", "brahe.stage.build", "brahe.build.question", "brahe.build.supervisor", "brahe.build.draft", "brahe.build.cards", "brahe.build.card-tool", "brahe.build.card-docs", "brahe.build.score", "brahe.build.score-tool", "brahe.build.score-value", "brahe.build.host", "brahe.stage.return"]),
-      [BRAHE_GROUPS.hosting]: new Set(["brahe.build.question", "brahe.build.supervisor", "brahe.build.draft", "brahe.build.host", "brahe.host.runtime", "brahe.host.endpoint"]),
-      [BRAHE_GROUPS.return]: new Set(["brahe.assistant", "brahe.stage.return", "brahe.return.answer", "brahe.return.inspect", "brahe.answer.evaluate", "brahe.answer.control", "brahe.answer.decision", "brahe.answer.stop", "brahe.review"]),
-      [BRAHE_GROUPS.answerInspection]: new Set(["brahe.assistant", "brahe.stage.return", "brahe.return.answer", "brahe.return.inspect", "brahe.inspect.answer.call", "brahe.service.ai-defense", "brahe.inspect.answer.apply", "brahe.answer.evaluate", "brahe.answer.control", "brahe.answer.decision", "brahe.answer.stop", "brahe.review"]),
-    };
+    const rule = system.framing[groupId] ?? system.framing[system.rootGroupId] ?? {};
+    const exact = rule.ids ? new Set(rule.ids) : null;
+    const wanted = rule.prefixes ?? [];
     const visible = absolute
-      .filter((node) => exact[groupId]?.has(node.instanceId) ?? wanted.some((prefix) => node.instanceId.startsWith(prefix)))
+      .filter((node) => exact ? exact.has(node.instanceId) : wanted.some((prefix) => node.instanceId.startsWith(prefix)))
       .map((node) => {
-        if (groupId === BRAHE_GROUPS.build && node.instanceId === "brahe.assistant") return { ...node, x: 470, width: 220, height: 44 };
-        return groupId !== BRAHE_GROUPS.assistant && (node.instanceId === "brahe.assistant" || (groupId === BRAHE_GROUPS.requestInspection && node.instanceId === "brahe.stage.check") || (groupId === BRAHE_GROUPS.answerInspection && node.instanceId === "brahe.stage.return"))
-          ? { ...node, width: 220, height: 44 }
-          : node;
+        const shrink = rule.shrink?.[node.instanceId];
+        return shrink ? { ...node, ...shrink } : node;
       });
     const ids = new Set(visible.map((node) => node.instanceId));
     const routed = routeScene({ ...nextScene, nodes: projectedNodes }).filter((edge) => ids.has(edge.sourceInstanceId) && ids.has(edge.targetInstanceId));
-    const deepRequest = groupId === BRAHE_GROUPS.requestInspection;
-    const deepAnswer = groupId === BRAHE_GROUPS.answerInspection;
-    const localStage = groupId === BRAHE_GROUPS.check || groupId === BRAHE_GROUPS.build || groupId === BRAHE_GROUPS.return;
-    const viewport = frameScene(visible, routed, undefined, canvas.clientWidth, canvas.clientHeight, deepAnswer
-      ? { minZoom: 0.8, pad: 32 }
-      : deepRequest || localStage
-        ? { minZoom: 0.82, pad: 32 }
-        : undefined);
+    const viewport = frameScene(visible, routed, undefined, canvas.clientWidth, canvas.clientHeight, rule.minZoom ? { minZoom: rule.minZoom, pad: 32 } : undefined);
     automaticViewport.current = viewport;
     cameraOwner.current = "automatic";
     (globalThis as {
@@ -694,11 +664,11 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
     (globalThis as { __mapOperationId?: number }).__mapOperationId = operationId;
     const started = performance.now();
     const snapshot = interactionSnapshot();
-    const nextExpanded = braheContinuous
-      ? normalizeBraheExpansion(navRef.current.expandedGroupIds, node.expandGroupId)
+    const nextExpanded = system
+      ? system.normalize(navRef.current.expandedGroupIds, node.expandGroupId)
       : normalizeGenericExpansion(catalog.id, navRef.current.expandedGroupIds, node.expandGroupId);
     if (node.platformFocus) dispatch({ type: "setFocus", platformFocus: node.platformFocus });
-    const nextScene = braheContinuous ? projectBraheSystem(nextExpanded, mode) : projectGenericSystem(catalog, nextExpanded, mode);
+    const nextScene = system ? system.project(nextExpanded, mode) : projectGenericSystem(catalog, nextExpanded, mode);
     const projected = performance.now();
     beginLocalTransition(nextScene);
     dispatch({ type: "setExpansion", expandedGroupIds: nextExpanded, selectedId: node.instanceId, snapshot });
@@ -713,24 +683,14 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
     (globalThis as { __mapOperationId?: number }).__mapOperationId = operationId;
     const started = performance.now();
     const snapshot = interactionSnapshot();
-    const nextExpanded = braheContinuous
-      ? collapseBraheGroup(navRef.current.expandedGroupIds, node.expandGroupId)
+    const nextExpanded = system
+      ? system.collapse(navRef.current.expandedGroupIds, node.expandGroupId)
       : collapseGenericGroup(catalog.id, navRef.current.expandedGroupIds, node.expandGroupId);
-    const nextScene = braheContinuous ? projectBraheSystem(nextExpanded, mode) : projectGenericSystem(catalog, nextExpanded, mode);
+    const nextScene = system ? system.project(nextExpanded, mode) : projectGenericSystem(catalog, nextExpanded, mode);
     const projected = performance.now();
     beginLocalTransition(nextScene);
     dispatch({ type: "setExpansion", expandedGroupIds: nextExpanded, selectedId: node.instanceId, snapshot });
-    const frameGroupId = !braheContinuous
-      ? parentGenericGroup(catalog.id, node.expandGroupId)
-      : node.expandGroupId === BRAHE_GROUPS.requestInspection
-      ? BRAHE_GROUPS.check
-      : node.expandGroupId === BRAHE_GROUPS.hosting
-        ? BRAHE_GROUPS.build
-        : node.expandGroupId === BRAHE_GROUPS.answerInspection
-          ? BRAHE_GROUPS.return
-          : [BRAHE_GROUPS.check, BRAHE_GROUPS.build, BRAHE_GROUPS.return].includes(node.expandGroupId as BraheGroupId)
-            ? BRAHE_GROUPS.assistant
-            : node.expandGroupId;
+    const frameGroupId = system ? system.frameParent(node.expandGroupId) : parentGenericGroup(catalog.id, node.expandGroupId);
     scheduleContinuousFrame(nextScene, frameGroupId, operationId);
     reportContinuousTiming(started, projected);
   }
@@ -810,21 +770,13 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
 
   function onRail(step: SceneNode) {
     if (continuous) {
-      if (!braheContinuous) {
+      if (!system) {
         const occurrence = scene.nodes.find((node) => node.instanceId === step.instanceId);
         if (occurrence?.expandGroupId) expandContinuous(occurrence);
         else dispatch({ type: "select", instanceId: step.instanceId });
         return;
       }
-      const occurrenceId = step.instanceId === "prepare"
-        ? "brahe.assistant"
-        : step.instanceId === "check"
-          ? "brahe.stage.check"
-          : step.instanceId === "build"
-            ? "brahe.stage.build"
-            : step.instanceId === "return-stage"
-              ? "brahe.stage.return"
-              : `brahe.${step.instanceId}`;
+      const occurrenceId = system.railOccurrence(step.instanceId);
       const occurrence = scene.nodes.find((node) => node.instanceId === occurrenceId);
       if (occurrence?.expandGroupId) expandContinuous(occurrence);
       else dispatch({ type: "select", instanceId: occurrenceId });
@@ -871,25 +823,15 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
   const journey = root;
   const selected = scene.nodes.find((node) => node.instanceId === nav.selectedId) ?? null;
   const bothModes = root.modes.includes("implemented") && root.modes.includes("proposed");
-  const continuousLabels: Record<string, string> = {
-    "brahe.journey": "Card guidance",
-    [BRAHE_GROUPS.assistant]: "Bank assistant",
-    [BRAHE_GROUPS.check]: "Check question",
-    [BRAHE_GROUPS.requestInspection]: "Request inspection",
-    [BRAHE_GROUPS.build]: "Build explanation",
-    [BRAHE_GROUPS.hosting]: "Model hosting",
-    [BRAHE_GROUPS.return]: "Check and return",
-    [BRAHE_GROUPS.answerInspection]: "Answer inspection",
-  };
-  const continuousPath = braheContinuous
-    ? ["brahe.journey", ...nav.expandedGroupIds].map((id) => continuousLabels[id] ?? id)
+  const continuousPath = system
+    ? [system.rootLabel, ...nav.expandedGroupIds.map((id) => system.labels[id] ?? id)]
     : [root.title, ...nav.expandedGroupIds.map((id) => genericGroupLabel(catalog.id, id))];
   const handleFlowNodeClick = useCallback((_: unknown, node: FlowNode) => {
     dispatch({ type: "select", instanceId: node.id });
   }, [dispatch]);
   const handleFlowNodeDoubleClick = useCallback((_: unknown, node: FlowNode) => {
     const occurrence = sceneRef.current.nodes.find((item) => item.instanceId === node.id);
-    if (catalog.id === "brahe-bank" && occurrence?.expandGroupId) expandContinuousRef.current(occurrence);
+    if (continuousSystems[catalog.id] && occurrence?.expandGroupId) expandContinuousRef.current(occurrence);
     else if (hostRef.current) void enterScene(hostRef.current, node.id);
   }, [catalog.id]);
   const handleFlowMoveStart = useCallback((event: unknown) => {
@@ -973,23 +915,17 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
             <p>{title}</p>
           </div>
         ) : null}
-        <ol className="map-rail" aria-label={isOverview || !braheContinuous ? "Business journey" : "Assistant stages"}>
-          {(isOverview || !braheContinuous
+        <ol className="map-rail" aria-label={isOverview || !system ? "Business journey" : system.railLabel}>
+          {(isOverview || !system
             ? journey.nodes.filter((step) => step.role === "activity")
-            : [
-                { instanceId: "check", displayLabel: "Check question" },
-                { instanceId: "build", displayLabel: "Build explanation" },
-                { instanceId: "return-stage", displayLabel: "Check and return" },
-              ]
+            : system.stages
           ).map((step, index) => (
             <li key={step.instanceId}>
               {index > 0 ? <span aria-hidden="true">→</span> : null}
               <button type="button" aria-current={!isOverview && (continuous
-                ? !braheContinuous
+                ? !system
                   ? scene.nodes.find((node) => node.instanceId === step.instanceId)?.expanded
-                  : (step.instanceId === "check" && nav.expandedGroupIds.includes(BRAHE_GROUPS.check))
-                  || (step.instanceId === "build" && nav.expandedGroupIds.includes(BRAHE_GROUPS.build))
-                  || (step.instanceId === "return-stage" && nav.expandedGroupIds.includes(BRAHE_GROUPS.return))
+                  : system.stages.some((stage) => stage.instanceId === step.instanceId && nav.expandedGroupIds.includes(stage.groupId))
                 : (step.instanceId === "check" && ["brahe.check", "brahe.inspect-request", "brahe.scope-control"].includes(scene.id))
                   || (step.instanceId === "build" && ["brahe.build", "brahe.hosting", "brahe.hosting-proposed"].includes(scene.id))
                   || (step.instanceId === "return-stage" && ["brahe.return-stage", "brahe.inspect-response", "brahe.answer-control"].includes(scene.id))) ? "step" : undefined} onClick={() => {

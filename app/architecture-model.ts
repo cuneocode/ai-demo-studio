@@ -6,11 +6,8 @@
  * Proposed designs are design decisions, not claims of installed integrations.
  */
 export type NodeKind = 'service' | 'ai' | 'store' | 'human' | 'cisco' | 'failure';
-/** `code`: source/config excerpt IDs served by the service behind this node (see services/interbank/demo/sources.py). */
-export type DiagramNode = { id: string; title: string; subtitle: string; detail: string; x: number; y: number; kind?: NodeKind; source?: string; code?: string[] };
-export type NodeSide = 'top' | 'bottom' | 'left' | 'right';
-/** `anchors` picks the exact node sides an edge leaves and enters; it overrides `ports`. */
-export type DiagramEdge = { from: string; to: string; label: string; kind?: 'data' | 'control' | 'telemetry' | 'placement'; ports?: 'down' | 'up' | 'left'; anchors?: [NodeSide, NodeSide]; via?: [number, number][]; labelAt?: [number, number] };
+export type DiagramNode = { id: string; title: string; subtitle: string; detail: string; x: number; y: number; kind?: NodeKind; source?: string };
+export type DiagramEdge = { from: string; to: string; label: string; kind?: 'data' | 'control' | 'telemetry' | 'placement'; ports?: 'down' | 'up' | 'left'; via?: [number, number][]; labelAt?: [number, number] };
 export type Boundary = { title: string; x: number; y: number; width: number; height: number };
 export type Diagram = { title: string; note: string; width: number; height: number; nodes: DiagramNode[]; edges: DiagramEdge[]; boundaries?: Boundary[] };
 export type FrameMapping = { transformation: { friction: string; aiShift: string; humanControl: string }; architecture: { process: {title:string;detail:string}[]; ai:{point:string;label:string;detail:string}[] } };
@@ -23,12 +20,8 @@ export const sources = {
   fraud: { title: 'NVIDIA Financial Fraud Training', url: 'https://docs.nvidia.com/nim/financial-fraud-training/3.0.0/overview/overview.html' },
   edgar: { title: 'SEC EDGAR developer APIs', url: 'https://www.sec.gov/os/webmaster-faq#developers' },
   deepagents: { title: 'LangChain Deep Agents', url: 'https://docs.langchain.com/oss/python/deepagents/overview' },
-  a2a: { title: 'Agent2Agent (A2A) protocol', url: 'https://a2a-protocol.org/latest/specification/' },
-  agentgateway: { title: 'agentgateway', url: 'https://agentgateway.dev/docs/' },
-  aoTracing: { title: 'Splunk Agent Observability · distributed tracing with OTel', url: 'https://agent-observability-docs.splunk.com/sdk-api/logging/distributed-tracing-otel' },
-  agentControl: { title: 'Agent Control architecture', url: 'https://docs.agentcontrol.dev/concepts/architecture' },
 };
-const n = (id:string,title:string,subtitle:string,x:number,y:number,kind:NodeKind='service',detail=subtitle,source?:string,code?:string[]):DiagramNode => ({id,title,subtitle,x,y,kind,detail,source,...(code?{code}:{})});
+const n = (id:string,title:string,subtitle:string,x:number,y:number,kind:NodeKind='service',detail=subtitle,source?:string):DiagramNode => ({id,title,subtitle,x,y,kind,detail,source});
 const e = (from:string,to:string,label:string,options:Partial<DiagramEdge>={}):DiagramEdge => ({from,to,label,...options});
 
 const LANE_GAP = 330;
@@ -84,7 +77,6 @@ export function capabilityDiagram(frame:FrameMapping,step=0,caseId?:string):Diag
  if(caseId==='company-briefing') return briefingCapability(frame,step);
  if(caseId==='market-research') return researchCapability(frame,step);
  if(caseId==='client-advisory') return advisoryCapability(frame,step);
- if(caseId==='interbank-a2a') return interbankCapability(frame,step);
  const active=Math.min(step,Math.max(0,frame.architecture.ai.length-1));
  const ai=frame.architecture.ai[active]??{label:'AI insertion',point:'',detail:'AI insertion'};
  return {title:'Business transformation',note:caseId==='brahe-bank'?'AI Defense inspects model-bound prompts and answers on the live Brahe path. Splunk export is optional; UCS + Nexus placement is proposed.':'Select a step or connection to isolate its supporting relationships. Cisco capabilities below are proposed, not measured results.',width:1460,height:790,
@@ -755,141 +747,6 @@ export function advisoryKnowledge():Diagram {
  ]};
 }
 
-function interbankCapability(frame:FrameMapping,step:number):Diagram {
- const process=frame.architecture.process;
- const agents=frame.architecture.ai[Math.min(step,Math.max(0,frame.architecture.ai.length-1))]??{label:'Two Deep Agents',detail:'Each bank runs its own LangChain Deep Agent over its own records.'};
- return {title:'Interbank settlement investigation · capability',note:'Implemented in the lab: every A2A hop crosses both banks\' AI gateways, Cisco AI Defense inspects each request and response at the gateway, Splunk Agent Control checks each outbound message in the agent, and one Splunk trace covers both banks. Agents are read-only; people approve remediation.',width:1460,height:790,
- nodes:[
-  ...process.map((p,i)=>n('p'+i,p.title,p.detail,30+i*365,50,'human')),
-  n('control','Splunk Agent Control','Outbound A2A message · pre',40,320,'cisco','Server-side controls bound to the Agent Stream evaluate the exact message before the agent sends it to the other bank.',sources.agentControl.url,['agent-control','controls-setup']),
-  n('ai',agents.label,'AI insertion · '+(frame.architecture.ai[step]?.point??''),420,320,'ai',agents.detail,sources.deepagents.url,['deep-agent-builder','bank-a-agent','bank-b-agent']),
-  n('gateway','AI gateway per bank','agentgateway · A2A routes',800,320,'service','Each bank\'s agent reaches the other bank only through its own gateway egress listener and the partner gateway\'s ingress listener (mTLS, JWT admission).',sources.agentgateway.url,['bank-a-gateway','bank-b-gateway']),
-  n('blocked','Message not delivered','403 policy · 503 fail closed',1180,320,'failure','A control deny returns NOT SENT to the agent. An AI Defense violation returns HTTP 403; inspection unavailable returns 503. Nothing crosses to the other bank.'),
-  n('observe','Splunk Agent Observability','One trace · one session',420,600,'cisco','Agents, gateways, AI Defense hops, and control executions export spans with W3C trace context, so both banks appear in one trace.',sources.aoTracing.url,['telemetry','genai','collector']),
-  n('defense','Cisco AI Defense','Every gateway hop',800,600,'cisco','ExtProc at each gateway listener inspects A2A requests and responses with the Inspection API and enforces the verdict.',sources.defense.url,['ai-defense-extproc','ai-defense-api']),
- ],
- edges:[
-  ...process.slice(0,-1).map((_,i)=>e('p'+i,'p'+(i+1),'next step')),
-  e('p'+Math.max(0,Math.min(process.length-1,step)),'ai',step===3?'review report':'assisted by',{ports:'down'}),
-  e('ai','control','pre-send check',{ports:'left',kind:'control'}),
-  e('ai','gateway','A2A via own gateway'),
-  e('gateway','defense','inspect request + response',{ports:'down',kind:'control'}),
-  e('control','blocked','deny → NOT SENT',{kind:'control',anchors:['top','top'],via:[[160,276],[1300,276]],labelAt:[1060,276]}),
-  e('defense','blocked','deny / unavailable',{kind:'control',anchors:['right','bottom'],via:[[1300,664]],labelAt:[1300,560]}),
-  e('ai','observe','one trace across both banks',{ports:'down',kind:'telemetry'}),
-  e('defense','observe','hop verdict spans',{ports:'left',kind:'telemetry'}),
- ]};
-}
-
-/** Bank A and Bank B side by side. Only the gateways cross between banks; shared SaaS sits between them. */
-export function interbankRuntime():Diagram {
- const A=[40,340,640], B=[1300,1600,1900], C=980, R=[70,300,530,760,990];
- return {title:'Interbank A2A · implemented request path',note:'Code-verified topology of services/interbank. A kickoff from Bank A\'s operations desk becomes one A2A conversation between two LangChain Deep Agents. Every hop leaves through the sender\'s gateway and enters through the receiver\'s gateway, where Cisco AI Defense inspects request and response (fail closed). Each outbound message first passes Splunk Agent Control. Agents, gateways, AI Defense, and controls export to one Splunk trace and session. The map does not assert that OpenAI, AI Defense, or Splunk are reachable right now.',width:2180,height:1180,
- boundaries:[
-  {title:'BANK A · Harbor Point Bank · own networks, keys, and egress',x:20,y:20,width:880,height:1140},
-  {title:'SHARED SAAS',x:940,y:480,width:320,height:680},
-  {title:'BANK B · Meridian Trust · own networks, keys, and egress',x:1280,y:20,width:880,height:1140},
- ],
- nodes:[
-  n('console','Operations desk · console','Kickoff ↔ final report',A[2],R[0],'human','Bank A operators start an investigation and receive the report. Agents are read-only: named teams approve SSI or static-data fixes, and no funds move. The console is an A2A client and the root span of the trace.',undefined,['console','a2a-send']),
-  n('a-model','OpenAI Responses API','Bank A egress · reasoning summaries',A[1],R[0],'ai','Hosted model reached over Bank A\'s egress network with its own credential. Reasoning summaries stream to the dashboard as the agent\'s thinking and into each LLM span.',undefined,['deep-agent-builder']),
-  n('a-records','Bank A records','SQLite · read-only tool',A[0],R[1],'store','Seeded at container start from records.sql. query_settlement_records accepts one SELECT, opens the file read-only with query_only, and returns at most 50 rows.',undefined,['records','bank-a-records']),
-  n('a-agent','Bank A Deep Agent','Coordinator + responder',A[1],R[1],'ai','create_deep_agent with write_todos planning, the SQL tool, and send_message_to_bank_b. The coordinator runs the console\'s investigation; the responder answers Bank B\'s questions.',sources.deepagents.url,['bank-a-agent','deep-agent-builder','a2a-receive']),
-  n('a-in','Bank A gateway · ingress','agentgateway :7443 console · :9443 Bank B',A[2],R[1],'service','Ingress listeners admit only Bank A\'s console (:7443) and Bank B\'s gateway (:9443) with mTLS and a JWT, then re-sign a short-lived token for the agent.',sources.agentgateway.url,['bank-a-gateway']),
-  n('a-policy','Bank A AI Defense ExtProc','Every hop · request + response',A[2],R[2],'cisco','Envoy ExtProc service. The gateway buffers each A2A body; the service extracts the conversational text, calls the Inspection API, and returns continue, 403 on violation, or 503 when inspection is unavailable.',sources.defense.url,['ai-defense-extproc','ai-defense-api','bank-a-gateway']),
-  n('a-blocked','Blocked at Bank A','403 policy · 503 · NOT SENT',A[0],R[3],'failure','An AI Defense deny or outage stops the hop at Bank A\'s gateway; an Agent Control deny stops the message inside the agent. The agent is told it was not delivered.'),
-  n('a-control','Agent Control gate','send_a2a_message · pre',A[1],R[3],'cisco','Before send_message_to_bank_b sends anything, the Agent Control SDK evaluates the server-side controls bound to the Agent Stream on the exact message text.',sources.agentControl.url,['partner-tool','agent-control']),
-  n('a-out','Bank A gateway · egress','agentgateway :8443 → Bank B',A[2],R[3],'service','The only way out of Bank A. Replaces the agent\'s token with a gateway-signed ES256 partner token and opens mTLS to Bank B\'s gateway.',sources.agentgateway.url,['bank-a-gateway']),
-  n('a-ac','Splunk Agent Control','Bank A controls · hosted',A[1],R[4],'cisco','Hosted Agent Control evaluates Bank A\'s outbound confidentiality control and returns allow or deny. Each execution is recorded on the server and as a control span in the trace.',sources.agentControl.url,['agent-control','controls-setup']),
-  n('a-collector','Bank A OTel Collector','Gateway spans → Splunk AO',A[2],R[4],'service','Splunk OTel Collector receives the gateway\'s OTLP spans and forwards them with the Splunk AO project and Agent Stream headers.',sources.aoTracing.url,['collector','bank-a-gateway']),
-  n('aidefense','Cisco AI Defense','Inspection API',C,R[2],'cisco','Chat inspection for every gateway hop of both banks. Verdicts carry classifications, rules, and an event ID.',sources.defense.url,['ai-defense-api']),
-  n('splunk','Splunk Agent Observability','One trace · one session',C,R[4],'cisco','W3C traceparent and baggage cross every A2A hop, so the console, both gateways, every AI Defense inspection, both Deep Agents, and every control execution land in one trace and one session.',sources.aoTracing.url,['telemetry','genai','collector']),
-  n('b-out','Bank B gateway · egress','agentgateway :8443 → Bank A',B[0],R[1],'service','The only way out of Bank B. Re-signs a Bank B partner token and opens mTLS to Bank A\'s gateway.',sources.agentgateway.url,['bank-b-gateway']),
-  n('b-control','Agent Control gate','send_a2a_message · pre',B[1],R[1],'cisco','Before send_message_to_bank_a sends anything, the SDK evaluates Bank B\'s server-side controls on the exact message text.',sources.agentControl.url,['partner-tool','agent-control']),
-  n('b-blocked','Blocked at Bank B','403 policy · 503 · NOT SENT',B[2],R[1],'failure','An AI Defense deny or outage stops the hop at Bank B\'s gateway, and the caller receives the gateway\'s refusal; an Agent Control deny keeps the message inside Bank B.'),
-  n('b-ac','Splunk Agent Control','Bank B controls · hosted',B[1],R[0],'cisco','Hosted Agent Control evaluates Bank B\'s outbound confidentiality control.',sources.agentControl.url,['agent-control','controls-setup']),
-  n('b-policy','Bank B AI Defense ExtProc','Every hop · request + response',B[0],R[2],'cisco','Same ExtProc service as Bank A, on Bank B\'s policy network, inspecting Bank B\'s two hops.',sources.defense.url,['ai-defense-extproc','ai-defense-api','bank-b-gateway']),
-  n('b-in','Bank B gateway · ingress','agentgateway :9443 from Bank A',B[0],R[3],'service','Admits only Bank A\'s gateway (mTLS with Bank A\'s CA, Bank A partner JWT) and re-signs a token for Bank B\'s agent.',sources.agentgateway.url,['bank-b-gateway']),
-  n('b-agent','Bank B Deep Agent','Investigator',B[1],R[3],'ai','create_deep_agent over Bank B\'s records. Answers Bank A over A2A and may ask Bank A follow-up questions through its own gateway.',sources.deepagents.url,['bank-b-agent','deep-agent-builder','a2a-receive']),
-  n('b-records','Bank B records','SQLite · read-only tool',B[2],R[3],'store','Bank B\'s own settlement database. Bank A cannot query it.',undefined,['records','bank-b-records']),
-  n('b-collector','Bank B OTel Collector','Gateway spans → Splunk AO',B[0],R[4],'service','Forwards Bank B gateway spans to Splunk AO.',sources.aoTracing.url,['collector','bank-b-gateway']),
-  n('b-model','OpenAI Responses API','Bank B egress · reasoning summaries',B[1],R[4],'ai','Hosted model reached over Bank B\'s egress network with its own credential.',undefined,['deep-agent-builder']),
- ],
- edges:[
-  e('console','a-in','kickoff ↔ final report',{ports:'down',labelAt:[790,249]}),
-  e('a-in','a-agent','ingress · gateway JWT',{ports:'left',labelAt:[610,272]}),
-  e('a-agent','a-model','reasoning ↔ tool calls',{ports:'up',labelAt:[420,249]}),
-  e('a-agent','a-records','SQL ↔ rows',{ports:'left',labelAt:[290,272]}),
-  e('a-agent','a-control','send_message_to_bank_b',{ports:'down',labelAt:[460,480]}),
-  e('a-control','a-out','allow → :8443',{kind:'control',labelAt:[610,720]}),
-  e('a-control','a-blocked','deny → NOT SENT',{ports:'left',kind:'control',labelAt:[200,720]}),
-  e('a-control','a-ac','evaluate ↔ verdict',{ports:'down',kind:'control',labelAt:[460,965]}),
-  e('a-in','a-policy','ExtProc :9002 · :9003',{ports:'down',kind:'control'}),
-  e('a-out','a-policy','ExtProc :9001',{ports:'up',kind:'control'}),
-  e('a-policy','aidefense','inspect',{kind:'control'}),
-  e('a-policy','a-blocked','403 deny · 503 fail closed',{kind:'control',anchors:['left','top'],via:[[160,594]],labelAt:[220,594]}),
-  e('a-out','b-in','interbank network · A2A over mTLS ↔ reply'),
-  e('b-out','a-in','interbank network · A2A over mTLS ↔ reply',{ports:'left'}),
-  e('b-in','b-agent','ingress · JWT',{labelAt:[1570,720]}),
-  e('b-agent','b-records','SQL ↔ rows',{labelAt:[1870,720]}),
-  e('b-agent','b-control','send_message_to_bank_a',{ports:'up',labelAt:[1720,690]}),
-  e('b-agent','b-model','reasoning ↔ tool calls',{ports:'down',labelAt:[1720,965]}),
-  e('b-control','b-out','allow → :8443',{ports:'left',kind:'control',labelAt:[1570,272]}),
-  e('b-control','b-blocked','deny → NOT SENT',{kind:'control',labelAt:[1870,272]}),
-  e('b-control','b-ac','evaluate ↔ verdict',{ports:'up',kind:'control'}),
-  e('b-out','b-policy','ExtProc :9001',{ports:'down',kind:'control'}),
-  e('b-in','b-policy','ExtProc :9002',{ports:'up',kind:'control'}),
-  e('b-policy','aidefense','inspect',{ports:'left',kind:'control'}),
-  e('b-policy','b-blocked','403 deny · 503 fail closed',{kind:'control',anchors:['right','bottom'],via:[[2020,594]],labelAt:[1880,594]}),
-  e('a-out','a-collector','OTLP gateway spans',{ports:'down',kind:'telemetry',labelAt:[760,965]}),
-  e('a-collector','splunk','OTLP export',{kind:'telemetry'}),
-  e('b-in','b-collector','OTLP gateway spans',{ports:'down',kind:'telemetry',labelAt:[1420,965]}),
-  e('b-collector','splunk','OTLP export',{ports:'left',kind:'telemetry'}),
-  e('a-agent','splunk','agent · LLM · tool · control spans',{kind:'telemetry',anchors:['left','top'],via:[[310,364],[310,930],[1100,930]],labelAt:[600,930]}),
-  e('b-agent','splunk','agent · LLM · tool · control spans',{kind:'telemetry',anchors:['right','top'],via:[[1870,824],[1870,930],[1100,930]],labelAt:[1570,930]}),
-  e('a-policy','splunk','AI Defense hop spans',{kind:'telemetry',anchors:['right','top'],via:[[910,594],[910,930],[1100,930]],labelAt:[910,700]}),
-  e('b-policy','splunk','AI Defense hop spans',{kind:'telemetry',anchors:['left','top'],via:[[1270,594],[1270,930],[1100,930]],labelAt:[1270,700]}),
-  e('console','splunk','trace root · session',{kind:'telemetry',anchors:['right','top'],via:[[920,134],[920,930],[1100,930]],labelAt:[920,250]}),
- ]};
-}
-
-/** What labctl prepares before any investigation, and how the running lab consumes it. */
-export function interbankKnowledge():Diagram {
- return {title:'Interbank A2A · trust and data preparation',note:'Offline: labctl up imports the studio .env into 0600 files, generates each bank\'s self-signed P-256 / SHA-256 CA, 90-day workload certificates, ES256 tokens and JWKS, builds the agents\' egress CA bundle, and registers the Agent Control controls. Online: each container mounts only its own role directory read-only, and each agent loads its bank\'s seed SQL into a read-only database.',width:1520,height:850,
- boundaries:[
-  {title:'Offline · labctl up, before any investigation',x:28,y:16,width:1464,height:460},
-  {title:'Online · every investigation',x:28,y:520,width:1464,height:300},
- ],
- nodes:[
-  n('env','Studio .env','OpenAI · Splunk AO · AI Defense',56,64,'store','The repository-root .env (git-ignored). Credentials never enter source code or images.',undefined,['pki']),
-  n('labctl','labctl up','Import settings · 0600 files',436,64,'service','Writes .runtime/vendor.env for every container and .runtime/model.env (OpenAI key) for the two agents only.',undefined,['pki']),
-  n('pki','Per-bank PKI','P-256 CA · 90-day leaves',816,64,'service','One self-signed CA per bank (SHA-256, one year) issues gateway, agent, and console certificates. Local trust anchors for the lab, not public PKI.',undefined,['pki']),
-  n('tokens','JWT + JWKS','ES256 per hop',1196,64,'service','Internal bearer tokens for agents and console, partner signing keys per gateway, and the JWKS each listener verifies against.',undefined,['pki']),
-  n('stop','Setup stops','Missing settings or keys',56,290,'failure','labctl exits before starting containers if OPENAI_API_KEY, MODEL_NAME, the Splunk AO key, the AI Defense key, or AGENT_CONTROL_URL is missing.'),
-  n('egress','Egress CA bundle','certifi + proxy root',436,290,'service','Public roots plus the Cisco Secure Access root found in the macOS keychain (or EXTRA_CA_FILE), so the agents can reach the OpenAI API through a TLS-inspecting proxy.',undefined,['pki']),
-  n('controls','setup_controls','Regex deny · bound to Agent Stream',816,290,'cisco','Creates or updates one confidentiality control per bank (execution: server, step <bank>.send_a2a_message, stage pre) and binds it to the Splunk AO Agent Stream.',sources.agentControl.url,['controls-setup']),
-  n('roles','Role directories','.runtime/roles/<workload>',1196,290,'store','Each gateway, agent, and the console gets only the certificates, keys, and tokens it needs.'),
-  n('seed','records.sql','Per-bank seed data',56,576,'store','Fictional trades, instructions, SSIs, notices, and positions for one bank.',undefined,['bank-a-records','bank-b-records']),
-  n('sqlite','Read-only SQLite','query_only · 50 rows',436,576,'store','Loaded at agent start into /tmp; the tool opens it read-only and rejects anything but one SELECT.',undefined,['records']),
-  n('agent','Deep Agent tools','SQL + send_message_to_<bank>',816,576,'ai','query_settlement_records reads the bank\'s data; send_message_to_<bank> is checked by Agent Control before A2A.',sources.deepagents.url,['partner-tool','records']),
-  n('workloads','Gateways, agents, console','Mount their role directory',1196,576,'service','Read-only mounts. Agents, policy services, the console, and gateways run with a read-only root filesystem, no-new-privileges, and all capabilities dropped.',undefined,['compose']),
- ],
- edges:[
-  e('env','labctl','import settings'),
-  e('labctl','pki','generate'),
-  e('pki','tokens','keys sign tokens'),
-  e('tokens','roles','certs · keys · tokens',{ports:'down'}),
-  e('labctl','egress','build bundle',{ports:'down',labelAt:[556,268]}),
-  e('labctl','stop','missing key → exit',{kind:'control',anchors:['bottom','top'],via:[[556,240],[176,240]],labelAt:[340,240]}),
-  e('labctl','controls','register controls',{kind:'control',anchors:['bottom','top'],via:[[556,240],[936,240]],labelAt:[760,240]}),
-  e('roles','workloads','read-only mounts',{ports:'down'}),
-  e('egress','workloads','agents\' egress trust',{anchors:['bottom','top'],via:[[556,496],[1316,496]],labelAt:[700,496]}),
-  e('controls','agent','server-side check on send',{ports:'down',kind:'control',labelAt:[936,440]}),
-  e('seed','sqlite','load at start'),
-  e('sqlite','agent','SELECT ↔ rows'),
- ]};
-}
-
 type Profile={entry:string;router:string;left:string;leftDetail:string;right:string;rightDetail:string;store:string;tool:string;result:string;gate:string;failure:string;ingest:string;gpu:string;note:string};
 export const profiles:Record<string,Profile>={
  'brahe-bank':{entry:'Banking question',router:'Bank supervisor',left:'Product specialist',leftDetail:'Retrieve terms and criteria',right:'Score specialist',rightDetail:'Call mock score tool',store:'Product document index',tool:'Mock score API · 550',result:'Eligibility explanation',gate:'Customer review · no approval',failure:'Missing evidence → abstain',ingest:'Versioned product Markdown',gpu:'Product embeddings + model inference',note:'Proposed hosted-model replacement; preserve tool behavior and validate model compatibility before migration.'},
@@ -899,7 +756,6 @@ export const profiles:Record<string,Profile>={
  'market-research':{entry:'Ticker + optional refresh',router:'Wealth research sidecar',left:'Yahoo + FRED cache',leftDetail:'Allowlisted fetch · write-through TTL',right:'Conflict + synthesis tools',rightDetail:'CPU conflicts · NIM cited note',store:'Snapshot + FRED cache · not a vector index',tool:'Earnings / peers / returns / macro',result:'Cited research note + demo recommendation',gate:'Accept research note',failure:'Empty provider → 502; ungrounded note omitted',ingest:'Live Yahoo + FRED allowlist',gpu:'Local NIM on 127.0.0.1:8003',note:'Write-through snapshot cache, structured conflicts, and a local NIM hop. Demo recommendation — not financial advice. This map does not assert live Yahoo, FRED, or NIM availability. No Tavily and no committed snapshot pack.'},
  'transaction-llm':{entry:'Payment event',router:'Schema validation + routing',left:'Payment extraction model',leftDetail:'Unstructured text → proposed fields',right:'Entity resolution service',rightDetail:'Match counterparties + code sets',store:'Reference codes + counterparty master',tool:'History / entity lookup APIs',result:'Schema-validated enrichment',gate:'Low confidence → operations',failure:'Invalid schema → quarantine',ingest:'Versioned codes + entity reference data',gpu:'Batched extraction; benchmark CPU alternative',note:'Deterministic validation gates publication. Only exceptions need agentic reasoning; no LLM in the payment authorization path.'},
  'fraud-modeling':{entry:'Payment features',router:'Fraud scoring endpoint',left:'Versioned fraud model',leftDetail:'Bounded scoring inference',right:'Drift investigation agent',rightDetail:'Asynchronous cohort analysis',store:'Online feature store + model registry',tool:'Labels / cohort analytics APIs',result:'Risk score + rule decision',gate:'Owner approves model changes',failure:'Timeout → configured rules fallback',ingest:'Events → features; delayed labels',gpu:'Scorer only if benchmark justifies it; explainer separate',note:'The synchronous score path bypasses the LLM. Drift analysis is asynchronous; no automatic model promotion.'},
- 'interbank-a2a':{entry:'Failed settlement case',router:'Investigation coordinator agent',left:'Own-bank records agent',leftDetail:'Read-only queries over settlement data',right:'Counterparty agent over A2A',rightDetail:'Partner answers through both gateways',store:'Settlement, SSI and notice records',tool:'Partner bank gateway (A2A)',result:'Joint root-cause report',gate:'Ops desk approves remediation',failure:'Policy deny → message not sent',ingest:'Settlement, SSI and notice records',gpu:'Agent reasoning inference per bank; inspection stays at the gateway',note:'Proposed: a private model endpoint per bank, persistent checkpoints, and a Splunk project per bank with cross-organization trace correlation. Gateway placement, AI Defense on every hop, and Agent Control on every outbound message stay as implemented.'},
  'company-briefing':{entry:'Ticker, name, or uploaded report',router:'Deep Agent supervisor',left:'Theme subagents',leftDetail:'Read TOC nodes; never dump the 10-K',right:'Grounding verifier',rightDetail:'Cite-or-abstain against node files',store:'Filing node files · not embeddings',tool:'EDGAR + companyfacts APIs',result:'Cited company briefing',gate:'Presenter accept-gate',failure:'Unknown issuer / ungrounded themes → stop',ingest:'EDGAR 10-K or uploaded annual report',gpu:'Protected model hops only; no filing embeddings',note:'Navigation-first Deep Agent. No vector index and no open web. AI Defense inspects model hops only; XBRL, EDGAR, upload, navigator, and grounding stay off Inspection. Presenter accepts before studio context is stored.'},
 };
 export function proposedRuntime(id:string):Diagram {
@@ -913,7 +769,7 @@ export function proposedRuntime(id:string):Diagram {
    };
    return {...graph,title:'Brahe Bank · proposed execution',note:'Preserve supervisor and specialist behavior; replace hosted inference and in-memory state deliberately. All Cisco connections are proposed. See Security & telemetry and Deployment for the supporting paths.',boundaries:[{title:'PROPOSED APPLICATION SERVICES · CPU',x:350,y:20,width:1080,height:1020},{title:'PROPOSED MODEL, CONTROLS AND OBSERVABILITY SERVICES',x:350,y:1080,width:1080,height:220}],nodes:graph.nodes.map(node=>({...node,...replacements[node.id]})),edges:graph.edges};
  }
- const p=profiles[id]; const fraud=id==='fraud-modeling', sequential=['sar-support','market-research','transaction-llm','company-briefing','interbank-a2a'].includes(id);
+ const p=profiles[id]; const fraud=id==='fraud-modeling', sequential=['sar-support','market-research','transaction-llm','company-briefing'].includes(id);
  return {title:p.router+' · proposed execution',note:p.note,width:1460,height:850,
  nodes:[n('entry',p.entry,'Authenticated / validated input',30,60,'human'),n('router',p.router,fraud?'Synchronous bounded request':'Application-owned orchestration',440,60,'service','Proposed service with identity propagation, request budget and correlated trace ID. No durable queue is assumed.'),n('result',p.result,['client-advisory','sar-support','market-research','company-briefing'].includes(id)?'LLM draft → citation checks':'Schema / rule checks + provenance',1170,60,['client-advisory','sar-support','market-research','company-briefing'].includes(id)?'ai':'service',p.note+' Model calls use the boundary shown in Security & telemetry; CPU/GPU placement is shown in Deployment.'),
  n('left',p.left,p.leftDetail,380,330,p.left.toLowerCase().includes('retriev')?'service':'ai'),n('right',p.right,p.rightDetail,820,330,p.right.toLowerCase().includes('agent')?'ai':'service'),n('store',p.store,'Entitlement-filtered read',30,620,'store','Source-system authorization is checked before context assembly. Store records carry version, freshness and source IDs.'),n('tool',p.tool,'Scoped tool credentials',610,620,'service'),n('gate',p.gate,'Human authority remains explicit',1170,620,'human'),n('fail',p.failure,'Stop / route exception',1170,330,'failure')],

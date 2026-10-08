@@ -2,6 +2,8 @@ import type { CaseScenes, Mode, SceneNode } from "./scene-model.ts";
 import { buildBusinessJourneyScene } from "./scene-model.ts";
 import { braheDrill, braheScenes } from "./brahe-scenes.ts";
 import { enableContinuousCatalog } from "./generic-system.ts";
+import { interbankScenes } from "./interbank-scenes.ts";
+import { interbankStates, projectInterbankSystem } from "./interbank-system.ts";
 import { buildAgentWorkflowScene, buildControlInteractionScene } from "./templates.ts";
 
 export type Catalog = CaseScenes & {
@@ -213,6 +215,18 @@ const transactions = journeyCase({
   ],
 });
 
+/** Each reachable expansion is registered as a scene so case validation routes and checks it. */
+const interbank: Catalog = {
+  ...interbankScenes,
+  scenes: {
+    ...interbankScenes.scenes,
+    ...Object.fromEntries(interbankStates().map((state) => {
+      const id = `interbank.state.${state.id}`;
+      return [id, { ...projectInterbankSystem(state.expanded, state.mode), id, modes: [state.mode] }];
+    })),
+  },
+};
+
 const rawCatalogs: Record<string, Catalog> = {
   "brahe-bank": {
     ...braheScenes,
@@ -228,6 +242,7 @@ const rawCatalogs: Record<string, Catalog> = {
   "kyc-processing": kyc,
   "sar-support": sar,
   "transaction-llm": transactions,
+  "interbank-a2a": interbank,
 };
 
 export const catalogs: Record<string, Catalog> = Object.fromEntries(

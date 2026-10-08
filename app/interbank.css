@@ -91,6 +91,13 @@
 .ib-counts strong{font-size:18px;color:var(--text)}
 .ib-counts span.deny strong{color:var(--danger)}
 
+.integration-deepagents{--integration:#a993e6}
+.integration-a2a{--integration:#9bb8ff}
+.integration-observability{--integration:#d99ac0}
+.integration-agent-control{--integration:#d1a85b}
+.integration-ai-defense{--integration:#58b98e}
+.ib-evidence{position:fixed;inset:0;z-index:300;display:flex;justify-content:flex-end;background:rgba(5,8,13,.55)}
+.ib-evidence .map-source{height:100%;max-width:100%;box-shadow:-12px 0 40px rgba(0,0,0,.4)}
 .ib-integrations-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:baseline}
 .ib-integrations-head p{margin:0;display:inline-flex;align-items:center;gap:5px;color:var(--muted);font-size:var(--font-meta)}
 .ib-integration-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:12px}

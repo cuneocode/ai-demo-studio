@@ -88,6 +88,7 @@
 .map-group.is-selected{outline:3px solid #9bb8ff;outline-offset:3px}
 .map-group-header{height:44px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;border-bottom:1px solid rgba(86,105,132,.55);background:rgba(20,31,46,.72);border-radius:15px 15px 0 0;pointer-events:auto}
 .map-group-header strong{font-size:17px;line-height:1.2}
+.map-group-header small{font-size:13px;color:#b7c3d4}
 .map-group-header button{border:1px solid #43516a;background:#101722;color:#eef2f8;border-radius:6px;min-height:28px;padding:0 9px;font-size:13px;cursor:pointer}
 .map-node.decision{background:#28271f;border-color:#8c7957}
 .map-node.context{min-height:64px;justify-content:center;background:#121a26;border-color:#607089;border-radius:999px;padding:8px 12px}
@@ -165,3 +166,4 @@
 .src-line{display:flex;gap:12px;padding:0 12px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:1.45}
 .src-line:hover{background:rgba(155,184,255,.08)}
 .src-no{width:3.2em;text-align:right;color:#7e8da3;user-select:none;flex:none}
+.src-text{white-space:pre}

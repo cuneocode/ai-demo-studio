@@ -320,6 +320,79 @@ test("fraud evidence opens from its owning occurrence without changing projectio
   await expect(explorer.locator(".react-flow__viewport")).toHaveAttribute("style", before.viewport ?? "");
 });
 
+test("interbank exchange keeps both banks, one crossing, and the outbound control in one canvas", async ({ page }) => {
+  const explorer = await openCase(page, "interbank-a2a", "Interbank settlement investigation");
+  await expect(explorer).toHaveAttribute("data-expanded-groups", "");
+  await visibleEdges(explorer, ["ib.rel.business.open", "ib.rel.business.approve", "ib.rel.support.defense", "ib.rel.support.observe", "ib.rel.support.infra"]);
+  const rootIds = ["ib.open", "ib.investigation", "ib.approve", "ib.platform.defense", "ib.platform.observe", "ib.platform.infra"];
+
+  await clickAction(page, "ib.investigation");
+  await expect(explorer).toHaveAttribute("data-expanded-groups", "ib.group.investigation");
+  await expectGroupGeometry(explorer, "ib.investigation", ["ib.stage.kickoff", "ib.stage.exchange", "ib.stage.report"]);
+  const stagesViewport = await explorer.locator(".react-flow__viewport").getAttribute("style");
+
+  await clickAction(page, "ib.stage.exchange");
+  await expect(explorer).toHaveAttribute("data-expanded-groups", "ib.group.investigation,ib.group.exchange");
+  for (const id of rootIds) await expect(explorer.locator(`.react-flow__node[data-id="${id}"]`)).toHaveCount(1);
+  await expectGroupGeometry(explorer, "ib.a.bank", ["ib.a.coordinator", "ib.a.records", "ib.a.control", "ib.a.gateway"]);
+  await expectGroupGeometry(explorer, "ib.b.bank", ["ib.b.gateway", "ib.b.investigator", "ib.b.records"]);
+  await visibleEdges(explorer, ["ib.rel.x.boundary", "ib.rel.x.reply", "ib.rel.x.model-a", "ib.rel.x.model-b", "ib.rel.x.trace-a", "ib.rel.x.trace-b"]);
+  await expect(explorer.locator('.react-flow__node[data-id="ib.a.bank"] [data-action="expand"]')).toHaveCount(0);
+  await noCardOverlap(explorer);
+  const exchange = await graphSignature(explorer);
+
+  await clickAction(page, "ib.a.control");
+  await expect(explorer).toHaveAttribute("data-expanded-groups", "ib.group.investigation,ib.group.exchange,ib.group.outbound-control");
+  await expectGroupGeometry(explorer, "ib.a.control", ["ib.a.control.evaluate", "ib.a.control.api", "ib.a.control.apply"]);
+  await visibleEdges(explorer, ["ib.rel.x.control", "ib.rel.x.control-verdict", "ib.rel.x.egress", "ib.rel.x.not-sent"]);
+  await noCardOverlap(explorer);
+  const control = await graphSignature(explorer);
+  await explorer.locator('.react-flow__node[data-id="ib.a.control.api"] .map-source-btn').click();
+  await expect(explorer.getByRole("complementary", { name: "Source inspector" })).toBeVisible();
+  await expect(explorer.locator(".src-view")).toBeVisible();
+  const withSource = await graphSignature(explorer);
+  expect(withSource.nodes.map(({ id, style }) => ({ id, style }))).toEqual(control.nodes.map(({ id, style }) => ({ id, style })));
+  expect(withSource.edges).toEqual(control.edges);
+  await explorer.getByRole("button", { name: "Close source" }).click();
+
+  await explorer.getByRole("button", { name: "Back" }).click();
+  await expect(explorer).toHaveAttribute("data-expanded-groups", "ib.group.investigation,ib.group.exchange");
+  expect((await graphSignature(explorer)).nodes.map((node) => node.id)).toEqual(exchange.nodes.map((node) => node.id));
+  await clickAction(page, "ib.stage.exchange", "collapse");
+  await expect(explorer).toHaveAttribute("data-expanded-groups", "ib.group.investigation");
+  await expect(explorer.locator(".react-flow__viewport")).toHaveAttribute("style", stagesViewport ?? "");
+  await clickAction(page, "ib.investigation", "collapse");
+  await expect(explorer).toHaveAttribute("data-expanded-groups", "");
+  await expect(page.locator(".react-flow")).toHaveCount(1);
+});
+
+test("interbank inspection stages show the fail-closed stop, and demo sources open captured evidence", async ({ page }) => {
+  const explorer = await openCase(page, "interbank-a2a", "Interbank settlement investigation");
+  await clickAction(page, "ib.investigation");
+  for (const [stage, inspect, stop, block] of [
+    ["ib.stage.kickoff", "ib.kickoff.inspect", "ib.kickoff.stop", "ib.rel.kickoff.block"],
+    ["ib.stage.report", "ib.report.inspect", "ib.report.stop", "ib.rel.report.block"],
+  ]) {
+    await clickAction(page, stage);
+    await clickAction(page, inspect);
+    await expectGroupGeometry(explorer, inspect, [`${inspect}.call`, `${inspect}.api`, `${inspect}.apply`]);
+    await expect(explorer.locator(`.react-flow__node[data-id="${stop}"]`)).toBeVisible();
+    await visibleEdges(explorer, [block]);
+    await noCardOverlap(explorer);
+    await clickAction(page, stage, "collapse");
+  }
+
+  const integrations = page.locator("#interbank-experience");
+  await integrations.getByRole("button", { name: "Bank A gateway", exact: true }).first().click();
+  const panel = page.getByRole("dialog", { name: "Bank A gateway source" });
+  await expect(panel.getByRole("complementary", { name: "Source inspector" })).toBeVisible();
+  await expect(panel.locator(".src-view")).toContainText("bank-a-ingress-from-console");
+  await panel.getByRole("button", { name: "bank-a.yaml · bank-a-egress-to-bank-b" }).click();
+  await expect(panel.locator(".src-view")).toContainText("bank-a-egress-to-bank-b");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
 test("Build, hosting, Return, and answer inspection reveal locally without replacing the root", async ({ page }) => {
   const explorer = await openBrahe(page);
   await clickAction(page, "brahe.assistant");

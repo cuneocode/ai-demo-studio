@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { catalogs } from "../app/map/catalog.ts";
 import { BRAHE_GROUPS, projectBraheSystem } from "../app/map/brahe-system.ts";
+import { continuousSystems } from "../app/map/continuous.ts";
+import { INTERBANK_GROUPS, collapseInterbankGroup, interbankStates, normalizeInterbankExpansion, projectInterbankSystem } from "../app/map/interbank-system.ts";
 import { evidence } from "../app/map/evidence.ts";
 import { collapseGenericGroup, coreGroupId, normalizeGenericExpansion, primaryGroupId, projectGenericSystem } from "../app/map/generic-system.ts";
 import { prepareLayout } from "../app/map/layout.ts";
@@ -13,7 +15,7 @@ import { frameScene } from "../app/map/viewport.ts";
 const evidenceIds = new Set(Object.keys(evidence));
 
 test("scene catalogs reference real relationships, ports, drills, and sources", () => {
-  assert.equal(Object.keys(catalogs).length, 8);
+  assert.equal(Object.keys(catalogs).length, 9);
   for (const catalog of Object.values(catalogs)) {
     const errors = validateCase(catalog, evidenceIds);
     assert.deepEqual(errors, [], catalog.id);
@@ -123,8 +125,64 @@ test("continuous Brahe projection retains root identity, parents, context, and r
   assert.equal(compactAnswer.relationships.find((relationship) => relationship.id === "rel.inspect.answer.stop")?.targetInstanceId, "brahe.answer.stop");
 });
 
-test("every non-Brahe catalog uses the shared continuous projection contract", () => {
-  for (const catalog of Object.values(catalogs).filter((item) => item.id !== "brahe-bank")) {
+test("continuous interbank projection keeps identity, lineage, clean routes, and the lab's boundaries", () => {
+  const modelIds = new Set(catalogs["interbank-a2a"].relationships.map((relationship) => relationship.id));
+  for (const state of interbankStates()) {
+    const projection = projectInterbankSystem(state.expanded, state.mode);
+    assert.equal(projection.id, "interbank.journey");
+    const ids = projection.nodes.map((node) => node.instanceId);
+    assert.equal(new Set(ids).size, ids.length, state.id);
+    for (const id of ["ib.open", "ib.investigation", "ib.approve", "ib.platform.defense", "ib.platform.observe", "ib.platform.infra"]) assert.ok(ids.includes(id), `${state.id} ${id}`);
+    const order = new Map(ids.map((id, index) => [id, index]));
+    for (const node of projection.nodes) {
+      if (node.parentId) assert.ok(order.get(node.parentId) < order.get(node.instanceId), `${state.id}: ${node.parentId} must precede ${node.instanceId}`);
+    }
+    for (const relationship of projection.relationships) {
+      assert.ok(order.has(relationship.sourceInstanceId) && order.has(relationship.targetInstanceId), `${state.id} ${relationship.id}`);
+      for (const modelId of relationship.modelRelationshipIds) assert.ok(modelIds.has(modelId), `${state.id} ${relationship.id} lineage ${modelId}`);
+    }
+    assert.deepEqual(routeIssues(projection, routeScene(projection)), [], state.id);
+  }
+
+  const exchange = projectInterbankSystem([INTERBANK_GROUPS.investigation, INTERBANK_GROUPS.exchange], "implemented");
+  const bankOf = (id) => {
+    const byId = new Map(exchange.nodes.map((node) => [node.instanceId, node]));
+    let current = byId.get(id);
+    while (current) {
+      if (current.instanceId === "ib.a.bank" || current.instanceId === "ib.b.bank") return current.instanceId;
+      current = current.parentId ? byId.get(current.parentId) : undefined;
+    }
+    return null;
+  };
+  const crossing = exchange.relationships.filter((edge) => edge.kind === "request" && bankOf(edge.sourceInstanceId) && bankOf(edge.targetInstanceId) && bankOf(edge.sourceInstanceId) !== bankOf(edge.targetInstanceId));
+  assert.deepEqual(crossing.map((edge) => [edge.sourceInstanceId, edge.targetInstanceId]), [["ib.a.gateway", "ib.b.gateway"]]);
+  for (const bank of ["ib.a.bank", "ib.b.bank"]) {
+    assert.ok(exchange.relationships.some((edge) => edge.kind === "telemetry" && edge.sourceInstanceId === bank && edge.targetInstanceId === "ib.exchange.trace"), `${bank} reaches Splunk`);
+  }
+  for (const gateway of ["ib.a.gateway", "ib.b.gateway"]) {
+    assert.ok(exchange.nodes.find((node) => node.instanceId === gateway)?.bindingIds?.includes("defense.boundary"), `${gateway} inspects`);
+  }
+
+  for (const [groups, prefix, stop] of [
+    [[INTERBANK_GROUPS.investigation, INTERBANK_GROUPS.kickoff, INTERBANK_GROUPS.kickoffInspection], "ib.kickoff.inspect", "ib.kickoff.stop"],
+    [[INTERBANK_GROUPS.investigation, INTERBANK_GROUPS.report, INTERBANK_GROUPS.reportInspection], "ib.report.inspect", "ib.report.stop"],
+  ]) {
+    const scene = projectInterbankSystem(groups, "implemented");
+    assert.ok(scene.relationships.some((edge) => edge.sourceInstanceId === `${prefix}.call` && edge.targetInstanceId === `${prefix}.api`), prefix);
+    assert.ok(scene.relationships.some((edge) => edge.kind === "control" && edge.sourceInstanceId === `${prefix}.apply` && edge.targetInstanceId === stop), `${prefix} fails closed`);
+  }
+
+  const control = normalizeInterbankExpansion([INTERBANK_GROUPS.investigation, INTERBANK_GROUPS.exchange], INTERBANK_GROUPS.outboundControl);
+  const hosting = normalizeInterbankExpansion(control, INTERBANK_GROUPS.hosting);
+  assert.ok(hosting.includes(INTERBANK_GROUPS.hosting) && !hosting.includes(INTERBANK_GROUPS.outboundControl));
+  const report = normalizeInterbankExpansion(hosting, INTERBANK_GROUPS.report);
+  assert.ok(report.includes(INTERBANK_GROUPS.report) && !report.includes(INTERBANK_GROUPS.exchange) && !report.includes(INTERBANK_GROUPS.hosting));
+  assert.deepEqual(collapseInterbankGroup(report, INTERBANK_GROUPS.investigation), []);
+  assert.deepEqual(collapseInterbankGroup(hosting, INTERBANK_GROUPS.exchange), [INTERBANK_GROUPS.investigation]);
+});
+
+test("every generic catalog uses the shared continuous projection contract", () => {
+  for (const catalog of Object.values(catalogs).filter((item) => !continuousSystems[item.id])) {
     const mode = catalog.scenes[catalog.rootSceneId].modes.includes("implemented") ? "implemented" : "proposed";
     const primary = primaryGroupId(catalog.id);
     const overview = projectGenericSystem(catalog, [], mode);

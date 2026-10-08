@@ -1,3 +1,4 @@
+import { interbankEvidence } from "./interbank-evidence.ts";
 import type { EvidenceRef } from "./types.ts";
 
 /** Allowlisted excerpts. Line ranges are 1-based and inclusive. */
@@ -420,4 +421,5 @@ export const evidence: Record<string, EvidenceRef> = {
     end: 81,
     proves: "AI Defense inspects only the optional narrative. A block omits the text and still leaves the score in place.",
   },
+  ...interbankEvidence,
 };
