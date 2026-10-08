@@ -14,6 +14,7 @@ import httpx
 from langchain_openai import ChatOpenAI
 
 from security import defense, inspection_messages
+from usage import model_usage
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "llm"))
 from studio_models import resolve  # noqa: E402
@@ -79,6 +80,9 @@ class ProtectedChatOpenAI(ChatOpenAI):
     async def _agenerate(self, messages, stop=None, run_manager=None, **kwargs):
         await defense.inspect(inspection_messages(messages), "model_input")
         result = await super()._agenerate(messages, stop=stop, run_manager=run_manager, **kwargs)
+        usage = model_usage.get()
+        if usage:
+            usage.record(result.generations)
         for generation in result.generations:
             await defense.inspect(inspection_messages([generation.message]), "model_output")
         return result

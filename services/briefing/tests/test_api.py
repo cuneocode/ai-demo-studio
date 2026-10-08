@@ -132,6 +132,7 @@ def test_analyze_upload_and_edgar_paths(client, monkeypatch):
     assert body["source"]["kind"] == "upload"
     assert body["trail"]["path"] == "upload"
     assert body["security"]["mode"] == "off"
+    assert body["usage"] == {"llm_calls": 0, "input_tokens": None, "output_tokens": None}
     assert "SECRET" not in uploaded.text
 
     auto = client.post("/api/briefing/analyze", data={"query": "JPM"})
@@ -140,6 +141,7 @@ def test_analyze_upload_and_edgar_paths(client, monkeypatch):
 
     cached = client.post("/api/briefing/analyze", data={"query": "JPM"})
     assert cached.json()["cached"] is True
+    assert cached.json()["usage"] == {"llm_calls": 0, "input_tokens": 0, "output_tokens": 0}
 
 
 def test_defense_blocks_briefing(client, monkeypatch):

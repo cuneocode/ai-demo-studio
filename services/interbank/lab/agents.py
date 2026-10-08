@@ -80,6 +80,9 @@ async def run_turn(agent: DeepAgent, *, prompt: str, thread_id: str, run_id: str
                 continue
             for message in messages:
                 if isinstance(message, AIMessage):
+                    usage = message.usage_metadata or {}
+                    await emit(run_id, "llm.call", f"{SERVICE_NAME} model call",
+                               data={"input_tokens": usage.get("input_tokens"), "output_tokens": usage.get("output_tokens")})
                     for thought in reasoning_summaries(message.content):
                         await emit(run_id, "agent.thinking", _headline(thought), body=thought)
                     content = message.text.strip()

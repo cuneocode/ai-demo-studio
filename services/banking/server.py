@@ -43,6 +43,21 @@ class ExecutionTrace(AsyncCallbackHandler):
     def __init__(self):
         self.events = []
         self.sources = []
+        self.llm_calls = 0
+        self.tokens = None
+
+    async def on_llm_end(self, response, **kwargs):
+        # Graph model calls only; Agent Control's judge runs outside these callbacks.
+        self.llm_calls += 1
+        for generation in [item for group in response.generations for item in group]:
+            usage = getattr(getattr(generation, "message", None), "usage_metadata", None)
+            if usage:
+                self.tokens = self.tokens or {"input_tokens": 0, "output_tokens": 0}
+                self.tokens["input_tokens"] += int(usage.get("input_tokens") or 0)
+                self.tokens["output_tokens"] += int(usage.get("output_tokens") or 0)
+
+    def usage(self):
+        return {"llm_calls": self.llm_calls, **(self.tokens or {"input_tokens": None, "output_tokens": None})}
 
     async def on_tool_start(self, serialized, input_str, **kwargs):
         name = serialized.get("name", "tool")
@@ -206,7 +221,7 @@ async def chat(request: Request):
     if failure:
         return JSONResponse(status_code=failure[0], content={"detail": failure[1],
             "security": security.summary(), "controls": controls.summary(), "session_reset": True,
-            "telemetry": {"splunk": splunk, "galileo": telemetry}})
+            "telemetry": {"splunk": splunk, "galileo": telemetry}, "usage": trace.usage()})
     return {"session_id": sid, "answer": answer, "trace": trace.events,
             "sources": trace.sources, "security": security.summary(), "controls": controls.summary(), "telemetry": {"galileo": telemetry, "splunk": splunk},
-            "duration_ms": round((time.monotonic() - now) * 1000)}
+            "usage": trace.usage(), "duration_ms": round((time.monotonic() - now) * 1000)}

@@ -36,9 +36,8 @@ class BriefingTelemetry:
             "export": "otlp" if self.endpoint else "off",
         }
 
-    def _payload(self, run_id: str, spans: list[dict] | None = None) -> dict:
+    def _payload(self, run_id: str, trace_id: str, spans: list[dict]) -> dict:
         now = time.time_ns()
-        recorded = spans or [{"name": "briefing.analyze", "start": now - 1_000_000, "end": now, "attrs": {"run_id": run_id}}]
         return {
             "resourceSpans": [{
                 "resource": {"attributes": [
@@ -47,7 +46,7 @@ class BriefingTelemetry:
                 "scopeSpans": [{
                     "scope": {"name": "company-briefing"},
                     "spans": [{
-                        "traceId": uuid.uuid4().hex,
+                        "traceId": trace_id,
                         "spanId": uuid.uuid4().hex[:16],
                         "name": span["name"],
                         "kind": 1,
@@ -57,7 +56,7 @@ class BriefingTelemetry:
                             {"key": key, "value": {"stringValue": str(value)}}
                             for key, value in (span.get("attrs") or {}).items()
                         ],
-                    } for span in recorded],
+                    } for span in spans],
                 }],
             }],
         }
@@ -65,15 +64,19 @@ class BriefingTelemetry:
     def export(self, run_id: str, spans: list[dict] | None = None) -> dict:
         if not self.endpoint:
             return {"status": "missing_configuration"}
+        now = time.time_ns()
+        recorded = spans or [{"name": "briefing.analyze", "start": now - 1_000_000, "end": now, "attrs": {"run_id": run_id}}]
+        # One trace per run, so the run can be found as a whole in Splunk.
+        trace_id = uuid.uuid4().hex
         headers = {"Content-Type": "application/json"}
         if self.token:
             headers["X-SF-TOKEN"] = self.token
         try:
-            response = httpx.post(self.endpoint, json=self._payload(run_id, spans), headers=headers, timeout=5.0)
+            response = httpx.post(self.endpoint, json=self._payload(run_id, trace_id, recorded), headers=headers, timeout=5.0)
             response.raise_for_status()
         except httpx.HTTPError:
-            return {"status": "export_failed", "run_id": run_id}
-        return {"status": "exported", "run_id": run_id}
+            return {"status": "export_failed", "run_id": run_id, "trace_id": trace_id, "span_count": 0}
+        return {"status": "exported", "run_id": run_id, "trace_id": trace_id, "span_count": len(recorded)}
 
     def delivery(self, run_id: str, spans: list[dict] | None = None) -> dict:
         return self.export(run_id, spans)

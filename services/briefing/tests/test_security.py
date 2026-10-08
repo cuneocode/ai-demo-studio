@@ -76,6 +76,29 @@ def test_model_inspects_tool_context_and_rejects_sync(inspection):
     monkeypatch.undo()
 
 
+def test_model_usage_counts_calls_and_reported_tokens(monkeypatch):
+    import usage as usage_module
+
+    monkeypatch.setattr(security.defense, "mode", "off")
+    replies = [
+        AIMessage(content="a", usage_metadata={"input_tokens": 40, "output_tokens": 7, "total_tokens": 47}),
+        AIMessage(content="b"),
+    ]
+
+    async def generate(self, *args, **kwargs):
+        return ChatResult(generations=[ChatGeneration(message=replies.pop(0))])
+
+    monkeypatch.setattr(ChatOpenAI, "_agenerate", generate)
+    model = security.ProtectedChatOpenAI(api_key="test-key", model="test-model")
+    tracked = usage_module.ModelUsage()
+    token = usage_module.model_usage.set(tracked)
+    asyncio.run(model._agenerate([HumanMessage(content="one")]))
+    asyncio.run(model._agenerate([HumanMessage(content="two")]))
+    usage_module.model_usage.reset(token)
+    assert tracked.summary() == {"llm_calls": 2, "input_tokens": 40, "output_tokens": 7}
+    assert usage_module.ModelUsage().summary() == {"llm_calls": 0, "input_tokens": None, "output_tokens": None}
+
+
 def test_mode_off_skips_inspect_even_with_shared_key(inspection, monkeypatch):
     monkeypatch.setattr(security.defense, "mode", "off")
     monkeypatch.setattr(security.defense, "key", "test-key")

@@ -42,6 +42,7 @@ from edgar import (
 from security import DefenseBlocked, DefenseUnavailable, SecurityRun, defense, security_run
 from telemetry import telemetry
 from tools import BriefingSession, apply_identity, write_meta
+from usage import ModelUsage, model_usage
 
 app = FastAPI(docs_url=None, redoc_url=None)
 logger = logging.getLogger("briefing")
@@ -139,6 +140,7 @@ def _replay_cached(key: str, started: float):
         "status": original.get("status") or "cached_replay",
     }
     cached["telemetry"] = {"splunk": {"status": "not_reexported", "reason": "cached replay"}}
+    cached["usage"] = {"llm_calls": 0, "input_tokens": 0, "output_tokens": 0}
     cached["duration_ms"] = round((time.monotonic() - started) * 1000)
     return cached
 
@@ -184,6 +186,8 @@ async def analyze(
     started = time.monotonic()
     run = SecurityRun()
     token: Token = security_run.set(run)
+    usage = ModelUsage()
+    usage_token: Token = model_usage.set(usage)
     run_id = str(uuid.uuid4())
     try:
         if upload:
@@ -254,11 +258,12 @@ async def analyze(
         if failure:
             return JSONResponse(
                 status_code=failure[0],
-                content={"detail": failure[1], "security": run.summary()},
+                content={"detail": failure[1], "security": run.summary(), "usage": usage.summary()},
             )
         payload = {
             **briefing,
             "security": run.summary(),
+            "usage": usage.summary(),
             "telemetry": {"splunk": telemetry.delivery(run_id, [
                 {"name": f"briefing.tool.{name}", "attrs": {"run_id": run_id, "tool": name}}
                 for name in (briefing.get("trail") or {}).get("tools") or []
@@ -270,4 +275,5 @@ async def analyze(
         _store_cached(cache_key, payload)
         return payload
     finally:
+        model_usage.reset(usage_token)
         security_run.reset(token)

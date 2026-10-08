@@ -82,3 +82,37 @@ def test_cache_backend_reads_export(tmp_path, monkeypatch):
     monkeypatch.setattr(scorer, "CACHE_PATH", cache)
     assert scorer.load_cache()["txn-clean-pos"]["probability"] == 0.22
     assert Path(cache).is_file()
+
+
+def test_generated_narrative_reports_provider_usage(client, monkeypatch):
+    class Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"choices": [{"message": {"content": "Shared merchant risk dominates."}}],
+                    "usage": {"prompt_tokens": 120, "completion_tokens": 18}}
+
+    class Client:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def post(self, *args, **kwargs):
+            return Response()
+
+    import narrative
+    monkeypatch.setenv("FRAUD_ENABLE_NARRATIVE", "true")
+    monkeypatch.setenv("FRAUD_NARRATIVE_API_KEY", "not-needed")
+    monkeypatch.setenv("FRAUD_NARRATIVE_BASE_URL", "http://127.0.0.1:8003/v1")
+    monkeypatch.setattr(narrative.httpx, "AsyncClient", Client)
+    body = client.post("/api/fraud/score", json={"case_id": "txn-mule-ach", "include_narrative": True}).json()
+    assert body["narrative"]["status"] == "generated"
+    assert body["narrative"]["usage"] == {"llm_calls": 1, "input_tokens": 120, "output_tokens": 18}
+    off = client.post("/api/fraud/score", json={"case_id": "txn-mule-ach"}).json()
+    assert "usage" not in off["narrative"]

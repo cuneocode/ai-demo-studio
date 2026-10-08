@@ -35,6 +35,7 @@ from security import SecurityRun, defense, security_run
 from synthesize import RESEARCH_DISCLAIMER, draft_note
 from synthesize import omitted as omitted_note
 from telemetry import wealth_telemetry
+from usage import ModelUsage, model_usage
 from tools.conflicts import detect_conflicts
 from tools.earnings import earnings_from_snapshot
 from tools.macro import macro_from_payload
@@ -198,6 +199,8 @@ async def analyze(request: AnalyzeRequest):
     started = time.monotonic()
     run = SecurityRun()
     token: Token = security_run.set(run)
+    usage = ModelUsage()
+    usage_token: Token = model_usage.set(usage)
     galileo_logger, callbacks, galileo = attach_galileo("Wealth research · synthesize", ticker)
     output = ""
     code = 200
@@ -255,6 +258,7 @@ async def analyze(request: AnalyzeRequest):
                         "dropped_claims": (note.get("dropped_claims") or 0),
                     },
                     "security": run.summary(),
+                    "usage": usage.summary(),
                     "duration_ms": round((time.monotonic() - started) * 1000),
                     "perimeter": PERIMETER,
                     "disclaimer": RESEARCH_DISCLAIMER,
@@ -264,10 +268,11 @@ async def analyze(request: AnalyzeRequest):
         splunk = wealth_telemetry.delivery(trace_id)
     finally:
         galileo = await finish_galileo(galileo_logger, galileo, output, code)
+        model_usage.reset(usage_token)
         security_run.reset(token)
     telemetry = {"splunk": splunk, "galileo": galileo}
     if failure:
-        return JSONResponse(status_code=failure[0], content={"detail": failure[1], "security": run.summary(), "telemetry": telemetry})
+        return JSONResponse(status_code=failure[0], content={"detail": failure[1], "security": run.summary(), "usage": usage.summary(), "telemetry": telemetry})
     body["telemetry"] = telemetry
     return body
 
@@ -277,6 +282,8 @@ async def brief(request: AdvisoryRequest):
     started = time.monotonic()
     run = SecurityRun()
     token: Token = security_run.set(run)
+    usage = ModelUsage()
+    usage_token: Token = model_usage.set(usage)
     output = ""
     code = 200
     failure = None
@@ -345,6 +352,7 @@ async def brief(request: AdvisoryRequest):
                     },
                     "grounding": {"dropped_claims": meeting.get("dropped_claims") or 0},
                     "security": run.summary(),
+                    "usage": usage.summary(),
                     "duration_ms": round((time.monotonic() - started) * 1000),
                     "perimeter": PERIMETER,
                     "disclaimer": ADVISORY_DISCLAIMER,
@@ -354,10 +362,11 @@ async def brief(request: AdvisoryRequest):
         splunk = wealth_telemetry.delivery(trace_id)
     finally:
         galileo = await finish_galileo(galileo_logger, galileo, output, code)
+        model_usage.reset(usage_token)
         security_run.reset(token)
     telemetry = {"splunk": splunk, "galileo": galileo}
     if failure:
-        return JSONResponse(status_code=failure[0], content={"detail": failure[1], "security": run.summary(), "telemetry": telemetry})
+        return JSONResponse(status_code=failure[0], content={"detail": failure[1], "security": run.summary(), "usage": usage.summary(), "telemetry": telemetry})
     body["telemetry"] = telemetry
     return body
 

@@ -58,11 +58,12 @@ def health():
 async def explain(case: dict, score: dict) -> dict:
     config = narrative_config()
     run = security_run.get() or SecurityRun()
-    empty = {"status": "disabled", "text": None, "security": run.summary()}
+    usage = {"llm_calls": 0, "input_tokens": None, "output_tokens": None}
+    empty = {"status": "disabled", "text": None, "security": run.summary(), "usage": usage}
     if not config["enabled"]:
         return empty
     if config["status"] != "configured":
-        return {"status": "unavailable", "text": None, "security": run.summary()}
+        return {"status": "unavailable", "text": None, "security": run.summary(), "usage": usage}
 
     shap_lines = ", ".join(
         f"{item['feature']} {item['direction']} {item['value']:+.2f}" for item in score["shap"][:6]
@@ -78,18 +79,19 @@ async def explain(case: dict, score: dict) -> dict:
     messages = [{"role": "user", "content": prompt}]
     try:
         await defense.inspect(messages, "narrative_input")
-        text = await _complete(config, messages)
+        text = await _complete(config, messages, usage)
         await defense.inspect([{"role": "assistant", "content": text}], "narrative_output")
     except DefenseBlocked:
-        return {"status": "blocked", "text": None, "security": run.summary()}
+        return {"status": "blocked", "text": None, "security": run.summary(), "usage": usage}
     except DefenseUnavailable:
-        return {"status": "unavailable", "text": None, "security": run.summary()}
+        return {"status": "unavailable", "text": None, "security": run.summary(), "usage": usage}
     except Exception:
-        return {"status": "unavailable", "text": None, "security": run.summary()}
-    return {"status": "generated", "text": text, "security": run.summary()}
+        return {"status": "unavailable", "text": None, "security": run.summary(), "usage": usage}
+    return {"status": "generated", "text": text, "security": run.summary(), "usage": usage}
 
 
-async def _complete(config: dict, messages: list[dict]) -> str:
+async def _complete(config: dict, messages: list[dict], usage: dict) -> str:
+    """usage gets the call and, when the provider reports them, its token counts."""
     body = {"model": config["model"], "messages": messages, "temperature": 0.2}
     if config["openai"]:
         # OpenAI rejects vLLM's chat_template_kwargs; GPT-5 models take max_completion_tokens.
@@ -106,7 +108,13 @@ async def _complete(config: dict, messages: list[dict]) -> str:
             json=body,
         )
         response.raise_for_status()
-        message = response.json()["choices"][0]["message"]
+        body = response.json()
+        usage["llm_calls"] += 1
+        reported = body.get("usage") if isinstance(body.get("usage"), dict) else {}
+        for source, target in (("prompt_tokens", "input_tokens"), ("completion_tokens", "output_tokens")):
+            if isinstance(reported.get(source), int):
+                usage[target] = (usage[target] or 0) + reported[source]
+        message = body["choices"][0]["message"]
         text = message.get("content")
         if not (isinstance(text, str) and text.strip()):
             text = message.get("reasoning_content") or ""

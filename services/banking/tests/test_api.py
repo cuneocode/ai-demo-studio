@@ -79,3 +79,21 @@ def test_trace_reports_executed_tools():
     asyncio.run(trace.on_tool_end("Document 1 — orbit.md:\nAnnual fee: $0"))
     assert trace.events == [{"name": "credit_score_retrieval", "kind": "tool"}]
     assert trace.sources[0]["title"] == "orbit.md"
+
+
+def test_chat_reports_graph_model_usage(client, monkeypatch):
+    from langchain_core.messages import AIMessage
+    from langchain_core.outputs import ChatGeneration, LLMResult
+
+    class Graph:
+        async def ainvoke(self, payload, config):
+            for usage in ({"input_tokens": 300, "output_tokens": 40, "total_tokens": 340}, None):
+                message = AIMessage(content="step", usage_metadata=usage) if usage else AIMessage(content="step")
+                for callback in config["callbacks"]:
+                    if hasattr(callback, "on_llm_end"):
+                        await callback.on_llm_end(LLMResult(generations=[[ChatGeneration(message=message)]]))
+            return {"messages": [SimpleNamespace(content="Brahe Platinum needs a 700 score.")]}
+
+    monkeypatch.setattr(server, "graph", Graph())
+    body = client.post("/api/banking/chat", json={"message": "platinum"}).json()
+    assert body["usage"] == {"llm_calls": 2, "input_tokens": 300, "output_tokens": 40}

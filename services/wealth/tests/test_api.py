@@ -164,6 +164,30 @@ def test_defense_omits_note_keeps_conflicts(monkeypatch, tmp_path):
     assert body["earnings"]["status"] == "ready"
     assert body["note"]["status"] == "blocked"
     assert body["recommendation"]["status"] == "blocked"
+    assert body["usage"] == {"llm_calls": 0, "input_tokens": None, "output_tokens": None}
+
+
+def test_analyze_reports_model_usage(monkeypatch, tmp_path):
+    from langchain_core.messages import AIMessage
+    from langchain_core.outputs import ChatGeneration
+
+    import usage
+
+    client = _client(monkeypatch, tmp_path)
+    monkeypatch.setattr(server, "get_snapshot", lambda ticker, refresh=False: (sample_snapshot(), "live"))
+    monkeypatch.setattr(server, "get_macro", lambda refresh=False: (sample_macro(), "live"))
+
+    async def drafted(*_args, **_kwargs):
+        reply = AIMessage(content="note", usage_metadata={"input_tokens": 900, "output_tokens": 210, "total_tokens": 1110})
+        usage.model_usage.get().record([ChatGeneration(message=reply)])
+        return (
+            {"status": "omitted", "reason": "fixture", "summary": None, "bullets": [], "citations": []},
+            {"status": "omitted", "reason": "fixture", "action": None, "thesis": None, "disclaimer": "Demo recommendation — not financial advice"},
+        )
+
+    monkeypatch.setattr(server, "draft_note", drafted)
+    body = client.post("/api/wealth/research/analyze", json={"ticker": "JPM"}).json()
+    assert body["usage"] == {"llm_calls": 1, "input_tokens": 900, "output_tokens": 210}
 
 
 def test_advisory_brief_keeps_holdings_when_nim_omits(monkeypatch, tmp_path):
