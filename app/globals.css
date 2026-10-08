@@ -203,6 +203,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--blue); outl
 .use-case-card.accent-amber::before { background: var(--amber); }
 .use-case-card:hover { transform: translateY(-2px); border-color: #3e5669; box-shadow: 0 14px 32px rgba(0,0,0,.16); }
 .use-case-card:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+.use-case-card.in-development { border-color: #243244; }
+.card-dev-overlay { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; pointer-events: none; background: rgba(8, 14, 22, .62); }
+.card-dev-overlay span { padding: 8px 14px; border: 1px solid rgba(249, 213, 140, .42); border-radius: 999px; background: rgba(18, 27, 39, .78); color: #f9d58c; font-size: var(--font-meta); font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
 .card-topline { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .category-label { color: var(--muted); font-size: var(--font-meta); text-transform: uppercase; letter-spacing: .11em; font-weight: 700; }
 .stage-label { color: var(--muted); font-size: var(--font-meta); display: flex; align-items: center; gap: 5px; white-space: nowrap; }

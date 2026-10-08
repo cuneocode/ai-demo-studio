@@ -24,11 +24,59 @@ export const sources = {
 const n = (id:string,title:string,subtitle:string,x:number,y:number,kind:NodeKind='service',detail=subtitle,source?:string):DiagramNode => ({id,title,subtitle,x,y,kind,detail,source});
 const e = (from:string,to:string,label:string,options:Partial<DiagramEdge>={}):DiagramEdge => ({from,to,label,...options});
 
+const LANE_GAP = 330;
+const ROW_STRIDE = 230;
+const NODE_W = 240;
+const NODE_H = 128;
+
+/** Cluster authored nodes into horizontal lanes. Presentation only; the graph stays use-case-specific. */
+export function diagramLanes(graph: Diagram) {
+ const ys = [...new Set(graph.nodes.map(node => node.y))].sort((a, b) => a - b);
+ const groups: number[][] = [];
+ for (const y of ys) {
+  const last = groups.at(-1);
+  if (last && y - last[last.length - 1] <= 48) last.push(y);
+  else groups.push([y]);
+ }
+ return groups.map(group => graph.nodes.filter(node => group.includes(node.y)).sort((a, b) => a.x - b.x));
+}
+
+/** Full deep-dive frame. Every node and edge stays; labels ride the gutter instead of the boxes. */
+export function presentDiagram(graph: Diagram): Diagram {
+ const lanes = diagramLanes(graph);
+ const placed = new Map<string, { x: number; y: number; row: number; col: number }>();
+ lanes.forEach((lane, row) => {
+  lane.forEach((node, col) => placed.set(node.id, { x: 48 + col * LANE_GAP, y: 36 + row * ROW_STRIDE, row, col }));
+ });
+ const nodes = graph.nodes.map(node => ({ ...node, ...placed.get(node.id) }));
+ const edges = graph.edges.map(edge => {
+  const a = placed.get(edge.from)!;
+  const b = placed.get(edge.to)!;
+  if (a.row === b.row && Math.abs(a.col - b.col) === 1) {
+   return { ...edge, via: undefined, labelAt: undefined, ports: undefined };
+  }
+  const gutterY = a.row === b.row ? a.y - 36 : a.row < b.row ? a.y + NODE_H + 40 : a.y - 40;
+  const startX = a.x + NODE_W / 2;
+  const endX = b.x + NODE_W / 2;
+  return {
+   ...edge,
+   ports: a.row === b.row ? undefined : a.row < b.row ? 'down' as const : 'up' as const,
+   via: [[startX, gutterY], [endX, gutterY]] as [number, number][],
+   labelAt: [(startX + endX) / 2, gutterY] as [number, number],
+  };
+ });
+ const width = Math.max(960, ...lanes.map(lane => 96 + Math.max(0, lane.length - 1) * LANE_GAP + NODE_W));
+ const height = Math.max(220, 36 + Math.max(1, lanes.length) * ROW_STRIDE + 24);
+ return { ...graph, width, height, nodes, edges, boundaries: undefined };
+}
+
 export function capabilityDiagram(frame:FrameMapping,step=0,caseId?:string):Diagram {
  const process=frame.architecture.process;
  step=Math.max(0,Math.min(process.length-1,step));
  if(caseId==='fraud-modeling') return fraudCapability(frame,step);
  if(caseId==='company-briefing') return briefingCapability(frame,step);
+ if(caseId==='market-research') return researchCapability(frame,step);
+ if(caseId==='client-advisory') return advisoryCapability(frame,step);
  const active=Math.min(step,Math.max(0,frame.architecture.ai.length-1));
  const ai=frame.architecture.ai[active]??{label:'AI insertion',point:'',detail:'AI insertion'};
  return {title:'Business transformation',note:caseId==='brahe-bank'?'AI Defense inspects model-bound prompts and answers on the live Brahe path. Splunk export is optional; UCS + Nexus placement is proposed.':'Select a step or connection to isolate its supporting relationships. Cisco capabilities below are proposed, not measured results.',width:1460,height:790,
@@ -133,18 +181,18 @@ export function bankingRuntime():Diagram {
  boundaries:[{title:'LOCAL PYTHON SERVICE · FastAPI + in-process LangGraph',x:350,y:20,width:1080,height:1020},{title:'EXTERNAL SERVICES · model, controls and telemetry',x:350,y:1080,width:1080,height:220}],
  nodes:[n('user','Customer / studio','Question + optional session ID',35,60,'human'),n('api','FastAPI /chat','Validate · session lock · 100s timeout',390,60,'service','POST /api/banking/chat validates the request, creates the root trace and invokes the layered path. Rejected requests return a safe error and reset the session checkpoint.'),
  n('defense','Cisco AI Defense','Request inspection',390,230,'cisco','First boundary: inspect the incoming question before it enters the checkpoint or graph. Enforce mode is fail-closed.',sources.defense.url),
- n('scope-judge','Application LLM judge','Banking scope · control 599',700,230,'ai','Hosted gpt-5.6-luna judge assesses whether the request is in banking scope; this is an application control, not a Galileo evaluator.'),
- n('scope-control','Agent Control SDK gate','Scope verdict · ID 599',1010,230,'cisco','Local application gate sends the scope judge result to the hosted Agent Control service and applies the returned allow/block verdict. A verdict is recorded, not a claim of perfect detection.'),
+ n('scope-judge','Application LLM judge','Banking scope · pre gate',700,230,'ai','Hosted judge returns in_scope for brahe-bank-banking-scope-v1. This is an application control, not a Galileo evaluator.'),
+ n('scope-control','Agent Control SDK gate','Step brahe-banking-scope',1010,230,'cisco','Local gate sends that boolean to hosted Agent Control and applies allow/block. A verdict is recorded, not a claim of perfect detection.'),
  n('supervisor','Bank supervisor','Route → collect → explain',700,430,'ai','LangGraph supervisor routes to specialists. Eligibility instructions require both specialist agents; there is no deterministic approval engine.'),
  n('cards','Card information agent','ReAct model / tool loop',390,430,'ai','Delegated product question invokes retrieval; evidence returns to this specialist before handoff back to the supervisor.'),n('score','Credit score agent','ReAct model / tool loop',1010,430,'ai','Delegated score question invokes a deterministic mock-score tool; specialist output returns through handoff-back.'),
  n('docs','Product retrieval tool','Local Markdown OR Pinecone',390,620,'store','Without Pinecone, lexical search reads local product Markdown. Configured Pinecone queries an existing top-k 1–8 index; /chat does not populate it.'),n('mock','Mock credit score tool','Returns fictional score 550',1010,620,'service','Not a credit bureau connection. No customer underwriting, payment or application is executed.'),
  n('final-defense','Cisco AI Defense','Final model-bound inspection',390,800,'cisco','ProtectedChatOpenAI inspects complete model output and tool arguments before the answer proceeds. This remains separate from quality controls.',sources.defense.url),
  n('quality-judge','Application LLM judge','Evidence + no approval claims',700,800,'ai','Hosted gpt-5.6-luna judge checks source grounding and prohibited approval claims after execution; it does not guarantee factual correctness.'),
- n('quality-control','Agent Control SDK gate','Grounding / no-approval · IDs 600/601',1010,800,'cisco','Local application gate sends the quality-judge result to the hosted Agent Control service: Evidence grounding (600) and No approval claims (601). Verdict metadata is bridged into the root trace.'),
+ n('quality-control','Agent Control SDK gate','Grounding and no-approval',1010,800,'cisco','Local gate enforces brahe-bank-evidence-grounding-v1 and brahe-bank-no-approval-claims-v1 on step brahe-answer-quality. Verdict metadata is bridged into the root trace.'),
  n('release','Validate and release','Answer + sources + control results',700,1000,'human','Release only after the final AI Defense and quality-control checks. The API returns allow/block/unavailable metadata without raw inspected content.'),
  n('output','Answer + sources','Customer reviews explanation',35,1000,'human','This is an illustrative assistant response, not a formal credit decision.'),
  n('state','InMemorySaver','thread_id → message checkpoints',1145,60,'store','Conversation checkpoints reside in process memory and are lost on restart. Unsafe/rejected requests are reset by the API.',sources.graph.url),
-n('model','OpenAI hosted model','ProtectedChat model calls',390,1120,'ai','Agent generation uses the configured hosted model through ProtectedChatOpenAI boundaries; no NVIDIA NIM or UCS GPU is in the running path.'),n('galileo','Splunk Agent Observability','Galileo SDK + control spans',700,1120,'service','Galileo 2.6+ callbacks collect execution telemetry; the Agent Control 8.5 bridge records control metadata in the root request trace. Upload failure does not reject a successful answer.',sources.splunk.url),n('splunk','Splunk OTLP export','Optional OTLP trace + metrics',1010,1120,'service','A separate OTLP exporter sends agent, workflow, model and tool spans only when configured. It is observability delivery, not Agent Control enforcement.',sources.splunk.url),n('agent-control-api','Hosted Agent Control service','Server-side JSON controls · 599/600/601',1170,1080,'cisco','Hosted control service evaluates the application judge payloads and returns allow/block metadata. It does not replace AI Defense or guarantee factual quality.'),
+n('model','OpenAI hosted model','ProtectedChat model calls',390,1120,'ai','Agent generation uses the configured hosted model through ProtectedChatOpenAI boundaries; no NVIDIA NIM or UCS GPU is in the running path.'),n('galileo','Splunk Agent Observability','Galileo SDK + control spans',700,1120,'service','Galileo 2.6+ callbacks collect execution telemetry; the Agent Control 8.5 bridge records control metadata in the root request trace. Upload failure does not reject a successful answer.',sources.splunk.url),n('splunk','Splunk OTLP export','Optional OTLP trace + metrics',1010,1120,'service','A separate OTLP exporter sends agent, workflow, model and tool spans only when configured. It is observability delivery, not Agent Control enforcement.',sources.splunk.url),n('agent-control-api','Hosted Agent Control service','Server-side JSON controls',1170,1080,'cisco','Hosted control service evaluates the application judge booleans and returns allow/block metadata. It does not replace AI Defense or guarantee factual quality.'),
  n('errors','Safe API error','No successful answer returned',35,430,'failure','AI Defense or Agent Control denial/unavailability, graph failure, timeout, concurrency, expired session and capacity errors return redacted metadata; rejected requests reset the session.')],
  edges:[e('user','api','POST message'),e('defense','scope-judge','allow → scope judge',{kind:'control'}),e('scope-judge','scope-control','judge result → SDK gate',{kind:'control'}),e('scope-control','agent-control-api','remote scope control request',{via:[[1130,295],[1290,295],[1290,520]],kind:'control'}),e('agent-control-api','scope-control','scope allow / block',{via:[[1410,520],[1410,190],[1130,190],[1130,230]],kind:'control'}),e('scope-control','supervisor','allow graph entry',{ports:'down',kind:'control'}),e('supervisor','state','read / write state'),e('supervisor','cards','product handoff ↔ facts',{ports:'left',kind:'data'}),e('supervisor','score','score handoff ↔ result',{kind:'data'}),e('cards','docs','search ↔ source excerpts',{ports:'down'}),e('score','mock','tool call ↔ 550',{ports:'down'}),
  e('supervisor','final-defense','model/tool output',{ports:'down',kind:'control'}),e('final-defense','quality-judge','allow → quality judge',{kind:'control'}),e('quality-judge','quality-control','judge result → SDK gate',{kind:'control'}),e('quality-control','agent-control-api','remote quality controls',{via:[[1130,865],[1320,865],[1320,650]],kind:'control'}),e('agent-control-api','quality-control','quality allow / block',{via:[[1430,650],[1430,730],[1130,730],[1130,800]],kind:'control'}),e('quality-control','release','allow → release',{ports:'down',kind:'control'}),e('release','output','answer + evidence',{ports:'left'}),
@@ -174,7 +222,7 @@ export function fraudRuntime():Diagram {
   n('user','Analyst / studio','Select a queue payment',56,64,'human','The workbench posts a case_id from the TabFormer test window. It does not send raw PAN data or start training.'),
   n('api','FastAPI /score','POST /api/fraud/score',436,64,'service','Validates the case_id, loads the catalog row, scores it, and may request a narrative. Health re-checks the sidecar on each call.'),
   n('catalog','TabFormer cases','studio_cases.json',816,64,'store','Held-out Sep–Oct 2019 payments with src, dst, and edge_attr. Fixture JSON is used only when FRAUD_BACKEND=fixture.'),
-  n('router','Backend selector','auto → live sidecar',1196,64,'service','auto uses the GraphSAGE+XGBoost HTTP sidecar when /health is up. Fixture is forced only. A down sidecar fails closed with HTTP 503.'),
+  n('router','Backend selector','auto → live, else Triton',1196,64,'service','auto uses the GraphSAGE+XGBoost HTTP sidecar when /health is up, otherwise a ready Triton endpoint. Fixture and cache run only when FRAUD_BACKEND forces them. A down stack returns HTTP 503.'),
   n('scoreFail','Score unavailable','HTTP 503 · no score',56,300,'failure','Unknown case, sidecar down, or infer failure. Auto does not silently swap in fixtures.'),
   n('tritonClient','Score client','POST :8000/score',436,300,'service','Sends src, dst, and the 6-wide edge_attr vector. This is HTTP JSON, not a Triton gRPC infer payload.'),
   n('tritonServer','GraphSAGE + XGBoost','GPU infer sidecar',816,300,'ai','serve.sh loads model_final.pt and xgboost_fraud.json in the NVIDIA training image. Neighbor sampling, GNN embedding, then XGBoost.',sources.fraud.url),
@@ -360,13 +408,352 @@ export function briefingKnowledge():Diagram {
  ]};
 }
 
+function researchCapability(frame:FrameMapping,step:number):Diagram {
+ const process=frame.architecture.process;
+ const fetch=frame.architecture.ai[0]??{detail:'Allowlisted yfinance and FRED write through a TTL cache. Empty provider responses fail closed.'};
+ const tools=frame.architecture.ai[1]??{detail:'Earnings, peers, returns, and macro are CPU math. Conflicts are structured rows, not a keyword scan.'};
+ const synth=frame.architecture.ai[2]??{detail:'LangChain ChatOpenAI talks to the local NIM. Defense inspects this hop only.'};
+ const xs=[56,436,816,1196];
+ const focus=step===0?'yahoo':step===1?'cache':step===2?'conflicts':'gate';
+ return {title:'Wealth research · capability',note:'Live path is allowlisted Yahoo + FRED cache, CPU tools and structured conflicts, then a local NIM hop. Cisco AI Defense inspects model hops only. Fetch, cache, FRED, tools, conflicts, and grounding stay off Inspection. This map does not assert live Yahoo, FRED, or NIM availability. No vector index and no Tavily. Demo recommendation — not financial advice.',width:1520,height:940,
+ boundaries:[
+  {title:'Business process',x:28,y:16,width:1464,height:220},
+  {title:'Deterministic fetch / cache / tools / conflicts · no Inspection',x:28,y:252,width:1464,height:220},
+  {title:'Local NIM hop · AI Defense on synthesis',x:28,y:488,width:1464,height:220},
+  {title:'Accept-gate · implemented NIM placement · optional telemetry',x:28,y:724,width:1464,height:192},
+ ],
+ nodes:[
+  ...process.map((p,i)=>n('p'+i,p.title,p.detail,xs[i]??56+i*380,56,'human')),
+  n('yahoo','Yahoo + FRED fetch','Allowlisted · no browse',56,300,'service',fetch.detail),
+  n('cache','Write-through cache','Same UTC day / TTL',436,300,'store','Gitignored .cache/snapshots and .cache/fred. Refresh forces a live pull. Not a committed snapshot pack.'),
+  n('tools','Earnings / peers / returns','CPU math · no Inspection',816,300,'service',tools.detail),
+  n('conflicts','Structured conflicts','Before the LLM',1196,300,'service','Beat-rate vs SPY lag, P/E premium vs decelerating revenue, CPI/Fed vs rate-sensitive sector. No keyword scan over prose.'),
+  n('grounding','Grounding verifier','Cite-or-abstain · not an LLM',56,536,'service','Excerpt and value match against the cached snapshot and FRED payload. Ungrounded-only notes are omitted. Off Inspection.'),
+  n('nim','Local NIM synthesis','LangChain · :8003',436,536,'ai',synth.detail),
+  n('defense','Cisco AI Defense','Model hops only',816,536,'cisco','Inspects note input and output. Fetch, cache, FRED, tools, conflicts, and grounding never enter Inspection.',sources.defense.url),
+  n('omit','Note omitted','Indicators still release',1196,536,'failure','NIM down, inspection deny, or ungrounded-only claims drop the note and recommendation. Earnings, peers, returns, macro, and conflicts remain.'),
+  n('fail','Empty provider','HTTP 502 · no invented rows',56,772,'failure','A failed or empty Yahoo snapshot fails closed. Missing FRED_API_KEY leaves macro absent and research still runs.'),
+  n('observe','Splunk Agent Observability','Galileo SDK · optional',436,772,'cisco','GalileoAsyncCallback on the NIM hop when GALILEO_API_KEY is set. Configuration only. Analyze does not require a dashboard. Not a local topic judge.',sources.splunk.url),
+  n('compute','Local NIM on UCS/GPU','Implemented · 127.0.0.1:8003',816,772,'cisco','This sidecar uses the local Nemotron NIM, not hosted OpenAI. The map does not claim a sized Cisco BOM.',sources.cisco.url),
+  n('gate','Accept research note','Presenter-owned store',1196,772,'human','Studio research context is stored only after this click. Clearing the company profile does not wipe the note.'),
+ ],
+ edges:[
+  ...process.slice(0,-1).map((_,i)=>e('p'+i,'p'+(i+1),'next step')),
+  e('p'+Math.min(step,Math.max(process.length-1,0)),focus,step===0?'select ticker':step===1?'fetch or reuse':step===2?'review conflicts':'review note',{ports:'down',labelAt:step===0?[176,248]:step===1?[556,248]:step===2?[1106,248]:[1316,248]}),
+  e('yahoo','cache','write-through',{labelAt:[346,364]}),
+  e('cache','tools','cached payload',{labelAt:[726,364]}),
+  e('tools','conflicts','tool JSON',{labelAt:[1106,364]}),
+  e('yahoo','fail','empty / failed fetch',{ports:'down',kind:'control',labelAt:[176,466]}),
+  e('tools','nim','tool JSON',{ports:'down',labelAt:[746,466]}),
+  e('conflicts','nim','conflict rows',{ports:'down',via:[[1316,480],[556,480]],labelAt:[930,472]}),
+  e('tools','grounding','numbers + labels',{via:[[936,428],[176,428]],labelAt:[556,420]}),
+  e('conflicts','grounding','row text',{via:[[1316,448],[176,448]],labelAt:[746,440]}),
+  e('nim','defense','inspect hop',{kind:'control',labelAt:[726,600]}),
+  e('defense','omit','deny / unavailable',{kind:'control',labelAt:[1106,600]}),
+  e('nim','omit','NIM down',{kind:'control',via:[[556,664],[1316,664]],labelAt:[930,656]}),
+  e('nim','grounding','draft note',{ports:'left',labelAt:[346,600]}),
+  e('grounding','omit','ungrounded-only',{kind:'control',via:[[176,664],[1316,664]],labelAt:[500,656]}),
+  e('grounding','gate','cited note',{ports:'down',via:[[176,836],[1316,836]],labelAt:[746,828]}),
+  e('nim','observe','optional spans',{kind:'telemetry',ports:'down',labelAt:[556,702]}),
+  e('nim','compute','implemented host',{kind:'placement',via:[[556,740],[936,740]],labelAt:[746,732]}),
+  ...(process[3]?[e('gate','p3','after accept',{ports:'up',via:[[1316,748],[1436,748],[1436,184]],labelAt:[1400,200]})]:[]),
+ ]};
+}
+
+export function researchRuntime():Diagram {
+ return {title:'Wealth research · implemented request path',note:'Code-verified path: the workbench posts a ticker. FastAPI on :8014 uses a write-through Yahoo + FRED cache, CPU tools, and structured conflicts. LangChain talks to the local NIM at 127.0.0.1:8003. Cisco AI Defense inspects model hops only. Fetch, cache, FRED, tools, conflicts, and grounding never enter Inspection. This map does not assert live Yahoo, FRED, or NIM availability. No vector index and no Tavily. Demo recommendation — not financial advice.',width:1520,height:1440,
+ boundaries:[
+  {title:'Studio adapter · FastAPI :8014',x:28,y:16,width:1464,height:220},
+  {title:'Allowlisted fetch + write-through cache · no Inspection',x:28,y:252,width:1464,height:220},
+  {title:'CPU tools + structured conflicts · no Inspection',x:28,y:488,width:1464,height:220},
+  {title:'Local NIM synthesis · Defense on hop',x:28,y:724,width:1464,height:220},
+  {title:'Ground + accept-gate · numbers stay if note omitted',x:28,y:960,width:1464,height:220},
+  {title:'Optional observability · implemented local NIM placement',x:28,y:1196,width:1464,height:220},
+ ],
+ nodes:[
+  n('user','Presenter / studio','US ticker + refresh flag',56,64,'human','Any US ticker. The accepted briefing ticker is a default only.'),
+  n('api','FastAPI /research/analyze','POST /api/wealth/research/analyze',436,64,'service','127.0.0.1:8014. Cache-if-fresh unless refresh=true. The map does not claim the sidecar is up.'),
+  n('ticker','Ticker check','1–5 letter US symbol',816,64,'service','Invalid symbols return 422. Analyze always performs a real allowlisted fetch or a fresh cache hit.'),
+  n('source','Source kind','live or cache · never fixture',1196,64,'service','source.kind is live or cache. Analyze does not read a bundled market snapshot catalog.'),
+  n('yahoo','yfinance named functions','history · earnings · info · peers',56,300,'service','No arbitrary HTTP. Peer groups come from the live industry + market-cap band, then cache with the issuer snapshot.'),
+  n('cache','Snapshot cache','.cache/snapshots/{ticker}.json',436,300,'store','Write-through. Fresh for the same UTC day or WEALTH_CACHE_TTL_SECONDS. Gitignored.'),
+  n('fred','FRED allowlist','FEDFUNDS · CPI · 10Y · UNRATE',816,300,'service','Requires FRED_API_KEY. Missing key leaves macro absent and research still runs.'),
+  n('fetchFail','Empty provider','HTTP 502 · no invented rows',1196,300,'failure','Empty Yahoo history/info fails closed. A configured FRED series that returns nothing also fails closed.'),
+  n('tools','Earnings / peers / returns','Deterministic math',56,536,'service','Beat-rate, peer median/percentile, and horizon returns vs SPY. Off Inspection.'),
+  n('macro','Macro tool','FRED series or absent',436,536,'service','Named tool over cached FRED observations. Direction is latest vs prior. Off Inspection.'),
+  n('conflicts','Structured conflicts','Before the LLM',816,536,'service','Cross-dimension rows only. No keyword scan over agent prose.'),
+  n('indicators','Indicator rows','Always release when tools succeed',1196,536,'service','Earnings, peers, returns, macro, and conflicts stay even if the note is omitted.'),
+  n('nim','ProtectedChatOpenAI','Temperature 0 · ainvoke',56,772,'ai','langchain_openai pointed at NIM_BASE_URL (default http://127.0.0.1:8003/v1). No hosted OpenAI default.'),
+  n('defense','Cisco AI Defense','Inspect every model hop',436,772,'cisco','src_app fsi-ai-studio-wealth. Fetch, cache, FRED, tools, conflicts, and grounding never enter Inspection.',sources.defense.url),
+  n('model','Local NIM','Nemotron Super · :8003',816,772,'ai','Implemented inference for this sidecar. Health is not ready if GET {NIM}/models fails. npm run dev:studio does not start NIM.'),
+  n('omit','Note omitted','Recommendation omitted',1196,772,'failure','NIM down, inspection deny/unavailable, timeout, or ungrounded-only claims. Numbers stay.'),
+  n('grounding','Grounding verifier','Snapshot + FRED values',56,1008,'service','Drop claims whose excerpt or value is not in the cache. Off Inspection.'),
+  n('gate','Accept research note','Presenter accept-gate',436,1008,'human','Stored at fsi-demo-studio.research-note only after this click.'),
+  n('store','localStorage note','After accept only',816,1008,'store','Separate from the company profile. Clearing the briefing does not wipe the note.'),
+  n('galileo','Splunk Agent Observability','Galileo SDK · optional',1196,1008,'service','GalileoAsyncCallback on research NIM hops when GALILEO_API_KEY is set. Configuration is not dashboard proof. This is not a local topic judge.',sources.splunk.url),
+  n('splunk','Splunk OTLP export','Official LangChain OTEL',56,1244,'service','Additional traces and metrics only when SPLUNK_REALM + SPLUNK_ACCESS_TOKEN or OTLP endpoints are set. Not a dashboard claim.',sources.splunk.url),
+  n('output','Demo recommendation','Not financial advice',436,1244,'human','Server attaches the disclaimer. The model does not author legal text.'),
+  n('compute','UCS / GPU host','Local NIM placement',816,1244,'cisco','Implemented as 127.0.0.1:8003. Not a sized Cisco BOM.',sources.cisco.url),
+  n('disclaimer','Not advice banner','Visible on the workbench',1196,1244,'human','Demo recommendation — not financial advice.'),
+ ],
+ edges:[
+  e('user','api','POST ticker',{labelAt:[346,128]}),
+  e('api','ticker','validate symbol',{labelAt:[726,128]}),
+  e('ticker','source','live or cache',{labelAt:[1106,128]}),
+  e('source','yahoo','refresh or miss',{ports:'down',via:[[1316,248],[176,248]],labelAt:[746,240]}),
+  e('source','cache','fresh hit',{ports:'down',labelAt:[726,248]}),
+  e('yahoo','cache','write snapshot',{labelAt:[346,364]}),
+  e('yahoo','fred','same analyze',{via:[[176,428],[936,428]],labelAt:[556,420]}),
+  e('fred','cache','write FRED',{labelAt:[726,364]}),
+  e('yahoo','fetchFail','empty history / info',{kind:'control',via:[[176,464],[1316,464]],labelAt:[746,456]}),
+  e('fred','fetchFail','empty series when keyed',{kind:'control',labelAt:[1106,364]}),
+  e('cache','tools','issuer payload',{ports:'down',via:[[556,500],[176,500]],labelAt:[300,492]}),
+  e('cache','macro','FRED payload',{ports:'down',labelAt:[556,466]}),
+  e('tools','conflicts','tool JSON',{via:[[176,600],[936,600]],labelAt:[556,592]}),
+  e('macro','conflicts','CPI / Fed direction',{labelAt:[726,600]}),
+  e('tools','indicators','rows always',{via:[[176,664],[1316,664]],labelAt:[746,656]}),
+  e('conflicts','indicators','conflict rows',{labelAt:[1106,600]}),
+  e('macro','indicators','macro rows',{via:[[556,680],[1316,680]],labelAt:[930,672]}),
+  e('conflicts','nim','rows + tools',{ports:'down',via:[[936,720],[176,720]],labelAt:[556,712]}),
+  e('indicators','omit','note may drop',{ports:'down',kind:'control',labelAt:[1316,702]}),
+  e('nim','model','ainvoke',{via:[[176,740],[936,740]],labelAt:[556,732]}),
+  e('nim','defense','inspect input / output',{kind:'control',labelAt:[346,836]}),
+  e('model','defense','inspect hop',{kind:'control',labelAt:[726,836]}),
+  e('defense','omit','deny / unavailable',{kind:'control',labelAt:[1106,836]}),
+  e('model','omit','NIM down / timeout',{kind:'control',labelAt:[1106,772]}),
+  e('nim','grounding','draft note',{ports:'down',labelAt:[176,940]}),
+  e('indicators','grounding','values + labels',{via:[[1316,980],[176,980]],labelAt:[746,972]}),
+  e('cache','grounding','snapshot corpus',{via:[[556,992],[176,992]],labelAt:[360,984]}),
+  e('grounding','gate','cited note',{labelAt:[346,1072]}),
+  e('grounding','omit','ungrounded-only',{kind:'control',via:[[176,940],[1316,940]],labelAt:[746,932]}),
+  e('yahoo','fetchFail','502 snapshot',{kind:'control',via:[[176,1140],[1316,1140]],labelAt:[746,1132]}),
+  e('api','galileo','optional traces',{kind:'telemetry',via:[[556,210],[1316,210],[1316,1008]],labelAt:[1400,620]}),
+  e('nim','galileo','NIM hop callbacks',{kind:'telemetry',via:[[176,1148],[1316,1148]],labelAt:[746,1140]}),
+  e('gate','store','Accept research note',{labelAt:[726,1072]}),
+  e('store','output','after accept',{ports:'down',labelAt:[936,1188]}),
+  e('output','disclaimer','visible banner',{labelAt:[726,1308]}),
+  e('api','splunk','optional spans',{ports:'down',kind:'telemetry',via:[[556,210],[176,210],[176,1244]],labelAt:[200,210]}),
+  e('nim','splunk','synthesis spans',{kind:'telemetry',via:[[176,1188],[176,1244]],labelAt:[200,1210]}),
+  e('model','compute','implemented :8003',{kind:'placement',ports:'down',labelAt:[936,1188]}),
+ ]};
+}
+
+export function researchKnowledge():Diagram {
+ return {title:'Wealth research · implemented market cache',note:'Yahoo named functions and allowlisted FRED series are the only providers. The write-through cache is the document of record after the first successful pull. No vector index, no Tavily, and no committed snapshot pack. This map does not assert live Yahoo or FRED availability.',width:1520,height:860,
+ boundaries:[
+  {title:'Allowlisted providers · not a live availability claim',x:28,y:16,width:1464,height:220},
+  {title:'Write-through cache · gitignored · no snapshot pack',x:28,y:280,width:1464,height:220},
+  {title:'CPU consumers · not embeddings',x:28,y:544,width:1464,height:292},
+ ],
+ nodes:[
+  n('yahoo','yfinance','history / earnings / info / recs',56,72,'service','Named functions only. No arbitrary HTTP from tools.'),
+  n('industry','Industry peers','Same sector + market-cap band',436,72,'service','Discovered live from yfinance Industry, then cached with the issuer. No peers.yaml catalog.'),
+  n('spy','SPY benchmark','Horizon returns vs SPY',816,72,'service','Same history helper as the issuer. Relative returns are computed in tools.'),
+  n('fredSrc','FRED API','Four allowlisted series',1196,72,'service','FEDFUNDS, CPIAUCSL, DGS10, UNRATE. Other series IDs are rejected.'),
+  n('snap','Issuer snapshot','.cache/snapshots/{ticker}.json',56,360,'store','fetchedAt + info + history + earnings + peers. Gitignored.'),
+  n('fredCache','FRED cache','.cache/fred/macro.json',436,360,'store','Write-through when FRED_API_KEY is set. Missing key is absent, not a fixture.'),
+  n('ttl','Freshness','Same UTC day or TTL seconds',816,360,'service','Stale-within-TTL hits skip the network. refresh:true forces a pull.'),
+  n('reject','Empty payload','HTTP 502',1196,360,'failure','Do not invent rows. Tests mock yfinance and FRED; they do not ship a demo fixture pack.'),
+  n('tools','Research tools','Earnings · peers · returns · macro',56,624,'service','Deterministic math over cached payloads.'),
+  n('conflicts','Conflict rows','Structured · pre-LLM',436,624,'service','Cross-dimension only. Keyword scans over free text are out.'),
+  n('ground','Grounding corpus','Snapshot + FRED JSON',816,624,'service','Cite-or-abstain against cached values. No vector query.'),
+  n('consumer','Note + UI panels','Indicators always · note optional',1196,624,'service','Workbench shows numbers even when NIM is down.'),
+ ],
+ edges:[
+  e('yahoo','industry','sector / cap band',{labelAt:[346,136]}),
+  e('yahoo','spy','benchmark history',{via:[[176,48],[936,48]],labelAt:[556,40]}),
+  e('yahoo','snap','write issuer',{ports:'down',labelAt:[176,248]}),
+  e('industry','snap','cache peers',{ports:'down',labelAt:[346,248]}),
+  e('spy','snap','cache SPY',{ports:'down',labelAt:[726,248]}),
+  e('fredSrc','fredCache','write series',{ports:'down',labelAt:[1106,248]}),
+  e('yahoo','reject','empty history',{kind:'control',via:[[176,280],[1316,280]],labelAt:[746,272]}),
+  e('fredSrc','reject','empty series when keyed',{kind:'control',labelAt:[1316,136]}),
+  e('snap','ttl','fetchedAt',{labelAt:[346,424]}),
+  e('fredCache','ttl','fetchedAt',{labelAt:[726,424]}),
+  e('ttl','tools','fresh payload',{ports:'down',labelAt:[176,536]}),
+  e('fredCache','tools','macro payload',{ports:'down',via:[[556,520],[176,520]],labelAt:[360,512]}),
+  e('tools','conflicts','tool JSON',{labelAt:[346,688]}),
+  e('tools','ground','values',{via:[[176,752],[936,752]],labelAt:[556,744]}),
+  e('conflicts','consumer','rows always',{labelAt:[726,688]}),
+  e('ground','consumer','cited note or omit',{labelAt:[1106,688]}),
+ ]};
+}
+
+function advisoryCapability(frame:FrameMapping,step:number):Diagram {
+ const process=frame.architecture.process;
+ const entitled=frame.architecture.ai[0]??{detail:'Accepted briefing excerpts and research snapshot fields. Off Inspection.'};
+ const rules=frame.architecture.ai[1]??{detail:'Concentration, single-name cap, and missing IPS fields. Not an LLM.'};
+ const synth=frame.architecture.ai[2]??{detail:'Local NIM drafts a meeting brief. Defense inspects this hop only.'};
+ const xs=[56,436,816,1196];
+ const focus=step===0?'holdings':step===1?'entitled':step===2?'suitability':'gate';
+ return {title:'Client advisory · capability',note:'Live path is presenter-entered holdings, entitled briefing + research, CPU suitability rules, then a local NIM hop. Cisco AI Defense inspects model hops only. Entitled assembly, holdings fetch, suitability, and grounding stay off Inspection. This map does not assert live Yahoo, FRED, or NIM availability. Demo brief — not advice. No household catalog.',width:1520,height:940,
+ boundaries:[
+  {title:'Business process',x:28,y:16,width:1464,height:220},
+  {title:'Entitled context / holdings / suitability · no Inspection',x:28,y:252,width:1464,height:220},
+  {title:'Local NIM hop · AI Defense on synthesis',x:28,y:488,width:1464,height:220},
+  {title:'Advisor accept-gate · implemented NIM placement',x:28,y:724,width:1464,height:192},
+ ],
+ nodes:[
+  ...process.map((p,i)=>n('p'+i,p.title,p.detail,xs[i]??56+i*380,56,'human')),
+  n('holdings','Live holdings','Ticker + weight rows',56,300,'human','Presenter-entered. No Carter-household CRM and no product fixture pack.'),
+  n('entitled','Entitled context','Accepted briefing + note',436,300,'service',entitled.detail),
+  n('suitability','Suitability rules','CPU · not an LLM',816,300,'service',rules.detail),
+  n('metrics','Holding metrics','Yahoo cache · live',1196,300,'service','Same snapshot cache as research. Empty holdings fetch fails closed.'),
+  n('grounding','Grounding verifier','Briefing excerpts + snapshot',56,536,'service','Cite-or-abstain against posted briefing excerpts and cached holding fields. Off Inspection.'),
+  n('nim','Local NIM brief','LangChain · :8003',436,536,'ai',synth.detail),
+  n('defense','Cisco AI Defense','Model hops only',816,536,'cisco','Inspects brief input and output. Entitled assembly, suitability, holdings, and grounding never enter Inspection.',sources.defense.url),
+  n('omit','Brief omitted','Holdings still release',1196,536,'failure','NIM down, inspection deny, or ungrounded-only claims drop the meeting brief. Holding metrics and suitability rows remain.'),
+  n('fail','Empty holdings fetch','HTTP 502',56,772,'failure','If every holding ticker returns empty market data, the request fails closed.'),
+  n('observe','Splunk Agent Observability','Galileo SDK · optional',436,772,'cisco','GalileoAsyncCallback on the NIM hop when GALILEO_API_KEY is set. Configuration only. Not a dashboard claim. Not a local topic judge.',sources.splunk.url),
+  n('compute','Local NIM on UCS/GPU','Implemented · 127.0.0.1:8003',816,772,'cisco','Same sidecar NIM as research. Not hosted OpenAI. Not a sized Cisco BOM.',sources.cisco.url),
+  n('gate','Accept meeting brief','Advisor-owned store',1196,772,'human','Stored at fsi-demo-studio.advisory-brief only after this click.'),
+ ],
+ edges:[
+  ...process.slice(0,-1).map((_,i)=>e('p'+i,'p'+(i+1),'next step')),
+  e('p'+Math.min(step,Math.max(process.length-1,0)),focus,step===0?'enter holdings':step===1?'assemble context':step===2?'run rules':'review brief',{ports:'down',labelAt:step===0?[176,248]:step===1?[556,248]:step===2?[936,248]:[1316,248]}),
+  e('holdings','metrics','live fetch / cache',{via:[[176,428],[1316,428]],labelAt:[746,420]}),
+  e('entitled','suitability','accepted context',{labelAt:[726,364]}),
+  e('metrics','suitability','weights + names',{labelAt:[1106,364]}),
+  e('holdings','fail','all tickers empty',{ports:'down',kind:'control',labelAt:[176,466]}),
+  e('suitability','nim','findings',{ports:'down',labelAt:[746,466]}),
+  e('entitled','nim','excerpts + note',{ports:'down',via:[[556,480],[556,536]],labelAt:[500,508]}),
+  e('metrics','nim','holding metrics',{ports:'down',via:[[1316,480],[556,480]],labelAt:[930,472]}),
+  e('entitled','grounding','briefing excerpts',{via:[[556,448],[176,448]],labelAt:[360,440]}),
+  e('metrics','grounding','snapshot fields',{via:[[1316,400],[176,400]],labelAt:[746,392]}),
+  e('nim','defense','inspect hop',{kind:'control',labelAt:[726,600]}),
+  e('defense','omit','deny / unavailable',{kind:'control',labelAt:[1106,600]}),
+  e('nim','omit','NIM down',{kind:'control',via:[[556,664],[1316,664]],labelAt:[930,656]}),
+  e('nim','grounding','draft brief',{ports:'left',labelAt:[346,600]}),
+  e('grounding','omit','ungrounded-only',{kind:'control',via:[[176,664],[1316,664]],labelAt:[500,656]}),
+  e('grounding','gate','cited brief',{ports:'down',via:[[176,836],[1316,836]],labelAt:[746,828]}),
+  e('nim','observe','optional spans',{kind:'telemetry',ports:'down',labelAt:[556,702]}),
+  e('nim','compute','implemented host',{kind:'placement',via:[[556,740],[936,740]],labelAt:[746,732]}),
+  ...(process[3]?[e('gate','p3','after accept',{ports:'up',via:[[1316,748],[1436,748],[1436,184]],labelAt:[1400,200]})]:[]),
+ ]};
+}
+
+export function advisoryRuntime():Diagram {
+ return {title:'Client advisory · implemented request path',note:'Code-verified path: the workbench posts presenter holdings plus optional accepted briefing and research payloads. FastAPI on :8014 loads live holding metrics from the Yahoo cache, runs suitability rules, and may ask the local NIM for a meeting brief. Cisco AI Defense inspects model hops only. Entitled assembly, holdings, suitability, and grounding never enter Inspection. This map does not assert live Yahoo, FRED, or NIM availability. Demo brief — not advice. No household catalog.',width:1520,height:1440,
+ boundaries:[
+  {title:'Studio adapter · FastAPI :8014',x:28,y:16,width:1464,height:220},
+  {title:'Entitled context + live holdings · no Inspection',x:28,y:252,width:1464,height:220},
+  {title:'Suitability rules · CPU · no Inspection',x:28,y:488,width:1464,height:220},
+  {title:'Local NIM meeting brief · Defense on hop',x:28,y:724,width:1464,height:220},
+  {title:'Ground + advisor accept-gate · holdings stay if brief omitted',x:28,y:960,width:1464,height:220},
+  {title:'Optional observability · implemented local NIM placement',x:28,y:1196,width:1464,height:220},
+ ],
+ nodes:[
+  n('user','Advisor / studio','Holdings + optional notes',56,64,'human','Ticker and weight rows. No household catalog and no CRM catalog.'),
+  n('api','FastAPI /advisory/brief','POST /api/wealth/advisory/brief',436,64,'service','Browser may post accepted briefing and research payloads. The sidecar does not open briefing EDGAR.'),
+  n('holdingsIn','Holdings editor','Weights as fractions',816,64,'human','Presenter-owned. Weights above 1.5 are treated as percents.'),
+  n('posted','Posted context','Optional briefing + note',1196,64,'store','Entitled only if already accepted in the studio. Clearing the company profile does not wipe this brief.'),
+  n('briefingCtx','Accepted briefing','Theme excerpts',56,300,'service','Objectives, risks, and other posted facts. Off Inspection.'),
+  n('researchCtx','Accepted research note','Snapshot fields',436,300,'service','Ticker, conflicts, and cited note if the presenter accepted research.'),
+  n('liveMetrics','Holding metrics','Yahoo cache / live',816,300,'service','Same get_snapshot path as research. One empty ticker is marked absent; all empty is HTTP 502.'),
+  n('metricsFail','Holdings fetch failed','HTTP 502',1196,300,'failure','No invented positions or returns.'),
+  n('suitability','Suitability rules','Concentration · IPS',56,536,'service','Single-name cap and missing IPS fields. Rules, not an LLM. Off Inspection.'),
+  n('ips','IPS notes','Presenter text',436,536,'human','Missing objective, risk, or horizon becomes a finding.'),
+  n('assemble','Context assembly','Holdings + entitled + findings',816,536,'service','CPU assembly. Not a vector index and not sent to Inspection.'),
+  n('rows','Holdings + findings','Always release when fetch succeeds',1196,536,'service','The meeting brief may drop; these rows stay.'),
+  n('nim','ProtectedChatOpenAI','Temperature 0 · ainvoke',56,772,'ai','Same local NIM client as research. Advisor-owned; no auto-trade.'),
+  n('defense','Cisco AI Defense','Inspect every model hop',436,772,'cisco','src_app fsi-ai-studio-wealth. Suitability and entitled assembly never enter Inspection.',sources.defense.url),
+  n('model','Local NIM','Nemotron Super · :8003',816,772,'ai','Implemented inference. Health is not ready if GET {NIM}/models fails.'),
+  n('omit','Brief omitted','Holdings remain',1196,772,'failure','NIM down, inspection deny/unavailable, timeout, or ungrounded-only claims.'),
+  n('grounding','Grounding verifier','Excerpts + snapshot values',56,1008,'service','Cite-or-abstain against posted briefing excerpts and cached holding fields. Off Inspection.'),
+  n('gate','Accept meeting brief','Advisor accept-gate',436,1008,'human','Stored at fsi-demo-studio.advisory-brief only after this click.'),
+  n('store','localStorage brief','After accept only',816,1008,'store','Separate key from the company profile and the research note.'),
+  n('galileo','Splunk Agent Observability','Galileo SDK · optional',1196,1008,'service','GalileoAsyncCallback on advisory NIM hops when GALILEO_API_KEY is set. Configuration is not dashboard proof. This is not a local topic judge.',sources.splunk.url),
+  n('splunk','Splunk OTLP export','Official LangChain OTEL',56,1244,'service','Additional traces and metrics only when SPLUNK_REALM + SPLUNK_ACCESS_TOKEN or OTLP endpoints are set. Not a dashboard claim.',sources.splunk.url),
+  n('output','Demo brief','Not advice',436,1244,'human','Server attaches the disclaimer. The advisor owns every recommendation.'),
+  n('compute','UCS / GPU host','Local NIM placement',816,1244,'cisco','Implemented as 127.0.0.1:8003. Not a sized Cisco BOM.',sources.cisco.url),
+  n('disclaimer','Not advice banner','Visible on the workbench',1196,1244,'human','Demo brief — not advice.'),
+ ],
+ edges:[
+  e('user','api','POST holdings',{labelAt:[346,128]}),
+  e('api','holdingsIn','validate rows',{labelAt:[726,128]}),
+  e('api','posted','optional payloads',{via:[[556,48],[1316,48]],labelAt:[930,40]}),
+  e('posted','briefingCtx','accepted briefing',{ports:'down',via:[[1316,248],[176,248]],labelAt:[746,240]}),
+  e('posted','researchCtx','accepted note',{ports:'down',labelAt:[726,248]}),
+  e('holdingsIn','liveMetrics','each ticker',{ports:'down',labelAt:[1106,248]}),
+  e('liveMetrics','metricsFail','all empty',{kind:'control',labelAt:[1106,364]}),
+  e('briefingCtx','assemble','excerpts',{via:[[176,500],[936,500]],labelAt:[556,492]}),
+  e('researchCtx','assemble','note fields',{ports:'down',labelAt:[556,466]}),
+  e('liveMetrics','assemble','metrics',{labelAt:[1106,466]}),
+  e('liveMetrics','suitability','weights',{via:[[936,464],[176,464]],labelAt:[556,456]}),
+  e('ips','suitability','IPS text',{ports:'left',labelAt:[346,600]}),
+  e('suitability','rows','findings',{via:[[176,664],[1316,664]],labelAt:[746,656]}),
+  e('assemble','rows','holdings stay',{labelAt:[1106,600]}),
+  e('assemble','nim','context JSON',{ports:'down',via:[[936,720],[176,720]],labelAt:[556,712]}),
+  e('suitability','nim','findings',{ports:'down',labelAt:[176,702]}),
+  e('rows','omit','brief may drop',{ports:'down',kind:'control',labelAt:[1316,702]}),
+  e('nim','model','ainvoke',{via:[[176,740],[936,740]],labelAt:[556,732]}),
+  e('nim','defense','inspect input / output',{kind:'control',labelAt:[346,836]}),
+  e('model','defense','inspect hop',{kind:'control',labelAt:[726,836]}),
+  e('defense','omit','deny / unavailable',{kind:'control',labelAt:[1106,836]}),
+  e('model','omit','NIM down / timeout',{kind:'control',labelAt:[1106,772]}),
+  e('nim','grounding','draft brief',{ports:'down',labelAt:[176,940]}),
+  e('briefingCtx','grounding','excerpts',{via:[[176,992],[176,1008]],labelAt:[120,996]}),
+  e('liveMetrics','grounding','snapshot fields',{via:[[936,1004],[176,1004]],labelAt:[556,996]}),
+  e('rows','grounding','released rows',{via:[[1316,980],[176,980]],labelAt:[746,972]}),
+  e('grounding','gate','cited brief',{labelAt:[346,1072]}),
+  e('grounding','omit','ungrounded-only',{kind:'control',via:[[176,940],[1316,940]],labelAt:[746,932]}),
+  e('liveMetrics','metricsFail','502 holdings',{kind:'control',via:[[936,1140],[1316,1140]],labelAt:[1126,1132]}),
+  e('api','galileo','optional traces',{kind:'telemetry',via:[[556,210],[1316,210],[1316,1008]],labelAt:[1400,620]}),
+  e('nim','galileo','NIM hop callbacks',{kind:'telemetry',via:[[176,1148],[1316,1148]],labelAt:[746,1140]}),
+  e('gate','store','Accept meeting brief',{labelAt:[726,1072]}),
+  e('store','output','after accept',{ports:'down',labelAt:[936,1188]}),
+  e('output','disclaimer','visible banner',{labelAt:[726,1308]}),
+  e('api','splunk','optional spans',{ports:'down',kind:'telemetry',via:[[556,210],[176,210],[176,1244]],labelAt:[200,210]}),
+  e('nim','splunk','synthesis spans',{kind:'telemetry',via:[[176,1188],[176,1244]],labelAt:[200,1210]}),
+  e('model','compute','implemented :8003',{kind:'placement',ports:'down',labelAt:[936,1188]}),
+ ]};
+}
+
+export function advisoryKnowledge():Diagram {
+ return {title:'Client advisory · implemented entitled context',note:'Holdings are presenter-entered. Briefing excerpts and the research snapshot are entitled only after their own accept-gates. No household CRM catalog, no vector index, and no Tavily. This map does not assert live Yahoo or NIM availability.',width:1520,height:860,
+ boundaries:[
+  {title:'Presenter inputs · not a household catalog',x:28,y:16,width:1464,height:220},
+  {title:'Entitled studio context · separate accept-gates',x:28,y:280,width:1464,height:220},
+  {title:'Rules + consumers · not embeddings',x:28,y:544,width:1464,height:292},
+ ],
+ nodes:[
+  n('editor','Holdings editor','Ticker + weight',56,72,'human','Live rows only. No household catalog and no product fixtures.'),
+  n('notes','IPS notes','Objective / risk / horizon',436,72,'human','Missing fields become suitability findings.'),
+  n('yahoo','Yahoo cache','Same wealth snapshots',816,72,'store','Holding metrics reuse services/wealth/.cache/snapshots.'),
+  n('reject','Empty ticker','Mark absent or 502',1196,72,'failure','Do not invent a return or P/E.'),
+  n('briefing','Accepted briefing','localStorage company-profile',56,360,'store','Posted to /advisory/brief. The sidecar does not call EDGAR.'),
+  n('research','Accepted research note','localStorage research-note',436,360,'store','Separate key. Clearing the company profile does not wipe it.'),
+  n('excerpts','Briefing excerpts','Theme facts + citations',816,360,'store','Used as grounding corpus for the meeting brief.'),
+  n('prompt','Prompt to accept','No silent entitlement',1196,360,'human','The UI asks the presenter to accept briefing and research when they are missing.'),
+  n('rules','Suitability rules','Concentration · IPS',56,624,'service','CPU. Off Inspection.'),
+  n('metrics','Holding metrics','1Y vs SPY · P/E',436,624,'service','From the cached snapshot, not an LLM.'),
+  n('ground','Grounding corpus','Excerpts + snapshot JSON',816,624,'service','Cite-or-abstain. No vector query.'),
+  n('consumer','Brief + UI rows','Holdings always · brief optional',1196,624,'service','Workbench shows holdings if NIM is down.'),
+ ],
+ edges:[
+  e('editor','yahoo','fetch / cache',{labelAt:[346,136]}),
+  e('yahoo','reject','empty snapshot',{kind:'control',labelAt:[1106,136]}),
+  e('notes','rules','IPS text',{ports:'down',labelAt:[346,248]}),
+  e('editor','rules','weights',{ports:'down',via:[[176,248],[176,624]],labelAt:[120,248]}),
+  e('briefing','excerpts','posted facts',{labelAt:[346,424]}),
+  e('research','excerpts','accepted note',{labelAt:[726,424]}),
+  e('briefing','prompt','not accepted',{kind:'control',via:[[176,280],[1316,280]],labelAt:[746,272]}),
+  e('research','prompt','not accepted',{kind:'control',via:[[556,500],[1316,500]],labelAt:[930,492]}),
+  e('yahoo','metrics','snapshot',{ports:'down',via:[[936,248],[556,248],[556,624]],labelAt:[556,248]}),
+  e('rules','consumer','findings',{labelAt:[346,688]}),
+  e('metrics','consumer','holding rows',{labelAt:[726,688]}),
+  e('excerpts','ground','corpus',{ports:'down',labelAt:[936,536]}),
+  e('ground','consumer','cited brief or omit',{labelAt:[1106,688]}),
+ ]};
+}
+
 type Profile={entry:string;router:string;left:string;leftDetail:string;right:string;rightDetail:string;store:string;tool:string;result:string;gate:string;failure:string;ingest:string;gpu:string;note:string};
 export const profiles:Record<string,Profile>={
  'brahe-bank':{entry:'Banking question',router:'Bank supervisor',left:'Product specialist',leftDetail:'Retrieve terms and criteria',right:'Score specialist',rightDetail:'Call mock score tool',store:'Product document index',tool:'Mock score API · 550',result:'Eligibility explanation',gate:'Customer review · no approval',failure:'Missing evidence → abstain',ingest:'Versioned product Markdown',gpu:'Product embeddings + model inference',note:'Proposed hosted-model replacement; preserve tool behavior and validate model compatibility before migration.'},
  'kyc-processing':{entry:'Onboarding document case',router:'Case verification workflow',left:'Document extraction',leftDetail:'OCR → fields + evidence locations',right:'Entity reconciliation',rightDetail:'Registry and screening checks',store:'Identity documents + policy index',tool:'Registry / sanctions APIs',result:'Cited discrepancy summary',gate:'Analyst approves onboarding',failure:'Mismatch / missing file → review',ingest:'Documents + versioned KYC policy',gpu:'Document OCR + summary inference',note:'Identity checks and registry authorization remain deterministic services. An LLM does not approve onboarding.'},
  'sar-support':{entry:'Investigation alert',router:'Investigation coordinator',left:'Evidence timeline builder',leftDetail:'Query transactions + link entities',right:'Narrative drafting agent',rightDetail:'Draft only from case evidence',store:'Case evidence + transaction graph',tool:'Case management / query APIs',result:'Narrative + linked chronology',gate:'Investigator reviews and files',failure:'Unsupported claim → revise',ingest:'Transaction CDC + case evidence',gpu:'Narrative generation; graph acceleration optional',note:'Transaction graph queries feed the draft. No automatic filing or implied regulatory compliance.'},
- 'client-advisory':{entry:'Prepare client meeting',router:'Briefing coordinator',left:'Entitled research retriever',leftDetail:'Client-scoped policy + research',right:'Portfolio analytics tool',rightDetail:'Positions, exposure, constraints',store:'Approved research + policy index',tool:'CRM / portfolio / rules APIs',result:'Sourced briefing draft',gate:'Advisor validates suitability',failure:'Stale facts / policy conflict → review',ingest:'Approved research + policy versions',gpu:'Embedding, reranking and briefing inference',note:'Portfolio arithmetic and suitability rules run as tools. AI drafts the briefing; the advisor owns recommendations.'},
- 'market-research':{entry:'Research topic + as-of date',router:'Research coordinator',left:'Temporal hybrid retriever',leftDetail:'Filter date, rights and issuer',right:'Evidence comparison agent',rightDetail:'Reconcile conflicting statements',store:'Filings / transcripts / citation index',tool:'Pricing feed / citation verifier',result:'Cited research note',gate:'Research analyst publishes',failure:'Conflicting citation → flag',ingest:'Filings + transcripts + licenses',gpu:'Document extraction + synthesis inference',note:'Time-sensitive pricing comes from an API, not static embeddings. Publication requires source verification.'},
+ 'client-advisory':{entry:'Presenter holdings + entitled context',router:'Wealth advisory sidecar',left:'Entitled briefing + research',leftDetail:'Accepted studio context only · no CRM catalog',right:'Suitability rules',rightDetail:'Concentration / IPS · not an LLM',store:'Accepted note + briefing excerpts',tool:'Live holding metrics via Yahoo cache',result:'Meeting brief draft',gate:'Accept meeting brief',failure:'Empty holdings fetch → 502; ungrounded brief omitted',ingest:'Presenter holdings + accepted studio context',gpu:'Local NIM on 127.0.0.1:8003',note:'Entitled context assembly and suitability rules stay off Inspection. The local NIM drafts a meeting brief; the advisor accept-gate owns it. Demo brief — not advice. No household catalog and no auto-trade.'},
+ 'market-research':{entry:'Ticker + optional refresh',router:'Wealth research sidecar',left:'Yahoo + FRED cache',leftDetail:'Allowlisted fetch · write-through TTL',right:'Conflict + synthesis tools',rightDetail:'CPU conflicts · NIM cited note',store:'Snapshot + FRED cache · not a vector index',tool:'Earnings / peers / returns / macro',result:'Cited research note + demo recommendation',gate:'Accept research note',failure:'Empty provider → 502; ungrounded note omitted',ingest:'Live Yahoo + FRED allowlist',gpu:'Local NIM on 127.0.0.1:8003',note:'Write-through snapshot cache, structured conflicts, and a local NIM hop. Demo recommendation — not financial advice. This map does not assert live Yahoo, FRED, or NIM availability. No Tavily and no committed snapshot pack.'},
  'transaction-llm':{entry:'Payment event',router:'Schema validation + routing',left:'Payment extraction model',leftDetail:'Unstructured text → proposed fields',right:'Entity resolution service',rightDetail:'Match counterparties + code sets',store:'Reference codes + counterparty master',tool:'History / entity lookup APIs',result:'Schema-validated enrichment',gate:'Low confidence → operations',failure:'Invalid schema → quarantine',ingest:'Versioned codes + entity reference data',gpu:'Batched extraction; benchmark CPU alternative',note:'Deterministic validation gates publication. Only exceptions need agentic reasoning; no LLM in the payment authorization path.'},
  'fraud-modeling':{entry:'Payment features',router:'Fraud scoring endpoint',left:'Versioned fraud model',leftDetail:'Bounded scoring inference',right:'Drift investigation agent',rightDetail:'Asynchronous cohort analysis',store:'Online feature store + model registry',tool:'Labels / cohort analytics APIs',result:'Risk score + rule decision',gate:'Owner approves model changes',failure:'Timeout → configured rules fallback',ingest:'Events → features; delayed labels',gpu:'Scorer only if benchmark justifies it; explainer separate',note:'The synchronous score path bypasses the LLM. Drift analysis is asynchronous; no automatic model promotion.'},
  'company-briefing':{entry:'Ticker, name, or uploaded report',router:'Deep Agent supervisor',left:'Theme subagents',leftDetail:'Read TOC nodes; never dump the 10-K',right:'Grounding verifier',rightDetail:'Cite-or-abstain against node files',store:'Filing node files · not embeddings',tool:'EDGAR + companyfacts APIs',result:'Cited company briefing',gate:'Presenter accept-gate',failure:'Unknown issuer / ungrounded themes → stop',ingest:'EDGAR 10-K or uploaded annual report',gpu:'Protected model hops only; no filing embeddings',note:'Navigation-first Deep Agent. No vector index and no open web. AI Defense inspects model hops only; XBRL, EDGAR, upload, navigator, and grounding stay off Inspection. Presenter accepts before studio context is stored.'},
@@ -395,8 +782,8 @@ export function proposedRuntime(id:string):Diagram {
 }
 
 export function knowledgeDiagram(id:string):Diagram {
- const p=profiles[id],fraud=id==='fraud-modeling',briefing=id==='company-briefing', structured=['fraud-modeling','transaction-llm','company-briefing'].includes(id);
- return {title:briefing?'Filing map and structured facts':structured?'Reference / feature preparation':'Knowledge preparation and retrieval',note:briefing?'Proposed preparation still has no vector index. Node files remain a filing map; metrics stay in companyfacts or verbatim tables.':structured?'Structured records remain structured. No blanket “embed everything” step.':'Proposed pipeline. Source access controls, freshness and evidence lineage remain application responsibilities.',width:1460,height:750,
+ const p=profiles[id],fraud=id==='fraud-modeling',briefing=id==='company-briefing',research=id==='market-research',advisory=id==='client-advisory', structured=['fraud-modeling','transaction-llm','company-briefing','market-research','client-advisory'].includes(id);
+ return {title:briefing?'Filing map and structured facts':research?'Snapshot cache and FRED series':advisory?'Entitled context and live holdings':structured?'Reference / feature preparation':'Knowledge preparation and retrieval',note:briefing?'Proposed preparation still has no vector index. Node files remain a filing map; metrics stay in companyfacts or verbatim tables.':research?'No vector index and no Tavily. Cache is write-through Yahoo/FRED, not a committed snapshot pack. This map does not assert live Yahoo or FRED availability.':advisory?'No household CRM catalog and no vector index. Holdings are presenter-entered; briefing excerpts come from the accepted studio profile.':structured?'Structured records remain structured. No blanket “embed everything” step.':'Proposed pipeline. Source access controls, freshness and evidence lineage remain application responsibilities.',width:1460,height:750,
  nodes:[n('source',p.ingest,'Approved source / schema owner',30,70,'store'),n('prepare',briefing?'Build TOC + titled nodes':structured?'Validate + transform':'Parse + chunk documents','Preserve version + provenance',430,70,'service'),n('index',briefing?'Write node files':structured?'Keyed upsert':'Embedding model','CPU pipeline / GPU where justified',835,70,structured?'service':'ai',briefing?'One file per Item / heading. Not embeddings.':'Embedding is a model call for searchable document chunks, not a replacement for structured database queries.',briefing?undefined:sources.rag.url),n('store',p.store,briefing?'Filing map · not a vector index':structured?'Versioned structured store':'Vector + lexical index; ACL metadata',1170,350,'store'),n('retrieve',fraud?'Feature lookup':briefing?'list_filing_toc / read_filing_node':'Authorized retrieval','Scope + freshness filter',770,350,'service'),n('context',fraud?'Scoring feature vector':briefing?'Bounded node + XBRL facts':'Context assembly','Source IDs + token / schema budget',370,350,'service'),n('consumer',p.left,'Online consumer',30,350,'ai'),n('reject','Reject or hold source','Invalid / stale / unauthorized',430,620,'failure')],
  edges:[e('source','prepare','records + access metadata'),e('prepare','index',briefing?'titled nodes':structured?'validated rows':'chunks + source IDs'),e('index','store',briefing?'node files + citations':structured?'upsert keyed records':'vectors + metadata',{ports:'down'}),e('store','retrieve',briefing?'filing map':structured?'versioned features':'top-k permitted evidence',{ports:'left'}),e('retrieve','context',fraud?'typed features':briefing?'cited node + XBRL':'ranked evidence',{ports:'left'}),e('context','consumer','bounded input',{ports:'left'}),e('prepare','reject','invalid schema / content',{ports:'down',via:[[550,250],[700,250],[700,580],[550,580]],labelAt:[610,570],kind:'control'}),e('retrieve','reject','deny / stale evidence',{ports:'down',kind:'control',labelAt:[850,550]})]};
 }

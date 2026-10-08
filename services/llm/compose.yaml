@@ -5,6 +5,7 @@ services:
     image: ${NEMOTRON_IMAGE:-vllm/vllm-openai:cu130-nightly}
     container_name: ${NEMOTRON_NAME:-fsi-nemotron-super}
     gpus: all
+    network_mode: bridge
     ipc: host
     shm_size: 16g
     ports:
@@ -35,6 +36,9 @@ services:
       - --tensor-parallel-size
       - "1"
       - --trust-remote-code
+      - --enable-auto-tool-choice
+      - --tool-call-parser
+      - qwen3_coder
       - --gpu-memory-utilization
       - "0.78"
       - --enable-chunked-prefill

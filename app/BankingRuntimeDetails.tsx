@@ -35,7 +35,7 @@ export default function BankingRuntimeDetails({ health }: { health: BankingHealt
   const security = health?.security;
   const defense = security?.status === "configured" ? security.mode === "enforce" ? "Enforcing" : "Monitoring" : readable(security?.status);
   const controls = health?.controls ?? stream?.controls;
-  const traceStatus = tracing === "traces_present" ? "Traces received" : checking ? "Checking…" : readable(tracing);
+  const traceStatus = tracing === "traces_present" ? "Prior traces present" : checking ? "Checking…" : readable(tracing);
 
   // The established theme is invariant. Runtime contracts may evolve, but keep
   // configuration, observed delivery, evaluations, and controls separate.
@@ -50,7 +50,7 @@ export default function BankingRuntimeDetails({ health }: { health: BankingHealt
         {controls?.judge_model && <dd className="runtime-note">{controls.judge_model} · {controls.execution} · {controls.fail_open ? "Fail open" : "Fail closed"}</dd>}
         <dd className="runtime-note">Application LLM judge · Agent Control enforcement</dd>
       </div>
-      <div><dt><Activity size={16} /> Agent tracing</dt><dd className={tracing === "traces_present" ? "status-confirmed" : ""}>{traceStatus}</dd><dd className="runtime-note">Splunk Agent Observability · Galileo SDK{stream?.tracing.stream && <span>{stream.tracing.stream}</span>}</dd></div>
+      <div><dt><Activity size={16} /> Agent tracing</dt><dd className={tracing === "traces_present" ? "status-confirmed" : ""}>{traceStatus}</dd><dd className="runtime-note">Splunk Agent Observability · Galileo SDK · stream-level evidence checked on page load; record timestamp and current-request correlation unavailable{stream?.tracing.stream && <span>{stream.tracing.stream}</span>}</dd></div>
       <div><dt><Gauge size={16} /> Evaluators</dt><dd>{checking ? "Checking…" : evaluation?.status === "configured" ? `${evaluation.names.length} configured` : readable(evaluation?.status)}</dd>
         {!!evaluation?.names.length && <dd><ul>{evaluation.names.map((name) => <li key={name}>{evaluatorNames[name] || readable(name)}</li>)}</ul></dd>}
         <dd className="runtime-note">Results not verified</dd>

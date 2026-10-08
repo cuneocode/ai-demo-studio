@@ -53,6 +53,7 @@ export default defineConfig(async () => {
         "/api/banking": { target: "http://127.0.0.1:8011", changeOrigin: false, timeout: 120000, proxyTimeout: 120000 },
         "/api/fraud": { target: "http://127.0.0.1:8012", changeOrigin: false, timeout: 180000, proxyTimeout: 180000 },
         "/api/briefing": { target: "http://127.0.0.1:8013", changeOrigin: false, timeout: 240000, proxyTimeout: 240000 },
+        "/api/wealth": { target: "http://127.0.0.1:8014", changeOrigin: false, timeout: 180000, proxyTimeout: 180000 },
       },
       ...(isCodexSeatbeltSandbox ? { watch: { useFsEvents: false, usePolling: true } } : {}),
     },

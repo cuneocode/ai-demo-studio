@@ -45,8 +45,11 @@ next-env.d.ts
 /services/fraud/.cache/
 /services/briefing/.venv/
 /services/briefing/.cache/
+/services/wealth/.venv/
+/services/wealth/.cache/
 __pycache__/
 .pytest_cache/
 /output/
 /.playwright-cli/
+/artifacts/
 *.tsbuildinfo

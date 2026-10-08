@@ -1,0 +1,85 @@
+import asyncio
+from types import SimpleNamespace
+
+import httpx
+import pytest
+from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.outputs import ChatGeneration, ChatResult
+from langchain_openai import ChatOpenAI
+
+import nim
+import security
+
+
+@pytest.fixture
+def inspection(monkeypatch):
+    monkeypatch.setattr(security.defense, "mode", "enforce")
+    monkeypatch.setattr(security.defense, "key", "test-key")
+    monkeypatch.setattr(security.defense, "valid", True)
+    monkeypatch.setattr(security.defense, "fail_open", False)
+    verdicts, payloads = [], []
+
+    class Client:
+        def __init__(self, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            pass
+
+        async def post(self, url, **kwargs):
+            payloads.append(kwargs["json"])
+            verdict = verdicts.pop(0)
+            if isinstance(verdict, Exception):
+                raise verdict
+            return httpx.Response(200, json=verdict, request=httpx.Request("POST", url))
+
+    monkeypatch.setattr(security, "httpx", SimpleNamespace(AsyncClient=Client))
+    return verdicts, payloads
+
+
+def test_unavailable_and_deny_fail_closed(inspection):
+    run = security.SecurityRun()
+    token = security.security_run.set(run)
+    inspection[0].append(RuntimeError("SECRET"))
+    with pytest.raises(security.DefenseUnavailable):
+        asyncio.run(security.defense.inspect([{"role": "user", "content": "hi"}]))
+    assert run.errors == 1
+    assert "SECRET" not in run.summary()["status"]
+    inspection[0].append({"is_safe": False, "event_id": "evt"})
+    with pytest.raises(security.DefenseBlocked):
+        asyncio.run(security.defense.inspect([{"role": "user", "content": "hi"}]))
+    security.security_run.reset(token)
+    assert security.defense.fail_open is False
+
+
+def test_model_inspects_and_rejects_sync(inspection):
+    verdicts, payloads = inspection
+    verdicts.extend([{"is_safe": True}, {"is_safe": False}])
+
+    async def generate(self, *args, **kwargs):
+        return ChatResult(generations=[ChatGeneration(message=AIMessage(content="ok"))])
+
+    monkeypatch = pytest.MonkeyPatch()
+    monkeypatch.setattr(ChatOpenAI, "_agenerate", generate)
+    model = nim.ProtectedChatOpenAI(api_key="test-key", model="test-model")
+    with pytest.raises(security.DefenseBlocked):
+        asyncio.run(model._agenerate([HumanMessage(content="query")]))
+    assert payloads
+    assert payloads[0]["metadata"]["src_app"] == "fsi-ai-studio-wealth"
+    assert model.disable_streaming is True
+    with pytest.raises(RuntimeError):
+        model._generate([HumanMessage(content="test")])
+    monkeypatch.undo()
+
+
+def test_wealth_mode_defaults_off(monkeypatch):
+    monkeypatch.setenv("AIDEFENSE_API_KEY", "shared-brahe-key")
+    monkeypatch.setenv("AIDEFENSE_MODE", "enforce")
+    monkeypatch.delenv("WEALTH_AIDEFENSE_MODE", raising=False)
+    instance = security.Defense()
+    assert instance.mode == "off"
+    assert instance.health()["fail_open"] is False
+    assert instance.configured() is True

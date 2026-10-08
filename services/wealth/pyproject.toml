@@ -1,0 +1,27 @@
+[project]
+name = "fsi-wealth-research"
+version = "0.1.0"
+description = "Studio sidecar for live wealth research and client advisory"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "fastapi>=0.115.13,<0.116",
+  "galileo==2.6.0",
+  "httpx>=0.28,<0.29",
+  "langchain[openai]>=0.3.18",
+  "opentelemetry-exporter-otlp-proto-http>=1.38,<1.39",
+  "opentelemetry-sdk>=1.38,<1.39",
+  "python-dotenv>=1.1.0",
+  "splunk-otel-instrumentation-langchain==0.1.16",
+  "truststore>=0.10,<0.11",
+  "uvicorn>=0.34.3,<0.35",
+  "yfinance>=0.2.40",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.4.1,<9.0.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

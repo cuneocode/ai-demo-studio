@@ -1,11 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import BankingDemo from "./BankingDemo";
 import FraudDemo from "./FraudDemo";
 import CompanyBriefing from "./CompanyBriefing";
+import MarketResearch from "./MarketResearch";
+import ClientAdvisory from "./ClientAdvisory";
 import ArchitectureMap from "./ArchitectureMap";
-import { companySwitcherLabel, loadCompanyProfile, type StoredCompanyProfile } from "./company-profile";
+import { loadCompanyProfile, type StoredCompanyProfile } from "./company-profile";
+import { loadResearchNote, switcherContextLabel, type StoredResearchNote } from "./research-note";
+import { loadAdvisoryBrief, type StoredAdvisoryBrief } from "./advisory-brief";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
@@ -64,7 +68,7 @@ type UseCase = {
 };
 
 type UseCaseFrame = {
-  liveExperience?: "banking" | "fraud" | "briefing";
+  liveExperience?: "banking" | "fraud" | "briefing" | "research" | "advisory";
   transformation: {
     friction: string;
     aiShift: string;
@@ -99,6 +103,54 @@ const useCases: UseCase[] = [
     signal: "Interactive banking", stage: "Interactive",
   },
   {
+    id: "fraud-modeling",
+    title: "Transaction fraud scoring",
+    category: "Risk & compliance",
+    description: "Score a payment on a graph neighborhood and inspect Shapley evidence.",
+    outcome: "Explainable fraud scores without a notebook.",
+    icon: CircleGauge,
+    accent: "mint",
+    solutions: ["AI Infrastructure", "Splunk Observability", "AI Defense"],
+    signal: "Graph scoring",
+    stage: "Interactive",
+  },
+  {
+    id: "company-briefing",
+    title: "Company briefing",
+    category: "Operations",
+    description: "Extract objectives, risks, obligations, AI initiatives, and XBRL metrics from an EDGAR filing or uploaded annual report.",
+    outcome: "Presenter-owned company context after a human accept-gate.",
+    icon: Building2,
+    accent: "violet",
+    solutions: ["AI Defense", "Splunk Observability", "AI Infrastructure"],
+    signal: "Filing extract",
+    stage: "Interactive",
+  },
+  {
+    id: "market-research",
+    title: "Wealth market research",
+    category: "Wealth & advisory",
+    description: "Synthesize filings, market events, and house views in an evidence-linked workspace.",
+    outcome: "Faster research with source visibility.",
+    icon: Landmark,
+    accent: "blue",
+    solutions: ["AI Defense", "Splunk Observability"],
+    signal: "Live research · Yahoo + FRED cache",
+    stage: "Interactive",
+  },
+  {
+    id: "client-advisory",
+    title: "Client advisory",
+    category: "Wealth & advisory",
+    description: "Combine trusted client context, opportunity signals, and compliant next steps.",
+    outcome: "Personalized service with protected client data.",
+    icon: WalletCards,
+    accent: "amber",
+    solutions: ["AI Defense", "Splunk Observability", "AI Infrastructure"],
+    signal: "Live advisory · entitled context + holdings",
+    stage: "Interactive",
+  },
+  {
     id: "kyc-processing",
     title: "KYC processing",
     category: "Risk & compliance",
@@ -123,42 +175,6 @@ const useCases: UseCase[] = [
     stage: "Ready",
   },
   {
-    id: "fraud-modeling",
-    title: "Transaction fraud scoring",
-    category: "Risk & compliance",
-    description: "Score a payment on a graph neighborhood and inspect Shapley evidence.",
-    outcome: "Explainable fraud scores without a notebook.",
-    icon: CircleGauge,
-    accent: "mint",
-    solutions: ["AI Infrastructure", "Splunk Observability", "AI Defense"],
-    signal: "Graph scoring",
-    stage: "Interactive",
-  },
-  {
-    id: "client-advisory",
-    title: "Client advisory",
-    category: "Wealth & advisory",
-    description: "Combine trusted client context, opportunity signals, and compliant next steps.",
-    outcome: "Personalized service with protected client data.",
-    icon: WalletCards,
-    accent: "amber",
-    solutions: ["AI Defense", "AI Infrastructure"],
-    signal: "Advisor briefing",
-    stage: "Ready",
-  },
-  {
-    id: "market-research",
-    title: "Wealth market research",
-    category: "Wealth & advisory",
-    description: "Synthesize filings, market events, and house views in an evidence-linked workspace.",
-    outcome: "Faster research with source visibility.",
-    icon: Landmark,
-    accent: "blue",
-    solutions: ["AI Defense", "Splunk Observability"],
-    signal: "Research synthesis",
-    stage: "Concept",
-  },
-  {
     id: "transaction-llm",
     title: "Transaction intelligence",
     category: "Operations",
@@ -169,18 +185,6 @@ const useCases: UseCase[] = [
     solutions: ["AI Infrastructure", "Splunk Observability"],
     signal: "Data enrichment",
     stage: "Concept",
-  },
-  {
-    id: "company-briefing",
-    title: "Company briefing",
-    category: "Operations",
-    description: "Extract objectives, risks, obligations, AI initiatives, and XBRL metrics from an EDGAR filing or uploaded annual report.",
-    outcome: "Presenter-owned company context after a human accept-gate.",
-    icon: Building2,
-    accent: "violet",
-    solutions: ["AI Defense", "Splunk Observability", "AI Infrastructure"],
-    signal: "Filing extract",
-    stage: "Interactive",
   },
 ];
 
@@ -308,74 +312,56 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
     primaryAction: "Review next alert",
   },
   "client-advisory": {
+    liveExperience: "advisory",
     transformation: {
-      friction: "Advisors assemble client context, market views, and compliance notes before each meeting.",
-      aiShift: "AI creates a grounded briefing and surfaces relevant opportunities and constraints.",
-      humanControl: "The advisor validates suitability and decides what guidance reaches the client.",
+      friction: "Advisors assemble entitled briefing context, a research note, and live holdings by hand before each meeting.",
+      aiShift: "Suitability rules run on presenter-entered weights. Local NIM drafts a cited meeting brief from accepted context only.",
+      humanControl: "The advisor accept-gate owns the brief. This is a demo brief — not advice. No auto-trade.",
     },
     architecture: {
       process: [
-        { title: "Gather client context", detail: "CRM, portfolio, goals, notes" },
-        { title: "Prepare briefing", detail: "Changes and discussion points" },
-        { title: "Review suitability", detail: "Constraints and candidate actions" },
-        { title: "Meet and document", detail: "Advisor-owned recommendation" },
+        { title: "Enter live holdings", detail: "Ticker + weight rows · no household catalog" },
+        { title: "Assemble entitled context", detail: "Accepted briefing + accepted research note" },
+        { title: "Run suitability rules", detail: "Concentration, single-name cap, IPS fields" },
+        { title: "Accept meeting brief", detail: "Advisor-owned localStorage write" },
       ],
       ai: [
-        { point: "01 → 02", label: "RAG + context engineering", detail: "Entitled retrieval combines client data, approved research, portfolio facts, and policy." },
-        { point: "02 → 03", label: "GPU briefing generation", detail: "An LLM synthesizes a sourced briefing and candidate discussion points." },
-        { point: "03 → 04", label: "Suitability copilot", detail: "Check proposed actions against constraints and draft notes; the advisor decides." },
+        { point: "01 → 02", label: "Entitled context assembly", detail: "Posted accepted briefing excerpts and research snapshot fields. Off Inspection. No CRM catalog and no Tavily." },
+        { point: "02 → 03", label: "Suitability rules", detail: "CPU rules on concentration and missing IPS fields. Not an LLM and not sent to AI Defense." },
+        { point: "03 → 04", label: "NIM brief + advisor gate", detail: "ProtectedChatOpenAI on 127.0.0.1:8003. Defense inspects this hop only. Holdings remain if the brief is omitted." },
       ],
     },
-    metrics: [
-      { label: "Briefings due", value: "08", detail: "Across 5 advisors" },
-      { label: "Priority follow-ups", value: "03", detail: "Due today" },
-      { label: "Compliance checks", value: "02", detail: "Need review" },
-    ],
-    rows: [
-      { name: "Carter household", stage: "Portfolio review", signal: "Meeting today", status: "Ready", tone: "ready" },
-      { name: "Meridian Dental Partners", stage: "Liquidity event", signal: "Follow-up due", status: "Review", tone: "review" },
-      { name: "Elena Ruiz", stage: "Distribution request", signal: "Suitability check", status: "Pending", tone: "pending" },
-    ],
+    metrics: [], rows: [], evidence: [],
     workbenchLabel: "Advisor brief",
-    workbenchTitle: "Carter household",
-    workbenchSummary: "Concentrated technology exposure increased after recent gains. The household also has a liquidity need in Q4.",
-    evidence: ["Portfolio snapshot", "Meeting notes", "House view"],
-    primaryAction: "Open next briefing",
+    workbenchTitle: "Live holdings + entitled context",
+    workbenchSummary: "Prepare a meeting brief from accepted studio context and presenter-entered holdings.",
+    primaryAction: "Prepare meeting brief",
   },
   "market-research": {
+    liveExperience: "research",
     transformation: {
-      friction: "Researchers scan filings, transcripts, and market feeds before forming a house view.",
-      aiShift: "AI synthesizes changes, compares sources, and links every assertion to evidence.",
-      humanControl: "Research staff challenge conclusions and approve anything distributed downstream.",
+      friction: "Researchers pull Yahoo prints, FRED series, and peer multiples by hand before writing a note.",
+      aiShift: "Allowlisted yfinance + FRED write through a cache. CPU tools emit conflict rows. Local NIM drafts a cited note.",
+      humanControl: "Accept research note is required. Demo recommendation — not financial advice. Numbers stay if the note is omitted.",
     },
     architecture: {
       process: [
-        { title: "Monitor sources", detail: "Filings, transcripts, and events" },
-        { title: "Extract evidence", detail: "Facts, changes, and citations" },
-        { title: "Form investment view", detail: "Compare themes and conflicts" },
-        { title: "Review and publish", detail: "Analyst-owned house view" },
+        { title: "Select a ticker", detail: "Any US ticker · briefing ticker when accepted" },
+        { title: "Fetch or reuse cache", detail: "Yahoo + FRED write-through · same UTC day" },
+        { title: "Review indicators + conflicts", detail: "Earnings, peers, returns, macro, structured rows" },
+        { title: "Accept research note", detail: "Presenter-owned localStorage write" },
       ],
       ai: [
-        { point: "01 → 02", label: "Accelerated ingestion", detail: "GPU document and embedding models process filings, transcripts, and market events." },
-        { point: "02 → 03", label: "RAG + context engineering", detail: "Hybrid retrieval applies time, entitlement, and citation metadata to research context." },
-        { point: "03 → 04", label: "Research synthesis", detail: "Compare evidence, expose conflicts, and draft a cited note for analyst review." },
+        { point: "01 → 02", label: "Fetch + snapshot cache", detail: "Named yfinance functions and allowlisted FRED series. Off Inspection. Empty provider responses fail closed." },
+        { point: "02 → 03", label: "CPU tools + conflicts", detail: "Beat-rate, peer P/E, horizon vs SPY, and structured conflicts. Not a keyword scan and not sent to Defense." },
+        { point: "03 → 04", label: "NIM note + accept-gate", detail: "LangChain ChatOpenAI to local NIM on :8003. Defense inspects model hops only. Grounding drops ungrounded claims." },
       ],
     },
-    metrics: [
-      { label: "New sources", value: "12", detail: "Since last review" },
-      { label: "Draft notes", value: "04", detail: "2 ready to publish" },
-      { label: "Watchlist events", value: "02", detail: "Material changes" },
-    ],
-    rows: [
-      { name: "Regional banks", stage: "Quarterly data", signal: "Ratios extracted", status: "Ready", tone: "ready" },
-      { name: "Investment-grade credit", stage: "Spread movement", signal: "Draft ready", status: "Review", tone: "review" },
-      { name: "AI infrastructure", stage: "Earnings transcripts", signal: "3 citations needed", status: "Pending", tone: "pending" },
-    ],
+    metrics: [], rows: [], evidence: [],
     workbenchLabel: "Research note",
-    workbenchTitle: "Regional banks — Q3 update",
-    workbenchSummary: "Net interest margins stabilized across the tracked group while deposit costs remained uneven by institution size.",
-    evidence: ["8 filings", "3 transcripts", "Market data"],
-    primaryAction: "Review research queue",
+    workbenchTitle: "Live Yahoo + FRED research",
+    workbenchSummary: "Analyze a ticker from cache-if-fresh or a forced refresh, then accept the note.",
+    primaryAction: "Analyze ticker",
   },
   "transaction-llm": {
     transformation: {
@@ -458,6 +444,8 @@ function liveExperienceLabel(experience?: UseCaseFrame["liveExperience"]) {
   if (experience === "banking") return "Live AI · fictional bank";
   if (experience === "fraud") return "Live scoring · TabFormer GNN+XGB";
   if (experience === "briefing") return "Live extract · EDGAR + upload";
+  if (experience === "research") return "Live research · Yahoo + FRED cache";
+  if (experience === "advisory") return "Live advisory · entitled context + holdings";
   return "Prototype data";
 }
 
@@ -475,6 +463,16 @@ function focusLiveExperience(experience?: UseCaseFrame["liveExperience"]) {
   if (experience === "briefing") {
     document.getElementById("briefing-experience")?.scrollIntoView({ behavior: "smooth" });
     document.getElementById("company-briefing-query")?.focus({ preventScroll: true });
+    return;
+  }
+  if (experience === "research") {
+    document.getElementById("research-experience")?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("research-ticker")?.focus({ preventScroll: true });
+    return;
+  }
+  if (experience === "advisory") {
+    document.getElementById("advisory-experience")?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("accept-meeting-brief")?.focus({ preventScroll: true });
   }
 }
 
@@ -494,13 +492,14 @@ function StatusDot({ tone = "mint" }: { tone?: "mint" | "blue" | "violet" | "amb
 
 function UseCaseCard({ useCase, onOpen }: { useCase: UseCase; onOpen: (item: UseCase) => void }) {
   const Icon = useCase.icon;
+  const inDevelopment = !useCaseFrames[useCase.id]?.liveExperience;
 
   return (
     <article
-      className={`use-case-card accent-${useCase.accent}`}
+      className={`use-case-card accent-${useCase.accent}${inDevelopment ? " in-development" : ""}`}
       role="button"
       tabIndex={0}
-      aria-label={`Open ${useCase.title} experience`}
+      aria-label={`Open ${useCase.title} experience${inDevelopment ? ", in development" : ""}`}
       onClick={() => onOpen(useCase)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -529,6 +528,7 @@ function UseCaseCard({ useCase, onOpen }: { useCase: UseCase; onOpen: (item: Use
         {useCase.solutions.map((solution) => <span key={solution}>{solution}</span>)}
       </div>
       <div className="card-action">Explore AI experience <ArrowRight size={16} /></div>
+      {inDevelopment && <div className="card-dev-overlay"><span>In development</span></div>}
     </article>
   );
 }
@@ -622,6 +622,10 @@ function UseCaseWorkspace({
   onAdd,
   companyProfile,
   onCompanyProfileChange,
+  researchNote,
+  onResearchNoteChange,
+  advisoryBrief,
+  onAdvisoryBriefChange,
 }: {
   useCase: UseCase;
   inStory: boolean;
@@ -629,6 +633,10 @@ function UseCaseWorkspace({
   onAdd: () => void;
   companyProfile: StoredCompanyProfile | null;
   onCompanyProfileChange: (profile: StoredCompanyProfile | null) => void;
+  researchNote: StoredResearchNote | null;
+  onResearchNoteChange: (note: StoredResearchNote | null) => void;
+  advisoryBrief: StoredAdvisoryBrief | null;
+  onAdvisoryBriefChange: (brief: StoredAdvisoryBrief | null) => void;
 }) {
   const frame = useCaseFrames[useCase.id];
   const Icon = useCase.icon;
@@ -653,8 +661,6 @@ function UseCaseWorkspace({
         </div>
       </header>
 
-      <ArchitectureMap key={useCase.id} caseId={useCase.id} title={useCase.title} frame={frame} />
-
       {frame.liveExperience === "banking" ? <section id="banking-experience">
         <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Banking assistant</h2></div><span>Fictional products · mock score 550</span></div>
         <BankingDemo embedded inStory={inStory} onBack={onBack} onAdd={onAdd} />
@@ -664,7 +670,17 @@ function UseCaseWorkspace({
       </section> : frame.liveExperience === "briefing" ? <section id="briefing-experience">
         <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Company briefing</h2></div><span>EDGAR + upload only · accept before store</span></div>
         <CompanyBriefing embedded inStory={inStory} onBack={onBack} onAdd={onAdd} profile={companyProfile} onProfileChange={onCompanyProfileChange} />
-      </section> : <>
+      </section> : frame.liveExperience === "research" ? <section id="research-experience">
+        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Wealth market research</h2></div><span>Yahoo + FRED cache · not financial advice</span></div>
+        <MarketResearch embedded inStory={inStory} companyProfile={companyProfile} note={researchNote} onNoteChange={onResearchNoteChange} />
+      </section> : frame.liveExperience === "advisory" ? <section id="advisory-experience">
+        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Client advisory</h2></div><span>Entitled context + holdings · not advice</span></div>
+        <ClientAdvisory embedded inStory={inStory} companyProfile={companyProfile} researchNote={researchNote} brief={advisoryBrief} onBriefChange={onAdvisoryBriefChange} />
+      </section> : null}
+
+      <ArchitectureMap key={useCase.id} caseId={useCase.id} title={useCase.title} frame={frame} />
+
+      {!frame.liveExperience ? <>
       <div className="experience-label">
         <div><span className="eyebrow">ILLUSTRATIVE EXPERIENCE</span><h2>How the use case could appear</h2></div>
         <span>Frontend and data are prototype-only</span>
@@ -723,7 +739,7 @@ function UseCaseWorkspace({
         </aside>
       </div>
 
-      </>}
+      </> : null}
     </div>
   );
 }
@@ -736,7 +752,18 @@ export default function HomePage() {
   const [launcherOpen, setLauncherOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [storyItems, setStoryItems] = useState<string[]>(["kyc-processing", "sar-support", "client-advisory"]);
-  const [companyProfile, setCompanyProfile] = useState<StoredCompanyProfile | null>(() => loadCompanyProfile());
+  const [companyProfile, setCompanyProfile] = useState<StoredCompanyProfile | null>(null);
+  const [researchNote, setResearchNote] = useState<StoredResearchNote | null>(null);
+  const [advisoryBrief, setAdvisoryBrief] = useState<StoredAdvisoryBrief | null>(null);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      setCompanyProfile(loadCompanyProfile());
+      setResearchNote(loadResearchNote());
+      setAdvisoryBrief(loadAdvisoryBrief());
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   const openUseCase = (item: UseCase) => {
     setSelectedCase(item);
@@ -768,7 +795,7 @@ export default function HomePage() {
           <div className="brand-copy"><strong>FSI</strong><span>AI Demo Studio</span></div>
           <span className="top-divider" />
           <button className="tenant-switcher" onClick={() => switchView("briefing")} aria-label="Open company briefing">
-            <span>{companySwitcherLabel(companyProfile)}</span>
+            <span>{switcherContextLabel(companyProfile, researchNote, Boolean(advisoryBrief))}</span>
             <ChevronDown size={14} />
           </button>
         </div>
@@ -826,6 +853,10 @@ export default function HomePage() {
               onAdd={() => setStoryItems(items => items.includes(selectedCase.id) ? items : [...items, selectedCase.id])}
               companyProfile={companyProfile}
               onCompanyProfileChange={setCompanyProfile}
+              researchNote={researchNote}
+              onResearchNoteChange={setResearchNote}
+              advisoryBrief={advisoryBrief}
+              onAdvisoryBriefChange={setAdvisoryBrief}
             />
           )}
 
@@ -887,7 +918,7 @@ export default function HomePage() {
                     <button className="text-button" onClick={() => switchView("library")}>View all {useCases.length} <ArrowRight size={15} /></button>
                   </div>
                   <div className="use-case-grid">
-                    {useCases.slice(0, 4).map((item) => <UseCaseCard key={item.id} useCase={item} onOpen={openUseCase} />)}
+                    {useCases.map((item) => <UseCaseCard key={item.id} useCase={item} onOpen={openUseCase} />)}
                   </div>
                 </section>
                 <PlatformRail />
