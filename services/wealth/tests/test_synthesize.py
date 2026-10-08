@@ -20,7 +20,7 @@ def test_draft_note_omits_on_defense(monkeypatch, snapshot):
 
         ainvoke = blocked
 
-    monkeypatch.setattr(synthesize, "chat_model", lambda: Fake())
+    monkeypatch.setattr(synthesize, "chat_model", lambda _use_case: Fake())
     note, rec = __import__("asyncio").run(synthesize.draft_note("JPM", {"earnings": {}}, [], snapshot, None))
     assert note["status"] == "blocked"
     assert rec["status"] == "blocked"
@@ -43,7 +43,7 @@ def test_draft_note_grounds_structured_output(monkeypatch, snapshot):
 
         ainvoke = complete
 
-    monkeypatch.setattr(synthesize, "chat_model", lambda: Fake())
+    monkeypatch.setattr(synthesize, "chat_model", lambda _use_case: Fake())
     note, rec = __import__("asyncio").run(synthesize.draft_note(
         "JPM",
         {"earnings": {"beatRate": 1.0}},

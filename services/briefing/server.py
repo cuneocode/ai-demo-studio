@@ -26,6 +26,7 @@ load_dotenv(Path(os.getenv("BRIEFING_ENV_FILE", Path(__file__).resolve().parents
 os.environ.setdefault("MODEL_NAME", "gpt-4o-mini")
 
 from agent import AgentIncomplete
+import model_backend
 from documents import UploadError, validate_upload, write_source
 from edgar import (
     AmbiguousIssuer,
@@ -68,15 +69,16 @@ async def startup():
 
 @app.get("/api/briefing/health")
 async def health():
-    model = os.getenv("MODEL_NAME", "gpt-4o-mini")
-    key = bool(os.getenv("OPENAI_API_KEY"))
+    backend = model_backend.describe()
+    key = model_backend.configured()
     agent_ok = _agent_importable()
     defense_ok = defense.configured()
     ready = bool(key and agent_ok and defense_ok)
     root = cache_root()
     return {
         "ready": ready,
-        "model": model,
+        "model": backend["model"],
+        "backend": backend,
         "agent": "deep-agent",
         "sec": sec_health(),
         "cache": {
@@ -172,7 +174,7 @@ async def analyze(
     upload = file is not None and bool(file.filename)
     if not q and not pinned and not upload:
         raise HTTPException(422, "Provide a company query, CIK, or an uploaded annual report.")
-    if not os.getenv("OPENAI_API_KEY"):
+    if not model_backend.configured():
         raise HTTPException(503, "The briefing model is not configured.")
     if not defense.configured():
         raise HTTPException(503, "AI Defense inspection is unavailable. No briefing was released.")

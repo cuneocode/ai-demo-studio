@@ -8,7 +8,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field, model_validator
 
 from grounding import ground_note, ground_recommendation
-from nim import chat_model
+from nim import RESEARCH, chat_model
 from security import DefenseBlocked, DefenseUnavailable
 
 RESEARCH_DISCLAIMER = "Demo recommendation — not financial advice"
@@ -68,7 +68,7 @@ def omitted(reason: str, status: str = "omitted") -> tuple[dict, dict]:
 async def draft_note(ticker: str, tools: dict, conflicts: list[dict], snapshot: dict, macro: dict | None, callbacks=None) -> tuple[dict, dict]:
     payload = json.dumps({"ticker": ticker, "tools": tools, "conflicts": conflicts}, default=str)
     try:
-        model = chat_model().with_structured_output(ResearchDraft, method="json_mode")
+        model = chat_model(RESEARCH).with_structured_output(ResearchDraft, method="json_mode")
         result = await model.ainvoke([
             SystemMessage(content=SYSTEM),
             HumanMessage(content=payload),

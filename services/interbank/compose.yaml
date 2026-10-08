@@ -17,6 +17,7 @@ x-python: &python
 
 x-agent-env: &agent-env
   SPLUNK_AO_HOME_DIR: /tmp/.splunk
+  STUDIO_MODELS_FILE: /studio/models.json
   EVENT_SINK_URL: http://demo:8090/events
   SSL_CERT_FILE: /runtime/egress-ca-bundle.pem
 
@@ -54,7 +55,9 @@ services:
       TLS_KEY_FILE: /runtime/agent.key
       TLS_CLIENT_CA_FILE: /runtime/bank-a-ca.crt
       GATEWAY_JWKS_FILE: /runtime/gateway-jwks.json
-    volumes: [./.runtime/roles/bank-a-agent:/runtime:ro]
+    volumes: [./.runtime/roles/bank-a-agent:/runtime:ro, ../../.studio:/studio:ro]
+    # A studio model endpoint on this machine (Sparky's vLLM) is host.docker.internal.
+    extra_hosts: ["host.docker.internal:host-gateway"]
     networks: [bank-a-internal, bank-a-egress, events]
     healthcheck: &agent-health
       test: ["CMD", "python", "-c", "import ssl,urllib.request as u; c=ssl.create_default_context(cafile='/runtime/bank-a-ca.crt'); c.load_cert_chain('/runtime/agent.crt','/runtime/agent.key'); u.urlopen('https://bank-a-agent:9443/health',context=c,timeout=3)"]
@@ -105,7 +108,8 @@ services:
       TLS_KEY_FILE: /runtime/agent.key
       TLS_CLIENT_CA_FILE: /runtime/bank-b-ca.crt
       GATEWAY_JWKS_FILE: /runtime/gateway-jwks.json
-    volumes: [./.runtime/roles/bank-b-agent:/runtime:ro]
+    volumes: [./.runtime/roles/bank-b-agent:/runtime:ro, ../../.studio:/studio:ro]
+    extra_hosts: ["host.docker.internal:host-gateway"]
     networks: [bank-b-internal, bank-b-egress, events]
     healthcheck:
       <<: *agent-health
@@ -148,8 +152,10 @@ services:
       EVENT_SINK_URL: http://127.0.0.1:8090/events
       EVIDENCE_DIR: /evidence
       CONSOLE_TOKEN_FILE: /runtime/console.jwt
+      STUDIO_MODELS_FILE: /studio/models.json
     volumes:
       - ./.runtime/roles/console:/runtime:ro
+      - ../../.studio:/studio:ro
       - ./evidence:/evidence
       - ./gateways:/app/gateways:ro
       - ./otel:/app/otel:ro

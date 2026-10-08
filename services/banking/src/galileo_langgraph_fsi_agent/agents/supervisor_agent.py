@@ -2,17 +2,13 @@
 Supervisor Agent for Brahe Bank Application
 """
 
-import os
 from security import ProtectedChatOpenAI as ChatOpenAI
+from model_backend import model_settings
 from langgraph_supervisor import create_supervisor
 from langgraph.checkpoint.memory import InMemorySaver
 
 from .credit_score_agent import create_credit_score_agent
 from .credit_card_information_agent import create_credit_card_information_agent
-
-# Define the agents that the supervisor will manage
-credit_card_information_agent = create_credit_card_information_agent()
-credit_score_agent = create_credit_score_agent()
 
 
 def create_supervisor_agent():
@@ -20,8 +16,8 @@ def create_supervisor_agent():
     Create a supervisor agent that manages all the agents in the Brahe Bank application.
     """
     bank_supervisor_agent = create_supervisor(
-        model=ChatOpenAI(model=os.environ["MODEL_NAME"], name="Supervisor", reasoning_effort="none" if os.environ["MODEL_NAME"].startswith("gpt-5.6") else None),
-        agents=[credit_card_information_agent, credit_score_agent],
+        model=ChatOpenAI(**model_settings(), name="Supervisor"),
+        agents=[create_credit_card_information_agent(), create_credit_score_agent()],
         prompt=(
             """
             You are a supervisor managing the following agents:

@@ -8,6 +8,7 @@ import MarketResearch from "./MarketResearch";
 import ClientAdvisory from "./ClientAdvisory";
 import InterbankDemo from "./InterbankDemo";
 import ArchitectureMap from "./ArchitectureMap";
+import ModelBackends, { ModelChip } from "./ModelBackends";
 import { loadCompanyProfile, type StoredCompanyProfile } from "./company-profile";
 import { loadResearchNote, switcherContextLabel, type StoredResearchNote } from "./research-note";
 import { loadAdvisoryBrief, type StoredAdvisoryBrief } from "./advisory-brief";
@@ -25,6 +26,7 @@ import {
   ChevronDown,
   CircleGauge,
   CircleHelp,
+  Cpu,
   Eye,
   FileSearch,
   Fingerprint,
@@ -52,7 +54,7 @@ import {
   X,
 } from "lucide-react";
 
-type View = "overview" | "library" | "stories" | "briefing";
+type View = "overview" | "library" | "stories" | "briefing" | "models";
 type Category = "All" | "Risk & compliance" | "Wealth & advisory" | "Operations";
 
 type UseCase = {
@@ -477,6 +479,7 @@ const navItems: { id: View; label: string; icon: LucideIcon }[] = [
   { id: "briefing", label: "Company briefing", icon: Building2 },
   { id: "library", label: "Use case library", icon: Library },
   { id: "stories", label: "Story builder", icon: Workflow },
+  { id: "models", label: "Model backends", icon: Cpu },
 ];
 
 function liveExperienceLabel(experience?: UseCaseFrame["liveExperience"]) {
@@ -670,6 +673,7 @@ function UseCaseWorkspace({
   onResearchNoteChange,
   advisoryBrief,
   onAdvisoryBriefChange,
+  onOpenModels,
 }: {
   useCase: UseCase;
   inStory: boolean;
@@ -681,6 +685,7 @@ function UseCaseWorkspace({
   onResearchNoteChange: (note: StoredResearchNote | null) => void;
   advisoryBrief: StoredAdvisoryBrief | null;
   onAdvisoryBriefChange: (brief: StoredAdvisoryBrief | null) => void;
+  onOpenModels: () => void;
 }) {
   const frame = useCaseFrames[useCase.id];
   const Icon = useCase.icon;
@@ -700,6 +705,7 @@ function UseCaseWorkspace({
         </div>
         <div className="heading-actions">
           <span className="prototype-chip"><StatusDot tone="amber" /> {liveExperienceLabel(frame.liveExperience)}</span>
+          <ModelChip experience={frame.liveExperience} onOpen={onOpenModels} />
           <button className="secondary-button" onClick={onAdd}>{inStory ? <><Check size={16} /> In story</> : <><Plus size={16} /> Add to story</>}</button>
           <button className="primary-button" onClick={frame.liveExperience ? () => focusLiveExperience(frame.liveExperience) : undefined}>{frame.primaryAction} <ArrowRight size={16} /></button>
         </div>
@@ -904,8 +910,11 @@ export default function HomePage() {
               onResearchNoteChange={setResearchNote}
               advisoryBrief={advisoryBrief}
               onAdvisoryBriefChange={setAdvisoryBrief}
+              onOpenModels={() => switchView("models")}
             />
           )}
+
+          {!selectedCase && activeView === "models" && <ModelBackends />}
 
           {!selectedCase && activeView === "briefing" && (
             <>

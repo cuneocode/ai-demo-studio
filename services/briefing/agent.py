@@ -3,13 +3,13 @@ from __future__ import annotations
 
 import inspect
 import json
-import os
 import shutil
 from pathlib import Path
 
 from pydantic import BaseModel, Field
 
 from grounding import ground_briefing
+from model_backend import model_settings
 from security import ProtectedChatOpenAI
 from subagents import theme_subagents
 from tools import session_var, supervisor_tools
@@ -172,15 +172,13 @@ def _supervisor_permissions():
 
 
 def protected_model():
-    name = os.getenv("MODEL_NAME", "gpt-4o-mini")
     return ProtectedChatOpenAI(
-        model=name,
+        **model_settings(),
         temperature=0,
         timeout=120,
         max_retries=1,
         streaming=False,
         disable_streaming=True,
-        reasoning_effort="none" if name.startswith("gpt-5.6") else None,
     )
 
 

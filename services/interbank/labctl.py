@@ -37,6 +37,9 @@ RUNTIME = ROOT / ".runtime"
 PKI = RUNTIME / "pki"
 ROLES = RUNTIME / "roles"
 FSI_ENV = Path(os.environ.get("FSI_ENV", ROOT.parents[1] / ".env"))
+# The studio's Model backends choice; the agents and console mount this directory read-only.
+STUDIO = ROOT.parents[1] / ".studio"
+MODEL_KEYS = ("OPENAI_API_KEY", "VLLM_API_KEY", "NIM_API_KEY", "NVIDIA_API_KEY")
 IMAGE = "interbank-a2a-demo:0.2.0"
 DEMO_URL = "http://127.0.0.1:8088"
 PROJECT = "Interbank A2A Settlement Demo"
@@ -66,9 +69,10 @@ def import_vendor_env() -> None:
         if "=" in line and not line.lstrip().startswith("#"):
             key, value = line.split("=", 1)
             source[key.strip()] = value.strip().strip("'\"")
-    missing = [k for k in ("GALILEO_API_KEY", "GALILEO_CONSOLE_URL", "AIDEFENSE_API_KEY",
-                           "AGENT_CONTROL_URL", "OPENAI_API_KEY", "MODEL_NAME")
-               if not source.get(k)]
+    required = ["GALILEO_API_KEY", "GALILEO_CONSOLE_URL", "AIDEFENSE_API_KEY", "AGENT_CONTROL_URL"]
+    if not (STUDIO / "models.json").exists():
+        required += ["OPENAI_API_KEY", "MODEL_NAME"]
+    missing = [k for k in required if not source.get(k)]
     if missing:
         raise SystemExit(f"{FSI_ENV} is missing {', '.join(missing)}")
     console = source["GALILEO_CONSOLE_URL"].rstrip("/")
@@ -88,12 +92,15 @@ def import_vendor_env() -> None:
         "AIDEFENSE_API_KEY": source["AIDEFENSE_API_KEY"],
         "AIDEFENSE_REGION": source.get("AIDEFENSE_REGION", "us-west-2"),
         "AIDEFENSE_TIMEOUT": source.get("AIDEFENSE_TIMEOUT", "30"),
-        "MODEL_NAME": source["MODEL_NAME"],
+        "MODEL_NAME": source.get("MODEL_NAME", ""),
         "MODEL_REASONING_EFFORT": source.get("MODEL_REASONING_EFFORT", "medium"),
     }
     write_private(RUNTIME / "vendor.env", "".join(f"{k}={v}\n" for k, v in values.items()))
-    # Only the two agent containers mount model.env, the OpenAI credential.
-    model = {"MODEL_API_KEY": source["OPENAI_API_KEY"]}
+    # Only the two agent containers mount model.env: the model credentials a studio
+    # provider may name, plus the lab's own fallback settings.
+    model = {k: source[k] for k in MODEL_KEYS if source.get(k)}
+    if source.get("OPENAI_API_KEY"):
+        model["MODEL_API_KEY"] = source["OPENAI_API_KEY"]
     if source.get("OPENAI_BASE_URL"):
         model["MODEL_BASE_URL"] = source["OPENAI_BASE_URL"]
     write_private(RUNTIME / "model.env", "".join(f"{k}={v}\n" for k, v in model.items()))
@@ -250,6 +257,7 @@ def run_tool(module: str, *args: str) -> None:
 
 def up(_: argparse.Namespace) -> None:
     RUNTIME.mkdir(mode=0o700, exist_ok=True)
+    STUDIO.mkdir(mode=0o700, exist_ok=True)
     for folder in ("runs", "telemetry/bank-a", "telemetry/bank-b"):
         (ROOT / "evidence" / folder).mkdir(parents=True, exist_ok=True)
     write_private(ROOT / ".env", f"LAB_UID={os.getuid()}\nLAB_GID={os.getgid()}\n")

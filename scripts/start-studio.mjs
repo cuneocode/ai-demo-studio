@@ -4,6 +4,7 @@ import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import http from "node:http";
 import { fileURLToPath } from "node:url";
+import { handleStudioModels } from "./studio-models-api.ts";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const host = "127.0.0.1";
@@ -39,6 +40,7 @@ children.push(spawn(process.execPath, [`${root}node_modules/.bin/vinext`, "start
 }));
 
 const server = http.createServer((request, response) => {
+  if (handleStudioModels(request, response)) return;
   const service = serviceSpecs.find((candidate) => request.url?.startsWith(candidate.prefix));
   if (request.url?.startsWith("/api/briefing") && Number(request.headers["content-length"] || 0) > 45 * 1024 * 1024) {
     response.writeHead(413, { "content-type": "application/json" });

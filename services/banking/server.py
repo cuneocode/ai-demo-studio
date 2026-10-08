@@ -26,8 +26,10 @@ from security import defense, security_run, SecurityRun, DefenseBlocked, Defense
 from telemetry import banking_telemetry
 from observability_status import stream_status
 from runtime_controls import runtime_controls, ControlRun, ControlsBlocked, ControlsUnavailable
+import model_backend
 app = FastAPI(docs_url=None, redoc_url=None)
 graph = None
+graph_signature = None
 sessions = {}
 startup_error = None
 
@@ -54,13 +56,25 @@ class ExecutionTrace(AsyncCallbackHandler):
                 self.sources.append({"title": title.split(" — ")[-1].rstrip(":"), "text": body.strip()[:1600]})
 
 
+def ensure_graph():
+    """Rebuild the agents when the studio's model backend for Brahe changes."""
+    global graph, graph_signature
+    signature = model_backend.signature()
+    if graph is not None and graph_signature in (None, signature):
+        return
+    from src.galileo_langgraph_fsi_agent.agents.supervisor_agent import create_supervisor_agent
+    graph = create_supervisor_agent()
+    graph_signature = signature
+    # Conversations live in the old graph's checkpointer.
+    sessions.clear()
+
+
 @app.on_event("startup")
 async def startup():
-    global graph, startup_error
+    global startup_error
     try:
         banking_telemetry.start()
-        from src.galileo_langgraph_fsi_agent.agents.supervisor_agent import create_supervisor_agent
-        graph = create_supervisor_agent()
+        ensure_graph()
         try:
             await asyncio.to_thread(runtime_controls.start)
         except Exception:
@@ -78,7 +92,7 @@ async def shutdown():
 
 @app.get("/api/banking/health")
 async def health():
-    return {"ready": graph is not None, "model": os.getenv("MODEL_NAME"),
+    return {"ready": graph is not None, "model": model_backend.describe()["model"], "backend": model_backend.describe(),
             "retrieval": "Pinecone" if os.getenv("PINECONE_API_KEY") else "Local document search", "galileo": "configured" if os.getenv("GALILEO_API_KEY") else "disabled",
             "security": defense.health(), "splunk": banking_telemetry.health(), "controls": runtime_controls.health(),
             "error": "Banking dependencies are unavailable." if startup_error else None}
@@ -93,6 +107,8 @@ async def observability():
 async def chat(request: Request):
     if not graph:
         raise HTTPException(503, "Banking dependencies are unavailable. Check local service configuration.")
+    if not any(entry[1].locked() for entry in sessions.values()):
+        ensure_graph()
     if not request.message.strip():
         raise HTTPException(422, "Enter a message.")
     now = time.monotonic()

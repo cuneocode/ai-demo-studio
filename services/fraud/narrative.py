@@ -3,6 +3,7 @@ import os
 
 import httpx
 
+from model_backend import resolve_narrative
 from security import DefenseBlocked, DefenseUnavailable, defense, security_run, SecurityRun
 
 
@@ -20,22 +21,28 @@ def _local_base(base: str) -> bool:
 
 def narrative_config():
     enabled = os.getenv("FRAUD_ENABLE_NARRATIVE", "false").lower() == "true"
-    key = os.getenv("FRAUD_NARRATIVE_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("NVIDIA_API_KEY") or ""
-    base = os.getenv("FRAUD_NARRATIVE_BASE_URL") or os.getenv("OPENAI_BASE_URL") or ""
-    model = os.getenv("FRAUD_NARRATIVE_MODEL") or os.getenv("MODEL_NAME") or ""
-    if not base and os.getenv("NVIDIA_API_KEY") and not os.getenv("OPENAI_API_KEY"):
-        base = "https://integrate.api.nvidia.com/v1"
-        model = model or "meta/llama-3.1-8b-instruct"
+    backend = resolve_narrative()
+    if backend is not None:
+        key, base, model = backend.api_key, backend.base_url, backend.model
+    else:
+        key = os.getenv("FRAUD_NARRATIVE_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("NVIDIA_API_KEY") or ""
+        base = os.getenv("FRAUD_NARRATIVE_BASE_URL") or os.getenv("OPENAI_BASE_URL") or ""
+        model = os.getenv("FRAUD_NARRATIVE_MODEL") or os.getenv("MODEL_NAME") or ""
+        if not base and os.getenv("NVIDIA_API_KEY") and not os.getenv("OPENAI_API_KEY"):
+            base = "https://integrate.api.nvidia.com/v1"
+            model = model or "meta/llama-3.1-8b-instruct"
     base = base.rstrip("/") or "https://api.openai.com/v1"
     model = model or "gpt-4o-mini"
-    if enabled and not key and _local_base(base):
+    openai = backend.kind == "openai" if backend is not None else "api.openai.com" in base
+    if enabled and not key and (_local_base(base) or (backend is not None and backend.vllm)):
         key = "not-needed"
     status = "disabled"
     if enabled and key:
         status = "configured"
     elif enabled:
         status = "missing_configuration"
-    return {"enabled": enabled, "status": status, "model": model if enabled else "", "base": base, "key": key}
+    return {"enabled": enabled, "status": status, "model": model if enabled else "", "base": base, "key": key,
+            "openai": openai, "provider": backend.provider if backend is not None else "env"}
 
 
 def health():
@@ -43,6 +50,7 @@ def health():
     return {
         "status": config["status"],
         "model": config["model"] or None,
+        "provider": config["provider"],
         "ready": config["status"] == "configured",
     }
 
@@ -82,17 +90,20 @@ async def explain(case: dict, score: dict) -> dict:
 
 
 async def _complete(config: dict, messages: list[dict]) -> str:
+    body = {"model": config["model"], "messages": messages, "temperature": 0.2}
+    if config["openai"]:
+        # OpenAI rejects vLLM's chat_template_kwargs; GPT-5 models take max_completion_tokens.
+        body["max_completion_tokens"] = 180
+        if config["model"].startswith("gpt-5"):
+            body["reasoning_effort"] = "none"
+    else:
+        body["max_tokens"] = 180
+        body["chat_template_kwargs"] = {"enable_thinking": False}
     async with httpx.AsyncClient(timeout=_timeout()) as client:
         response = await client.post(
             f"{config['base']}/chat/completions",
             headers={"Authorization": f"Bearer {config['key']}"},
-            json={
-                "model": config["model"],
-                "messages": messages,
-                "temperature": 0.2,
-                "max_tokens": 180,
-                "chat_template_kwargs": {"enable_thinking": False},
-            },
+            json=body,
         )
         response.raise_for_status()
         message = response.json()["choices"][0]["message"]

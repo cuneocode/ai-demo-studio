@@ -25,7 +25,7 @@ type LabEvent = {
 };
 type Run = { id: string; prompt: string; status: "running" | "completed" | "blocked" | "failed"; started_at: string; finished_at?: string; report?: string; trace_id?: string };
 type Runtime = {
-  model: { name: string; api: string; reasoning_effort: string; reasoning_summary: string };
+  model: { name: string; api: string; label?: string; reasoning_effort: string; reasoning_summary: string };
   agents: { framework: string; protocol: string; bank_a: string[]; bank_b: string[] };
   gateway: { product: string; transport: string; admission: string };
   ai_defense: { mode: string; region: string; hops: Record<string, string[]> };
@@ -515,8 +515,8 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
           {runtime && <div className="proof-card ib-runtime">
             <span className="review-kicker">RUNTIME</span>
             <dl className="fact-grid">
-              <div><dt>Model</dt><dd>{runtime.model.name} · {runtime.model.api}</dd></div>
-              <div><dt>Reasoning</dt><dd>{runtime.model.reasoning_effort} effort · {runtime.model.reasoning_summary} summaries</dd></div>
+              <div><dt>Model</dt><dd>{runtime.model.label ? `${runtime.model.label} · ` : ""}{runtime.model.name} · {runtime.model.api}</dd></div>
+              <div><dt>Reasoning</dt><dd>{runtime.model.reasoning_summary === "none" ? "No reasoning summaries on Chat Completions" : `${runtime.model.reasoning_effort} effort · ${runtime.model.reasoning_summary} summaries`}</dd></div>
               <div><dt>Agents</dt><dd>{runtime.agents.framework} · {runtime.agents.protocol}</dd></div>
               <div><dt>Gateway</dt><dd>{runtime.gateway.product} · {runtime.gateway.transport}</dd></div>
               <div><dt>AI Defense</dt><dd>{runtime.ai_defense.mode}{runtime.ai_defense.region ? ` · ${runtime.ai_defense.region}` : ""}</dd></div>

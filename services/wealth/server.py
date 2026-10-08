@@ -27,7 +27,7 @@ load_dotenv(Path(os.getenv("WEALTH_ENV_FILE", Path(__file__).resolve().parents[2
 from advise import ADVISORY_DISCLAIMER, draft_brief
 from advise import omitted as omitted_brief
 from cache import cache_root, get_macro, get_snapshot, is_fresh, load_snapshot
-from nim import nim_health, nim_model, nim_reachable
+from nim import ADVISORY, models_url, nim_health, nim_model, nim_reachable
 from observability_status import stream_status, summarize
 from providers.fred import FredError, fred_health
 from providers.yahoo import ProviderError
@@ -162,6 +162,7 @@ def _galileo_configured() -> str:
 @app.get("/api/wealth/health")
 async def health():
     reachable = await nim_reachable()
+    advisory_reachable = reachable if models_url(ADVISORY) == models_url() else await nim_reachable(ADVISORY)
     agent_ok = _agent_importable()
     root = cache_root()
     return {
@@ -169,6 +170,7 @@ async def health():
         "model": nim_model(),
         "agent": "langchain",
         "nim": nim_health(reachable),
+        "advisory_model": nim_health(advisory_reachable, ADVISORY),
         "yahoo": {"status": "not_asserted"},
         "fred": fred_health(),
         "cache": {

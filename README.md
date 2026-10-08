@@ -85,6 +85,18 @@ or enforce explicit server-side membership or allowlist checks.
 Use SIWC for account pages, user-specific dashboards, saved records, and write
 actions tied to the current ChatGPT user. Leave public content anonymous.
 
+## Model backends
+
+The studio's **Model backends** page chooses the OpenAI-compatible endpoint every
+live use case calls (for example the OpenAI API on a laptop, or vLLM on Sparky),
+with optional per-use-case overrides. It saves `.studio/models.json` (git-ignored),
+which holds provider URLs, model names, and the *name* of each key variable
+(`OPENAI_API_KEY`, `VLLM_API_KEY`, `NIM_API_KEY`, or `NVIDIA_API_KEY`); key values
+stay in `.env`. Services resolve it per request (`services/llm/studio_models.py`).
+Without the file, each service keeps its own `.env` settings. The page's API is
+served by the Node layer in front of the worker (the Vite dev server and
+`scripts/start-studio.mjs`), because it writes to disk.
+
 ## Useful Commands
 
 - `npm run dev`: start local development

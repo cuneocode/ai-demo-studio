@@ -1,4 +1,4 @@
-"""LangChain Deep Agents running on the OpenAI API."""
+"""LangChain Deep Agents on the model endpoint the studio selects."""
 
 from __future__ import annotations
 
@@ -17,7 +17,8 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 
-from lab.config import SERVICE_NAME, env
+from lab import models
+from lab.config import SERVICE_NAME
 from lab.events import emit
 from lab.genai import reasoning_summaries
 
@@ -29,35 +30,45 @@ register_harness_profile(
 )
 
 
-def chat_model() -> ChatOpenAI:
-    # gpt-5.6-luna accepts function tools with reasoning only on the Responses API.
-    # Reasoning summaries are what the dashboard shows as each agent's thinking.
-    return ChatOpenAI(
-        model=env("MODEL_NAME"),
-        base_url=os.getenv("MODEL_BASE_URL") or None,
-        api_key=env("MODEL_API_KEY"),
-        use_responses_api=True,
-        reasoning={"effort": os.getenv("MODEL_REASONING_EFFORT", "medium"), "summary": "detailed"},
-        max_tokens=4000,
-        timeout=240,
-        max_retries=1,
-    )
+def chat_model(backend: models.Backend) -> ChatOpenAI:
+    common = {"model": backend.model, "base_url": backend.base_url, "api_key": backend.api_key or "not-needed",
+              "max_tokens": 4000, "timeout": 240, "max_retries": 1}
+    if backend.responses_api:
+        # gpt-5.6-luna accepts function tools with reasoning only on the Responses API.
+        # Reasoning summaries are what the dashboard shows as each agent's thinking.
+        return ChatOpenAI(**common, use_responses_api=True,
+                          reasoning={"effort": os.getenv("MODEL_REASONING_EFFORT", "medium"), "summary": "detailed"})
+    # Chat Completions: tool calls and answers still stream to the timeline, without thinking.
+    if backend.kind == "vllm":
+        return ChatOpenAI(**common, extra_body={"chat_template_kwargs": {"enable_thinking": False}})
+    return ChatOpenAI(**common, reasoning_effort="none" if backend.model.startswith("gpt-5") else None)
 
 
-def build_deep_agent(*, name: str, system_prompt: str, tools: Sequence[Any]):
-    return create_deep_agent(
-        model=chat_model(),
-        tools=list(tools),
-        system_prompt=system_prompt,
-        checkpointer=InMemorySaver(),
-        name=name,
-    )
+class DeepAgent:
+    """A Deep Agent rebuilt whenever the studio switches this lab's model backend."""
+
+    def __init__(self, *, name: str, system_prompt: str, tools: Sequence[Any]):
+        self.name = name
+        self._spec = {"name": name, "system_prompt": system_prompt, "tools": list(tools)}
+        self._graph = None
+        self._signature: tuple | None = None
+
+    def current(self):
+        backend = models.backend()
+        if self._graph is None or backend.signature != self._signature:
+            self._graph = create_deep_agent(model=chat_model(backend), checkpointer=InMemorySaver(), **self._spec)
+            self._signature = backend.signature
+        return self._graph
 
 
-async def run_turn(agent, *, prompt: str, thread_id: str, run_id: str) -> str:
+def build_deep_agent(*, name: str, system_prompt: str, tools: Sequence[Any]) -> DeepAgent:
+    return DeepAgent(name=name, system_prompt=system_prompt, tools=tools)
+
+
+async def run_turn(agent: DeepAgent, *, prompt: str, thread_id: str, run_id: str) -> str:
     """Run one conversational turn, reporting every model step to the timeline."""
     answer = ""
-    stream = agent.astream(
+    stream = agent.current().astream(
         {"messages": [HumanMessage(content=prompt)]},
         config={"configurable": {"thread_id": thread_id}, "recursion_limit": 60},
         stream_mode="updates",

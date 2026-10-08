@@ -2,8 +2,8 @@
 A credit score agent for the Brahe Bank application.
 """
 
-import os
 from security import ProtectedChatOpenAI as ChatOpenAI
+from model_backend import model_settings
 from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import create_react_agent
 
@@ -22,7 +22,7 @@ def create_credit_score_agent() -> CompiledGraph:
 
     # Create an agent
     agent = create_react_agent(
-        model=ChatOpenAI(model=os.environ["MODEL_NAME"], name="Credit Score Agent", reasoning_effort="none" if os.environ["MODEL_NAME"].startswith("gpt-5.6") else None),
+        model=ChatOpenAI(**model_settings(), name="Credit Score Agent"),
         tools=[credit_score_tool],
         prompt=(
             """

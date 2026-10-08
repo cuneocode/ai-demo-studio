@@ -53,3 +53,6 @@ __pycache__/
 /.playwright-cli/
 /artifacts/
 *.tsbuildinfo
+
+# studio model backends (provider choices only; keys stay in .env)
+/.studio/

@@ -23,6 +23,7 @@ from pydantic import BaseModel
 from demo.sources import SOURCES, catalog, excerpt
 from lab.a2a_peer import A2AClientConfig, GatewayDenied, send_message
 from lab.config import env
+from lab import models
 from lab.events import emit
 from lab.telemetry import current_ids, flush, session, set_output, setup_telemetry, span
 
@@ -158,10 +159,14 @@ async def telemetry() -> dict:
 @app.get("/api/runtime")
 async def runtime() -> dict:
     """What this lab is configured to run, for the studio's runtime card. No secrets."""
+    backend = models.backend()
+    # Mirrors lab.agents.chat_model.
+    effort = (os.getenv("MODEL_REASONING_EFFORT", "medium") if backend.responses_api
+              else "none" if backend.kind == "vllm" or backend.model.startswith("gpt-5") else "default")
     return {
-        "model": {"name": os.getenv("MODEL_NAME", ""), "api": "OpenAI Responses API",
-                  "reasoning_effort": os.getenv("MODEL_REASONING_EFFORT", "medium"),
-                  "reasoning_summary": "detailed"},
+        "model": {**backend.public(), "name": backend.model,
+                  "reasoning_effort": effort,
+                  "reasoning_summary": "detailed" if backend.responses_api else "none"},
         "agents": {"framework": "LangChain Deep Agents", "protocol": "A2A 1.0 (JSON-RPC)",
                    "bank_a": ["bank-a-coordinator", "bank-a-responder"],
                    "bank_b": ["bank-b-investigator"]},

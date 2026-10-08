@@ -7,7 +7,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field, model_validator
 
 from grounding import ground_brief
-from nim import chat_model
+from nim import ADVISORY, chat_model
 from security import DefenseBlocked, DefenseUnavailable
 
 ADVISORY_DISCLAIMER = "Demo brief — not advice"
@@ -83,7 +83,7 @@ async def draft_brief(
         "clientNotes": client_notes,
     }, default=str)
     try:
-        model = chat_model().with_structured_output(MeetingDraft, method="json_mode")
+        model = chat_model(ADVISORY).with_structured_output(MeetingDraft, method="json_mode")
         result = await model.ainvoke([
             SystemMessage(content=SYSTEM),
             HumanMessage(content=payload),

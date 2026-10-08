@@ -16,6 +16,7 @@ import agent_control
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, ConfigDict, StrictBool
 
+from model_backend import judge_settings
 from security import ProtectedChatOpenAI, DefenseBlocked, DefenseUnavailable
 
 AGENT_NAME = "brahe-bank-runtime"
@@ -111,11 +112,11 @@ class RuntimeControls:
     def __init__(self):
         self.ready = False
         self.target_id = None
-        self.model_name = os.getenv("BRAHE_JUDGE_MODEL", os.getenv("MODEL_NAME", "gpt-4o-mini"))
+        self.model_name = judge_settings()["model"]
 
     def health(self):
         return {"status": "enforcing" if self.ready else "unavailable" if os.getenv("GALILEO_API_KEY") else "not_configured",
-                "names": [p[0] for p in POLICIES.values()], "judge_model": self.model_name,
+                "names": [p[0] for p in POLICIES.values()], "judge_model": judge_settings()["model"],
                 "execution": "server", "fail_open": False}
 
     def start(self):
@@ -145,8 +146,9 @@ class RuntimeControls:
                 raise ControlsUnavailable("Required banking control scope is unavailable.")
 
     async def judge(self, schema, policy, data, logger=None):
-        model = ProtectedChatOpenAI(model=self.model_name, name="Banking quality judge", timeout=30, max_retries=0,
-            reasoning_effort="none" if self.model_name.startswith("gpt-5.6") else None)
+        settings = judge_settings()
+        self.model_name = settings["model"]
+        model = ProtectedChatOpenAI(**settings, name="Banking quality judge", timeout=30, max_retries=0)
         callbacks = []
         if logger is not None:
             from galileo.handlers.langchain import GalileoAsyncCallback

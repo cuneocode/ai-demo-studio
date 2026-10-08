@@ -4,7 +4,8 @@ Two banks investigate a failed delivery-versus-payment settlement (trade TRD-847
 over A2A. Each bank runs:
 
 - a **LangChain Deep Agent** (`bank_a/agent.py`, `bank_b/agent.py`, built in
-  `lab/agents.py`) on the OpenAI Responses API (`MODEL_NAME` from the studio .env),
+  `lab/agents.py`) on the backend chosen in the studio's **Model backends** page, else
+  the OpenAI Responses API with `MODEL_NAME` from the studio .env (`lab/models.py`),
   with reasoning summaries and a read-only SQLite settlement database
   (`bank_*/records.sql`);
 - the **A2A SDK** (1.2.2) for both sending and receiving (`lab/a2a_peer.py`);
@@ -38,6 +39,13 @@ reasoning summaries, which the dashboards show as each agent's thinking. If the 
 sits behind a TLS-inspecting proxy, `up` adds its root to the agents' egress CA bundle:
 the Cisco Secure Access root from the macOS System keychain, or a PEM file named by
 `EXTRA_CA_FILE`.
+
+The agents and dashboard mount the studio's `.studio/` directory read-only and read
+`models.json` on each investigation, so switching the backend needs no restart. A
+provider without the Responses API runs on Chat Completions: tool calls and answers
+still stream, without thinking. A loopback base URL is reached as
+`host.docker.internal`. Docker Desktop forwards it to the host's loopback; on Linux
+the endpoint (for example vLLM) must also listen on the Docker bridge address.
 
 From the repository root:
 
