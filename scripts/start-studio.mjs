@@ -1,10 +1,11 @@
 // Integrated production-style local presentation runtime.
-// Credentials remain in the existing ignored environment and are inherited by services.
+// Credentials stay in the ignored .env, which each service loads; Studio settings edits it
+// and restarts the services this process launched (scripts/studio-services.ts).
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import http from "node:http";
 import { fileURLToPath } from "node:url";
-import { handleStudioModels } from "./studio-models-api.ts";
+import { handleStudioApi, startMissing, stopAll } from "./studio-api.ts";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const host = "127.0.0.1";
@@ -16,22 +17,19 @@ const serviceSpecs = [
   { prefix: "/api/fraud", port: 8012, directory: "fraud" },
   { prefix: "/api/briefing", port: 8013, directory: "briefing" },
   { prefix: "/api/wealth", port: 8014, directory: "wealth" },
+  // The interbank lab runs in Docker (npm run interbank:up); its dashboard serves /api/* on 8088.
+  { prefix: "/api/interbank", port: 8088, rewrite: (path) => path.replace(/^\/api\/interbank/, "/api") },
 ];
 
 const children = [];
 if (!reuseServices) {
-  for (const service of serviceSpecs) {
-    const python = `${root}services/${service.directory}/.venv/bin/python`;
-    if (!existsSync(python)) {
+  for (const service of serviceSpecs.filter((candidate) => candidate.directory)) {
+    if (!existsSync(`${root}services/${service.directory}/.venv/bin/python`)) {
       console.error(`Run npm run ${service.directory}:install before starting the studio.`);
       process.exit(1);
     }
-    children.push(spawn(python, ["-m", "uvicorn", "server:app", "--host", host, "--port", String(service.port)], {
-      cwd: `${root}services/${service.directory}`,
-      stdio: "inherit",
-      env: process.env,
-    }));
   }
+  await startMissing();
 }
 children.push(spawn(process.execPath, [`${root}node_modules/.bin/vinext`, "start"], {
   cwd: root,
@@ -40,7 +38,7 @@ children.push(spawn(process.execPath, [`${root}node_modules/.bin/vinext`, "start
 }));
 
 const server = http.createServer((request, response) => {
-  if (handleStudioModels(request, response)) return;
+  if (handleStudioApi(request, response)) return;
   const service = serviceSpecs.find((candidate) => request.url?.startsWith(candidate.prefix));
   if (request.url?.startsWith("/api/briefing") && Number(request.headers["content-length"] || 0) > 45 * 1024 * 1024) {
     response.writeHead(413, { "content-type": "application/json" });
@@ -51,7 +49,7 @@ const server = http.createServer((request, response) => {
   const upstream = http.request({
     hostname: host,
     port,
-    path: request.url,
+    path: service?.rewrite ? service.rewrite(request.url) : request.url,
     method: request.method,
     headers: { ...request.headers, host: `${host}:${port}` },
   }, (upstreamResponse) => {
@@ -79,7 +77,8 @@ function stop(code = 0) {
   stopping = true;
   server.close();
   children.forEach((child) => child.kill("SIGTERM"));
-  setTimeout(() => process.exit(code), 800);
+  void stopAll();
+  setTimeout(() => process.exit(code), 1500);
 }
 children.forEach((child) => {
   child.on("error", () => stop(1));

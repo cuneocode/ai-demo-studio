@@ -1,6 +1,6 @@
 """Which OpenAI-compatible endpoint each studio use case calls.
 
-The studio's Model backends page writes .studio/models.json (git-ignored): named
+Studio settings (its Model backends section) writes .studio/models.json (git-ignored): named
 providers, a default, and per-use-case overrides. A provider records the *name* of
 its key variable, never the key. Without the file, every service keeps its own .env
 settings. Standard library only, so any service can import it.

@@ -2,7 +2,7 @@ import vinext from "vinext";
 import { defineConfig } from "vite";
 import hostingConfig from "./.openai/hosting.json";
 import { sites } from "./build/sites-vite-plugin";
-import { handleStudioModels } from "./scripts/studio-models-api.ts";
+import { handleStudioApi, startMissing } from "./scripts/studio-api.ts";
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
   "00000000-0000-4000-8000-000000000000";
@@ -62,10 +62,12 @@ export default defineConfig(async () => {
     },
     plugins: [
       {
-        name: "studio-models",
+        name: "studio-api",
         configureServer(viteServer) {
+          // npm run dev:studio launches the Python services through the studio so Studio settings can restart them.
+          if (process.env.STUDIO_START_SERVICES === "1") void startMissing();
           viteServer.middlewares.use((req, res, next) => {
-            if (!handleStudioModels(req, res)) next();
+            if (!handleStudioApi(req, res)) next();
           });
         },
       },

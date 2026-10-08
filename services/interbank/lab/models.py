@@ -1,4 +1,4 @@
-"""The model endpoint the studio's Model backends page selects for this lab.
+"""The model endpoint Studio settings selects for this lab.
 
 Same file format as services/llm/studio_models.py, read from the studio's
 .studio/models.json mounted read-only at STUDIO_MODELS_FILE. The file names each

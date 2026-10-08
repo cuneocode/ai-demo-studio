@@ -1,4 +1,4 @@
-"""Brahe's model endpoint: the studio's Model backends choice, else MODEL_NAME from .env."""
+"""Brahe's model endpoint: the model chosen in Studio settings, else MODEL_NAME from .env."""
 import os
 import sys
 from pathlib import Path

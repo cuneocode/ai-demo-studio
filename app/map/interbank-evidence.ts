@@ -260,7 +260,7 @@ export const interbankEvidence: Record<string, EvidenceRef> = Object.fromEntries
     symbol: "chat_model",
     start: 33,
     end: 44,
-    proves: "The agents call the backend chosen in Model backends, else MODEL_NAME from .env: the Responses API with reasoning summaries when the provider has it, otherwise Chat Completions. No endpoint or key is in source.",
+    proves: "The agents call the backend chosen in Studio settings, else MODEL_NAME from .env: the Responses API with reasoning summaries when the provider has it, otherwise Chat Completions. No endpoint or key is in source.",
     proofRole: "Setup",
     evidenceKind: "source",
   }),

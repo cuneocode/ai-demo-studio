@@ -1,4 +1,4 @@
-"""The briefing model endpoint: the studio's Model backends choice, else .env."""
+"""The briefing model endpoint: the model chosen in Studio settings, else .env."""
 import os
 import sys
 from pathlib import Path

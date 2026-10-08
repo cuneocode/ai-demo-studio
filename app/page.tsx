@@ -8,7 +8,7 @@ import MarketResearch from "./MarketResearch";
 import ClientAdvisory from "./ClientAdvisory";
 import InterbankDemo from "./InterbankDemo";
 import ArchitectureMap from "./ArchitectureMap";
-import ModelBackends, { ModelChip } from "./ModelBackends";
+import StudioSettings, { ModelChip } from "./StudioSettings";
 import { loadCompanyProfile, type StoredCompanyProfile } from "./company-profile";
 import { loadResearchNote, switcherContextLabel, type StoredResearchNote } from "./research-note";
 import { loadAdvisoryBrief, type StoredAdvisoryBrief } from "./advisory-brief";
@@ -26,7 +26,6 @@ import {
   ChevronDown,
   CircleGauge,
   CircleHelp,
-  Cpu,
   Eye,
   FileSearch,
   Fingerprint,
@@ -54,7 +53,7 @@ import {
   X,
 } from "lucide-react";
 
-type View = "overview" | "library" | "stories" | "briefing" | "models";
+type View = "overview" | "library" | "stories" | "briefing" | "settings";
 type Category = "All" | "Risk & compliance" | "Wealth & advisory" | "Operations";
 
 type UseCase = {
@@ -479,7 +478,7 @@ const navItems: { id: View; label: string; icon: LucideIcon }[] = [
   { id: "briefing", label: "Company briefing", icon: Building2 },
   { id: "library", label: "Use case library", icon: Library },
   { id: "stories", label: "Story builder", icon: Workflow },
-  { id: "models", label: "Model backends", icon: Cpu },
+  { id: "settings", label: "Studio settings", icon: Settings2 },
 ];
 
 function liveExperienceLabel(experience?: UseCaseFrame["liveExperience"]) {
@@ -910,11 +909,11 @@ export default function HomePage() {
               onResearchNoteChange={setResearchNote}
               advisoryBrief={advisoryBrief}
               onAdvisoryBriefChange={setAdvisoryBrief}
-              onOpenModels={() => switchView("models")}
+              onOpenModels={() => switchView("settings")}
             />
           )}
 
-          {!selectedCase && activeView === "models" && <ModelBackends />}
+          {!selectedCase && activeView === "settings" && <StudioSettings />}
 
           {!selectedCase && activeView === "briefing" && (
             <>

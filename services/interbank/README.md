@@ -4,7 +4,7 @@ Two banks investigate a failed delivery-versus-payment settlement (trade TRD-847
 over A2A. Each bank runs:
 
 - a **LangChain Deep Agent** (`bank_a/agent.py`, `bank_b/agent.py`, built in
-  `lab/agents.py`) on the backend chosen in the studio's **Model backends** page, else
+  `lab/agents.py`) on the backend chosen in the **Studio settings** page, else
   the OpenAI Responses API with `MODEL_NAME` from the studio .env (`lab/models.py`),
   with reasoning summaries and a read-only SQLite settlement database
   (`bank_*/records.sql`);

@@ -1,4 +1,4 @@
-"""The fraud narrative's model endpoint: the studio's Model backends choice, else .env."""
+"""The fraud narrative's model endpoint: the model chosen in Studio settings, else .env."""
 import sys
 from pathlib import Path
 

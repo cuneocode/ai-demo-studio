@@ -10,7 +10,7 @@ export const interbankScenes: CaseScenes = {
     "The agents investigate and report. They cannot change records or approve remediation; named ops teams decide.",
     "The lab runs in Docker on this machine. Only the two gateways join the interbank network. A lab-only events network carries timeline steps to the dashboard, and each agent still rejects any token its own gateway did not sign.",
     "Certificates and tokens are created offline by labctl up: a P-256 / SHA-256 CA per bank, self-signed for local use only. Keys stay in git-ignored runtime files.",
-    "The model endpoint is whatever the studio's Model backends selects for this use case. AI Defense inspects A2A traffic at the gateways, not model calls.",
+    "The model endpoint is whatever Studio settings selects for this use case. AI Defense inspects A2A traffic at the gateways, not model calls.",
   ],
   relationships: [
     { id: "ib-biz-open", fromEntityId: "open", toEntityId: "investigate", kind: "businessSequence", fact: "The ops desk opens a failed settlement for a joint investigation." },
@@ -153,7 +153,7 @@ export const interbankScenes: CaseScenes = {
       applicationIntegrationEntityIds: ["model-client"],
       workloadEntityIds: ["coordinator", "investigator"],
       stageIds: ["exchange"],
-      mechanismLabel: "Endpoint selected in the studio's Model backends",
+      mechanismLabel: "Endpoint selected in Studio settings",
       applicationEffect: "Neither bank's agent can reason without it. Inspection stays at the gateways, not on model calls.",
       evidenceRefIds: ["interbank.agents.model", "interbank.agents.build"],
       implementationState: "implemented",

@@ -30,8 +30,8 @@ POLICIES = {
 
 
 def server_url():
-    # Dedicated setting avoids the upstream example's unrelated localhost URL.
-    return os.getenv("BRAHE_AGENT_CONTROL_URL", "https://agent-control.multitenant.galileocloud.io")
+    # The studio's shared Agent Control URL applies unless it is the upstream example's localhost URL.
+    return os.getenv("BRAHE_AGENT_CONTROL_URL") or next((u for u in [os.getenv("AGENT_CONTROL_URL", "")] if u and "localhost" not in u), "https://agent-control.multitenant.galileocloud.io")
 
 
 def definitions():

@@ -85,17 +85,32 @@ or enforce explicit server-side membership or allowlist checks.
 Use SIWC for account pages, user-specific dashboards, saved records, and write
 actions tied to the current ChatGPT user. Leave public content anonymous.
 
-## Model backends
+## Studio settings
 
-The studio's **Model backends** page chooses the OpenAI-compatible endpoint every
-live use case calls (for example the OpenAI API on a laptop, or vLLM on Sparky),
-with optional per-use-case overrides. It saves `.studio/models.json` (git-ignored),
-which holds provider URLs, model names, and the *name* of each key variable
-(`OPENAI_API_KEY`, `VLLM_API_KEY`, `NIM_API_KEY`, or `NVIDIA_API_KEY`); key values
-stay in `.env`. Services resolve it per request (`services/llm/studio_models.py`).
-Without the file, each service keeps its own `.env` settings. The page's API is
-served by the Node layer in front of the worker (the Vite dev server and
-`scripts/start-studio.mjs`), because it writes to disk.
+The studio's **Studio settings** page makes the demo portable: each presenter
+brings their own models and credentials without editing files.
+
+- **Credentials** for Splunk Agent Observability, Splunk Observability Cloud, Cisco
+  AI Defense (key, region, and per-use-case modes), and the optional data sources are
+  saved to the repository `.env` (git-ignored, mode 0600) in place, keeping its
+  comments. Keys are write-only: the browser only learns whether each is set, and
+  each group has a **Test** button that checks the saved or pasted values.
+- **Model backends** choose the OpenAI-compatible endpoint every live use case calls
+  (for example the OpenAI API on a laptop, or vLLM on Sparky), with optional
+  per-use-case overrides. They are saved to `.studio/models.json` (git-ignored),
+  which holds provider URLs, model names, and the *name* of each key variable; key
+  values stay in `.env`. Services resolve it per request, so model changes need no
+  restart. Without the file, each service keeps its own `.env` settings.
+- **Use case readiness** lists what each live demo still needs.
+- **Services** applies credential changes. Services read `.env` when they start, so
+  **Apply** restarts the Python services the studio launched (`npm run dev:studio` or
+  `npm run start:studio`) and starts any that are stopped. **Rebuild lab** reruns
+  `npm run interbank:up` for the interbank containers. Services started any other way
+  must be restarted where they run.
+
+The settings API is served by the Node layer in front of the worker (the Vite dev
+server and `scripts/start-studio.mjs`), because it writes to disk and manages
+processes. It accepts same-origin JSON writes only.
 
 ## Useful Commands
 

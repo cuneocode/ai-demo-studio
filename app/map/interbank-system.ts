@@ -404,7 +404,7 @@ function exchangeExpanded(expanded: ReadonlySet<string>, mode: Mode): SceneSpec 
       parentId: "ib.stage.exchange",
       entityId: mode === "implemented" ? "model" : "private-model",
       bindingIds: ["infra.model-serving", "infra.private-model-serving"],
-      supportingByMode: hostOpen ? undefined : { implemented: "Chosen in Model backends", proposed: "Private inference per bank" },
+      supportingByMode: hostOpen ? undefined : { implemented: "Chosen in Studio settings", proposed: "Private inference per bank" },
     }),
     group("ib.exchange.trace", "One trace across both banks", G.trace, traceOpen, trace, {
       parentId: "ib.stage.exchange",
@@ -475,7 +475,7 @@ function exchangeExpanded(expanded: ReadonlySet<string>, mode: Mode): SceneSpec 
         entityId: mode === "implemented" ? "model" : "private-model",
         bindingIds: ["infra.model-serving", "infra.private-model-serving"],
         supportingByMode: {
-          implemented: "OpenAI API or Sparky's vLLM, chosen in Model backends. Not inspected by AI Defense.",
+          implemented: "OpenAI API or Sparky's vLLM, chosen in Studio settings. Not inspected by AI Defense.",
           proposed: "A private endpoint per bank. Not called today.",
         },
         dense: true,

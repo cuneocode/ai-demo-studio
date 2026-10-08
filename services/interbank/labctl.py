@@ -37,7 +37,7 @@ RUNTIME = ROOT / ".runtime"
 PKI = RUNTIME / "pki"
 ROLES = RUNTIME / "roles"
 FSI_ENV = Path(os.environ.get("FSI_ENV", ROOT.parents[1] / ".env"))
-# The studio's Model backends choice; the agents and console mount this directory read-only.
+# The model chosen in Studio settings; the agents and console mount this directory read-only.
 STUDIO = ROOT.parents[1] / ".studio"
 MODEL_KEYS = ("OPENAI_API_KEY", "VLLM_API_KEY", "NIM_API_KEY", "NVIDIA_API_KEY")
 IMAGE = "interbank-a2a-demo:0.2.0"

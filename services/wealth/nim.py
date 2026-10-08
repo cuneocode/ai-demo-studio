@@ -1,6 +1,6 @@
 """LangChain ChatOpenAI for the wealth use cases. ainvoke only. Temperature 0.
 
-The endpoint is the studio's Model backends choice for each use case; without one,
+The endpoint is the model chosen in Studio settings for each use case; without one,
 the local NIM from .env.
 """
 from __future__ import annotations
