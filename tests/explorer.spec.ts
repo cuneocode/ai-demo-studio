@@ -1,9 +1,16 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 
+async function showArchitecture(page: Page) {
+  const tab = page.getByRole("tab", { name: "Architecture" });
+  await tab.click();
+  await expect(tab).toHaveAttribute("aria-selected", "true");
+}
+
 async function openBrahe(page: Page) {
   await page.goto("/", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Open Brahe Bank assistant experience" }).click();
+  await showArchitecture(page);
   const explorer = page.getByTestId("architecture-explorer");
   await explorer.scrollIntoViewIfNeeded();
   await expect(explorer).toHaveAttribute("data-scene-id", "brahe.journey");
@@ -15,6 +22,7 @@ async function openBrahe(page: Page) {
 async function openCase(page: Page, id: string, title: string) {
   await page.goto("/", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: `Open ${title} experience` }).click();
+  await showArchitecture(page);
   const explorer = page.getByTestId("architecture-explorer");
   await explorer.scrollIntoViewIfNeeded();
   await expect(explorer).toHaveAttribute("data-system-id", id);
@@ -382,6 +390,7 @@ test("interbank inspection stages show the fail-closed stop, and demo sources op
     await clickAction(page, stage, "collapse");
   }
 
+  await page.getByRole("tab", { name: "Use case demo" }).click();
   const integrations = page.locator("#interbank-experience");
   await integrations.getByRole("button", { name: "Bank A gateway", exact: true }).first().click();
   const panel = page.getByRole("dialog", { name: "Bank A gateway source" });

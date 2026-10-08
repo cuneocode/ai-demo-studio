@@ -124,9 +124,15 @@ test("the story is reordered, scored from live readiness, and presented full scr
   const bar = page.getByRole("region", { name: "Presenter controls" });
   await expect(bar).toContainText("MOMENT 1 OF 2");
   await expect(page.locator(".topbar")).toBeHidden();
+  await page.getByRole("tab", { name: "Use case demo" }).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("tab", { name: "Architecture" })).toHaveAttribute("aria-selected", "true");
+  await expect(bar).toContainText("MOMENT 1 OF 2");
+  await page.getByRole("heading", { level: 1 }).click();
   await page.keyboard.press("ArrowRight");
   await expect(bar).toContainText("MOMENT 2 OF 2");
   await expect(page.getByRole("heading", { name: "SAR reporting support", level: 1 })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Use case demo" })).toHaveAttribute("aria-selected", "true");
   await bar.getByRole("button", { name: "Finish" }).click();
   await expect(page.getByRole("heading", { name: "Build a demo story", level: 1 })).toBeVisible();
 });
@@ -142,7 +148,89 @@ test("prototype queue rows select the workbench item", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Queue settings" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Continue/ })).toHaveCount(0);
   await page.getByRole("button", { name: "View evidence in the architecture" }).click();
+  await expect(page.getByRole("tab", { name: "Architecture" })).toHaveAttribute("aria-selected", "true");
   await expect(page.locator("#architecture-explorer")).toBeInViewport();
+  await expect(page.locator("#case-panel-demo")).toBeHidden();
+
+  await page.getByRole("tab", { name: "Use case demo" }).click();
+  await expect(page.getByRole("row", { name: /Avery Chen/ })).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator(".workbench-body h3")).toHaveText("Avery Chen");
+});
+
+test("use case tabs are a keyboard tablist and opening another case resets to the demo", async ({ page }) => {
+  await open(page);
+  await page.getByRole("button", { name: "Open Transaction intelligence experience" }).click();
+  const demo = page.getByRole("tab", { name: "Use case demo" });
+  const architecture = page.getByRole("tab", { name: "Architecture" });
+  await expect(demo).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("architecture-explorer")).toHaveCount(0);
+
+  await demo.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(architecture).toBeFocused();
+  await expect(architecture).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("tabpanel", { name: "Architecture" })).toBeVisible();
+  await expect(page.getByTestId("architecture-explorer")).toHaveAttribute("data-system-id", "transaction-llm");
+  await page.keyboard.press("Home");
+  await expect(demo).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator("#illustrative-experience")).toBeVisible();
+
+  await page.keyboard.press("ControlOrMeta+k");
+  await page.getByLabel("Search demos and pages").fill("KYC processing");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: "KYC processing", level: 1 })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Use case demo" })).toHaveAttribute("aria-selected", "true");
+});
+
+test("a run started in the demo keeps going on the Architecture tab and is intact on return", async ({ page }) => {
+  const cases = [{ id: "c-1", label: "Card 4417 at Northwind Fuel", account: "acct-1", merchant: "Northwind Fuel", amount: 182.4, channel: "Chip", neighborhood: "Shared merchant with two flagged cards.", hint: "Fixture payment." }];
+  let scored = false;
+  await page.route("**/api/fraud/health", (route) => route.fulfill({ json: { ready: true, backend: "fixture", model: "Fixture scorer", threshold: 0.5 } }));
+  await page.route("**/api/fraud/cases", (route) => route.fulfill({ json: { cases } }));
+  await page.route("**/api/fraud/score", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+    scored = true;
+    await route.fulfill({ json: { case: cases[0], probability: 0.73, threshold: 0.5, decision: "hold", backend: "fixture", shap: [{ feature: "merchant_neighborhood", value: 0.41, direction: "risk" }] } });
+  });
+  await open(page);
+  await page.getByRole("button", { name: "Open Transaction fraud scoring experience" }).click();
+  const demoPanel = page.locator("#case-panel-demo");
+  await page.getByRole("button", { name: "Off", exact: true }).click();
+  await page.locator("#score-payment").click();
+  await expect(page.locator("#score-payment")).toContainText("Scoring");
+
+  await page.getByRole("tab", { name: "Architecture" }).click();
+  await expect(demoPanel).toBeHidden();
+  const explorer = page.getByTestId("architecture-explorer");
+  await expect(explorer).toBeVisible();
+  await expect(explorer).toHaveAttribute("data-system-id", "fraud-modeling");
+  await expect.poll(() => scored, { timeout: 10_000 }).toBe(true);
+  await expect(demoPanel.locator(".score-meter strong")).toHaveText("0.73");
+  const zoom = await explorer.getAttribute("data-zoom");
+  expect(Number(zoom)).toBeGreaterThan(0.4);
+
+  await page.getByRole("tab", { name: "Use case demo" }).click();
+  await expect(explorer).toBeHidden();
+  await expect(demoPanel.locator(".score-meter strong")).toHaveText("0.73");
+  await expect(demoPanel.locator(".decision-pill")).toHaveText("hold");
+  await expect(page.getByRole("button", { name: "Off", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#score-payment")).toContainText("Score this payment");
+
+  await page.getByRole("tab", { name: "Architecture" }).click();
+  await expect(page.locator(".react-flow")).toHaveCount(1);
+  await expect(explorer).toHaveAttribute("data-zoom", zoom!);
+
+  await page.getByRole("tab", { name: "Use case demo" }).click();
+  await page.setViewportSize({ width: 1100, height: 900 });
+  await page.getByRole("tab", { name: "Architecture" }).click();
+  const camera = () => page.locator(".react-flow__viewport").evaluate((element) => (element as HTMLElement).style.transform);
+  await page.waitForTimeout(500);
+  const refit = await camera();
+
+  await page.reload({ waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Open Transaction fraud scoring experience" }).click();
+  await page.getByRole("tab", { name: "Architecture" }).click();
+  await expect.poll(camera).toBe(refit);
 });
 
 test("the theme toggle switches to light mode and the choice survives a reload", async ({ page }) => {

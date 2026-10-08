@@ -23,6 +23,9 @@ html:root[data-theme="light"] .filter-row button.active {
   box-shadow: 0 6px 16px rgba(37, 99, 235, 0.22);
 }
 html:root[data-theme="light"] .primary-button:hover { background: #1d4ed8; filter: none; }
+html:root[data-theme="light"] .case-tabs [role="tab"] { border-color: #dbe3ee; background: #ffffff; color: #0f1b2d; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); }
+html:root[data-theme="light"] .case-tabs [role="tab"]:hover { border-color: #bfcde0; background: #f6f9fd; }
+html:root[data-theme="light"] .case-tabs [role="tab"][aria-selected="true"] { border-color: #2563eb; background: #2563eb; color: #ffffff; box-shadow: 0 6px 16px rgba(37, 99, 235, 0.22); }
 html:root[data-theme="light"] .button-count { color: #2563eb; background: #ffffff; }
 
 html:root[data-theme="light"] .topbar { background: rgba(255, 255, 255, 0.86); border-bottom-color: #e2e8f0; box-shadow: 0 1px 0 rgba(15, 23, 42, 0.03); }

@@ -257,6 +257,7 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
   const cameraOwner = useRef<"automatic" | "user">("automatic");
   const didFit = useRef(false);
   const hostRef = useRef<TransitionHost | null>(null);
+  const refitRef = useRef<() => void>(() => {});
   const publishZoom = useCallback((value: number) => {
     const next = Number(value.toFixed(3));
     zoomRef.current = next;
@@ -333,6 +334,15 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
     (globalThis as { __mapRepresentationGeneration?: string }).__mapRepresentationGeneration = representationGeneration;
   }, [representationGeneration]);
   useEffect(() => { hostRef.current = host(); });
+  useEffect(() => {
+    refitRef.current = () => {
+      const current = navRef.current;
+      if (cameraOwner.current !== "automatic" || current.phase !== "idle" || current.sourceSelection || environmentOpen) return;
+      const deepest = current.expandedGroupIds.at(-1);
+      if (continuous && deepest) frameContinuous(scene, deepest);
+      else frame(laid, scene.guides);
+    };
+  });
   useEffect(() => () => {
     if (localTransitionTimer.current) clearTimeout(localTransitionTimer.current);
     if (measurementFlushTimer.current) clearTimeout(measurementFlushTimer.current);
@@ -342,7 +352,7 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       const controls = hostRef.current;
-      if (!controls) return;
+      if (!controls || !explorerRef.current?.getClientRects().length) return;
       if (controls.getNav().sourceSelection || environmentOpen) {
         event.preventDefault();
         if (controls.getNav().sourceSelection) controls.dispatch({ type: "closeSource" });
@@ -381,7 +391,7 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
   useEffect(() => {
     const el = canvasRef.current;
     if (!el) return;
-    const frameId = requestAnimationFrame(() => {
+    const fitOnce = () => {
       const width = el.clientWidth;
       const height = el.clientHeight;
       if (didFit.current || width < 10 || height < 10) return;
@@ -398,8 +408,25 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
       cameraOwner.current = "automatic";
       flow.setViewport(viewport, { duration: 0 });
       publishZoom(viewport.zoom);
+    };
+    const frameId = requestAnimationFrame(fitOnce);
+    // Inside a hidden tab the canvas measures 0x0. Fit once it is first shown, and
+    // re-frame on a later show if its size changed while hidden.
+    let hidden = false;
+    let shown = { width: 0, height: 0 };
+    const observer = new ResizeObserver(() => {
+      const size = { width: el.clientWidth, height: el.clientHeight };
+      if (size.width < 10 || size.height < 10) { hidden = true; return; }
+      if (!didFit.current) fitOnce();
+      else if (hidden && (size.width !== shown.width || size.height !== shown.height)) refitRef.current();
+      hidden = false;
+      shown = size;
     });
-    return () => cancelAnimationFrame(frameId);
+    observer.observe(el);
+    return () => {
+      cancelAnimationFrame(frameId);
+      observer.disconnect();
+    };
   }, [system, catalog, continuous, flow, mode, publishZoom]);
 
   useEffect(() => {
@@ -409,15 +436,18 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
     const update = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
+        if (!stage.clientWidth) return;
         const next = stage.clientWidth < 900 || stage.clientWidth - sourceWidth < 560;
         setNarrow((current) => current === next ? current : next);
       });
     };
-    window.addEventListener("resize", update);
+    // Observing the stage (not the window) also catches a resize made while the tab was hidden.
+    const observer = new ResizeObserver(update);
+    observer.observe(stage);
     update();
     return () => {
       cancelAnimationFrame(frame);
-      window.removeEventListener("resize", update);
+      observer.disconnect();
     };
   }, [expanded, sourceWidth]);
 

@@ -231,7 +231,7 @@ export function PresenterBar({ index, total, title, talk, onPrev, onNext, onExit
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
-      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (target?.closest("input, textarea, select, [contenteditable='true'], [role='tab']")) return;
       if (event.key === "ArrowRight") onNext();
       else if (event.key === "ArrowLeft") onPrev();
       else if (event.key === "Escape") onExit();

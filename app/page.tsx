@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import BankingDemo from "./BankingDemo";
 import FraudDemo from "./FraudDemo";
 import CompanyBriefing from "./CompanyBriefing";
@@ -541,6 +541,16 @@ function focusLiveExperience(experience?: UseCaseFrame["liveExperience"]) {
   }
 }
 
+type CaseTab = "demo" | "architecture";
+
+/** Brings the tab row back below the top bar when a switch left it scrolled off screen. */
+function scrollTabsIntoView(tablist: HTMLElement | null) {
+  if (!tablist) return;
+  const topbar = document.querySelector(".topbar")?.getBoundingClientRect().bottom ?? 0;
+  const top = tablist.getBoundingClientRect().top;
+  if (top < topbar) window.scrollTo({ top: Math.max(0, window.scrollY + top - topbar - 12), behavior: "instant" });
+}
+
 function CiscoMark() {
   return (
     <span className="cisco-mark" aria-hidden="true">
@@ -715,6 +725,52 @@ function UseCaseWorkspace({
     : { title: row.name, summary: `${row.stage}: ${row.signal}.`, evidence: [row.stage, row.signal, `Status: ${row.status}`] };
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
+  // Both panels stay mounted so a run started in the demo keeps going while the
+  // architecture is shown. The explorer mounts on first open, when it can measure.
+  const [tab, setTab] = useState<CaseTab>("demo");
+  const [architectureOpened, setArchitectureOpened] = useState(false);
+  const tabScroll = useRef<Partial<Record<CaseTab, number>>>({});
+  const revealTabs = useRef(false);
+  const shownTab = useRef<CaseTab>("demo");
+  const tablistRef = useRef<HTMLDivElement>(null);
+  const selectTab = (next: CaseTab, options: { reveal?: boolean } = {}) => {
+    revealTabs.current = Boolean(options.reveal);
+    if (next === "architecture") setArchitectureOpened(true);
+    if (next === tab) {
+      if (options.reveal) scrollTabsIntoView(tablistRef.current);
+      return;
+    }
+    tabScroll.current[tab] = window.scrollY;
+    setTab(next);
+  };
+  useLayoutEffect(() => {
+    if (shownTab.current === tab) return;
+    shownTab.current = tab;
+    const saved = tabScroll.current[tab];
+    if (revealTabs.current || saved === undefined) scrollTabsIntoView(tablistRef.current);
+    else window.scrollTo({ top: saved, behavior: "instant" });
+    revealTabs.current = false;
+  }, [tab]);
+  const onTabKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    const order: CaseTab[] = ["demo", "architecture"];
+    const index = order.indexOf(tab);
+    const next = event.key === "ArrowRight" ? order[(index + 1) % order.length]
+      : event.key === "ArrowLeft" ? order[(index + order.length - 1) % order.length]
+      : event.key === "Home" ? order[0]
+      : event.key === "End" ? order[order.length - 1]
+      : null;
+    if (!next) return;
+    event.preventDefault();
+    selectTab(next);
+    document.getElementById(`case-tab-${next}`)?.focus({ preventScroll: true });
+  };
+  const startPrimaryAction = () => {
+    const run = () => (frame.liveExperience ? focusLiveExperience(frame.liveExperience) : scrollTo("illustrative-experience"));
+    if (tab === "demo") { run(); return; }
+    selectTab("demo");
+    requestAnimationFrame(run);
+  };
+
   return (
     <div className="case-frame-page">
       <button className="case-back-button" onClick={onBack}><ArrowLeft size={15} /> Back to library</button>
@@ -732,10 +788,29 @@ function UseCaseWorkspace({
           <span className="prototype-chip"><StatusDot tone="amber" /> {liveExperienceLabel(frame.liveExperience)}</span>
           <ModelChip experience={frame.liveExperience} onOpen={onOpenModels} />
           <button className="secondary-button" onClick={onAdd}>{inStory ? <><Check size={16} /> In story</> : <><Plus size={16} /> Add to story</>}</button>
-          <button className="primary-button" onClick={() => (frame.liveExperience ? focusLiveExperience(frame.liveExperience) : scrollTo("illustrative-experience"))}>{frame.primaryAction} <ArrowRight size={16} /></button>
+          <button className="primary-button" onClick={startPrimaryAction}>{frame.primaryAction} <ArrowRight size={16} /></button>
         </div>
       </header>
 
+      <div className="case-tabs" role="tablist" aria-label={`${useCase.title} views`} ref={tablistRef}>
+        {([["demo", "Use case demo"], ["architecture", "Architecture"]] as const).map(([id, label]) => (
+          <button
+            key={id}
+            id={`case-tab-${id}`}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            aria-controls={`case-panel-${id}`}
+            tabIndex={tab === id ? 0 : -1}
+            onClick={() => selectTab(id)}
+            onKeyDown={onTabKeyDown}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="case-tabpanel" id="case-panel-demo" role="tabpanel" aria-labelledby="case-tab-demo" hidden={tab !== "demo"}>
       {frame.liveExperience === "banking" ? <section id="banking-experience">
         <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Banking assistant</h2></div><span>Fictional products · mock score 550</span></div>
         <BankingDemo embedded inStory={inStory} onBack={onBack} onAdd={onAdd} />
@@ -755,8 +830,6 @@ function UseCaseWorkspace({
         <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Agent-to-agent investigation</h2></div><span>Fictional banks · read-only agents · live Splunk trace</span></div>
         <InterbankDemo embedded inStory={inStory} onBack={onBack} onAdd={onAdd} />
       </section> : null}
-
-      <div id="architecture-explorer"><ArchitectureMap key={useCase.id} caseId={useCase.id} title={useCase.title} frame={frame} /></div>
 
       {!frame.liveExperience ? <>
       <div className="experience-label" id="illustrative-experience">
@@ -812,11 +885,16 @@ function UseCaseWorkspace({
             </div>
             <div className="workbench-recommendation"><Sparkles size={16} /><div><small>SUGGESTED ACTION</small><strong>{frame.primaryAction}</strong></div></div>
           </div>
-          <div className="workbench-actions"><button className="secondary-button" onClick={() => scrollTo("architecture-explorer")}><Network size={15} /> View evidence in the architecture</button></div>
+          <div className="workbench-actions"><button className="secondary-button" onClick={() => selectTab("architecture", { reveal: true })}><Network size={15} /> View evidence in the architecture</button></div>
         </aside>
       </div>
 
       </> : null}
+      </div>
+
+      <div className="case-tabpanel" id="case-panel-architecture" role="tabpanel" aria-labelledby="case-tab-architecture" hidden={tab !== "architecture"}>
+        {architectureOpened && <div id="architecture-explorer"><ArchitectureMap key={useCase.id} caseId={useCase.id} title={useCase.title} frame={frame} /></div>}
+      </div>
     </div>
   );
 }
