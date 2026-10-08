@@ -72,6 +72,8 @@ docker run -d --name "$NAME" \
   --pipeline-parallel-size 1 \
   --data-parallel-size 1 \
   --trust-remote-code \
+  --enable-auto-tool-choice \
+  --tool-call-parser qwen3_coder \
   --gpu-memory-utilization 0.78 \
   --enable-chunked-prefill \
   --max-num-seqs 2 \

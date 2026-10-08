@@ -8,6 +8,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+from urllib.parse import urlparse
 
 import httpx
 from langchain_openai import ChatOpenAI
@@ -37,7 +38,9 @@ def nim_api_key(use_case: str = RESEARCH) -> str:
     backend = resolve(use_case)
     if backend:
         return backend.api_key or "not-needed"
-    return os.getenv("NIM_API_KEY") or os.getenv("OPENAI_API_KEY") or "not-needed"
+    # The OpenAI key goes only to OpenAI, never to a local or third-party endpoint.
+    openai_key = os.getenv("OPENAI_API_KEY") if urlparse(nim_base_url(use_case)).hostname == "api.openai.com" else None
+    return os.getenv("NIM_API_KEY") or openai_key or "not-needed"
 
 
 def models_url(use_case: str = RESEARCH) -> str:

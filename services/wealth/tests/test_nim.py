@@ -96,3 +96,12 @@ def test_chat_model_uses_nim(monkeypatch):
     assert model.extra_body["chat_template_kwargs"]["enable_thinking"] is False
     with pytest.raises(RuntimeError):
         model._generate([])
+
+
+def test_openai_key_is_never_sent_to_a_non_openai_endpoint(monkeypatch):
+    monkeypatch.delenv("NIM_API_KEY", raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("NIM_BASE_URL", "http://127.0.0.1:8003/v1")
+    assert nim.nim_api_key() == "not-needed"
+    monkeypatch.setenv("NIM_BASE_URL", "https://api.openai.com/v1")
+    assert nim.nim_api_key() == "test-key"
