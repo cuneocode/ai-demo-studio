@@ -6,6 +6,7 @@ import FraudDemo from "./FraudDemo";
 import CompanyBriefing from "./CompanyBriefing";
 import MarketResearch from "./MarketResearch";
 import ClientAdvisory from "./ClientAdvisory";
+import InterbankDemo from "./InterbankDemo";
 import ArchitectureMap from "./ArchitectureMap";
 import { loadCompanyProfile, type StoredCompanyProfile } from "./company-profile";
 import { loadResearchNote, switcherContextLabel, type StoredResearchNote } from "./research-note";
@@ -68,7 +69,7 @@ type UseCase = {
 };
 
 type UseCaseFrame = {
-  liveExperience?: "banking" | "fraud" | "briefing" | "research" | "advisory";
+  liveExperience?: "banking" | "fraud" | "briefing" | "research" | "advisory" | "interbank";
   transformation: {
     friction: string;
     aiShift: string;
@@ -185,6 +186,18 @@ const useCases: UseCase[] = [
     solutions: ["AI Infrastructure", "Splunk Observability"],
     signal: "Data enrichment",
     stage: "Concept",
+  },
+  {
+    id: "interbank-a2a",
+    title: "Interbank settlement investigation",
+    category: "Operations",
+    description: "Two banks' Deep Agents investigate a failed settlement together over A2A, through each bank's AI gateway.",
+    outcome: "A joint root-cause report without either bank opening its systems to the other.",
+    icon: Network,
+    accent: "violet",
+    solutions: ["AI Defense", "Splunk Agent Observability", "Splunk Agent Control"],
+    signal: "Agent-to-agent",
+    stage: "Interactive",
   },
 ];
 
@@ -424,6 +437,32 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
     workbenchSummary: "Review a grounded issuer profile, then accept it before the tenant switcher changes.",
     primaryAction: "Extract briefing",
   },
+  "interbank-a2a": {
+    liveExperience: "interbank",
+    transformation: {
+      friction: "Settlement fails are chased by email and phone between banks, each re-keying the other's records.",
+      aiShift: "Each bank's Deep Agent investigates its own records and asks the other bank's agent over A2A, through both banks' AI gateways.",
+      humanControl: "Agents are read-only. Named operations teams approve SSI and instruction fixes; no funds move.",
+    },
+    architecture: {
+      process: [
+        { title: "Open the failed settlement", detail: "Ops desk kickoff to Bank A's agent" },
+        { title: "Investigate own records", detail: "Read-only SQL on Bank A's data" },
+        { title: "Coordinate with the counterparty", detail: "A2A to Bank B through both gateways" },
+        { title: "Approve remediation", detail: "Each bank's team decides" },
+      ],
+      ai: [
+        { point: "01 → 02", label: "Bank A Deep Agent", detail: "Plans the investigation, queries Bank A's settlement records, and decides what to ask Bank B." },
+        { point: "02 → 03", label: "Counterparty agent over A2A", detail: "Bank B's Deep Agent answers from its own records. Every message passes Agent Control, both gateways, and AI Defense." },
+        { point: "03 → 04", label: "Joint root-cause report", detail: "Bank A's agent reports root cause, evidence, exposure, and proposed fixes for human approval." },
+      ],
+    },
+    metrics: [], rows: [], evidence: [],
+    workbenchLabel: "Interbank investigation",
+    workbenchTitle: "TRD-847",
+    workbenchSummary: "A delivery-versus-payment trade failed to match between Harbor Point Bank and Meridian Trust.",
+    primaryAction: "Start investigation",
+  },
 };
 
 const storySteps = [
@@ -446,6 +485,7 @@ function liveExperienceLabel(experience?: UseCaseFrame["liveExperience"]) {
   if (experience === "briefing") return "Live extract · EDGAR + upload";
   if (experience === "research") return "Live research · Yahoo + FRED cache";
   if (experience === "advisory") return "Live advisory · entitled context + holdings";
+  if (experience === "interbank") return "Live A2A · two Deep Agents";
   return "Prototype data";
 }
 
@@ -473,6 +513,10 @@ function focusLiveExperience(experience?: UseCaseFrame["liveExperience"]) {
   if (experience === "advisory") {
     document.getElementById("advisory-experience")?.scrollIntoView({ behavior: "smooth" });
     document.getElementById("accept-meeting-brief")?.focus({ preventScroll: true });
+  }
+  if (experience === "interbank") {
+    document.getElementById("interbank-experience")?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("interbank-kickoff")?.focus({ preventScroll: true });
   }
 }
 
@@ -676,6 +720,9 @@ function UseCaseWorkspace({
       </section> : frame.liveExperience === "advisory" ? <section id="advisory-experience">
         <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Client advisory</h2></div><span>Entitled context + holdings · not advice</span></div>
         <ClientAdvisory embedded inStory={inStory} companyProfile={companyProfile} researchNote={researchNote} brief={advisoryBrief} onBriefChange={onAdvisoryBriefChange} />
+      </section> : frame.liveExperience === "interbank" ? <section id="interbank-experience">
+        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Agent-to-agent investigation</h2></div><span>Fictional banks · read-only agents · live Splunk trace</span></div>
+        <InterbankDemo embedded inStory={inStory} onBack={onBack} onAdd={onAdd} />
       </section> : null}
 
       <ArchitectureMap key={useCase.id} caseId={useCase.id} title={useCase.title} frame={frame} />

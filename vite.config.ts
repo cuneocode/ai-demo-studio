@@ -1,5 +1,6 @@
+import { execFile } from "node:child_process";
 import vinext from "vinext";
-import { defineConfig } from "vite";
+import { defineConfig, type ViteDevServer } from "vite";
 import hostingConfig from "./.openai/hosting.json";
 import { sites } from "./build/sites-vite-plugin";
 
@@ -54,6 +55,8 @@ export default defineConfig(async () => {
         "/api/fraud": { target: "http://127.0.0.1:8012", changeOrigin: false, timeout: 180000, proxyTimeout: 180000 },
         "/api/briefing": { target: "http://127.0.0.1:8013", changeOrigin: false, timeout: 240000, proxyTimeout: 240000 },
         "/api/wealth": { target: "http://127.0.0.1:8014", changeOrigin: false, timeout: 180000, proxyTimeout: 180000 },
+        // The interbank lab runs in Docker (npm run interbank:up); its dashboard serves /api/* on 8088.
+        "/api/interbank": { target: "http://127.0.0.1:8088", changeOrigin: false, timeout: 30000, proxyTimeout: 30000, rewrite: (path: string) => path.replace(/^\/api\/interbank/, "/api") },
       },
       ...(isCodexSeatbeltSandbox ? { watch: { useFsEvents: false, usePolling: true } } : {}),
     },
@@ -74,6 +77,26 @@ export default defineConfig(async () => {
               return;
             }
             next();
+          });
+        },
+      },
+      {
+        // Source excerpts are read from the files on disk, so the code viewer works
+        // whether or not the lab's containers are running.
+        name: "interbank-sources",
+        configureServer(viteServer: ViteDevServer) {
+          viteServer.middlewares.use("/api/interbank/sources", (req, res) => {
+            const id = (req.url || "/").split("?")[0].replace(/^\//, "") || "--catalog";
+            if (id !== "--catalog" && !/^[a-z0-9-]+$/.test(id)) {
+              res.statusCode = 404;
+              res.end();
+              return;
+            }
+            execFile("python3", ["services/interbank/demo/sources.py", id], { maxBuffer: 8 * 1024 * 1024 }, (error, stdout) => {
+              res.setHeader("Content-Type", "application/json");
+              res.statusCode = error ? 404 : 200;
+              res.end(error ? JSON.stringify({ detail: "unknown source" }) : stdout);
+            });
           });
         },
       },

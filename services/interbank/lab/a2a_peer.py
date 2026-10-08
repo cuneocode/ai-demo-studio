@@ -25,7 +25,7 @@ from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.routes import ServerCallContextBuilder, create_agent_card_routes, create_jsonrpc_routes
 from a2a.server.tasks import InMemoryTaskStore, TaskUpdater
 from a2a.types import AgentCard, Message, Part, Role, SendMessageRequest, TaskState
-from opentelemetry.trace import SpanKind
+from opentelemetry.trace import SpanKind, Status, StatusCode
 from starlette.applications import Starlette
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -35,7 +35,8 @@ from starlette.routing import Route
 from lab.auth import AuthenticationError, verify_gateway_token
 from lab.config import ORGANIZATION, SERVICE_NAME, secret_file
 from lab.events import emit
-from lab.telemetry import continue_from, inject_headers, set_output, span
+from lab.telemetry import (HANDOFF_KEY, continue_from, handoff_link, handoff_metadata,
+                           inject_headers, set_output, span)
 
 
 class GatewayDenied(RuntimeError):
@@ -68,14 +69,16 @@ async def send_message(config: A2AClientConfig, text: str, *, run_id: str, conte
     """Send one A2A message to the partner bank's agent and return its reply text."""
     gateway = config.gateway_url.rstrip("/")
     with span(
-        f"invoke_agent {config.partner}-agent",
+        f"a2a.client.send_message to {config.partner}-agent",
         kind="agent",
-        label=f"{config.partner}-agent",
+        label=SERVICE_NAME,
         span_kind=SpanKind.CLIENT,
         input=text,
         attributes={
             "gen_ai.provider.name": "a2a",
+            "a2a.rpc.method": "SendMessage",
             "a2a.context_id": context_id,
+            "a2a.peer": f"{config.partner}-agent",
             "server.address": urlsplit(gateway).hostname,
         },
     ) as current:
@@ -109,13 +112,16 @@ async def send_message(config: A2AClientConfig, text: str, *, run_id: str, conte
                     httpx_client=transport,
                     supported_protocol_bindings=["JSONRPC"],
                 ))
-                request = SendMessageRequest(message=Message(
-                    message_id=str(uuid.uuid4()),
-                    context_id=context_id,
-                    role=Role.ROLE_USER,
-                    parts=[Part(text=text)],
-                    metadata={"investigation_id": run_id, "sender": ORGANIZATION},
-                ))
+                request = SendMessageRequest(
+                    message=Message(
+                        message_id=str(uuid.uuid4()),
+                        context_id=context_id,
+                        role=Role.ROLE_USER,
+                        parts=[Part(text=text)],
+                        metadata={"investigation_id": run_id, "sender": ORGANIZATION},
+                    ),
+                    metadata={HANDOFF_KEY: handoff_metadata(SERVICE_NAME)},
+                )
                 task = None
                 async for response in client.send_message(request):
                     if response.HasField("task"):
@@ -126,13 +132,14 @@ async def send_message(config: A2AClientConfig, text: str, *, run_id: str, conte
                                         f"{denied['reason']}")
                     raise GatewayDenied(int(denied["status"]), str(denied["reason"])) from exc
                 raise
+        if task is not None:
+            set_task_state(current, task.id, task.status.state)
         if task is None or task.status.state != TaskState.TASK_STATE_COMPLETED:
             raise RuntimeError(f"{config.partner} did not complete the A2A task")
         reply = "\n".join(
             part.text for artifact in task.artifacts for part in artifact.parts if part.text
         )
         set_output(current, reply)
-        current.set_attribute("a2a.task_id", task.id)
         await emit(run_id, "a2a.reply", f"A2A reply from {config.partner}",
                    source=f"{ORGANIZATION}-gateway", target=SERVICE_NAME, body=reply,
                    data={"task_id": task.id, "context_id": task.context_id,
@@ -143,6 +150,19 @@ async def send_message(config: A2AClientConfig, text: str, *, run_id: str, conte
 def _host(url: str) -> tuple[str | None, int | None]:
     parts = urlsplit(url)
     return parts.hostname, parts.port
+
+
+def set_task_state(current, task_id: str, state: int) -> None:
+    """a2a.task.id, a2a.task.state, and finish reason, as Splunk's A2A instrumentor records them."""
+    name = TaskState.Name(state).removeprefix("TASK_STATE_").lower()
+    current.set_attribute("a2a.task.id", task_id)
+    current.set_attribute("a2a.task.state", name)
+    if name in ("failed", "rejected", "canceled"):
+        current.set_status(Status(StatusCode.ERROR, f"A2A task {name}"))
+        current.set_attribute("error.type", f"a2a_task_{name}")
+        current.set_attribute("gen_ai.response.finish_reasons", (name,))
+    elif name == "completed":
+        current.set_attribute("gen_ai.response.finish_reasons", ("stop",))
 
 
 # -------------------------------------------------------------- receiving ----
@@ -187,15 +207,19 @@ class BankAgentExecutor(AgentExecutor):
             context_id=task.context_id,
             task_id=task.id,
         )
+        handoff = handoff_link(_handoff(context.metadata))
+        # Parented on the trace headers, so the gateways sit between the two agents;
+        # the handoff link points straight at the calling agent's send span.
         with continue_from(headers), span(
-            f"{SERVICE_NAME} handles A2A message from {inbound.caller}",
+            f"a2a.server.on_message_send {SERVICE_NAME}",
             kind="agent",
             label=SERVICE_NAME,
-            span_kind=SpanKind.SERVER,
             input=inbound.text,
+            links=[handoff] if handoff else None,
             attributes={
                 "gen_ai.provider.name": "a2a",
-                "a2a.task_id": task.id,
+                "a2a.rpc.method": "SendMessage",
+                "a2a.task.id": task.id,
                 "a2a.context_id": task.context_id,
                 "a2a.caller": inbound.caller,
             },
@@ -209,8 +233,10 @@ class BankAgentExecutor(AgentExecutor):
                 await emit(inbound.run_id, "run", f"{SERVICE_NAME} failed", status="error",
                            body=f"{type(exc).__name__}: {exc}")
                 await updater.failed(_agent_message(task, f"{SERVICE_NAME} failed: {exc}"))
+                set_task_state(current, task.id, TaskState.TASK_STATE_FAILED)
                 raise
             set_output(current, reply)
+            set_task_state(current, task.id, TaskState.TASK_STATE_COMPLETED)
         await updater.add_artifact([Part(text=reply)], name=f"{SERVICE_NAME}-reply")
         await updater.complete(_agent_message(task, reply))
         await emit(inbound.run_id, "a2a.respond", f"{SERVICE_NAME} replies over A2A",
@@ -219,6 +245,11 @@ class BankAgentExecutor(AgentExecutor):
     async def cancel(self, context: RequestContext, event_queue) -> None:
         updater = TaskUpdater(event_queue, context.task_id, context.context_id)
         await updater.cancel()
+
+
+def _handoff(metadata: dict) -> dict:
+    value = (metadata or {}).get(HANDOFF_KEY)
+    return value if isinstance(value, dict) else {}
 
 
 def _agent_message(task, text: str) -> Message:

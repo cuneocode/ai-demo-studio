@@ -20,7 +20,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from demo.sources import SOURCES, excerpt
+from demo.sources import SOURCES, catalog, excerpt
 from lab.a2a_peer import A2AClientConfig, GatewayDenied, send_message
 from lab.config import env
 from lab.events import emit
@@ -139,7 +139,7 @@ async def get_run(run_id: str, after: int = 0) -> dict:
 
 @app.get("/api/sources")
 async def list_sources() -> dict:
-    return {k: {"path": v[0], "title": v[1]} for k, v in SOURCES.items()}
+    return catalog()
 
 
 @app.get("/api/sources/{source_id}")
@@ -155,7 +155,34 @@ async def telemetry() -> dict:
             "console_url": os.getenv("SPLUNK_AO_CONSOLE_URL", "")}
 
 
+@app.get("/api/runtime")
+async def runtime() -> dict:
+    """What this lab is configured to run, for the studio's runtime card. No secrets."""
+    return {
+        "model": {"name": os.getenv("MODEL_NAME", ""), "api": "OpenAI Responses API",
+                  "reasoning_effort": os.getenv("MODEL_REASONING_EFFORT", "medium"),
+                  "reasoning_summary": "detailed"},
+        "agents": {"framework": "LangChain Deep Agents", "protocol": "A2A 1.0 (JSON-RPC)",
+                   "bank_a": ["bank-a-coordinator", "bank-a-responder"],
+                   "bank_b": ["bank-b-investigator"]},
+        "gateway": {"product": "agentgateway v1.6.0", "transport": "mTLS, TLS 1.3",
+                    "admission": "JWT per listener, re-signed ES256 per hop"},
+        "ai_defense": {"mode": "enforce, fail closed", "region": os.getenv("AIDEFENSE_REGION", ""),
+                       "hops": {"bank-a": ["ingress-from-console", "egress-to-bank-b",
+                                           "ingress-from-bank-b"],
+                                "bank-b": ["ingress-from-bank-a", "egress-to-bank-a"]}},
+        "agent_control": {"execution": "server", "step": "<bank>.send_a2a_message",
+                          "stage": "pre", "sinks": ["Agent Control server", "OpenTelemetry"]},
+        "observability": {"project": env("SPLUNK_AO_PROJECT"),
+                          "agent_stream": env("SPLUNK_AO_AGENT_STREAM"),
+                          "console_url": os.getenv("SPLUNK_AO_CONSOLE_URL", ""),
+                          "exporters": ["SplunkAOSpanProcessor (agents, AI Defense, console)",
+                                        "Splunk OTel Collector (gateways)"]},
+    }
+
+
 @app.get("/health")
+@app.get("/api/health")
 async def health() -> dict:
     return {"status": "ok"}
 

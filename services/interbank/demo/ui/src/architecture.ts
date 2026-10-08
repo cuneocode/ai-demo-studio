@@ -115,7 +115,7 @@ const bankAgent = (bank: "a" | "b"): Component => {
           "over A2A, and replies with its findings. Follow-up messages in the same A2A context share memory.",
     facts: [
       { label: "Framework", value: "deepagents 0.7 create_deep_agent (LangGraph runtime)" },
-      { label: "Model", value: "Nemotron 3 Super on local vLLM" },
+      { label: "Model", value: "OpenAI API (MODEL_NAME from the FSI .env)" },
       { label: "Tools", value: `query_settlement_records, send_message_to_${bank === "a" ? "bank_b" : "bank_a"}, write_todos` },
       { label: "A2A client", value: `a2a-sdk 1.2.2 create_client → ${Self} gateway :8443 → ${Other}` },
       { label: "A2A server", value: "a2a-sdk 1.2.2 AgentExecutor + DefaultRequestHandler, JSON-RPC, :9443 mTLS" },
@@ -201,15 +201,20 @@ export const COMPONENTS: Component[] = [
     sources: ["ai-defense-api"],
   },
   {
-    id: "vllm",
-    label: "Nemotron 3 Super",
-    subtitle: "local vLLM on DGX Spark",
+    id: "openai",
+    label: "OpenAI",
+    subtitle: "Chat Completions API · cloud",
     org: "shared",
     kind: "model",
     x: 790,
     y: 430,
-    summary: "OpenAI-compatible endpoint. Each bank reaches it on its own private network (vllm-a, vllm-b).",
-    facts: [{ label: "Model", value: "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4" }],
+    summary:
+      "Each bank's agent calls the OpenAI API directly over its own egress network. Only the two agent " +
+      "containers hold the API key.",
+    facts: [
+      { label: "Model", value: "MODEL_NAME from the FSI .env (gpt-5.6-luna)" },
+      { label: "Settings", value: "reasoning_effort none · temperature 0 · max 1500 tokens" },
+    ],
     sources: ["deep-agent-builder"],
   },
   {
@@ -256,8 +261,8 @@ export const LINKS: Link[] = [
   { id: "aidb-cisco", from: "bank-b-ai-defense", to: "cisco-ai-defense", label: "inspect", pairs: [["bank-b-gateway", "bank-b-ai-defense"]] },
   { id: "agenta-db", from: "bank-a-agent", to: "bank-a-records", label: "SQL", pairs: [["bank-a-agent", "bank-a-records"]] },
   { id: "agentb-db", from: "bank-b-agent", to: "bank-b-records", label: "SQL", pairs: [["bank-b-agent", "bank-b-records"]] },
-  { id: "agenta-llm", from: "bank-a-agent", to: "vllm", label: "LLM", pairs: [["bank-a-agent", "vllm"]] },
-  { id: "agentb-llm", from: "bank-b-agent", to: "vllm", label: "LLM", pairs: [["bank-b-agent", "vllm"]] },
+  { id: "agenta-llm", from: "bank-a-agent", to: "openai", label: "LLM", pairs: [["bank-a-agent", "openai"]] },
+  { id: "agentb-llm", from: "bank-b-agent", to: "openai", label: "LLM", pairs: [["bank-b-agent", "openai"]] },
   { id: "agenta-ctl", from: "bank-a-agent", to: "agent-control", label: "evaluate", pairs: [["bank-a-agent", "bank-a-agent-control"]] },
   { id: "agentb-ctl", from: "bank-b-agent", to: "agent-control", label: "evaluate", pairs: [["bank-b-agent", "bank-b-agent-control"]] },
   ...["operations-console", "bank-a-agent", "bank-b-agent", "bank-a-ai-defense", "bank-b-ai-defense"].map(tel),
@@ -282,7 +287,7 @@ export function eventFootprint(event: DemoEvent): { links: string[]; nodes: stri
   if (event.kind === "control") nodes.add("agent-control");
   if (event.kind === "agent.tool_call" || event.kind === "agent.message") {
     links.add(event.component === "bank-a-agent" ? "agenta-llm" : "agentb-llm");
-    nodes.add("vllm");
+    nodes.add("openai");
   }
   return { links: [...links], nodes: [...nodes].filter(Boolean) as string[] };
 }

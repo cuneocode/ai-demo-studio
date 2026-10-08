@@ -35,6 +35,17 @@ relationships with responsive card grids or hide edges at small breakpoints.
   index, no Tavily, no FRAA import, and no committed market snapshot pack.
   Optional Galileo / Splunk Agent Observability is configuration-only telemetry,
   not a local topic judge. Briefing's EDGAR + upload perimeter is unchanged.
+- Interbank settlement investigation's **Implemented system** is derived from
+  `services/interbank` (compose, gateway YAML, agents, policy, collector). Only the
+  two gateways cross between banks. Cisco AI Defense runs as an ExtProc on every
+  gateway listener (request and response, fail closed: 403 on violation, 503 when
+  inspection is unavailable). Splunk Agent Control evaluates each outbound A2A
+  message inside the agent before it reaches the gateway. Agents export spans with
+  `SplunkAOSpanProcessor`; gateways export through a per-bank collector; W3C
+  context crosses every hop, so one investigation is one trace and one session.
+  Agents are read-only and people approve remediation. Trust and data preparation
+  is offline (`labctl up`); the lab's certificates are self-signed for local use.
+  The map does not assert that the model endpoint, AI Defense, or Splunk are reachable.
 - The other architectures, and the **Proposed Cisco deployment** views, are design
   proposals. Brahe now has application-enforced AI Defense and conditional Splunk
   instrumentation/export; consult runtime health and per-request evidence rather

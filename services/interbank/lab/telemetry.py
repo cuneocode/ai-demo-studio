@@ -86,6 +86,7 @@ def span(
     label: str | None = None,
     attributes: dict[str, Any] | None = None,
     span_kind: SpanKind = SpanKind.INTERNAL,
+    links: list[trace.Link] | None = None,
 ) -> Iterator[trace.Span]:
     """A span Splunk renders with readable input and output.
 
@@ -96,6 +97,7 @@ def span(
     with tracer.start_as_current_span(
         name,
         kind=span_kind,
+        links=links,
         record_exception=False,
         set_status_on_exception=False,
     ) as current:
@@ -129,6 +131,35 @@ def inject_headers(headers: dict[str, str]) -> dict[str, str]:
     """Add W3C traceparent and baggage (carrying the Splunk session ID)."""
     propagate.inject(headers)
     return headers
+
+
+# Splunk's A2A instrumentor (splunk-ao-a2a) carries the calling agent's span in the
+# A2A request metadata under this key, and the receiving agent links back to it as an
+# agent handoff. That instrumentor supports a2a-sdk < 1.0 only, so the lab emits the
+# same metadata, attributes, and link itself.
+HANDOFF_KEY = "splunk_ao_observe"
+
+
+def handoff_metadata(agent_name: str) -> dict[str, str]:
+    ids = current_ids()
+    return {**inject_headers({}), "agent_trace_id": ids.get("trace_id", ""),
+            "agent_span_id": ids.get("span_id", ""), "agent_name": agent_name}
+
+
+def handoff_link(metadata: dict[str, Any]) -> trace.Link | None:
+    try:
+        trace_id = int(metadata["agent_trace_id"], 16)
+        span_id = int(metadata["agent_span_id"], 16)
+    except (KeyError, TypeError, ValueError):
+        return None
+    if not trace_id or not span_id:
+        return None
+    caller = trace.SpanContext(trace_id=trace_id, span_id=span_id, is_remote=True,
+                               trace_flags=trace.TraceFlags(trace.TraceFlags.SAMPLED))
+    attributes = {"link.type": "agent_handoff"}
+    if metadata.get("agent_name"):
+        attributes["link.from_agent"] = str(metadata["agent_name"])
+    return trace.Link(caller, attributes)
 
 
 @contextmanager

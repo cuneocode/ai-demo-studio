@@ -15,10 +15,10 @@ x-python: &python
   restart: unless-stopped
   env_file: [.runtime/vendor.env]
 
-x-model: &model
-  MODEL_NAME: nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
+x-agent-env: &agent-env
   SPLUNK_AO_HOME_DIR: /tmp/.splunk
   EVENT_SINK_URL: http://demo:8090/events
+  SSL_CERT_FILE: /runtime/egress-ca-bundle.pem
 
 x-gateway: &gateway
   image: cr.agentgateway.dev/agentgateway:v1.6.0@sha256:9d3e6044ddcdc0878b1787f77bd401252b95e22684203fb5e874c4c42d2ed90c
@@ -41,11 +41,11 @@ services:
   bank-a-agent:
     <<: *python
     command: bank_a.agent
+    env_file: [.runtime/vendor.env, .runtime/model.env]
     environment:
-      <<: *model
+      <<: *agent-env
       ORGANIZATION: bank-a
       SERVICE_NAME: bank-a-agent
-      MODEL_BASE_URL: http://vllm-a:8000/v1
       PUBLIC_URL: https://bank-a-gateway:9443/
       EGRESS_GATEWAY_URL: https://bank-a-gateway:8443
       EGRESS_CA_FILE: /runtime/bank-a-ca.crt
@@ -55,7 +55,7 @@ services:
       TLS_CLIENT_CA_FILE: /runtime/bank-a-ca.crt
       GATEWAY_JWKS_FILE: /runtime/gateway-jwks.json
     volumes: [./.runtime/roles/bank-a-agent:/runtime:ro]
-    networks: [bank-a-internal, bank-a-egress, vllm-a, events]
+    networks: [bank-a-internal, bank-a-egress, events]
     healthcheck: &agent-health
       test: ["CMD", "python", "-c", "import ssl,urllib.request as u; c=ssl.create_default_context(cafile='/runtime/bank-a-ca.crt'); c.load_cert_chain('/runtime/agent.crt','/runtime/agent.key'); u.urlopen('https://bank-a-agent:9443/health',context=c,timeout=3)"]
       interval: 5s
@@ -92,11 +92,11 @@ services:
   bank-b-agent:
     <<: *python
     command: bank_b.agent
+    env_file: [.runtime/vendor.env, .runtime/model.env]
     environment:
-      <<: *model
+      <<: *agent-env
       ORGANIZATION: bank-b
       SERVICE_NAME: bank-b-agent
-      MODEL_BASE_URL: http://vllm-b:8000/v1
       PUBLIC_URL: https://bank-b-gateway:9443/
       EGRESS_GATEWAY_URL: https://bank-b-gateway:8443
       EGRESS_CA_FILE: /runtime/bank-b-ca.crt
@@ -106,7 +106,7 @@ services:
       TLS_CLIENT_CA_FILE: /runtime/bank-b-ca.crt
       GATEWAY_JWKS_FILE: /runtime/gateway-jwks.json
     volumes: [./.runtime/roles/bank-b-agent:/runtime:ro]
-    networks: [bank-b-internal, bank-b-egress, vllm-b, events]
+    networks: [bank-b-internal, bank-b-egress, events]
     healthcheck:
       <<: *agent-health
       test: ["CMD", "python", "-c", "import ssl,urllib.request as u; c=ssl.create_default_context(cafile='/runtime/bank-b-ca.crt'); c.load_cert_chain('/runtime/agent.crt','/runtime/agent.key'); u.urlopen('https://bank-b-agent:9443/health',context=c,timeout=3)"]
@@ -171,5 +171,3 @@ networks:
   bank-b-egress: {}
   interbank: {internal: true}
   events: {internal: true}
-  vllm-a: {external: true, name: a2a-lab-vllm-a}
-  vllm-b: {external: true, name: a2a-lab-vllm-b}
