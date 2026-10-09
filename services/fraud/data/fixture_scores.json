@@ -1,0 +1,48 @@
+{
+  "_about": "Synthetic sample scores for the five studio cases. Used only when neither the live GNN sidecar nor recorded scores can answer. Not model output.",
+  "txn-clean-pos": {
+    "probability": 0.08,
+    "shap": [
+      {"feature": "merchant_neighborhood", "value": -0.11, "direction": "protective"},
+      {"feature": "account_history", "value": -0.07, "direction": "protective"},
+      {"feature": "transaction_amount", "value": 0.02, "direction": "risk"},
+      {"feature": "payment_channel", "value": -0.03, "direction": "protective"}
+    ]
+  },
+  "txn-compromised-merchant": {
+    "probability": 0.74,
+    "shap": [
+      {"feature": "merchant_neighborhood", "value": 0.41, "direction": "risk"},
+      {"feature": "account_gnn_embedding", "value": -0.06, "direction": "protective"},
+      {"feature": "transaction_amount", "value": 0.09, "direction": "risk"},
+      {"feature": "payment_channel", "value": 0.08, "direction": "risk"}
+    ]
+  },
+  "txn-mule-ach": {
+    "probability": 0.67,
+    "shap": [
+      {"feature": "account_neighborhood", "value": 0.29, "direction": "risk"},
+      {"feature": "transaction_amount", "value": 0.18, "direction": "risk"},
+      {"feature": "payment_channel", "value": 0.11, "direction": "risk"},
+      {"feature": "merchant_neighborhood", "value": 0.04, "direction": "risk"}
+    ]
+  },
+  "txn-cnp-review": {
+    "probability": 0.41,
+    "shap": [
+      {"feature": "payment_channel", "value": 0.14, "direction": "risk"},
+      {"feature": "raw_account_features", "value": 0.09, "direction": "risk"},
+      {"feature": "merchant_neighborhood", "value": -0.05, "direction": "protective"},
+      {"feature": "transaction_amount", "value": 0.07, "direction": "risk"}
+    ]
+  },
+  "txn-subscription": {
+    "probability": 0.11,
+    "shap": [
+      {"feature": "payment_channel", "value": -0.12, "direction": "protective"},
+      {"feature": "merchant_neighborhood", "value": -0.08, "direction": "protective"},
+      {"feature": "account_history", "value": -0.06, "direction": "protective"},
+      {"feature": "transaction_amount", "value": 0.01, "direction": "risk"}
+    ]
+  }
+}

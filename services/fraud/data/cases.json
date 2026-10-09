@@ -6,18 +6,18 @@
     "merchant": "Harbor Market #18",
     "amount": 42.18,
     "channel": "pos",
-    "neighborhood": "Merchant chargeback rate 0.4% · account has 14 prior clears here",
-    "hint": "A clean local purchase. Neighborhood signal should stay protective."
+    "neighborhood": "Merchant dispute rate 0.4% · this card has 14 earlier clean purchases here",
+    "hint": "A clean local purchase. The merchant's network should read as protective."
   },
   {
     "id": "txn-compromised-merchant",
-    "label": "First purchase at high-chargeback merchant",
+    "label": "First purchase at a compromised merchant",
     "account": "****1188",
     "merchant": "Orbit Digital Goods",
     "amount": 286.40,
     "channel": "cnp",
-    "neighborhood": "Merchant 50/200 chargebacks this month · customer history is clean",
-    "hint": "This is the GNN story: a clean customer at a compromised merchant."
+    "neighborhood": "In the last 21 days, 412 cards bought here and 37 later had confirmed fraud · customer history is clean",
+    "hint": "The graph story: a clean customer at a common point of purchase. Rules would approve; the merchant's network drives the score."
   },
   {
     "id": "txn-mule-ach",
@@ -27,7 +27,7 @@
     "amount": 4750.00,
     "channel": "ach",
     "neighborhood": "Account received 6 inbound credits in 36 hours · new device",
-    "hint": "Mule-style velocity. Amount and account neighborhood should dominate."
+    "hint": "Mule-style velocity. Amount and the account's network should dominate."
   },
   {
     "id": "txn-cnp-review",
@@ -36,8 +36,8 @@
     "merchant": "Northwind Outdoor Co.",
     "amount": 612.90,
     "channel": "cnp",
-    "neighborhood": "First CNP from this device country · merchant otherwise stable",
-    "hint": "Elevated but not decisive. Expect a review band, not an automatic hold."
+    "neighborhood": "First online purchase from this device's country · merchant otherwise stable",
+    "hint": "Elevated but not decisive: the suggested action is to verify with the customer."
   },
   {
     "id": "txn-subscription",

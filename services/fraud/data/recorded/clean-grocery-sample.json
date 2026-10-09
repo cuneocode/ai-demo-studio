@@ -1,0 +1,172 @@
+{
+ "v": 1,
+ "name": "clean-grocery-sample",
+ "title": "Clean grocery purchase \u00b7 sample scores",
+ "scenario": "txn-clean-pos",
+ "recorded_at": "2026-10-09T21:09:21.360014+00:00",
+ "served_by": null,
+ "synthetic": true,
+ "run": {
+  "id": "fraud-20261009-210921-bfd501",
+  "service": "fraud",
+  "label": "Score \u00b7 Neighborhood grocery \u00b7 card present",
+  "scenario": "txn-clean-pos",
+  "status": "completed",
+  "started_at": "2026-10-09T21:09:21.359888+00:00",
+  "finished_at": "2026-10-09T21:09:21.360014+00:00",
+  "meta": {
+   "case_id": "txn-clean-pos",
+   "include_narrative": false,
+   "synthetic": true
+  },
+  "result": {
+   "case_id": "txn-clean-pos",
+   "probability": 0.08,
+   "risk_band": "low",
+   "suggested_action": "No action needed; keep monitoring",
+   "backend": "fixture",
+   "backend_label": "Sample scores",
+   "duration_ms": 0
+  }
+ },
+ "events": [
+  {
+   "v": 1,
+   "id": "d74c66b3-9a1d-425c-80fa-bf4ba822d356",
+   "at": "2026-10-09T21:09:21.359905+00:00",
+   "ns": 16000,
+   "run_id": "fraud-20261009-210921-bfd501",
+   "component": "fraud-triage",
+   "kind": "run",
+   "status": "started",
+   "title": "Scoring Neighborhood grocery \u00b7 card present",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Synthetic payment \u00b7 Harbor Market #18 \u00b7 $42.18 \u00b7 card present",
+   "data": {}
+  },
+  {
+   "v": 1,
+   "id": "f2e9f4fe-a989-4e03-8176-5b7ce15965eb",
+   "at": "2026-10-09T21:09:21.359912+00:00",
+   "ns": 22458,
+   "run_id": "fraud-20261009-210921-bfd501",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Look up the payment",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_case",
+    "arguments": {
+     "case_id": "txn-clean-pos"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "8884ab23-ac30-49ea-add2-7d7e279ae3bd",
+   "at": "2026-10-09T21:09:21.359918+00:00",
+   "ns": 29041,
+   "run_id": "fraud-20261009-210921-bfd501",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Payment found \u00b7 ****4421 at Harbor Market #18",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Merchant dispute rate 0.4% \u00b7 this card has 14 earlier clean purchases here",
+   "data": {
+    "tool": "get_case"
+   }
+  },
+  {
+   "v": 1,
+   "id": "917c6dba-0c88-4978-b1a7-de95bd2a21d2",
+   "at": "2026-10-09T21:09:21.359923+00:00",
+   "ns": 34125,
+   "run_id": "fraud-20261009-210921-bfd501",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Score the payment's graph neighborhood",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "score_payment",
+    "arguments": {
+     "case_id": "txn-clean-pos"
+    },
+    "chain": [
+     "fixture"
+    ]
+   }
+  },
+  {
+   "v": 1,
+   "id": "2b378a29-e29d-444c-8803-143812f639c8",
+   "at": "2026-10-09T21:09:21.359996+00:00",
+   "ns": 107291,
+   "run_id": "fraud-20261009-210921-bfd501",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Sample scores \u00b7 probability 0.08 \u00b7 Low risk",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Strongest signal: Merchant's network of linked cards (-0.11)",
+   "data": {
+    "tool": "score_payment",
+    "backend": "fixture",
+    "label": "Sample scores",
+    "engine": null,
+    "probability": 0.08,
+    "risk_band": "low",
+    "latency_ms": 0.1,
+    "recorded_at": null,
+    "synthetic": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "257582d4-3d95-438a-9d7c-307ea26317e1",
+   "at": "2026-10-09T21:09:21.360008+00:00",
+   "ns": 119625,
+   "run_id": "fraud-20261009-210921-bfd501",
+   "component": "fraud-triage",
+   "kind": "result",
+   "status": "ok",
+   "title": "Low risk \u00b7 No action needed; keep monitoring",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Probability 0.08 against an alert threshold of 0.50, scored by Sample scores. The score is evidence; the analyst decides.",
+   "data": {
+    "case_id": "txn-clean-pos",
+    "probability": 0.08,
+    "risk_band": "low",
+    "suggested_action": "No action needed; keep monitoring",
+    "backend": "fixture",
+    "backend_label": "Sample scores",
+    "duration_ms": 0
+   }
+  }
+ ],
+ "result": {
+  "case_id": "txn-clean-pos",
+  "probability": 0.08,
+  "risk_band": "low",
+  "suggested_action": "No action needed; keep monitoring",
+  "backend": "fixture",
+  "backend_label": "Sample scores",
+  "duration_ms": 0
+ }
+}

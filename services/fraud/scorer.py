@@ -1,60 +1,32 @@
-"""Score backends: live GNN+XGBoost when the infer sidecar is up; fixture only when forced."""
+"""Score backends, never dead: live GNN+XGBoost sidecar, then recorded scores, then sample fixtures.
+
+`auto` walks the chain per request, so a sidecar that drops mid-demo still yields a score,
+and every response names the backend that answered (live | cache | fixture).
+"""
 from __future__ import annotations
 
 import json
 import os
+import time
 from pathlib import Path
 
 import httpx
 
-CACHE_PATH = Path(__file__).resolve().parent / ".cache" / "scores.json"
+from reasons import feature_label
 
-FIXTURE_SCORES = {
-    "txn-clean-pos": {
-        "probability": 0.08,
-        "shap": [
-            {"feature": "merchant_neighborhood", "value": -0.11, "direction": "protective"},
-            {"feature": "account_history", "value": -0.07, "direction": "protective"},
-            {"feature": "transaction_amount", "value": 0.02, "direction": "risk"},
-            {"feature": "payment_channel", "value": -0.03, "direction": "protective"},
-        ],
-    },
-    "txn-compromised-merchant": {
-        "probability": 0.74,
-        "shap": [
-            {"feature": "merchant_neighborhood", "value": 0.41, "direction": "risk"},
-            {"feature": "account_gnn_embedding", "value": -0.06, "direction": "protective"},
-            {"feature": "transaction_amount", "value": 0.09, "direction": "risk"},
-            {"feature": "payment_channel", "value": 0.08, "direction": "risk"},
-        ],
-    },
-    "txn-mule-ach": {
-        "probability": 0.67,
-        "shap": [
-            {"feature": "account_neighborhood", "value": 0.29, "direction": "risk"},
-            {"feature": "transaction_amount", "value": 0.18, "direction": "risk"},
-            {"feature": "payment_channel", "value": 0.11, "direction": "risk"},
-            {"feature": "merchant_neighborhood", "value": 0.04, "direction": "risk"},
-        ],
-    },
-    "txn-cnp-review": {
-        "probability": 0.41,
-        "shap": [
-            {"feature": "payment_channel", "value": 0.14, "direction": "risk"},
-            {"feature": "raw_account_features", "value": 0.09, "direction": "risk"},
-            {"feature": "merchant_neighborhood", "value": -0.05, "direction": "protective"},
-            {"feature": "transaction_amount", "value": 0.07, "direction": "risk"},
-        ],
-    },
-    "txn-subscription": {
-        "probability": 0.11,
-        "shap": [
-            {"feature": "payment_channel", "value": -0.12, "direction": "protective"},
-            {"feature": "merchant_neighborhood", "value": -0.08, "direction": "protective"},
-            {"feature": "account_history", "value": -0.06, "direction": "protective"},
-            {"feature": "transaction_amount", "value": 0.01, "direction": "risk"},
-        ],
-    },
+ROOT = Path(__file__).resolve().parent
+CACHE_PATH = ROOT / ".cache" / "scores.json"
+RECORDED_PATH = ROOT / "data" / "recorded_scores.json"
+FIXTURE_PATH = ROOT / "data" / "fixture_scores.json"
+
+LIVE, CACHE, FIXTURE = "live", "cache", "fixture"
+BACKEND_LABEL = {LIVE: "GNN on Sparky (live)", CACHE: "Recorded scores", FIXTURE: "Sample scores"}
+PROBE_TTL_S = 5.0
+
+RISK_BANDS = {
+    "high": ("High risk", "Contact customer, then block and reissue"),
+    "elevated": ("Elevated risk", "Verify with the customer before the payment settles"),
+    "low": ("Low risk", "No action needed; keep monitoring"),
 }
 
 
@@ -74,12 +46,25 @@ def threshold() -> float:
     return min(0.95, max(0.05, value))
 
 
-def decision_for(probability: float, cut: float) -> str:
+def risk_band(probability: float, cut: float) -> str:
     if probability >= cut:
-        return "hold"
+        return "high"
     if probability >= cut * 0.7:
-        return "review"
-    return "clear"
+        return "elevated"
+    return "low"
+
+
+def risk_label(band: str) -> str:
+    return RISK_BANDS[band][0]
+
+
+def suggested_action(band: str) -> str:
+    return RISK_BANDS[band][1]
+
+
+def decision_for(probability: float, cut: float) -> str:
+    """Legacy API field (hold / review / clear); the studio shows risk_band and suggested_action."""
+    return {"high": "hold", "elevated": "review", "low": "clear"}[risk_band(probability, cut)]
 
 
 def normalize_score(payload: dict) -> dict:
@@ -89,137 +74,185 @@ def normalize_score(payload: dict) -> dict:
     shap = []
     for item in payload.get("shap") or []:
         value = float(item["value"])
+        feature = str(item["feature"])
         shap.append({
-            "feature": str(item["feature"]),
+            "feature": feature,
+            "label": feature_label(feature),
             "value": value,
             "direction": item.get("direction") or ("risk" if value >= 0 else "protective"),
         })
     return {"probability": probability, "shap": shap}
 
 
-def load_cache() -> dict:
-    if not CACHE_PATH.is_file():
+def _read_scores(path: Path) -> dict:
+    if not path.is_file():
         return {}
     try:
-        data = json.loads(CACHE_PATH.read_text())
+        data = json.loads(path.read_text())
     except (OSError, json.JSONDecodeError):
         return {}
-    return data if isinstance(data, dict) else {}
+    if not isinstance(data, dict):
+        return {}
+    return {key: value for key, value in data.items() if not key.startswith("_") and isinstance(value, dict)}
+
+
+def load_cache() -> dict:
+    """Scores recorded from the live sidecar: .cache/scores.json, else the committed data/recorded_scores.json."""
+    return _read_scores(CACHE_PATH) or _read_scores(RECORDED_PATH)
+
+
+def load_fixture() -> dict:
+    return _read_scores(FIXTURE_PATH)
+
+
+def latest_recorded_at(cache: dict) -> str | None:
+    stamps = [entry.get("recorded_at") for entry in cache.values() if isinstance(entry.get("recorded_at"), str)]
+    return max(stamps) if stamps else None
 
 
 class Scorer:
     def __init__(self):
-        self.requested = (os.getenv("FRAUD_BACKEND") or "auto").lower()
-        self.triton_url = env_url("FRAUD_TRITON_URL", "http://127.0.0.1:8000")
-        self.score_url = env_url("FRAUD_SCORE_URL", "http://127.0.0.1:8000")
-        self.model = os.getenv("FRAUD_TRITON_MODEL") or "fraud_pipeline_explained"
+        self.requested = "auto"
         self.backend = "unavailable"
-        self.detail = "Waiting for the trained GraphSAGE + XGBoost scorer."
+        self.engine: str | None = None
+        self.detail = "Checking the scoring backends."
         self.ready = False
-        self.triton = {"status": "not_configured", "url": self.triton_url, "model": self.model}
         self.cache_cases = 0
+        self.recorded_at: str | None = None
+        self.live_ready = False
+        self.triton_ready = False
+        self._probed_at = 0.0
+        self._configure()
+        self.triton = {"status": "not_configured", "url": self.triton_url, "model": self.model}
 
-    async def resolve(self):
+    def _configure(self):
         self.requested = (os.getenv("FRAUD_BACKEND") or "auto").lower()
         self.triton_url = env_url("FRAUD_TRITON_URL", "http://127.0.0.1:8000")
         self.score_url = env_url("FRAUD_SCORE_URL", "http://127.0.0.1:8000")
         self.model = os.getenv("FRAUD_TRITON_MODEL") or "fraud_pipeline_explained"
+
+    async def _probe(self, force: bool = False):
+        if not force and time.monotonic() - self._probed_at < PROBE_TTL_S:
+            return
+        self.live_ready = await self._production_ready()
+        self.triton_ready = False if self.live_ready else await self._triton_ready()
+        self._probed_at = time.monotonic()
+
+    async def resolve(self, force: bool = False):
+        self._configure()
         cache = load_cache()
         self.cache_cases = len(cache)
-        triton_ready = await self._triton_ready()
-        live_ready = await self._production_ready()
-        self.triton["status"] = "ready" if (triton_ready or live_ready) else "unavailable" if self.requested != "fixture" else "not_configured"
-        if live_ready:
-            self.triton["url"] = self.score_url
-            self.triton["model"] = "gnn_xgb"
+        self.recorded_at = latest_recorded_at(cache)
+        await self._probe(force)
+        live = self.live_ready or self.triton_ready
+        self.triton = {
+            "status": "ready" if live else "not_configured" if self.requested == FIXTURE else "unavailable",
+            "url": self.score_url if self.live_ready else self.triton_url,
+            "model": "gnn_xgb" if self.live_ready else self.model,
+        }
 
-        if self.requested == "fixture":
-            self._use_fixture()
-            return
-        if self.requested == "cache":
-            if cache:
-                self._use_cache()
-            else:
-                self._unavailable("Cached scores are missing.")
-            return
+        if self.requested == FIXTURE:
+            return self._use_fixture("Sample scores (FRAUD_BACKEND=fixture).")
+        if self.requested == CACHE:
+            return self._use_cache() if cache else self._unavailable("Recorded scores are missing.")
         if self.requested in {"production", "gnn"}:
-            if live_ready:
-                self._use_production()
-            else:
-                self._unavailable("The GraphSAGE + XGBoost scorer is not reachable.")
-            return
+            return self._use_live("sidecar") if self.live_ready else self._unavailable("The GraphSAGE + XGBoost scorer is not reachable.")
         if self.requested == "triton":
-            if triton_ready:
-                self._use_triton()
-            else:
-                self._unavailable("Triton /v2/health/ready is not reachable.")
-            return
-        if live_ready:
-            self._use_production()
-        elif triton_ready:
-            self._use_triton()
-        else:
-            self._unavailable("Train the NVIDIA GNN+XGBoost stack and start scripts/serve.sh.")
+            return self._use_live("triton") if self.triton_ready else self._unavailable("Triton /v2/health/ready is not reachable.")
+        if self.live_ready:
+            return self._use_live("sidecar")
+        if self.triton_ready:
+            return self._use_live("triton")
+        if cache:
+            return self._use_cache("The live GNN sidecar is offline. ")
+        if load_fixture():
+            return self._use_fixture("The live GNN sidecar is offline and no recorded scores exist. Showing sample scores.")
+        return self._unavailable("No scoring backend is available.")
 
     def health(self):
         return {
             "backend": self.backend,
+            "backend_label": BACKEND_LABEL.get(self.backend, "Unavailable"),
+            "engine": self.engine,
             "ready": self.ready,
             "model": {
-                "fixture": "fixture-graph-xgb",
-                "cache": "cached-triton-export",
-                "production_http": "gnn-xgb-tabformer",
-                "triton": self.model,
+                FIXTURE: "Sample scores (synthetic)",
+                CACHE: "gnn-xgb-tabformer (recorded)",
+                LIVE: "gnn-xgb-tabformer" if self.engine == "sidecar" else self.model,
             }.get(self.backend, self.backend),
             "detail": self.detail,
             "threshold": threshold(),
+            "requested": self.requested,
+            "sidecar": {"status": "up" if (self.live_ready or self.triton_ready) else "down", "url": self.score_url},
             "triton": self.triton,
             "cache_cases": self.cache_cases,
+            "recorded_at": self.recorded_at,
         }
 
+    def chain(self) -> list[str]:
+        """Backends to try for one request, in order."""
+        if self.requested == FIXTURE:
+            return [FIXTURE]
+        if self.requested == CACHE:
+            return [CACHE]
+        if self.requested in {"production", "gnn", "triton"}:
+            return [LIVE] if self.ready else []
+        order = [LIVE] if (self.live_ready or self.triton_ready) else []
+        return order + ([CACHE] if self.cache_cases else []) + [FIXTURE]
+
     async def score(self, case: dict) -> dict:
+        """The first backend in the chain that scores this case; `fallback` lists the ones that could not."""
         if not self.ready:
             raise ScoreError(self.detail)
-        if self.backend == "fixture":
-            return self._fixture_score(case["id"])
-        if self.backend == "cache":
+        skipped: list[dict] = []
+        for backend in self.chain():
+            started = time.monotonic()
+            try:
+                result = await self._score_with(backend, case)
+            except ScoreError as exc:
+                skipped.append({"backend": backend, "label": BACKEND_LABEL[backend], "reason": str(exc)})
+                continue
+            result.update({
+                "backend": backend,
+                "backend_label": BACKEND_LABEL[backend],
+                "engine": ("sidecar" if self.live_ready else "triton") if backend == LIVE else None,
+                "latency_ms": round((time.monotonic() - started) * 1000, 1),
+                "fallback": skipped,
+            })
+            return result
+        raise ScoreError(skipped[-1]["reason"] if skipped else self.detail)
+
+    async def _score_with(self, backend: str, case: dict) -> dict:
+        if backend == FIXTURE:
+            payload = load_fixture().get(case["id"])
+            if not payload:
+                raise ScoreError("No sample score for this case.")
+            return {**normalize_score(payload), "recorded_at": None}
+        if backend == CACHE:
             cached = load_cache().get(case["id"])
             if not cached:
-                raise ScoreError("No cached score for this case.")
-            return normalize_score(cached)
-        if self.backend == "production_http":
-            return await self._score_http(f"{self.score_url}/score", {"case": case, "case_id": case["id"]})
-        return await self._score_triton(case)
+                raise ScoreError("No recorded score for this case.")
+            return {**normalize_score(cached), "recorded_at": cached.get("recorded_at")}
+        if self.live_ready:
+            return {**await self._score_http(f"{self.score_url}/score", {"case": case, "case_id": case["id"]}), "recorded_at": None}
+        return {**await self._score_triton(case), "recorded_at": None}
 
-    def _use_fixture(self):
-        self.backend = "fixture"
-        self.ready = True
-        self.detail = "Deterministic Shapley fixtures for the five studio cases."
-
-    def _use_cache(self):
-        self.backend = "cache"
-        self.ready = True
-        self.detail = f"Using {self.cache_cases} exported scores from services/fraud/.cache/scores.json."
-
-    def _use_production(self):
-        self.backend = "production_http"
-        self.ready = True
-        self.detail = f"Live GraphSAGE + XGBoost scoring at {self.score_url}."
-
-    def _use_triton(self):
-        self.backend = "triton"
-        self.ready = True
-        self.detail = f"Scoring through Triton model {self.model}."
-
-    def _unavailable(self, detail: str):
-        self.ready = False
+    def _use_fixture(self, detail: str):
+        self.backend, self.engine, self.ready = FIXTURE, None, True
         self.detail = detail
 
-    def _fixture_score(self, case_id: str) -> dict:
-        payload = FIXTURE_SCORES.get(case_id)
-        if not payload:
-            raise ScoreError("Unknown fixture case.")
-        return normalize_score(payload)
+    def _use_cache(self, prefix: str = ""):
+        self.backend, self.engine, self.ready = CACHE, None, True
+        self.detail = f"{prefix}Using {self.cache_cases} recorded scores from the GNN on Sparky."
+
+    def _use_live(self, engine: str):
+        self.backend, self.engine, self.ready = LIVE, engine, True
+        self.detail = (f"Live GraphSAGE + XGBoost scoring at {self.score_url}." if engine == "sidecar"
+                       else f"Scoring through Triton model {self.model}.")
+
+    def _unavailable(self, detail: str):
+        self.backend, self.engine, self.ready = "unavailable", None, False
+        self.detail = detail
 
     async def _triton_ready(self) -> bool:
         try:
@@ -246,7 +279,8 @@ class Scorer:
         except ScoreError:
             raise
         except Exception:
-            raise ScoreError("The configured score service did not return a usable result.") from None
+            self._probed_at = 0.0
+            raise ScoreError("The live GNN sidecar did not return a usable result.") from None
 
     async def _score_triton(self, case: dict) -> dict:
         url = f"{self.triton_url}/v2/models/{self.model}/infer"
@@ -265,6 +299,7 @@ class Scorer:
             response.raise_for_status()
             body = response.json()
         except Exception:
+            self._probed_at = 0.0
             raise ScoreError("Triton inference failed. The live GNN payload is not this studio case catalog.") from None
         outputs = {item.get("name"): item for item in body.get("outputs", [])}
         probability = (outputs.get("fraud_probability") or outputs.get("probability") or {}).get("data", [None])[0]

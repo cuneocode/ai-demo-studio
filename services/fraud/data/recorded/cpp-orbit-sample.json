@@ -1,0 +1,172 @@
+{
+ "v": 1,
+ "name": "cpp-orbit-sample",
+ "title": "Compromised merchant \u00b7 sample scores",
+ "scenario": "txn-compromised-merchant",
+ "recorded_at": "2026-10-09T21:09:21.358552+00:00",
+ "served_by": null,
+ "synthetic": true,
+ "run": {
+  "id": "fraud-20261009-210921-525999",
+  "service": "fraud",
+  "label": "Score \u00b7 First purchase at a compromised merchant",
+  "scenario": "txn-compromised-merchant",
+  "status": "completed",
+  "started_at": "2026-10-09T21:09:21.358294+00:00",
+  "finished_at": "2026-10-09T21:09:21.358552+00:00",
+  "meta": {
+   "case_id": "txn-compromised-merchant",
+   "include_narrative": false,
+   "synthetic": true
+  },
+  "result": {
+   "case_id": "txn-compromised-merchant",
+   "probability": 0.74,
+   "risk_band": "high",
+   "suggested_action": "Contact customer, then block and reissue",
+   "backend": "fixture",
+   "backend_label": "Sample scores",
+   "duration_ms": 1
+  }
+ },
+ "events": [
+  {
+   "v": 1,
+   "id": "4304685a-8af3-4e07-ac09-95f215574690",
+   "at": "2026-10-09T21:09:21.358319+00:00",
+   "ns": 24125,
+   "run_id": "fraud-20261009-210921-525999",
+   "component": "fraud-triage",
+   "kind": "run",
+   "status": "started",
+   "title": "Scoring First purchase at a compromised merchant",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Synthetic payment \u00b7 Orbit Digital Goods \u00b7 $286.40 \u00b7 card not present",
+   "data": {}
+  },
+  {
+   "v": 1,
+   "id": "78c5d62f-31fb-4f4e-8be0-e3a54c62768a",
+   "at": "2026-10-09T21:09:21.358330+00:00",
+   "ns": 33750,
+   "run_id": "fraud-20261009-210921-525999",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Look up the payment",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_case",
+    "arguments": {
+     "case_id": "txn-compromised-merchant"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "a956fe4a-8835-40d3-b17d-f7314bb2bb1f",
+   "at": "2026-10-09T21:09:21.358337+00:00",
+   "ns": 41417,
+   "run_id": "fraud-20261009-210921-525999",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Payment found \u00b7 ****1188 at Orbit Digital Goods",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "In the last 21 days, 412 cards bought here and 37 later had confirmed fraud \u00b7 customer history is clean",
+   "data": {
+    "tool": "get_case"
+   }
+  },
+  {
+   "v": 1,
+   "id": "833ae113-b089-4af3-9e02-e9f6db19c41a",
+   "at": "2026-10-09T21:09:21.358344+00:00",
+   "ns": 47667,
+   "run_id": "fraud-20261009-210921-525999",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Score the payment's graph neighborhood",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "score_payment",
+    "arguments": {
+     "case_id": "txn-compromised-merchant"
+    },
+    "chain": [
+     "fixture"
+    ]
+   }
+  },
+  {
+   "v": 1,
+   "id": "4cb47d4e-21d4-436a-a44b-4393ef3d5d63",
+   "at": "2026-10-09T21:09:21.358536+00:00",
+   "ns": 240542,
+   "run_id": "fraud-20261009-210921-525999",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "Sample scores \u00b7 probability 0.74 \u00b7 High risk",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Strongest signal: Merchant's network of linked cards (+0.41)",
+   "data": {
+    "tool": "score_payment",
+    "backend": "fixture",
+    "label": "Sample scores",
+    "engine": null,
+    "probability": 0.74,
+    "risk_band": "high",
+    "latency_ms": 0.2,
+    "recorded_at": null,
+    "synthetic": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "49da78b0-2358-40c8-aca7-6e4ff0e73a40",
+   "at": "2026-10-09T21:09:21.358548+00:00",
+   "ns": 251500,
+   "run_id": "fraud-20261009-210921-525999",
+   "component": "fraud-triage",
+   "kind": "result",
+   "status": "flagged",
+   "title": "High risk \u00b7 Contact customer, then block and reissue",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Probability 0.74 against an alert threshold of 0.50, scored by Sample scores. The score is evidence; the analyst decides.",
+   "data": {
+    "case_id": "txn-compromised-merchant",
+    "probability": 0.74,
+    "risk_band": "high",
+    "suggested_action": "Contact customer, then block and reissue",
+    "backend": "fixture",
+    "backend_label": "Sample scores",
+    "duration_ms": 1
+   }
+  }
+ ],
+ "result": {
+  "case_id": "txn-compromised-merchant",
+  "probability": 0.74,
+  "risk_band": "high",
+  "suggested_action": "Contact customer, then block and reissue",
+  "backend": "fixture",
+  "backend_label": "Sample scores",
+  "duration_ms": 1
+ }
+}

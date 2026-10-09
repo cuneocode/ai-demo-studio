@@ -6,6 +6,10 @@ from dataclasses import dataclass, field
 
 import httpx
 
+from runlog import emit_current
+
+STAGE_LABEL = {"narrative_input": "analyst-summary prompt", "narrative_output": "analyst summary"}
+
 
 class DefenseBlocked(Exception):
     pass
@@ -92,17 +96,29 @@ class Defense:
         except Exception:
             if run:
                 run.errors += 1
+            what = STAGE_LABEL.get(stage, stage)
+            emit_current("guardrail", f"AI Defense · {what} · inspection unavailable", status="error",
+                         body="Failed open; the summary continues." if self.fail_open else "Failed closed; the summary is omitted. The score is unaffected.",
+                         data={"stage": stage, "mode": self.mode})
             if not self.fail_open:
                 raise DefenseUnavailable("AI Defense inspection is unavailable. Narrative omitted.") from None
             return
+        event_id = verdict.get("event_id")
         if run:
             run.checks += 1
-            event_id = verdict.get("event_id")
             if isinstance(event_id, str) and event_id and event_id not in run.event_ids:
                 run.event_ids.append(event_id)
             if not verdict["is_safe"]:
                 run.blocked += 1
-        if not verdict["is_safe"] and self.mode == "enforce":
+        what = STAGE_LABEL.get(stage, stage)
+        safe = verdict["is_safe"]
+        status = "allowed" if safe else "blocked" if self.mode == "enforce" else "flagged"
+        raw = verdict.get("classifications")
+        classifiers = [item for item in raw if isinstance(item, str)] if isinstance(raw, list) else []
+        emit_current("guardrail", f"AI Defense · {what} · {'clean' if safe else 'blocked' if status == 'blocked' else 'violation (monitor)'}",
+                     status=status, data={"stage": stage, "mode": self.mode, "event_id": event_id if isinstance(event_id, str) else None,
+                                          "classifiers": classifiers[:6]})
+        if not safe and self.mode == "enforce":
             raise DefenseBlocked("AI Defense blocked the narrative. Score was still released.")
 
 

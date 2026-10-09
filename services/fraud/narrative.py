@@ -1,9 +1,12 @@
 """Optional LLM explanation. Never required for a score to be released."""
+import asyncio
 import os
+import time
 
 import httpx
 
-from model_backend import resolve_narrative
+from model_backend import USE_CASE, call_with_failover, pick_narrative, resolve_narrative
+from runlog import emit_current, emit_model_call
 from security import DefenseBlocked, DefenseUnavailable, defense, security_run, SecurityRun
 
 
@@ -66,7 +69,7 @@ async def explain(case: dict, score: dict) -> dict:
         return {"status": "unavailable", "text": None, "security": run.summary(), "usage": usage}
 
     shap_lines = ", ".join(
-        f"{item['feature']} {item['direction']} {item['value']:+.2f}" for item in score["shap"][:6]
+        f"{item.get('label') or item['feature']} {item['direction']} {item['value']:+.2f}" for item in score["shap"][:6]
     )
     prompt = (
         "Write two short sentences for a fraud analyst. Use only these facts. "
@@ -77,17 +80,45 @@ async def explain(case: dict, score: dict) -> dict:
         f"Probability: {score['probability']:.2f}. Shapley groups: {shap_lines}."
     )
     messages = [{"role": "user", "content": prompt}]
+    served_by = None
+    started = None
     try:
         await defense.inspect(messages, "narrative_input")
-        text = await _complete(config, messages, usage)
+        started = time.monotonic()
+        chosen = await asyncio.to_thread(pick_narrative) if resolve_narrative() is not None else None
+        if chosen is None:
+            text = await _complete(config, messages, usage)
+            served_by = {"provider": config["provider"], "label": "Lab .env" if config["provider"] == "env" else config["provider"],
+                         "model": config["model"], "fallback": False, "reason": ""}
+        else:
+            text, selection = await call_with_failover(
+                USE_CASE, lambda backend: _complete(_backend_config(backend), messages, usage), first=chosen)
+            served_by = selection.served_by()
+        _emit_call(served_by, started, usage, "ok")
+        started = None
         await defense.inspect([{"role": "assistant", "content": text}], "narrative_output")
     except DefenseBlocked:
-        return {"status": "blocked", "text": None, "security": run.summary(), "usage": usage}
+        return {"status": "blocked", "text": None, "security": run.summary(), "usage": usage, "served_by": served_by}
     except DefenseUnavailable:
-        return {"status": "unavailable", "text": None, "security": run.summary(), "usage": usage}
+        return {"status": "unavailable", "text": None, "security": run.summary(), "usage": usage, "served_by": served_by}
     except Exception:
-        return {"status": "unavailable", "text": None, "security": run.summary(), "usage": usage}
-    return {"status": "generated", "text": text, "security": run.summary(), "usage": usage}
+        if started is not None:
+            _emit_call(served_by, started, usage, "error")
+        return {"status": "unavailable", "text": None, "security": run.summary(), "usage": usage, "served_by": served_by}
+    return {"status": "generated", "text": text, "security": run.summary(), "usage": usage, "served_by": served_by}
+
+
+def _emit_call(served_by: dict | None, started: float, usage: dict, status: str) -> None:
+    latency = round((time.monotonic() - started) * 1000)
+    if served_by:
+        emit_model_call(served_by, title="AI analyst summary", latency_ms=latency, input_tokens=usage["input_tokens"],
+                        output_tokens=usage["output_tokens"], status=status)
+    else:
+        emit_current("llm.call", "AI analyst summary · no model answered", status="error", data={"latency_ms": latency})
+
+
+def _backend_config(backend) -> dict:
+    return {"model": backend.model, "base": backend.base_url, "key": backend.api_key or "not-needed", "openai": backend.kind == "openai"}
 
 
 async def _complete(config: dict, messages: list[dict], usage: dict) -> str:
