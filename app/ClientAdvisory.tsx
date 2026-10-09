@@ -127,6 +127,13 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
   const { links, openUseCase } = useStudioNav();
   const stats = useMemo(() => wealthStats(service, "/api/wealth/advisory/brief", links?.agentObservability, ADVISORY_DEFENSE), [service, links?.agentObservability]);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const focusResult = useRef(false);
+
+  useEffect(() => {
+    if (!focusResult.current || !prep) return;
+    focusResult.current = false;
+    headingRef.current?.focus({ preventScroll: true });
+  }, [prep]);
 
   useEffect(() => {
     fetch("/api/wealth/health", { signal: AbortSignal.timeout(10000) })
@@ -172,7 +179,7 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
     setRaw(body);
     setOrigin(from);
     setChosen(next.brief.actionIds);
-    requestAnimationFrame(() => headingRef.current?.focus({ preventScroll: true }));
+    focusResult.current = true;
   }
 
   async function runLive() {
@@ -241,7 +248,7 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
       const next = normalizeApproval(body);
       setApproval(next);
       setRaw({ ...raw, approval: body });
-      if (origin.kind === "live" && prep.runId) timeline.open(prep.runId);
+      if (origin.kind === "live" && prep.runId) timeline.resume(prep.runId);
       if (next.status === "sent") {
         const stored = { acceptedAt: next.supervisor?.at || new Date().toISOString(), householdId: prep.household?.id, householdName: prep.household?.name,
           recordedAt: origin.kind === "recorded" ? origin.recordedAt : undefined };

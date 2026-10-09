@@ -33,6 +33,7 @@ export function useRun<R extends RunInfo = RunInfo, E extends RunEvent = RunEven
   const [shown, setShown] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [polling, setPolling] = useState(false);
+  const [follow, setFollow] = useState(0);
   const urlRef = useRef(pageUrl);
   const settledRef = useRef(onSettled);
   useEffect(() => { urlRef.current = pageUrl; settledRef.current = onSettled; });
@@ -66,7 +67,7 @@ export function useRun<R extends RunInfo = RunInfo, E extends RunEvent = RunEven
     };
     poll();
     return () => { live = false; clearTimeout(timer); };
-  }, [runId, polling, interval, lostContact]);
+  }, [runId, polling, follow, interval, lostContact]);
 
   useEffect(() => {
     if (shown === null || shown >= events.length) return;
@@ -84,6 +85,16 @@ export function useRun<R extends RunInfo = RunInfo, E extends RunEvent = RunEven
     setShown(replay ? 0 : null);
     setRunId(id);
     setPolling(true);
+    setFollow((value) => value + 1);
+  }, []);
+
+  /** Poll a live run again (e.g. after a decision appended events), keeping what is on screen. */
+  const resume = useCallback((id: string) => {
+    setRunId(id);
+    setMode("live");
+    setShown(null);
+    setPolling(true);
+    setFollow((value) => value + 1);
   }, []);
 
   /** Play events the page already holds (a recording or fixture), with recorded pacing. */
@@ -104,7 +115,7 @@ export function useRun<R extends RunInfo = RunInfo, E extends RunEvent = RunEven
   const replaying = shown !== null && shown < events.length;
   const effectiveRun = useMemo(() => (run && replaying ? { ...run, status: "running" } as R : run), [run, replaying]);
 
-  return { runId, mode, run, effectiveRun, events, visible, replaying, error, setError, open, play, skip, reset };
+  return { runId, mode, run, effectiveRun, events, visible, replaying, error, setError, open, resume, play, skip, reset };
 }
 
 /** Keeps a scrolling list pinned to the newest item unless the reader scrolled up. */

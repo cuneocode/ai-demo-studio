@@ -107,6 +107,13 @@ export default function MarketResearch({ embedded = false, inStory = false, note
   const { links, openUseCase } = useStudioNav();
   const stats = useMemo(() => wealthStats(service, "/api/wealth/research/analyze", links?.agentObservability, RESEARCH_DEFENSE), [service, links?.agentObservability]);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const focusResult = useRef(false);
+
+  useEffect(() => {
+    if (!focusResult.current || !result) return;
+    focusResult.current = false;
+    headingRef.current?.focus({ preventScroll: true });
+  }, [result]);
 
   useEffect(() => {
     fetch("/api/wealth/health", { signal: AbortSignal.timeout(10000) })
@@ -133,7 +140,7 @@ export default function MarketResearch({ embedded = false, inStory = false, note
     setResult(next);
     setRaw(body);
     setOrigin(from);
-    requestAnimationFrame(() => headingRef.current?.focus({ preventScroll: true }));
+    focusResult.current = true;
   }
 
   async function runLive(pick: ResearchScenario | null, symbol?: string) {
@@ -197,7 +204,7 @@ export default function MarketResearch({ embedded = false, inStory = false, note
       if (!response.ok) throw new Error(parseApiError(text, response.status));
       const outcome = normalizePublish(parsed(text));
       setPublish(outcome);
-      if (origin.kind === "live" && result.runId) timeline.open(result.runId);
+      if (origin.kind === "live" && result.runId) timeline.resume(result.runId);
       if (outcome.status === "published") {
         const stored: StoredResearchNote = {
           ticker: result.ticker, acceptedAt: outcome.at || new Date().toISOString(), publishedBy: outcome.by,

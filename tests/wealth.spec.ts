@@ -46,6 +46,7 @@ type Routes = {
   publish?: (route: Route) => unknown;
   brief?: (route: Route) => unknown;
   approve?: (route: Route) => unknown;
+  extraEvents?: () => object[];
 };
 
 /** Every /api/wealth call is mocked: nothing in this spec reaches the live service or a paid model. */
@@ -64,8 +65,8 @@ async function mockWealth(page: Page, routes: Routes = {}) {
     const id = new URL(route.request().url()).pathname.split("/").pop();
     return route.fulfill({ json: {
       run: { id, status: "completed", started_at: "2026-10-09T12:00:00Z", finished_at: "2026-10-09T12:00:02Z" },
-      events: [{ id: "e1", at: "2026-10-09T12:00:00Z", run_id: id, component: "wealth", kind: "run", status: "started", title: "Mocked live run" }],
-      total: 1,
+      events: [{ id: "e1", at: "2026-10-09T12:00:00Z", run_id: id, component: "wealth", kind: "run", status: "started", title: "Mocked live run" }, ...(routes.extraEvents?.() ?? [])],
+      total: 1 + (routes.extraEvents?.().length ?? 0),
     } });
   });
   if (routes.analyze) await page.route("**/api/wealth/research/analyze", routes.analyze);
@@ -292,7 +293,7 @@ test.describe("Advisor meeting prep", () => {
     });
     await open(page, ADVISORY_TITLE);
     await page.locator(".rx-actions").getByRole("button", { name: "Replay recorded run" }).click();
-    await expect(result(page).getByRole("heading", { name: "Dana Whitfield", level: 2 })).toBeVisible();
+    await expect(result(page).getByRole("heading", { name: "Dana Whitfield", level: 2 })).toBeFocused();
     await expect(result(page)).toContainText("Reg BI care obligation");
     await expect(result(page).locator(".ax-findings li").first()).toContainText("Single issuer above policy");
 
@@ -355,6 +356,24 @@ test.describe("Advisor meeting prep", () => {
     await expect(result(page).locator(".ax-refused")).toContainText("Client data stayed in the bank");
     await expect(badge(page)).toHaveText("Sample data · Brief written by code · client data stayed in the bank");
     await expect(result(page)).not.toContainText("AI Defense forced to enforce");
+  });
+
+  test("a decision on a live run appends to the timeline without clearing it", async ({ page }) => {
+    let decided = false;
+    await mockWealth(page, {
+      brief: (route) => route.fulfill({ json: { ...RECORDED["advisory-dana-whitfield"].result, run_id: route.request().postDataJSON().run_id, served_by: OPENAI_FALLBACK } }),
+      approve: (route) => {
+        decided = true;
+        return route.fulfill({ json: { status: "awaiting_supervisor", advisor: { by: "Jordan Lee · advisor", at: "2026-10-09T12:10:00Z" }, action_ids: [] } });
+      },
+      extraEvents: () => (decided ? [{ id: "e2", at: "2026-10-09T12:00:05Z", component: "wealth", kind: "hitl.decision", status: "ok", lane: "human", title: "Jordan Lee · advisor · submitted the brief for supervision" }] : []),
+    });
+    await open(page, ADVISORY_TITLE);
+    await page.locator("#advisory-run").click();
+    await expect(timeline(page)).toContainText("Mocked live run");
+    await page.getByRole("region", { name: "Approval" }).getByRole("button", { name: "Submit for supervision" }).click();
+    await expect(timeline(page)).toContainText("submitted the brief for supervision");
+    await expect(timeline(page)).toContainText("Mocked live run");
   });
 
   test("the prepared brief survives a trip to the Architecture tab", async ({ page }) => {
