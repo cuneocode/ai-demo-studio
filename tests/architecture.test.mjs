@@ -6,8 +6,8 @@ import { buildZoomScene, routeSceneEdge, zoomCaseIds, zoomMaps } from '../app/ar
 const sample={transformation:{friction:'Before',aiShift:'After',humanControl:'Review'},architecture:{process:Array.from({length:4},(_,i)=>({title:`Step ${i}`,detail:'Business step'})),ai:Array.from({length:3},(_,i)=>({point:`${i} → ${i+1}`,label:`AI ${i}`,detail:'Capability'}))}};
 const fraudFrame={transformation:{friction:'Before',aiShift:'After',humanControl:'Review'},architecture:{process:[{title:'Select a payment',detail:'Held-out TabFormer card events'},{title:'Score the graph edge',detail:'Neighborhood + transaction features'},{title:'Inspect evidence',detail:'Probability + Shapley groups'},{title:'Decide disposition',detail:'Analyst-owned hold / review / clear'}],ai:[{point:'01 → 02',label:'GraphSAGE + XGBoost + Shapley',detail:'Score path never enters AI Defense.'},{point:'02 → 03',label:'Threshold band',detail:'hold ≥ 0.50'},{point:'03 → 04',label:'Optional narrative',detail:'AI Defense inspects only this hop.'}]}};
 const briefingFrame={transformation:{friction:'Before',aiShift:'After',humanControl:'Review'},architecture:{process:[{title:'Identify the issuer',detail:'Ticker, name, or upload'},{title:'Ingest the annual report',detail:'EDGAR 10-K or uploaded file'},{title:'Extract grounded themes',detail:'TOC nodes + companyfacts'},{title:'Accept studio context',detail:'Presenter-owned accept-gate'}],ai:[{point:'01 → 02',label:'Deep Agent supervisor',detail:'Plans and delegates. Never reads filing nodes.'},{point:'02 → 03',label:'Theme subagents',detail:'read_filing_node plus XBRL facts.'},{point:'03 → 04',label:'Ground and accept',detail:'Cite-or-abstain verifier, then Use this company.'}]}};
-const researchFrame={transformation:{friction:'Before',aiShift:'After',humanControl:'Review'},architecture:{process:[{title:'Select a ticker',detail:'Any US ticker'},{title:'Fetch or reuse cache',detail:'Yahoo + FRED'},{title:'Review indicators + conflicts',detail:'CPU tools'},{title:'Accept research note',detail:'Presenter-owned accept-gate'}],ai:[{point:'01 → 02',label:'Fetch + snapshot cache',detail:'Allowlisted yfinance and FRED.'},{point:'02 → 03',label:'CPU tools + conflicts',detail:'Structured rows before the LLM.'},{point:'03 → 04',label:'NIM note + accept-gate',detail:'Local NIM on :8003. Defense on hops only.'}]}};
-const advisoryFrame={transformation:{friction:'Before',aiShift:'After',humanControl:'Review'},architecture:{process:[{title:'Enter live holdings',detail:'Ticker + weight'},{title:'Assemble entitled context',detail:'Accepted briefing + note'},{title:'Run suitability rules',detail:'CPU rules'},{title:'Accept meeting brief',detail:'Advisor-owned accept-gate'}],ai:[{point:'01 → 02',label:'Entitled context assembly',detail:'Posted accepted context. Off Inspection.'},{point:'02 → 03',label:'Suitability rules',detail:'Not an LLM and not sent to Defense.'},{point:'03 → 04',label:'NIM brief + advisor gate',detail:'Local NIM. Holdings remain if brief omitted.'}]}};
+const researchFrame={transformation:{friction:'Before',aiShift:'After',humanControl:'Review'},architecture:{process:[{title:'Select a ticker',detail:'Any US ticker'},{title:'Fetch or reuse cache',detail:'Yahoo + FRED'},{title:'Review indicators + conflicts',detail:'CPU tools'},{title:'Accept research note',detail:'Presenter-owned accept-gate'}],ai:[{point:'01 → 02',label:'Fetch + snapshot cache',detail:'Allowlisted yfinance and FRED.'},{point:'02 → 03',label:'CPU tools + conflicts',detail:'Structured rows before the LLM.'},{point:'03 → 04',label:'Model-chain note + accept-gate',detail:'Sparky vLLM, else the OpenAI API. Defense on hops only.'}]}};
+const advisoryFrame={transformation:{friction:'Before',aiShift:'After',humanControl:'Review'},architecture:{process:[{title:'Enter live holdings',detail:'Ticker + weight'},{title:'Assemble entitled context',detail:'Accepted briefing + note'},{title:'Run suitability rules',detail:'CPU rules'},{title:'Accept meeting brief',detail:'Advisor-owned accept-gate'}],ai:[{point:'01 → 02',label:'Entitled context assembly',detail:'Posted accepted context. Off Inspection.'},{point:'02 → 03',label:'Suitability rules',detail:'Not an LLM and not sent to Defense.'},{point:'03 → 04',label:'Model-chain brief + advisor gate',detail:'Sparky vLLM, else OpenAI under enforced AI Defense. Holdings remain if brief omitted.'}]}};
 const graphs=[bankingRuntime(),bankingKnowledge(),fraudRuntime(),fraudKnowledge(),briefingRuntime(),briefingKnowledge(),researchRuntime(),researchKnowledge(),advisoryRuntime(),advisoryKnowledge(),...Object.keys(profiles).flatMap(id=>[proposedRuntime(id),knowledgeDiagram(id),securityDiagram(id),deploymentDiagram(id)]),...[0,1,2,3,99,-1].map(i=>capabilityDiagram(sample,i)),...[0,1,2,3,99,-1].map(i=>capabilityDiagram(fraudFrame,i,'fraud-modeling')),...[0,1,2,3,99,-1].map(i=>capabilityDiagram(briefingFrame,i,'company-briefing')),...[0,1,2,3,99,-1].map(i=>capabilityDiagram(researchFrame,i,'market-research')),...[0,1,2,3,99,-1].map(i=>capabilityDiagram(advisoryFrame,i,'client-advisory'))];
 for(const graph of graphs)test(`Valid connected diagram: ${graph.title}`,()=>{
  const ids=new Set(graph.nodes.map(n=>n.id));assert.equal(ids.size,graph.nodes.length);
@@ -15,7 +15,7 @@ for(const graph of graphs)test(`Valid connected diagram: ${graph.title}`,()=>{
  for(const edge of graph.edges){assert.ok(ids.has(edge.from)&&ids.has(edge.to),`Dangling edge ${edge.from} → ${edge.to}`);assert.ok(edge.label.trim());}
 });
 test('Running bank does not claim proposed controls or private inference',()=>{
- const live=bankingRuntime();assert.ok(live.nodes.some(n=>n.title==='InMemorySaver'));assert.ok(live.nodes.some(n=>n.title==='OpenAI hosted model'));assert.ok(live.nodes.some(n=>n.title==='Cisco AI Defense'));assert.ok(live.nodes.some(n=>n.title==='Splunk OTLP export'));assert.ok(live.edges.some(e=>e.from==='supervisor'&&e.to==='cards'));assert.ok(live.edges.some(e=>e.from==='supervisor'&&e.to==='score'));
+ const live=bankingRuntime();assert.ok(live.nodes.some(n=>n.title==='InMemorySaver'));assert.ok(live.nodes.some(n=>n.title==='Studio model chain'&&/OpenAI API/.test(n.detail)&&/no NVIDIA NIM or Cisco UCS GPU/.test(n.detail)));assert.ok(live.nodes.some(n=>n.title==='Cisco AI Defense'));assert.ok(live.nodes.some(n=>n.title==='Splunk OTLP export'));assert.ok(live.edges.some(e=>e.from==='supervisor'&&e.to==='cards'));assert.ok(live.edges.some(e=>e.from==='supervisor'&&e.to==='score'));
 });
 test('Brahe inspection is on every model boundary and can fail before answer release',()=>{
  const live=bankingRuntime();assert.ok(live.edges.some(e=>e.from==='api'&&e.to==='defense'&&e.label.includes('full context')));assert.ok(live.edges.some(e=>e.from==='defense'&&e.to==='model'&&e.label.startsWith('allow')));assert.ok(live.edges.some(e=>e.from==='model'&&e.to==='defense'&&e.label.includes('tool args')));assert.ok(live.edges.some(e=>e.from==='defense'&&e.to==='errors'));assert.ok(live.nodes.find(n=>n.id==='splunk')?.detail.includes('only when configured'));
@@ -108,11 +108,11 @@ test('Live research keeps Defense off fetch, cache, FRED, tools, conflicts, and 
  assert.ok(!live.edges.some(e=>offInspection.has(e.from)&&e.to==='defense'));
  assert.ok(!live.edges.some(e=>e.from==='defense'&&offInspection.has(e.to)));
  assert.ok(live.nodes.some(n=>n.id==='gate'&&n.title.includes('Accept research note')));
- assert.ok(live.note.includes('does not assert live Yahoo, FRED, or NIM'));
+ assert.ok(live.note.includes('does not assert live Yahoo, FRED, or model'));
  assert.ok(live.note.includes('not financial advice')||live.nodes.some(n=>/not financial advice/i.test(`${n.title} ${n.detail}`)));
  assert.ok(!live.nodes.some(n=>/vector index|tavily|fixture pack/i.test(`${n.title} ${n.subtitle} ${n.detail}`)));
 });
-test('Live research puts Defense on NIM hops and keeps indicators if the note is omitted',()=>{
+test('Live research puts Defense on model hops and keeps indicators if the note is omitted',()=>{
  const live=researchRuntime();
  assert.ok(live.edges.some(e=>e.from==='nim'&&e.to==='defense'));
  assert.ok(live.edges.some(e=>e.from==='model'&&e.to==='defense'));
@@ -129,13 +129,13 @@ test('Research cache map has no vector index and no committed snapshot pack',()=
  assert.ok(knowledge.note.includes('no committed snapshot pack'));
  assert.ok(!knowledge.nodes.some(n=>/embedding model|vector index|tavily/i.test(`${n.title} ${n.detail}`)));
 });
-test('Research capability keeps Defense off tools/cache and on the NIM hop',()=>{
+test('Research capability keeps Defense off tools/cache and on the model hop',()=>{
  for(const step of [0,1,2,3]){
   const graph=capabilityDiagram(researchFrame,step,'market-research');
   assert.ok(!graph.edges.some(e=>['yahoo','cache','tools','conflicts','grounding'].includes(e.from)&&e.to==='defense'));
   assert.ok(graph.edges.some(e=>e.from==='nim'&&e.to==='defense'));
   assert.ok(graph.edges.some(e=>e.from==='tools'&&e.to==='conflicts')||graph.nodes.some(n=>n.id==='conflicts'));
-  assert.ok(graph.note.includes('does not assert live Yahoo, FRED, or NIM'));
+  assert.ok(graph.note.includes('does not assert live Yahoo, FRED, or model'));
  }
 });
 test('Live advisory keeps Defense off entitled context, suitability, holdings, and grounding',()=>{
@@ -144,10 +144,10 @@ test('Live advisory keeps Defense off entitled context, suitability, holdings, a
  assert.ok(!live.edges.some(e=>offInspection.has(e.from)&&e.to==='defense'));
  assert.ok(!live.edges.some(e=>e.from==='defense'&&offInspection.has(e.to)));
  assert.ok(live.nodes.some(n=>n.id==='gate'&&n.title.includes('Accept meeting brief')));
- assert.ok(live.note.includes('does not assert live Yahoo, FRED, or NIM'));
+ assert.ok(live.note.includes('does not assert live Yahoo, FRED, or model'));
  assert.ok(live.note.includes('not advice')||live.nodes.some(n=>/not advice/i.test(`${n.title} ${n.detail}`)));
 });
-test('Live advisory puts Defense on NIM hops and keeps holdings if the brief is omitted',()=>{
+test('Live advisory puts Defense on model hops and keeps holdings if the brief is omitted',()=>{
  const live=advisoryRuntime();
  assert.ok(live.edges.some(e=>e.from==='nim'&&e.to==='defense'));
  assert.ok(live.edges.some(e=>e.from==='model'&&e.to==='defense'));
@@ -162,12 +162,48 @@ test('Advisory entitled-context map has no household catalog and no vector index
  assert.ok(knowledge.note.includes('No household CRM catalog'));
   assert.ok(!knowledge.nodes.some(n=>/embedding model|vector index|tavily/i.test(`${n.title} ${n.detail}`)));
 });
-test('Advisory capability keeps Defense off rules/context and on the NIM hop',()=>{
+test('Advisory capability keeps Defense off rules/context and on the model hop',()=>{
  for(const step of [0,1,2,3]){
   const graph=capabilityDiagram(advisoryFrame,step,'client-advisory');
   assert.ok(!graph.edges.some(e=>['entitled','holdings','suitability','metrics','grounding'].includes(e.from)&&e.to==='defense'));
   assert.ok(graph.edges.some(e=>e.from==='nim'&&e.to==='defense'));
-  assert.ok(graph.note.includes('does not assert live Yahoo, FRED, or NIM'));
+  assert.ok(graph.note.includes('does not assert live Yahoo, FRED, or model'));
+ }
+});
+test('No diagram claims Cisco UCS / GPU inference as implemented',()=>{
+ for(const graph of graphs){
+  const scope=`${graph.title} ${graph.note}`;
+  for(const node of graph.nodes){
+   const text=`${node.title} ${node.subtitle} ${node.detail}`;
+   assert.ok(!/local nim/i.test(`${node.title} ${node.subtitle}`),`${graph.title}: ${node.id} still says Local NIM`);
+   if(!/\bUCS\b/.test(text))continue;
+   assert.ok(!/\bimplemented\b/i.test(text),`${graph.title}: ${node.id} claims UCS as implemented`);
+   assert.ok(/proposed/i.test(text)||/proposed/i.test(scope)||/\bno\b[^.]*UCS/i.test(text),`${graph.title}: ${node.id} mentions UCS without saying proposed or absent`);
+  }
+ }
+});
+test('Wealth model host is Sparky on a DGX Spark dev box, with Cisco AI POD proposed',()=>{
+ const wealth=[researchRuntime(),advisoryRuntime(),...[0,3].flatMap(i=>[capabilityDiagram(researchFrame,i,'market-research'),capabilityDiagram(advisoryFrame,i,'client-advisory')])];
+ for(const graph of wealth){
+  const compute=graph.nodes.find(n=>n.id==='compute');
+  assert.match(compute.title,/Sparky/);
+  assert.match(compute.detail,/DGX Spark/);
+  assert.match(compute.detail,/not Cisco hardware/);
+  assert.match(`${compute.subtitle} ${compute.detail}`,/proposed/i);
+  assert.notEqual(compute.kind,'cisco',`${graph.title}: the dev host is not a Cisco node`);
+  assert.match(graph.note,/Studio model chain/);
+  assert.ok(!graph.edges.some(e=>/implemented/i.test(e.label)),`${graph.title}: no edge calls the dev host implemented`);
+ }
+ for(const graph of [researchRuntime(),advisoryRuntime()]){
+  const model=graph.nodes.find(n=>n.id==='model');
+  assert.equal(model.title,'Studio model chain');
+  assert.match(model.subtitle,/Sparky vLLM → OpenAI API/);
+ }
+ assert.match(advisoryRuntime().note,/only with AI Defense forced to enforce/);
+ for(const id of ['market-research','client-advisory']){
+  assert.match(profiles[id].gpu,/Sparky vLLM/);
+  assert.match(profiles[id].gpu,/DGX Spark/);
+  assert.match(profiles[id].gpu,/proposed/);
  }
 });
 test('Wealth profiles describe snapshot cache, FRED, and accept-gates',()=>{

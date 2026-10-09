@@ -10,7 +10,7 @@ import InterbankDemo from "./InterbankDemo";
 import ArchitectureMap from "./ArchitectureMap";
 import StudioSettings, { ModelChip } from "./StudioSettings";
 import { ControlsPage, HelpDrawer, PresenterBar, ServiceBell, TelemetryPage } from "./StudioShell";
-import { momentReady, platformSummary, useStudioStatus } from "./studio-status";
+import { momentReady, platformSummary, useStudioStatus, type StudioStatus, type Tone } from "./studio-status";
 import { StudioNavContext } from "./studio-nav";
 import { IllustrativeRunStats } from "./RunStats";
 import { setTheme, useTheme } from "./theme";
@@ -146,7 +146,7 @@ const useCases: UseCase[] = [
     icon: Landmark,
     accent: "blue",
     solutions: ["AI Defense", "Splunk Observability"],
-    signal: "Live research · Yahoo + FRED cache",
+    signal: "Live research · Yahoo + FRED · committed snapshots",
     stage: "Interactive",
   },
   {
@@ -158,7 +158,7 @@ const useCases: UseCase[] = [
     icon: WalletCards,
     accent: "amber",
     solutions: ["AI Defense", "Splunk Observability", "AI Infrastructure"],
-    signal: "Live advisory · entitled context + holdings",
+    signal: "Live advisory · synthetic households + shared context",
     stage: "Interactive",
   },
   {
@@ -313,7 +313,7 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
     transformation: {
       friction: "Each payment is scored in isolation, so a clean customer at a compromised merchant looks safe.",
       aiShift: "GraphSAGE + XGBoost scores the payment from the account–merchant neighborhood; Captum Shapley explains the risk. The score path does not enter Cisco AI Defense.",
-      humanControl: "The score is not a fraud flag. An analyst reviews evidence and owns hold, review, or clear.",
+      humanControl: "The score is not a fraud flag. An analyst reviews the evidence and decides what happens to the payment.",
     },
     architecture: {
       process: [
@@ -324,7 +324,7 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
       ],
       ai: [
         { point: "01 → 02", label: "GraphSAGE + XGBoost + Shapley", detail: "The live HTTP sidecar embeds the TabFormer neighborhood, classifies with XGBoost, and returns Captum Shapley groups. This hop never calls an LLM or AI Defense." },
-        { point: "02 → 03", label: "Threshold band", detail: "hold ≥ 0.50, review ≥ 0.35, otherwise clear. The probability is evidence, not a fraud flag." },
+        { point: "02 → 03", label: "Risk band", detail: "High ≥ 0.50, elevated ≥ 0.35, otherwise low, each with a suggested action. The probability is evidence, not a fraud flag." },
         { point: "03 → 04", label: "Optional narrative", detail: "Off unless FRAUD_ENABLE_NARRATIVE=true. AI Defense inspects only this draft. Deny or LLM failure omits the text; the score still releases." },
       ],
     },
@@ -332,13 +332,13 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
     workbenchLabel: "Fraud scoring",
     workbenchTitle: "Graph payment scorer",
     workbenchSummary: "Score TabFormer payments with GraphSAGE + XGBoost and review Shapley evidence.",
-    primaryAction: "Review next alert",
+    primaryAction: "Score selected payment",
   },
   "client-advisory": {
     liveExperience: "advisory",
     transformation: {
       friction: "Advisors assemble entitled briefing context, a research note, and live holdings by hand before each meeting.",
-      aiShift: "Suitability rules run on presenter-entered weights. Local NIM drafts a cited meeting brief from accepted context only.",
+      aiShift: "Suitability rules run on presenter-entered weights. The Studio model chain drafts a cited meeting brief from accepted context only.",
       humanControl: "The advisor accept-gate owns the brief. This is a demo brief — not advice. No auto-trade.",
     },
     architecture: {
@@ -351,7 +351,7 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
       ai: [
         { point: "01 → 02", label: "Entitled context assembly", detail: "Posted accepted briefing excerpts and research snapshot fields. Off Inspection. No CRM catalog and no Tavily." },
         { point: "02 → 03", label: "Suitability rules", detail: "CPU rules on concentration and missing IPS fields. Not an LLM and not sent to AI Defense." },
-        { point: "03 → 04", label: "NIM brief + advisor gate", detail: "ProtectedChatOpenAI on 127.0.0.1:8003. Defense inspects this hop only. Holdings remain if the brief is omitted." },
+        { point: "03 → 04", label: "Model-chain brief + advisor gate", detail: "ProtectedChatOpenAI on the Studio model chain: Sparky vLLM, else the OpenAI API with AI Defense enforcing. Defense inspects this hop only. Holdings remain if the brief is omitted." },
       ],
     },
     metrics: [], rows: [], evidence: [],
@@ -364,7 +364,7 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
     liveExperience: "research",
     transformation: {
       friction: "Researchers pull Yahoo prints, FRED series, and peer multiples by hand before writing a note.",
-      aiShift: "Allowlisted yfinance + FRED write through a cache. CPU tools emit conflict rows. Local NIM drafts a cited note.",
+      aiShift: "Allowlisted yfinance + FRED write through a cache. CPU tools emit conflict rows. The Studio model chain drafts a cited note.",
       humanControl: "Accept research note is required. Demo recommendation — not financial advice. Numbers stay if the note is omitted.",
     },
     architecture: {
@@ -377,7 +377,7 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
       ai: [
         { point: "01 → 02", label: "Fetch + snapshot cache", detail: "Named yfinance functions and allowlisted FRED series. Off Inspection. Empty provider responses fail closed." },
         { point: "02 → 03", label: "CPU tools + conflicts", detail: "Beat-rate, peer P/E, horizon vs SPY, and structured conflicts. Not a keyword scan and not sent to Defense." },
-        { point: "03 → 04", label: "NIM note + accept-gate", detail: "LangChain ChatOpenAI to local NIM on :8003. Defense inspects model hops only. Grounding drops ungrounded claims." },
+        { point: "03 → 04", label: "Model-chain note + accept-gate", detail: "LangChain ChatOpenAI on the Studio model chain: Sparky vLLM, else the OpenAI API. Defense inspects model hops only. Grounding drops ungrounded claims." },
       ],
     },
     metrics: [], rows: [], evidence: [],
@@ -477,7 +477,7 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
 
 const storySteps = [
   { title: "KYC intake", label: "Know the client", icon: Fingerprint, color: "blue" },
-  { title: "Transaction screening", label: "See the signal", icon: ReceiptText, color: "violet" },
+  { title: "Fraud monitoring", label: "Catch the fraud", icon: ReceiptText, color: "violet" },
   { title: "SAR support", label: "Investigate & report", icon: FileSearch, color: "mint" },
   { title: "Client advisory", label: "Serve with context", icon: WalletCards, color: "amber" },
 ];
@@ -502,45 +502,53 @@ const SOLUTIONS: Solution[] = ["AI Defense", "Splunk observability", "AI Infrast
 const solutionOf = (name: string): Solution | null =>
   name.includes("AI Defense") ? "AI Defense" : name.includes("AI Infrastructure") ? "AI Infrastructure" : /Splunk|Galileo/.test(name) ? "Splunk observability" : null;
 
-function liveExperienceLabel(experience?: UseCaseFrame["liveExperience"]) {
-  if (experience === "banking") return "Live AI · fictional bank";
-  if (experience === "fraud") return "Live scoring · TabFormer GNN+XGB";
-  if (experience === "briefing") return "Live extract · EDGAR + upload";
-  if (experience === "research") return "Live research · Yahoo + FRED cache";
-  if (experience === "advisory") return "Live advisory · entitled context + holdings";
-  if (experience === "interbank") return "Live A2A · two Deep Agents";
-  return "Prototype data";
+type LiveExperience = NonNullable<UseCaseFrame["liveExperience"]>;
+
+const LIVE_SUBJECT: Record<LiveExperience, string> = {
+  banking: "fictional bank",
+  fraud: "TabFormer GNN+XGB",
+  briefing: "EDGAR + upload",
+  research: "Yahoo + FRED · committed snapshots",
+  advisory: "synthetic households + shared context",
+  interbank: "two Deep Agents",
+};
+
+/** Demos that can replay a recorded run when their service or model is down. */
+const HAS_RECORDED_RUNS = new Set<LiveExperience>(["fraud", "research", "advisory"]);
+
+/** The header chip: "Live" only when the studio status says this use case's service is up and ready. */
+function liveExperienceStatus(useCaseId: string, experience: UseCaseFrame["liveExperience"], status: StudioStatus | null): { label: string; tone: Tone; title: string } {
+  if (!experience) return { label: "Prototype data", tone: "amber", title: "Illustrative frontend and data" };
+  if (!status) return { label: "Checking live service", tone: "blue", title: "Studio status unavailable" };
+  const { ready, reason } = momentReady(status, useCaseId, true);
+  if (ready) return { label: `Live · ${LIVE_SUBJECT[experience]}`, tone: "mint", title: reason };
+  const state = reason.startsWith("Needs ") ? "Setup needed" : "Offline";
+  return { label: HAS_RECORDED_RUNS.has(experience) ? `${state} · recorded runs available` : state, tone: "amber", title: reason };
 }
 
-function focusLiveExperience(experience?: UseCaseFrame["liveExperience"]) {
-  if (experience === "banking") {
-    document.getElementById("banking-experience")?.scrollIntoView({ behavior: "smooth" });
-    document.querySelector<HTMLInputElement>(".chat-composer input")?.focus({ preventScroll: true });
-    return;
-  }
-  if (experience === "fraud") {
-    document.getElementById("fraud-experience")?.scrollIntoView({ behavior: "smooth" });
-    document.getElementById("score-payment")?.focus({ preventScroll: true });
-    return;
-  }
-  if (experience === "briefing") {
-    document.getElementById("briefing-experience")?.scrollIntoView({ behavior: "smooth" });
-    document.getElementById("company-briefing-query")?.focus({ preventScroll: true });
-    return;
-  }
-  if (experience === "research") {
-    document.getElementById("research-experience")?.scrollIntoView({ behavior: "smooth" });
-    document.getElementById("research-ticker")?.focus({ preventScroll: true });
-    return;
-  }
-  if (experience === "advisory") {
-    document.getElementById("advisory-experience")?.scrollIntoView({ behavior: "smooth" });
-    document.getElementById("accept-meeting-brief")?.focus({ preventScroll: true });
-  }
-  if (experience === "interbank") {
-    document.getElementById("interbank-experience")?.scrollIntoView({ behavior: "smooth" });
-    document.getElementById("interbank-kickoff")?.focus({ preventScroll: true });
-  }
+/** Each demo's section and the control its header CTA should focus. */
+const FOCUS_TARGETS: Record<LiveExperience, { section: string; control: string }> = {
+  banking: { section: "banking-experience", control: ".chat-composer input" },
+  fraud: { section: "fraud-experience", control: "#score-payment" },
+  briefing: { section: "briefing-experience", control: "#company-briefing-query" },
+  research: { section: "research-experience", control: "#research-ticker" },
+  advisory: { section: "advisory-experience", control: "input" },
+  interbank: { section: "interbank-experience", control: "#interbank-kickoff" },
+};
+const FOCUSABLE = "input, select, textarea, button, [href], [tabindex]:not([tabindex='-1'])";
+
+const focusable = (element: Element | null): element is HTMLElement =>
+  element instanceof HTMLElement && !element.matches(":disabled, [aria-disabled='true']") && element.getClientRects().length > 0;
+
+/** Scrolls to the demo and focuses its first control, or the first enabled control when that one is disabled. */
+function focusLiveExperience(experience: LiveExperience) {
+  const target = FOCUS_TARGETS[experience];
+  const section = document.getElementById(target.section);
+  if (!section) return;
+  section.scrollIntoView({ behavior: "smooth" });
+  const preferred = section.querySelector(target.control);
+  const control = focusable(preferred) ? preferred : Array.from(section.querySelectorAll(FOCUSABLE)).find(focusable);
+  control?.focus({ preventScroll: true });
 }
 
 type CaseTab = "demo" | "architecture";
@@ -634,6 +642,7 @@ function PlatformRail() {
       tone: "mint" as const,
     },
   ];
+  const mapped = useCases.filter((item) => new Set(item.solutions.map(solutionOf).filter(Boolean)).size >= 2).length;
 
   return (
     <aside className="platform-rail">
@@ -662,8 +671,8 @@ function PlatformRail() {
         })}
       </div>
       <div className="rail-footer">
-        <div className="coverage-ring"><span>100%</span><small>mapped</small></div>
-        <div><strong>Platform coverage</strong><p>Every demo includes at least two Cisco capabilities.</p></div>
+        <div className="coverage-ring"><span>{mapped}/{useCases.length}</span><small>mapped</small></div>
+        <div><strong>Platform coverage</strong><p>{mapped} of {useCases.length} demos map to two or more Cisco capabilities. Architecture mapping, not a measured deployment.</p></div>
       </div>
     </aside>
   );
@@ -723,6 +732,7 @@ function UseCaseWorkspace({
   advisoryBrief,
   onAdvisoryBriefChange,
   onOpenModels,
+  status,
 }: {
   useCase: UseCase;
   inStory: boolean;
@@ -735,8 +745,10 @@ function UseCaseWorkspace({
   advisoryBrief: StoredAdvisoryBrief | null;
   onAdvisoryBriefChange: (brief: StoredAdvisoryBrief | null) => void;
   onOpenModels: () => void;
+  status: StudioStatus | null;
 }) {
   const frame = useCaseFrames[useCase.id];
+  const liveStatus = liveExperienceStatus(useCase.id, frame.liveExperience, status);
   const Icon = useCase.icon;
   const [selectedRow, setSelectedRow] = useState(0);
   const row = frame.rows[selectedRow];
@@ -806,7 +818,7 @@ function UseCaseWorkspace({
           </div>
         </div>
         <div className="heading-actions">
-          <span className="prototype-chip"><StatusDot tone="amber" /> {liveExperienceLabel(frame.liveExperience)}</span>
+          <span className="prototype-chip live-status-chip" title={liveStatus.title}><StatusDot tone={liveStatus.tone} /> {liveStatus.label}</span>
           <ModelChip experience={frame.liveExperience} onOpen={onOpenModels} />
           <button className="secondary-button" onClick={onAdd}>{inStory ? <><Check size={16} /> In story</> : <><Plus size={16} /> Add to story</>}</button>
           <button className="primary-button" onClick={startPrimaryAction}>{frame.primaryAction} <ArrowRight size={16} /></button>
@@ -836,16 +848,16 @@ function UseCaseWorkspace({
         <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Banking assistant</h2></div><span>Fictional products · mock score 550</span></div>
         <BankingDemo embedded inStory={inStory} onBack={onBack} onAdd={onAdd} />
       </section> : frame.liveExperience === "fraud" ? <section id="fraud-experience">
-        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Fraud scoring</h2></div><span>TabFormer GNN+XGB · score is not a flag</span></div>
+        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Fraud scoring</h2></div><span>TabFormer GNN+XGB · the score is evidence, not a decision</span></div>
         <FraudDemo embedded inStory={inStory} onBack={onBack} onAdd={onAdd} />
       </section> : frame.liveExperience === "briefing" ? <section id="briefing-experience">
         <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Company briefing</h2></div><span>EDGAR + upload only · accept before store</span></div>
         <CompanyBriefing embedded inStory={inStory} onBack={onBack} onAdd={onAdd} profile={companyProfile} onProfileChange={onCompanyProfileChange} />
       </section> : frame.liveExperience === "research" ? <section id="research-experience">
-        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Wealth market research</h2></div><span>Yahoo + FRED cache · not financial advice</span></div>
+        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Wealth market research</h2></div><span>Yahoo + FRED · committed snapshots · not financial advice</span></div>
         <MarketResearch embedded inStory={inStory} companyProfile={companyProfile} note={researchNote} onNoteChange={onResearchNoteChange} />
       </section> : frame.liveExperience === "advisory" ? <section id="advisory-experience">
-        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Client advisory</h2></div><span>Entitled context + holdings · not advice</span></div>
+        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Client advisory</h2></div><span>Synthetic households + shared context · not advice</span></div>
         <ClientAdvisory embedded inStory={inStory} companyProfile={companyProfile} researchNote={researchNote} brief={advisoryBrief} onBriefChange={onAdvisoryBriefChange} />
       </section> : frame.liveExperience === "interbank" ? <section id="interbank-experience">
         <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Agent-to-agent investigation</h2></div><span>Fictional banks · read-only agents · live Splunk trace</span></div>
@@ -1038,7 +1050,19 @@ export default function HomePage() {
     if (!normalized) return [];
     const pages = [...navItems, ...shellPages].map((item) => ({ key: `view-${item.id}`, icon: item.icon, title: item.label, detail: "Page", open: () => switchView(item.id) }));
     const cases = useCases.map((item) => ({ key: `case-${item.id}`, icon: item.icon, title: item.title, detail: `${item.category} · ${useCaseFrames[item.id]?.liveExperience ? "Live" : "Prototype"}`, open: () => openUseCase(item), text: `${item.description} ${item.solutions.join(" ")}` }));
-    return [...pages, ...cases].filter((item) => `${item.title} ${item.detail} ${"text" in item ? item.text : ""}`.toLowerCase().includes(normalized)).slice(0, 8);
+    const rank = (item: (typeof pages)[number] | (typeof cases)[number]) => {
+      const title = item.title.toLowerCase();
+      if (title.startsWith(normalized)) return 0;
+      if (title.split(/[^a-z0-9]+/).some((word) => word.startsWith(normalized))) return 1;
+      if (title.includes(normalized)) return 2;
+      return `${title} ${item.detail} ${"text" in item ? item.text : ""}`.toLowerCase().includes(normalized) ? 3 : -1;
+    };
+    return [...pages, ...cases]
+      .map((item, order) => ({ item, order, score: rank(item) }))
+      .filter((entry) => entry.score >= 0)
+      .sort((a, b) => a.score - b.score || a.order - b.order)
+      .slice(0, 8)
+      .map((entry) => entry.item);
   }, [launcherQuery, switchView, openUseCase]);
   const closeLauncher = () => { setLauncherOpen(false); setLauncherQuery(""); };
   const links = status?.links ?? null;
@@ -1118,6 +1142,7 @@ export default function HomePage() {
               advisoryBrief={advisoryBrief}
               onAdvisoryBriefChange={setAdvisoryBrief}
               onOpenModels={() => switchView("settings")}
+              status={status}
             />
           )}
 

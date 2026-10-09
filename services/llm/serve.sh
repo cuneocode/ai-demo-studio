@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Local Nemotron Super NVFP4 for optional fraud narratives.
+# Sparky vLLM: Nemotron Super NVFP4 on an NVIDIA DGX Spark dev box, first in the Studio model chain for every use case.
 # Official DGX Spark path: vLLM cu130-nightly + Marlin NVFP4 (not the GNN sidecar).
 set -euo pipefail
 

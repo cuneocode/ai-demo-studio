@@ -212,7 +212,7 @@ test("a run started in the demo keeps going on the Architecture tab and is intac
   await page.getByRole("tab", { name: "Use case demo" }).click();
   await expect(explorer).toBeHidden();
   await expect(demoPanel.locator(".score-meter strong")).toHaveText("0.73");
-  await expect(demoPanel.locator(".decision-pill")).toHaveText("hold");
+  await expect(demoPanel.getByRole("heading", { name: "High risk" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Off", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("#score-payment")).toContainText("Score this payment");
 

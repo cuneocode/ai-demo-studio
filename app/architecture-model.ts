@@ -149,7 +149,7 @@ function briefingCapability(frame:FrameMapping,step:number):Diagram {
   n('subagents','Theme subagents','read_filing_node · five themes',816,536,'ai',assemble.detail),
   n('defense','Cisco AI Defense','Every model hop',1196,536,'cisco','Inspects plan, delegate, extract, and assemble. Filing bytes never enter the Inspection API. Deny or unavailability fail closed.',sources.defense.url),
   n('observe','Splunk observability','Optional agent / tool spans',436,772,'cisco','Configuration only. A briefing does not require a dashboard.',sources.splunk.url),
-  n('compute','Cisco UCS + Nexus','Proposed model host',816,772,'cisco','Proposed private placement. The local demo uses a protected hosted model; this map does not assert that endpoint is up.',sources.cisco.url),
+  n('compute','Cisco UCS + Nexus','Proposed model host',816,772,'cisco','Proposed private placement. The local demo routes through the Studio model chain (Sparky vLLM on an NVIDIA DGX Spark dev box, else the OpenAI API); this map does not assert either endpoint is up.',sources.cisco.url),
   n('gate','Presenter accept-gate','Use this company',1196,772,'human','Studio context is stored only after this click. Refresh does not skip the gate.'),
  ],
  edges:[
@@ -192,7 +192,7 @@ export function bankingRuntime():Diagram {
  n('release','Validate and release','Answer + sources + control results',700,1000,'human','Release only after the final AI Defense and quality-control checks. The API returns allow/block/unavailable metadata without raw inspected content.'),
  n('output','Answer + sources','Customer reviews explanation',35,1000,'human','This is an illustrative assistant response, not a formal credit decision.'),
  n('state','InMemorySaver','thread_id → message checkpoints',1145,60,'store','Conversation checkpoints reside in process memory and are lost on restart. Unsafe/rejected requests are reset by the API.',sources.graph.url),
-n('model','OpenAI hosted model','ProtectedChat model calls',390,1120,'ai','Agent generation uses the configured hosted model through ProtectedChatOpenAI boundaries; no NVIDIA NIM or UCS GPU is in the running path.'),n('galileo','Splunk Agent Observability','Galileo SDK + control spans',700,1120,'service','Galileo 2.6+ callbacks collect execution telemetry; the Agent Control 8.5 bridge records control metadata in the root request trace. Upload failure does not reject a successful answer.',sources.splunk.url),n('splunk','Splunk OTLP export','Optional OTLP trace + metrics',1010,1120,'service','A separate OTLP exporter sends agent, workflow, model and tool spans only when configured. It is observability delivery, not Agent Control enforcement.',sources.splunk.url),n('agent-control-api','Hosted Agent Control service','Server-side JSON controls',1170,1080,'cisco','Hosted control service evaluates the application judge booleans and returns allow/block metadata. It does not replace AI Defense or guarantee factual quality.'),
+n('model','Studio model chain','Sparky vLLM → OpenAI API',390,1120,'ai','Agent generation uses the first healthy backend in the Studio model chain (Sparky vLLM on an NVIDIA DGX Spark dev box, else the hosted OpenAI API) through ProtectedChatOpenAI boundaries; no NVIDIA NIM or Cisco UCS GPU is in the running path.'),n('galileo','Splunk Agent Observability','Galileo SDK + control spans',700,1120,'service','Galileo 2.6+ callbacks collect execution telemetry; the Agent Control 8.5 bridge records control metadata in the root request trace. Upload failure does not reject a successful answer.',sources.splunk.url),n('splunk','Splunk OTLP export','Optional OTLP trace + metrics',1010,1120,'service','A separate OTLP exporter sends agent, workflow, model and tool spans only when configured. It is observability delivery, not Agent Control enforcement.',sources.splunk.url),n('agent-control-api','Hosted Agent Control service','Server-side JSON controls',1170,1080,'cisco','Hosted control service evaluates the application judge booleans and returns allow/block metadata. It does not replace AI Defense or guarantee factual quality.'),
  n('errors','Safe API error','No successful answer returned',35,430,'failure','AI Defense or Agent Control denial/unavailability, graph failure, timeout, concurrency, expired session and capacity errors return redacted metadata; rejected requests reset the session.')],
  edges:[e('user','api','POST message'),e('defense','scope-judge','allow → scope judge',{kind:'control'}),e('scope-judge','scope-control','judge result → SDK gate',{kind:'control'}),e('scope-control','agent-control-api','remote scope control request',{via:[[1130,295],[1290,295],[1290,520]],kind:'control'}),e('agent-control-api','scope-control','scope allow / block',{via:[[1410,520],[1410,190],[1130,190],[1130,230]],kind:'control'}),e('scope-control','supervisor','allow graph entry',{ports:'down',kind:'control'}),e('supervisor','state','read / write state'),e('supervisor','cards','product handoff ↔ facts',{ports:'left',kind:'data'}),e('supervisor','score','score handoff ↔ result',{kind:'data'}),e('cards','docs','search ↔ source excerpts',{ports:'down'}),e('score','mock','tool call ↔ 550',{ports:'down'}),
  e('supervisor','final-defense','model/tool output',{ports:'down',kind:'control'}),e('final-defense','quality-judge','allow → quality judge',{kind:'control'}),e('quality-judge','quality-control','judge result → SDK gate',{kind:'control'}),e('quality-control','agent-control-api','remote quality controls',{via:[[1130,865],[1320,865],[1320,650]],kind:'control'}),e('agent-control-api','quality-control','quality allow / block',{via:[[1430,650],[1430,730],[1130,730],[1130,800]],kind:'control'}),e('quality-control','release','allow → release',{ports:'down',kind:'control'}),e('release','output','answer + evidence',{ports:'left'}),
@@ -228,12 +228,12 @@ export function fraudRuntime():Diagram {
   n('tritonServer','GraphSAGE + XGBoost','GPU infer sidecar',816,300,'ai','serve.sh loads model_final.pt and xgboost_fraud.json in the NVIDIA training image. Neighbor sampling, GNN embedding, then XGBoost.',sources.fraud.url),
   n('shap','Captum Shapley','7 feature groups',1196,300,'ai','SVS over GNN account/merchant embeddings, raw node features, amount, hour, and channel. This hop does not call an LLM.',sources.fraud.url),
   n('fixture','Fixture table','FRAUD_BACKEND=fixture',56,536,'service','Deterministic SHAP for the five synthetic test cases. Not selected by auto once the sidecar is trained.'),
-  n('narrative','Optional LLM','Off by default',436,536,'ai','FRAUD_ENABLE_NARRATIVE drafts two sentences from SHAP groups. It must not declare the payment fraudulent.'),
+  n('narrative','Optional LLM','Off by default',436,536,'ai','FRAUD_ENABLE_NARRATIVE drafts two sentences from SHAP groups through the Studio model chain (Sparky vLLM, else the OpenAI API). It must not declare the payment fraudulent.'),
   n('defense','Cisco AI Defense','Narrative inspection only',816,536,'cisco','Inspects narrative input and output. The GNN/XGB score path is not sent to the Inspection API.',sources.defense.url),
   n('release','Release score','Probability + SHAP + band',1196,536,'service','clear / review / hold is a threshold band (0.5, review at 0.35). Not a disposition or SAR.'),
   n('splunk','Splunk OTLP export','Optional · not required',56,772,'service','Configuration only. No dashboard is implied by this demo.',sources.splunk.url),
   n('omit','Narrative omitted','Score still released',436,772,'failure','Inspection deny/unavailability or LLM failure drops only the explanation. The probability remains.'),
-  n('analyst','Suggested band','hold · review · clear',816,772,'human','hold ≥ 0.50; review ≥ 0.35; otherwise clear. A person owns the outcome.'),
+  n('analyst','Risk band','high · elevated · low',816,772,'human','High ≥ 0.50; elevated ≥ 0.35; otherwise low, each with a suggested action. A person owns the outcome.'),
   n('output','Analyst disposition','Human decision',1196,772,'human','This demo does not block a payment or file a report.'),
  ],
  edges:[
@@ -319,7 +319,7 @@ export function briefingRuntime():Diagram {
   n('nodes','Node files','/filings/nodes/{id}.md',1196,536,'store','Filing map, not embeddings. Each node has title, item, budget, and citation URL. Supervisor never calls read_filing_node.'),
   n('supervisor','Deep Agent supervisor','Plan · delegate · assemble',56,772,'ai','write_todos and task. Tools: identity, ingest, TOC, XBRL. Never read_filing_node. No general-purpose subagent and no web search.',sources.deepagents.url),
   n('subagents','Theme subagents','Five specialists',436,772,'ai','Objectives, risks, regulatory, AI initiatives, metrics. read_filing_node ≤8 per theme. Metrics uses get_company_facts only. Notes at /filings/notes/{theme}.json.'),
-  n('model','ProtectedChatOpenAI','Temperature 0 · every hop',816,772,'ai','Supervisor and subagents share this client. The map does not assert OpenAI availability or credentials.'),
+  n('model','ProtectedChatOpenAI','Temperature 0 · every hop',816,772,'ai','Supervisor and subagents share this client, built on the first healthy backend in the Studio model chain (Sparky vLLM, else the OpenAI API). The map does not assert OpenAI availability or credentials.'),
   n('defense','Cisco AI Defense','Inspect every model hop',1196,772,'cisco','Plan, delegate, extract, assemble. Filing bytes never enter Inspection. Deny or unavailability fail closed — no briefing.',sources.defense.url),
   n('grounding','Grounding verifier','Cite-or-abstain · not an LLM',56,1008,'service','Drop narrative facts whose excerpt is not in the node file. Drop xbrl metrics that miss companyfacts. Themes that lose every fact become abstains.'),
   n('gate','Presenter accept-gate','Use this company',436,1008,'human','Studio context is stored only after this click. Refresh and clear do not skip the gate.'),
@@ -412,15 +412,15 @@ function researchCapability(frame:FrameMapping,step:number):Diagram {
  const process=frame.architecture.process;
  const fetch=frame.architecture.ai[0]??{detail:'Allowlisted yfinance and FRED write through a TTL cache. Empty provider responses fail closed.'};
  const tools=frame.architecture.ai[1]??{detail:'Earnings, peers, returns, and macro are CPU math. Conflicts are structured rows, not a keyword scan.'};
- const synth=frame.architecture.ai[2]??{detail:'LangChain ChatOpenAI talks to the local NIM. Defense inspects this hop only.'};
+ const synth=frame.architecture.ai[2]??{detail:'LangChain ChatOpenAI calls the Studio model chain: Sparky vLLM, else the OpenAI API. Defense inspects this hop only.'};
  const xs=[56,436,816,1196];
  const focus=step===0?'yahoo':step===1?'cache':step===2?'conflicts':'gate';
- return {title:'Wealth research · capability',note:'Live path is allowlisted Yahoo + FRED cache, CPU tools and structured conflicts, then a local NIM hop. Cisco AI Defense inspects model hops only. Fetch, cache, FRED, tools, conflicts, and grounding stay off Inspection. This map does not assert live Yahoo, FRED, or NIM availability. No vector index and no Tavily. Demo recommendation — not financial advice.',width:1520,height:940,
+ return {title:'Wealth research · capability',note:'Live path is allowlisted Yahoo + FRED cache, CPU tools and structured conflicts, then one model hop on the Studio model chain (Sparky vLLM on an NVIDIA DGX Spark dev box, else the OpenAI API). Cisco AI Defense inspects model hops only. Fetch, cache, FRED, tools, conflicts, and grounding stay off Inspection. This map does not assert live Yahoo, FRED, or model availability. No vector index and no Tavily. Demo recommendation — not financial advice.',width:1520,height:940,
  boundaries:[
   {title:'Business process',x:28,y:16,width:1464,height:220},
   {title:'Deterministic fetch / cache / tools / conflicts · no Inspection',x:28,y:252,width:1464,height:220},
-  {title:'Local NIM hop · AI Defense on synthesis',x:28,y:488,width:1464,height:220},
-  {title:'Accept-gate · implemented NIM placement · optional telemetry',x:28,y:724,width:1464,height:192},
+  {title:'Model-chain hop · AI Defense on synthesis',x:28,y:488,width:1464,height:220},
+  {title:'Accept-gate · dev model host · optional telemetry',x:28,y:724,width:1464,height:192},
  ],
  nodes:[
   ...process.map((p,i)=>n('p'+i,p.title,p.detail,xs[i]??56+i*380,56,'human')),
@@ -429,12 +429,12 @@ function researchCapability(frame:FrameMapping,step:number):Diagram {
   n('tools','Earnings / peers / returns','CPU math · no Inspection',816,300,'service',tools.detail),
   n('conflicts','Structured conflicts','Before the LLM',1196,300,'service','Beat-rate vs SPY lag, P/E premium vs decelerating revenue, CPI/Fed vs rate-sensitive sector. No keyword scan over prose.'),
   n('grounding','Grounding verifier','Cite-or-abstain · not an LLM',56,536,'service','Excerpt and value match against the cached snapshot and FRED payload. Ungrounded-only notes are omitted. Off Inspection.'),
-  n('nim','Local NIM synthesis','LangChain · :8003',436,536,'ai',synth.detail),
+  n('nim','Model-chain synthesis','LangChain · Sparky → OpenAI',436,536,'ai',synth.detail),
   n('defense','Cisco AI Defense','Model hops only',816,536,'cisco','Inspects note input and output. Fetch, cache, FRED, tools, conflicts, and grounding never enter Inspection.',sources.defense.url),
-  n('omit','Note omitted','Indicators still release',1196,536,'failure','NIM down, inspection deny, or ungrounded-only claims drop the note and recommendation. Earnings, peers, returns, macro, and conflicts remain.'),
+  n('omit','Note omitted','Indicators still release',1196,536,'failure','No reachable model, inspection deny, or ungrounded-only claims drop the note and recommendation. Earnings, peers, returns, macro, and conflicts remain.'),
   n('fail','Empty provider','HTTP 502 · no invented rows',56,772,'failure','A failed or empty Yahoo snapshot fails closed. Missing FRED_API_KEY leaves macro absent and research still runs.'),
-  n('observe','Splunk Agent Observability','Galileo SDK · optional',436,772,'cisco','GalileoAsyncCallback on the NIM hop when GALILEO_API_KEY is set. Configuration only. Analyze does not require a dashboard. Not a local topic judge.',sources.splunk.url),
-  n('compute','Local NIM on UCS/GPU','Implemented · 127.0.0.1:8003',816,772,'cisco','This sidecar uses the local Nemotron NIM, not hosted OpenAI. The map does not claim a sized Cisco BOM.',sources.cisco.url),
+  n('observe','Splunk Agent Observability','Galileo SDK · optional',436,772,'cisco','GalileoAsyncCallback on the model hop when GALILEO_API_KEY is set. Configuration only. Analyze does not require a dashboard. Not a local topic judge.',sources.splunk.url),
+  n('compute','Sparky (DGX Spark) host','Dev box · Cisco AI POD proposed',816,772,'service','Sparky is an NVIDIA DGX Spark (GB10) dev box serving vLLM at 127.0.0.1:8003. It is not Cisco hardware. When it is down the chain answers from the OpenAI API and the note records which model answered. Cisco UCS / AI POD is the proposed production placement, not a sized BOM.',sources.cisco.url),
   n('gate','Accept research note','Presenter-owned store',1196,772,'human','Studio research context is stored only after this click. Clearing the company profile does not wipe the note.'),
  ],
  edges:[
@@ -450,25 +450,25 @@ function researchCapability(frame:FrameMapping,step:number):Diagram {
   e('conflicts','grounding','row text',{via:[[1316,448],[176,448]],labelAt:[746,440]}),
   e('nim','defense','inspect hop',{kind:'control',labelAt:[726,600]}),
   e('defense','omit','deny / unavailable',{kind:'control',labelAt:[1106,600]}),
-  e('nim','omit','NIM down',{kind:'control',via:[[556,664],[1316,664]],labelAt:[930,656]}),
+  e('nim','omit','no model up',{kind:'control',via:[[556,664],[1316,664]],labelAt:[930,656]}),
   e('nim','grounding','draft note',{ports:'left',labelAt:[346,600]}),
   e('grounding','omit','ungrounded-only',{kind:'control',via:[[176,664],[1316,664]],labelAt:[500,656]}),
   e('grounding','gate','cited note',{ports:'down',via:[[176,836],[1316,836]],labelAt:[746,828]}),
   e('nim','observe','optional spans',{kind:'telemetry',ports:'down',labelAt:[556,702]}),
-  e('nim','compute','implemented host',{kind:'placement',via:[[556,740],[936,740]],labelAt:[746,732]}),
+  e('nim','compute','dev host',{kind:'placement',via:[[556,740],[936,740]],labelAt:[746,732]}),
   ...(process[3]?[e('gate','p3','after accept',{ports:'up',via:[[1316,748],[1436,748],[1436,184]],labelAt:[1400,200]})]:[]),
  ]};
 }
 
 export function researchRuntime():Diagram {
- return {title:'Wealth research · implemented request path',note:'Code-verified path: the workbench posts a ticker. FastAPI on :8014 uses a write-through Yahoo + FRED cache, CPU tools, and structured conflicts. LangChain talks to the local NIM at 127.0.0.1:8003. Cisco AI Defense inspects model hops only. Fetch, cache, FRED, tools, conflicts, and grounding never enter Inspection. This map does not assert live Yahoo, FRED, or NIM availability. No vector index and no Tavily. Demo recommendation — not financial advice.',width:1520,height:1440,
+ return {title:'Wealth research · implemented request path',note:'Code-verified path: the workbench posts a ticker. FastAPI on :8014 uses a write-through Yahoo + FRED cache, CPU tools, and structured conflicts. LangChain calls the Studio model chain: Sparky vLLM at 127.0.0.1:8003 (an NVIDIA DGX Spark dev box), else the OpenAI API, and the response names the model that answered. Cisco AI Defense inspects model hops only. Fetch, cache, FRED, tools, conflicts, and grounding never enter Inspection. This map does not assert live Yahoo, FRED, or model availability. No vector index and no Tavily. Demo recommendation — not financial advice.',width:1520,height:1440,
  boundaries:[
   {title:'Studio adapter · FastAPI :8014',x:28,y:16,width:1464,height:220},
   {title:'Allowlisted fetch + write-through cache · no Inspection',x:28,y:252,width:1464,height:220},
   {title:'CPU tools + structured conflicts · no Inspection',x:28,y:488,width:1464,height:220},
-  {title:'Local NIM synthesis · Defense on hop',x:28,y:724,width:1464,height:220},
+  {title:'Model-chain synthesis · Defense on hop',x:28,y:724,width:1464,height:220},
   {title:'Ground + accept-gate · numbers stay if note omitted',x:28,y:960,width:1464,height:220},
-  {title:'Optional observability · implemented local NIM placement',x:28,y:1196,width:1464,height:220},
+  {title:'Optional observability · dev model host · Cisco AI POD proposed',x:28,y:1196,width:1464,height:220},
  ],
  nodes:[
   n('user','Presenter / studio','US ticker + refresh flag',56,64,'human','Any US ticker. The accepted briefing ticker is a default only.'),
@@ -483,17 +483,17 @@ export function researchRuntime():Diagram {
   n('macro','Macro tool','FRED series or absent',436,536,'service','Named tool over cached FRED observations. Direction is latest vs prior. Off Inspection.'),
   n('conflicts','Structured conflicts','Before the LLM',816,536,'service','Cross-dimension rows only. No keyword scan over agent prose.'),
   n('indicators','Indicator rows','Always release when tools succeed',1196,536,'service','Earnings, peers, returns, macro, and conflicts stay even if the note is omitted.'),
-  n('nim','ProtectedChatOpenAI','Temperature 0 · ainvoke',56,772,'ai','langchain_openai pointed at NIM_BASE_URL (default http://127.0.0.1:8003/v1). No hosted OpenAI default.'),
+  n('nim','ProtectedChatOpenAI','Temperature 0 · ainvoke',56,772,'ai','langchain_openai pointed at the first healthy backend in the Studio chain: Sparky vLLM (http://127.0.0.1:8003/v1), else the OpenAI API. A connect failure retries once on the next backend.'),
   n('defense','Cisco AI Defense','Inspect every model hop',436,772,'cisco','src_app fsi-ai-studio-wealth. Fetch, cache, FRED, tools, conflicts, and grounding never enter Inspection.',sources.defense.url),
-  n('model','Local NIM','Nemotron Super · :8003',816,772,'ai','Implemented inference for this sidecar. Health is not ready if GET {NIM}/models fails. npm run dev:studio does not start NIM.'),
-  n('omit','Note omitted','Recommendation omitted',1196,772,'failure','NIM down, inspection deny/unavailable, timeout, or ungrounded-only claims. Numbers stay.'),
+  n('model','Studio model chain','Sparky vLLM → OpenAI API',816,772,'ai','Sparky serves Nemotron Super through vLLM at 127.0.0.1:8003. If its health probe fails, the OpenAI API answers and the note records served_by. npm run dev:studio does not start vLLM.'),
+  n('omit','Note omitted','Recommendation omitted',1196,772,'failure','No reachable model, inspection deny/unavailable, timeout, or ungrounded-only claims. Numbers stay.'),
   n('grounding','Grounding verifier','Snapshot + FRED values',56,1008,'service','Drop claims whose excerpt or value is not in the cache. Off Inspection.'),
   n('gate','Accept research note','Presenter accept-gate',436,1008,'human','Stored at fsi-demo-studio.research-note only after this click.'),
   n('store','localStorage note','After accept only',816,1008,'store','Separate from the company profile. Clearing the briefing does not wipe the note.'),
-  n('galileo','Splunk Agent Observability','Galileo SDK · optional',1196,1008,'service','GalileoAsyncCallback on research NIM hops when GALILEO_API_KEY is set. Configuration is not dashboard proof. This is not a local topic judge.',sources.splunk.url),
+  n('galileo','Splunk Agent Observability','Galileo SDK · optional',1196,1008,'service','GalileoAsyncCallback on research model hops when GALILEO_API_KEY is set. Configuration is not dashboard proof. This is not a local topic judge.',sources.splunk.url),
   n('splunk','Splunk OTLP export','Official LangChain OTEL',56,1244,'service','Additional traces and metrics only when SPLUNK_REALM + SPLUNK_ACCESS_TOKEN or OTLP endpoints are set. Not a dashboard claim.',sources.splunk.url),
   n('output','Demo recommendation','Not financial advice',436,1244,'human','Server attaches the disclaimer. The model does not author legal text.'),
-  n('compute','UCS / GPU host','Local NIM placement',816,1244,'cisco','Implemented as 127.0.0.1:8003. Not a sized Cisco BOM.',sources.cisco.url),
+  n('compute','Sparky (DGX Spark) host','Dev box · Cisco AI POD proposed',816,1244,'service','vLLM on an NVIDIA DGX Spark (GB10) dev box at 127.0.0.1:8003, not Cisco hardware. Cisco UCS / AI POD is the proposed production placement. Not a sized Cisco BOM.',sources.cisco.url),
   n('disclaimer','Not advice banner','Visible on the workbench',1196,1244,'human','Demo recommendation — not financial advice.'),
  ],
  edges:[
@@ -520,7 +520,7 @@ export function researchRuntime():Diagram {
   e('nim','defense','inspect input / output',{kind:'control',labelAt:[346,836]}),
   e('model','defense','inspect hop',{kind:'control',labelAt:[726,836]}),
   e('defense','omit','deny / unavailable',{kind:'control',labelAt:[1106,836]}),
-  e('model','omit','NIM down / timeout',{kind:'control',labelAt:[1106,772]}),
+  e('model','omit','no model / timeout',{kind:'control',labelAt:[1106,772]}),
   e('nim','grounding','draft note',{ports:'down',labelAt:[176,940]}),
   e('indicators','grounding','values + labels',{via:[[1316,980],[176,980]],labelAt:[746,972]}),
   e('cache','grounding','snapshot corpus',{via:[[556,992],[176,992]],labelAt:[360,984]}),
@@ -528,13 +528,13 @@ export function researchRuntime():Diagram {
   e('grounding','omit','ungrounded-only',{kind:'control',via:[[176,940],[1316,940]],labelAt:[746,932]}),
   e('yahoo','fetchFail','502 snapshot',{kind:'control',via:[[176,1140],[1316,1140]],labelAt:[746,1132]}),
   e('api','galileo','optional traces',{kind:'telemetry',via:[[556,210],[1316,210],[1316,1008]],labelAt:[1400,620]}),
-  e('nim','galileo','NIM hop callbacks',{kind:'telemetry',via:[[176,1148],[1316,1148]],labelAt:[746,1140]}),
+  e('nim','galileo','model hop callbacks',{kind:'telemetry',via:[[176,1148],[1316,1148]],labelAt:[746,1140]}),
   e('gate','store','Accept research note',{labelAt:[726,1072]}),
   e('store','output','after accept',{ports:'down',labelAt:[936,1188]}),
   e('output','disclaimer','visible banner',{labelAt:[726,1308]}),
   e('api','splunk','optional spans',{ports:'down',kind:'telemetry',via:[[556,210],[176,210],[176,1244]],labelAt:[200,210]}),
   e('nim','splunk','synthesis spans',{kind:'telemetry',via:[[176,1188],[176,1244]],labelAt:[200,1210]}),
-  e('model','compute','implemented :8003',{kind:'placement',ports:'down',labelAt:[936,1188]}),
+  e('model','compute','dev host :8003',{kind:'placement',ports:'down',labelAt:[936,1188]}),
  ]};
 }
 
@@ -557,7 +557,7 @@ export function researchKnowledge():Diagram {
   n('tools','Research tools','Earnings · peers · returns · macro',56,624,'service','Deterministic math over cached payloads.'),
   n('conflicts','Conflict rows','Structured · pre-LLM',436,624,'service','Cross-dimension only. Keyword scans over free text are out.'),
   n('ground','Grounding corpus','Snapshot + FRED JSON',816,624,'service','Cite-or-abstain against cached values. No vector query.'),
-  n('consumer','Note + UI panels','Indicators always · note optional',1196,624,'service','Workbench shows numbers even when NIM is down.'),
+  n('consumer','Note + UI panels','Indicators always · note optional',1196,624,'service','Workbench shows numbers even when no model is reachable.'),
  ],
  edges:[
   e('yahoo','industry','sector / cap band',{labelAt:[346,136]}),
@@ -583,15 +583,15 @@ function advisoryCapability(frame:FrameMapping,step:number):Diagram {
  const process=frame.architecture.process;
  const entitled=frame.architecture.ai[0]??{detail:'Accepted briefing excerpts and research snapshot fields. Off Inspection.'};
  const rules=frame.architecture.ai[1]??{detail:'Concentration, single-name cap, and missing IPS fields. Not an LLM.'};
- const synth=frame.architecture.ai[2]??{detail:'Local NIM drafts a meeting brief. Defense inspects this hop only.'};
+ const synth=frame.architecture.ai[2]??{detail:'The Studio model chain drafts a meeting brief. Defense inspects this hop only.'};
  const xs=[56,436,816,1196];
  const focus=step===0?'holdings':step===1?'entitled':step===2?'suitability':'gate';
- return {title:'Client advisory · capability',note:'Live path is presenter-entered holdings, entitled briefing + research, CPU suitability rules, then a local NIM hop. Cisco AI Defense inspects model hops only. Entitled assembly, holdings fetch, suitability, and grounding stay off Inspection. This map does not assert live Yahoo, FRED, or NIM availability. Demo brief — not advice. No household catalog.',width:1520,height:940,
+ return {title:'Client advisory · capability',note:'Live path is presenter-entered holdings, entitled briefing + research, CPU suitability rules, then one model hop on the Studio model chain (Sparky vLLM on an NVIDIA DGX Spark dev box; the hosted OpenAI API only with AI Defense enforcing). Cisco AI Defense inspects model hops only. Entitled assembly, holdings fetch, suitability, and grounding stay off Inspection. This map does not assert live Yahoo, FRED, or model availability. Demo brief — not advice. No household catalog.',width:1520,height:940,
  boundaries:[
   {title:'Business process',x:28,y:16,width:1464,height:220},
   {title:'Entitled context / holdings / suitability · no Inspection',x:28,y:252,width:1464,height:220},
-  {title:'Local NIM hop · AI Defense on synthesis',x:28,y:488,width:1464,height:220},
-  {title:'Advisor accept-gate · implemented NIM placement',x:28,y:724,width:1464,height:192},
+  {title:'Model-chain hop · AI Defense on synthesis',x:28,y:488,width:1464,height:220},
+  {title:'Advisor accept-gate · dev model host',x:28,y:724,width:1464,height:192},
  ],
  nodes:[
   ...process.map((p,i)=>n('p'+i,p.title,p.detail,xs[i]??56+i*380,56,'human')),
@@ -600,12 +600,12 @@ function advisoryCapability(frame:FrameMapping,step:number):Diagram {
   n('suitability','Suitability rules','CPU · not an LLM',816,300,'service',rules.detail),
   n('metrics','Holding metrics','Yahoo cache · live',1196,300,'service','Same snapshot cache as research. Empty holdings fetch fails closed.'),
   n('grounding','Grounding verifier','Briefing excerpts + snapshot',56,536,'service','Cite-or-abstain against posted briefing excerpts and cached holding fields. Off Inspection.'),
-  n('nim','Local NIM brief','LangChain · :8003',436,536,'ai',synth.detail),
+  n('nim','Model-chain brief','LangChain · Sparky → OpenAI',436,536,'ai',synth.detail),
   n('defense','Cisco AI Defense','Model hops only',816,536,'cisco','Inspects brief input and output. Entitled assembly, suitability, holdings, and grounding never enter Inspection.',sources.defense.url),
-  n('omit','Brief omitted','Holdings still release',1196,536,'failure','NIM down, inspection deny, or ungrounded-only claims drop the meeting brief. Holding metrics and suitability rows remain.'),
+  n('omit','Brief omitted','Holdings still release',1196,536,'failure','No reachable model, a refused hosted call, inspection deny, or ungrounded-only claims drop the meeting brief. Holding metrics and suitability rows remain.'),
   n('fail','Empty holdings fetch','HTTP 502',56,772,'failure','If every holding ticker returns empty market data, the request fails closed.'),
-  n('observe','Splunk Agent Observability','Galileo SDK · optional',436,772,'cisco','GalileoAsyncCallback on the NIM hop when GALILEO_API_KEY is set. Configuration only. Not a dashboard claim. Not a local topic judge.',sources.splunk.url),
-  n('compute','Local NIM on UCS/GPU','Implemented · 127.0.0.1:8003',816,772,'cisco','Same sidecar NIM as research. Not hosted OpenAI. Not a sized Cisco BOM.',sources.cisco.url),
+  n('observe','Splunk Agent Observability','Galileo SDK · optional',436,772,'cisco','GalileoAsyncCallback on the model hop when GALILEO_API_KEY is set. Configuration only. Not a dashboard claim. Not a local topic judge.',sources.splunk.url),
+  n('compute','Sparky (DGX Spark) host','Dev box · Cisco AI POD proposed',816,772,'service','Same dev host as research: vLLM on an NVIDIA DGX Spark (GB10) at 127.0.0.1:8003, not Cisco hardware. Client data reaches the hosted OpenAI fallback only with AI Defense forced to enforce. Cisco UCS / AI POD is the proposed placement, not a sized BOM.',sources.cisco.url),
   n('gate','Accept meeting brief','Advisor-owned store',1196,772,'human','Stored at fsi-demo-studio.advisory-brief only after this click.'),
  ],
  edges:[
@@ -622,25 +622,25 @@ function advisoryCapability(frame:FrameMapping,step:number):Diagram {
   e('metrics','grounding','snapshot fields',{via:[[1316,400],[176,400]],labelAt:[746,392]}),
   e('nim','defense','inspect hop',{kind:'control',labelAt:[726,600]}),
   e('defense','omit','deny / unavailable',{kind:'control',labelAt:[1106,600]}),
-  e('nim','omit','NIM down',{kind:'control',via:[[556,664],[1316,664]],labelAt:[930,656]}),
+  e('nim','omit','no model up',{kind:'control',via:[[556,664],[1316,664]],labelAt:[930,656]}),
   e('nim','grounding','draft brief',{ports:'left',labelAt:[346,600]}),
   e('grounding','omit','ungrounded-only',{kind:'control',via:[[176,664],[1316,664]],labelAt:[500,656]}),
   e('grounding','gate','cited brief',{ports:'down',via:[[176,836],[1316,836]],labelAt:[746,828]}),
   e('nim','observe','optional spans',{kind:'telemetry',ports:'down',labelAt:[556,702]}),
-  e('nim','compute','implemented host',{kind:'placement',via:[[556,740],[936,740]],labelAt:[746,732]}),
+  e('nim','compute','dev host',{kind:'placement',via:[[556,740],[936,740]],labelAt:[746,732]}),
   ...(process[3]?[e('gate','p3','after accept',{ports:'up',via:[[1316,748],[1436,748],[1436,184]],labelAt:[1400,200]})]:[]),
  ]};
 }
 
 export function advisoryRuntime():Diagram {
- return {title:'Client advisory · implemented request path',note:'Code-verified path: the workbench posts presenter holdings plus optional accepted briefing and research payloads. FastAPI on :8014 loads live holding metrics from the Yahoo cache, runs suitability rules, and may ask the local NIM for a meeting brief. Cisco AI Defense inspects model hops only. Entitled assembly, holdings, suitability, and grounding never enter Inspection. This map does not assert live Yahoo, FRED, or NIM availability. Demo brief — not advice. No household catalog.',width:1520,height:1440,
+ return {title:'Client advisory · implemented request path',note:'Code-verified path: the workbench posts presenter holdings plus optional accepted briefing and research payloads. FastAPI on :8014 loads live holding metrics from the Yahoo cache, runs suitability rules, and may ask the Studio model chain for a meeting brief: Sparky vLLM at 127.0.0.1:8003 (an NVIDIA DGX Spark dev box), else the hosted OpenAI API only with AI Defense forced to enforce. Cisco AI Defense inspects model hops only. Entitled assembly, holdings, suitability, and grounding never enter Inspection. This map does not assert live Yahoo, FRED, or model availability. Demo brief — not advice. No household catalog.',width:1520,height:1440,
  boundaries:[
   {title:'Studio adapter · FastAPI :8014',x:28,y:16,width:1464,height:220},
   {title:'Entitled context + live holdings · no Inspection',x:28,y:252,width:1464,height:220},
   {title:'Suitability rules · CPU · no Inspection',x:28,y:488,width:1464,height:220},
-  {title:'Local NIM meeting brief · Defense on hop',x:28,y:724,width:1464,height:220},
+  {title:'Model-chain meeting brief · Defense on hop',x:28,y:724,width:1464,height:220},
   {title:'Ground + advisor accept-gate · holdings stay if brief omitted',x:28,y:960,width:1464,height:220},
-  {title:'Optional observability · implemented local NIM placement',x:28,y:1196,width:1464,height:220},
+  {title:'Optional observability · dev model host · Cisco AI POD proposed',x:28,y:1196,width:1464,height:220},
  ],
  nodes:[
   n('user','Advisor / studio','Holdings + optional notes',56,64,'human','Ticker and weight rows. No household catalog and no CRM catalog.'),
@@ -655,17 +655,17 @@ export function advisoryRuntime():Diagram {
   n('ips','IPS notes','Presenter text',436,536,'human','Missing objective, risk, or horizon becomes a finding.'),
   n('assemble','Context assembly','Holdings + entitled + findings',816,536,'service','CPU assembly. Not a vector index and not sent to Inspection.'),
   n('rows','Holdings + findings','Always release when fetch succeeds',1196,536,'service','The meeting brief may drop; these rows stay.'),
-  n('nim','ProtectedChatOpenAI','Temperature 0 · ainvoke',56,772,'ai','Same local NIM client as research. Advisor-owned; no auto-trade.'),
+  n('nim','ProtectedChatOpenAI','Temperature 0 · ainvoke',56,772,'ai','Same chain client as research. A hosted backend forces AI Defense to enforce; without AI Defense the hosted call is refused. Advisor-owned; no auto-trade.'),
   n('defense','Cisco AI Defense','Inspect every model hop',436,772,'cisco','src_app fsi-ai-studio-wealth. Suitability and entitled assembly never enter Inspection.',sources.defense.url),
-  n('model','Local NIM','Nemotron Super · :8003',816,772,'ai','Implemented inference. Health is not ready if GET {NIM}/models fails.'),
-  n('omit','Brief omitted','Holdings remain',1196,772,'failure','NIM down, inspection deny/unavailable, timeout, or ungrounded-only claims.'),
+  n('model','Studio model chain','Sparky vLLM → OpenAI API',816,772,'ai','Sparky serves Nemotron Super through vLLM at 127.0.0.1:8003. If its health probe fails, the OpenAI API answers under enforced AI Defense and the brief records served_by.'),
+  n('omit','Brief omitted','Holdings remain',1196,772,'failure','No reachable model, a refused hosted call, inspection deny/unavailable, timeout, or ungrounded-only claims.'),
   n('grounding','Grounding verifier','Excerpts + snapshot values',56,1008,'service','Cite-or-abstain against posted briefing excerpts and cached holding fields. Off Inspection.'),
   n('gate','Accept meeting brief','Advisor accept-gate',436,1008,'human','Stored at fsi-demo-studio.advisory-brief only after this click.'),
   n('store','localStorage brief','After accept only',816,1008,'store','Separate key from the company profile and the research note.'),
-  n('galileo','Splunk Agent Observability','Galileo SDK · optional',1196,1008,'service','GalileoAsyncCallback on advisory NIM hops when GALILEO_API_KEY is set. Configuration is not dashboard proof. This is not a local topic judge.',sources.splunk.url),
+  n('galileo','Splunk Agent Observability','Galileo SDK · optional',1196,1008,'service','GalileoAsyncCallback on advisory model hops when GALILEO_API_KEY is set. Configuration is not dashboard proof. This is not a local topic judge.',sources.splunk.url),
   n('splunk','Splunk OTLP export','Official LangChain OTEL',56,1244,'service','Additional traces and metrics only when SPLUNK_REALM + SPLUNK_ACCESS_TOKEN or OTLP endpoints are set. Not a dashboard claim.',sources.splunk.url),
   n('output','Demo brief','Not advice',436,1244,'human','Server attaches the disclaimer. The advisor owns every recommendation.'),
-  n('compute','UCS / GPU host','Local NIM placement',816,1244,'cisco','Implemented as 127.0.0.1:8003. Not a sized Cisco BOM.',sources.cisco.url),
+  n('compute','Sparky (DGX Spark) host','Dev box · Cisco AI POD proposed',816,1244,'service','vLLM on an NVIDIA DGX Spark (GB10) dev box at 127.0.0.1:8003, not Cisco hardware. Cisco UCS / AI POD is the proposed production placement. Not a sized Cisco BOM.',sources.cisco.url),
   n('disclaimer','Not advice banner','Visible on the workbench',1196,1244,'human','Demo brief — not advice.'),
  ],
  edges:[
@@ -690,7 +690,7 @@ export function advisoryRuntime():Diagram {
   e('nim','defense','inspect input / output',{kind:'control',labelAt:[346,836]}),
   e('model','defense','inspect hop',{kind:'control',labelAt:[726,836]}),
   e('defense','omit','deny / unavailable',{kind:'control',labelAt:[1106,836]}),
-  e('model','omit','NIM down / timeout',{kind:'control',labelAt:[1106,772]}),
+  e('model','omit','no model / timeout',{kind:'control',labelAt:[1106,772]}),
   e('nim','grounding','draft brief',{ports:'down',labelAt:[176,940]}),
   e('briefingCtx','grounding','excerpts',{via:[[176,992],[176,1008]],labelAt:[120,996]}),
   e('liveMetrics','grounding','snapshot fields',{via:[[936,1004],[176,1004]],labelAt:[556,996]}),
@@ -699,18 +699,18 @@ export function advisoryRuntime():Diagram {
   e('grounding','omit','ungrounded-only',{kind:'control',via:[[176,940],[1316,940]],labelAt:[746,932]}),
   e('liveMetrics','metricsFail','502 holdings',{kind:'control',via:[[936,1140],[1316,1140]],labelAt:[1126,1132]}),
   e('api','galileo','optional traces',{kind:'telemetry',via:[[556,210],[1316,210],[1316,1008]],labelAt:[1400,620]}),
-  e('nim','galileo','NIM hop callbacks',{kind:'telemetry',via:[[176,1148],[1316,1148]],labelAt:[746,1140]}),
+  e('nim','galileo','model hop callbacks',{kind:'telemetry',via:[[176,1148],[1316,1148]],labelAt:[746,1140]}),
   e('gate','store','Accept meeting brief',{labelAt:[726,1072]}),
   e('store','output','after accept',{ports:'down',labelAt:[936,1188]}),
   e('output','disclaimer','visible banner',{labelAt:[726,1308]}),
   e('api','splunk','optional spans',{ports:'down',kind:'telemetry',via:[[556,210],[176,210],[176,1244]],labelAt:[200,210]}),
   e('nim','splunk','synthesis spans',{kind:'telemetry',via:[[176,1188],[176,1244]],labelAt:[200,1210]}),
-  e('model','compute','implemented :8003',{kind:'placement',ports:'down',labelAt:[936,1188]}),
+  e('model','compute','dev host :8003',{kind:'placement',ports:'down',labelAt:[936,1188]}),
  ]};
 }
 
 export function advisoryKnowledge():Diagram {
- return {title:'Client advisory · implemented entitled context',note:'Holdings are presenter-entered. Briefing excerpts and the research snapshot are entitled only after their own accept-gates. No household CRM catalog, no vector index, and no Tavily. This map does not assert live Yahoo or NIM availability.',width:1520,height:860,
+ return {title:'Client advisory · implemented entitled context',note:'Holdings are presenter-entered. Briefing excerpts and the research snapshot are entitled only after their own accept-gates. No household CRM catalog, no vector index, and no Tavily. This map does not assert live Yahoo or model availability.',width:1520,height:860,
  boundaries:[
   {title:'Presenter inputs · not a household catalog',x:28,y:16,width:1464,height:220},
   {title:'Entitled studio context · separate accept-gates',x:28,y:280,width:1464,height:220},
@@ -728,7 +728,7 @@ export function advisoryKnowledge():Diagram {
   n('rules','Suitability rules','Concentration · IPS',56,624,'service','CPU. Off Inspection.'),
   n('metrics','Holding metrics','1Y vs SPY · P/E',436,624,'service','From the cached snapshot, not an LLM.'),
   n('ground','Grounding corpus','Excerpts + snapshot JSON',816,624,'service','Cite-or-abstain. No vector query.'),
-  n('consumer','Brief + UI rows','Holdings always · brief optional',1196,624,'service','Workbench shows holdings if NIM is down.'),
+  n('consumer','Brief + UI rows','Holdings always · brief optional',1196,624,'service','Workbench shows holdings if no model is reachable.'),
  ],
  edges:[
   e('editor','yahoo','fetch / cache',{labelAt:[346,136]}),
@@ -752,8 +752,8 @@ export const profiles:Record<string,Profile>={
  'brahe-bank':{entry:'Banking question',router:'Bank supervisor',left:'Product specialist',leftDetail:'Retrieve terms and criteria',right:'Score specialist',rightDetail:'Call mock score tool',store:'Product document index',tool:'Mock score API · 550',result:'Eligibility explanation',gate:'Customer review · no approval',failure:'Missing evidence → abstain',ingest:'Versioned product Markdown',gpu:'Product embeddings + model inference',note:'Proposed hosted-model replacement; preserve tool behavior and validate model compatibility before migration.'},
  'kyc-processing':{entry:'Onboarding document case',router:'Case verification workflow',left:'Document extraction',leftDetail:'OCR → fields + evidence locations',right:'Entity reconciliation',rightDetail:'Registry and screening checks',store:'Identity documents + policy index',tool:'Registry / sanctions APIs',result:'Cited discrepancy summary',gate:'Analyst approves onboarding',failure:'Mismatch / missing file → review',ingest:'Documents + versioned KYC policy',gpu:'Document OCR + summary inference',note:'Identity checks and registry authorization remain deterministic services. An LLM does not approve onboarding.'},
  'sar-support':{entry:'Investigation alert',router:'Investigation coordinator',left:'Evidence timeline builder',leftDetail:'Query transactions + link entities',right:'Narrative drafting agent',rightDetail:'Draft only from case evidence',store:'Case evidence + transaction graph',tool:'Case management / query APIs',result:'Narrative + linked chronology',gate:'Investigator reviews and files',failure:'Unsupported claim → revise',ingest:'Transaction CDC + case evidence',gpu:'Narrative generation; graph acceleration optional',note:'Transaction graph queries feed the draft. No automatic filing or implied regulatory compliance.'},
- 'client-advisory':{entry:'Presenter holdings + entitled context',router:'Wealth advisory sidecar',left:'Entitled briefing + research',leftDetail:'Accepted studio context only · no CRM catalog',right:'Suitability rules',rightDetail:'Concentration / IPS · not an LLM',store:'Accepted note + briefing excerpts',tool:'Live holding metrics via Yahoo cache',result:'Meeting brief draft',gate:'Accept meeting brief',failure:'Empty holdings fetch → 502; ungrounded brief omitted',ingest:'Presenter holdings + accepted studio context',gpu:'Local NIM on 127.0.0.1:8003',note:'Entitled context assembly and suitability rules stay off Inspection. The local NIM drafts a meeting brief; the advisor accept-gate owns it. Demo brief — not advice. No household catalog and no auto-trade.'},
- 'market-research':{entry:'Ticker + optional refresh',router:'Wealth research sidecar',left:'Yahoo + FRED cache',leftDetail:'Allowlisted fetch · write-through TTL',right:'Conflict + synthesis tools',rightDetail:'CPU conflicts · NIM cited note',store:'Snapshot + FRED cache · not a vector index',tool:'Earnings / peers / returns / macro',result:'Cited research note + demo recommendation',gate:'Accept research note',failure:'Empty provider → 502; ungrounded note omitted',ingest:'Live Yahoo + FRED allowlist',gpu:'Local NIM on 127.0.0.1:8003',note:'Write-through snapshot cache, structured conflicts, and a local NIM hop. Demo recommendation — not financial advice. This map does not assert live Yahoo, FRED, or NIM availability. No Tavily and no committed snapshot pack.'},
+ 'client-advisory':{entry:'Presenter holdings + entitled context',router:'Wealth advisory sidecar',left:'Entitled briefing + research',leftDetail:'Accepted studio context only · no CRM catalog',right:'Suitability rules',rightDetail:'Concentration / IPS · not an LLM',store:'Accepted note + briefing excerpts',tool:'Live holding metrics via Yahoo cache',result:'Meeting brief draft',gate:'Accept meeting brief',failure:'Empty holdings fetch → 502; ungrounded brief omitted',ingest:'Presenter holdings + accepted studio context',gpu:'Studio model chain: Sparky vLLM at 127.0.0.1:8003 on an NVIDIA DGX Spark dev box, else the OpenAI API under enforced AI Defense; Cisco UCS / AI POD proposed',note:'Entitled context assembly and suitability rules stay off Inspection. The Studio model chain drafts a meeting brief; the advisor accept-gate owns it. Demo brief — not advice. No household catalog and no auto-trade.'},
+ 'market-research':{entry:'Ticker + optional refresh',router:'Wealth research sidecar',left:'Yahoo + FRED cache',leftDetail:'Allowlisted fetch · write-through TTL',right:'Conflict + synthesis tools',rightDetail:'CPU conflicts · cited note from the model chain',store:'Snapshot + FRED cache · not a vector index',tool:'Earnings / peers / returns / macro',result:'Cited research note + demo recommendation',gate:'Accept research note',failure:'Empty provider → 502; ungrounded note omitted',ingest:'Live Yahoo + FRED allowlist',gpu:'Studio model chain: Sparky vLLM at 127.0.0.1:8003 on an NVIDIA DGX Spark dev box, else the OpenAI API; Cisco UCS / AI POD proposed',note:'Write-through snapshot cache, structured conflicts, and one model-chain hop. Demo recommendation — not financial advice. This map does not assert live Yahoo, FRED, or model availability. No Tavily and no committed snapshot pack.'},
  'transaction-llm':{entry:'Payment event',router:'Schema validation + routing',left:'Payment extraction model',leftDetail:'Unstructured text → proposed fields',right:'Entity resolution service',rightDetail:'Match counterparties + code sets',store:'Reference codes + counterparty master',tool:'History / entity lookup APIs',result:'Schema-validated enrichment',gate:'Low confidence → operations',failure:'Invalid schema → quarantine',ingest:'Versioned codes + entity reference data',gpu:'Batched extraction; benchmark CPU alternative',note:'Deterministic validation gates publication. Only exceptions need agentic reasoning; no LLM in the payment authorization path.'},
  'fraud-modeling':{entry:'Payment features',router:'Fraud scoring endpoint',left:'Versioned fraud model',leftDetail:'Bounded scoring inference',right:'Drift investigation agent',rightDetail:'Asynchronous cohort analysis',store:'Online feature store + model registry',tool:'Labels / cohort analytics APIs',result:'Risk score + rule decision',gate:'Owner approves model changes',failure:'Timeout → configured rules fallback',ingest:'Events → features; delayed labels',gpu:'Scorer only if benchmark justifies it; explainer separate',note:'The synchronous score path bypasses the LLM. Drift analysis is asynchronous; no automatic model promotion.'},
  'company-briefing':{entry:'Ticker, name, or uploaded report',router:'Deep Agent supervisor',left:'Theme subagents',leftDetail:'Read TOC nodes; never dump the 10-K',right:'Grounding verifier',rightDetail:'Cite-or-abstain against node files',store:'Filing node files · not embeddings',tool:'EDGAR + companyfacts APIs',result:'Cited company briefing',gate:'Presenter accept-gate',failure:'Unknown issuer / ungrounded themes → stop',ingest:'EDGAR 10-K or uploaded annual report',gpu:'Protected model hops only; no filing embeddings',note:'Navigation-first Deep Agent. No vector index and no open web. AI Defense inspects model hops only; XBRL, EDGAR, upload, navigator, and grounding stay off Inspection. Presenter accepts before studio context is stored.'},

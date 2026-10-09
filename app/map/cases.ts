@@ -44,7 +44,7 @@ const fraud: CaseMap = {
     select: entity("select", "Select a held-out payment", "Analyst picks a case", "The workbench sends a known case id. Unknown cases do not score.", "human"),
     score: entity("score", "Score the payment", "Graph model returns a probability.", "GraphSAGE and XGBoost score the edge. This step does not call an LLM and does not start training.", "ai", "implemented", { childScopeId: "fraud.score" }),
     read: entity("read", "Read the Shapley groups", "Evidence, not a verdict", "Captum groups explain the probability. They do not mark the payment fraudulent.", "human"),
-    decide: entity("decide", "Analyst owns the disposition", "Hold, review, or clear", "Threshold bands suggest a queue. A person decides. The demo does not file a case.", "decision"),
+    decide: entity("decide", "Analyst owns the disposition", "Risk band + suggested action", "Risk bands suggest a queue. A person decides. The demo does not file a case.", "decision"),
     entry: entity("entry", "Score API", "POST /api/fraud/score", "Loads the case, resolves a backend, and returns probability plus Shapley groups before any narrative.", "service", "implemented", { evidenceId: "fraud.score" }),
     model: entity("model", "GraphSAGE + XGBoost", "No LLM on this hop", "The sidecar or a ready Triton endpoint scores the edge. A down stack returns 503. Fixtures run only when forced.", "model"),
     narrative: entity("narrative", "Optional narrative", "Off unless requested", "Two sentences may be drafted after the score. AI Defense inspects only that text. A block omits the sentences and keeps the score.", "ai", "implemented", { evidenceId: "fraud.narrative" }),
