@@ -1,20 +1,31 @@
-import { agentTraceIntegration, defenseFacts, defenseFrom, defenseIntegration, DEFENSE_TILES, servedByFrom, traceFacts, usageFrom, type ObservedRun, type StatsCard } from "./RunStats";
+import { agentTraceIntegration, defenseFacts, defenseFrom, defenseIntegration, DEFENSE_TILES, servedByFrom, traceFacts, usageFrom, type Integration, type ObservedRun, type StatsCard } from "./RunStats";
 
 /** Raw wealth health fields: the normalized health rewrites status strings for display. */
-export type WealthService = { reachable: boolean; galileo?: string; security?: { status?: string; mode?: string; fail_open?: boolean } };
+export type WealthService = { reachable: boolean; galileo?: string; security?: { status?: string; mode?: string; fail_open?: boolean }; untrusted?: boolean };
 
 export const wealthService = (body: unknown): WealthService => {
   const value = (body && typeof body === "object" ? body : {}) as Record<string, unknown>;
-  return { reachable: true, galileo: typeof value.galileo === "string" ? value.galileo : undefined, security: value.security as WealthService["security"] };
+  return { reachable: true, galileo: typeof value.galileo === "string" ? value.galileo : undefined, security: value.security as WealthService["security"], untrusted: typeof value.untrusted_inspection === "string" && value.untrusted_inspection.startsWith("AI Defense") };
 };
+
+/** Untrusted inputs (news, CRM notes) are inspected even when model input and output inspection is off. */
+export type WealthDefenseScope = { inputs: string; whenOff: string };
+
+function wealthDefense(service: WealthService | null, reachable: boolean, scope?: WealthDefenseScope): Integration {
+  const base = defenseIntegration(service?.security, "model input and output", reachable);
+  if (base.state !== "off" || !service?.untrusted || !scope) return base;
+  return { state: "on", summary: `On · ${scope.inputs} · model calls off`, notice: `Model input and output inspection is off for this use case; ${scope.whenOff}`, settings: "st-ai-defense" };
+}
 
 /** One research or advisory call from the wealth service's response, including refusals. */
 export function observeWealth(run: ObservedRun, status: number, payload: unknown): ObservedRun {
   const body = (payload && typeof payload === "object" ? payload : {}) as Record<string, unknown>;
   const telemetry = (body.telemetry ?? {}) as { galileo?: string; splunk?: { status?: string; trace_id?: string; span_count?: number } };
   const usage = usageFrom(body.usage);
+  const toolCalls = (body.usage as { tool_calls?: unknown } | undefined)?.tool_calls;
   return {
     ...run,
+    toolCalls: typeof toolCalls === "number" ? toolCalls : undefined,
     status: status < 300 ? "completed" : status === 403 ? "blocked" : "failed",
     durationMs: typeof body.duration_ms === "number" ? body.duration_ms : undefined,
     ...usage,
@@ -41,13 +52,14 @@ export function observeRecordedWealth(run: ObservedRun, payload: unknown, record
   };
 }
 
-export function wealthStats(service: WealthService | null, endpoint: string, link?: string | null): { observability: StatsCard; defense: StatsCard } {
+export function wealthStats(service: WealthService | null, endpoint: string, link?: string | null, scope?: WealthDefenseScope): { observability: StatsCard; defense: StatsCard } {
   const reachable = service?.reachable !== false;
   return {
     observability: {
       integration: agentTraceIntegration(service?.galileo, reachable, link),
       tiles: [
         { label: "LLM calls", value: (run) => run.llmCalls },
+        { label: "Tool calls", value: (run) => run.toolCalls, hint: "Agent and policy tools the service ran" },
         { label: "Tokens in", value: (run) => run.inputTokens, format: "tokens" },
         { label: "Tokens out", value: (run) => run.outputTokens, format: "tokens" },
         { label: "Latency", value: (run) => run.durationMs, format: "ms", total: "avg", hint: "Measured by the wealth service" },
@@ -56,7 +68,7 @@ export function wealthStats(service: WealthService | null, endpoint: string, lin
       source: `From each ${endpoint} response: model calls and tokens are counted at the model client as the provider reported them.`,
     },
     defense: {
-      integration: defenseIntegration(service?.security, "model input and output", reachable),
+      integration: wealthDefense(service, reachable, scope),
       tiles: DEFENSE_TILES,
       facts: defenseFacts,
       source: "From the security summary on each response.",

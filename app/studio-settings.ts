@@ -65,7 +65,7 @@ export const SETTING_GROUPS: SettingGroup[] = [
         { value: "eu-central-1", label: "EU (eu-central-1)" }, { value: "ap-northeast-1", label: "APJ (ap-northeast-1)" }] },
       { name: "AIDEFENSE_MODE", label: "Brahe Bank and fraud narrative", options: MODES, help: "Default: enforce when a key is set." },
       { name: "BRIEFING_AIDEFENSE_MODE", label: "Company briefing", options: MODES, help: "Default: off." },
-      { name: "WEALTH_AIDEFENSE_MODE", label: "Market research and client advisory", options: MODES, help: "Default: off." },
+      { name: "WEALTH_AIDEFENSE_MODE", label: "House-view update and meeting prep", options: MODES, help: "Default: off." },
       { name: "SAR_AIDEFENSE_MODE", label: "SAR investigation", options: MODES, help: "Default: the Brahe Bank mode. The hosted fallback always runs with enforce." },
     ],
   },
@@ -151,12 +151,12 @@ export function readiness(settings: Record<string, SettingState>, model: (useCas
       notes: ["Scoring needs no credentials", "The triage agent uses the fraud-modeling model chain; scripted without one"],
     },
     {
-      id: "market-research", title: "Wealth market research",
+      id: "market-research", title: "Market event → house-view update",
       missing: [...modelNeed("market-research"), ...defenseNeed(defenseMode("WEALTH_AIDEFENSE_MODE", "off"))],
       notes: [`AI Defense: ${defenseMode("WEALTH_AIDEFENSE_MODE", "off")}`, has("FRED_API_KEY") ? "Live FRED series" : "Cached FRED series"],
     },
     {
-      id: "client-advisory", title: "Client advisory",
+      id: "client-advisory", title: "Advisor meeting prep",
       missing: [...modelNeed("client-advisory"), ...defenseNeed(defenseMode("WEALTH_AIDEFENSE_MODE", "off"))],
       notes: [`AI Defense: ${defenseMode("WEALTH_AIDEFENSE_MODE", "off")}`],
     },

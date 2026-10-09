@@ -140,26 +140,26 @@ const useCases: UseCase[] = [
   },
   {
     id: "market-research",
-    title: "Wealth market research",
+    title: "Market event → house-view update",
     category: "Wealth & advisory",
-    description: "Synthesize filings, market events, and house views in an evidence-linked workspace.",
-    outcome: "Faster research with source visibility.",
+    description: "An earnings event lands on a covered name: a research Deep Agent drafts what changed, every claim is verified, and the strategist publishes.",
+    outcome: "Hours of desk research become a verified, policy-checked update.",
     icon: Landmark,
     accent: "blue",
     solutions: ["AI Defense", "Splunk Observability"],
-    signal: "Live research · Yahoo + FRED · committed snapshots",
+    signal: "Research Deep Agent · verified claims · Agent Control",
     stage: "Interactive",
   },
   {
     id: "client-advisory",
-    title: "Client advisory",
+    title: "Advisor meeting prep",
     category: "Wealth & advisory",
-    description: "Combine trusted client context, opportunity signals, and compliant next steps.",
-    outcome: "Personalized service with protected client data.",
+    description: "Profile against portfolio, ranked next-best actions in dollars, and a checked one-page brief a supervisor approves.",
+    outcome: "Meeting-ready in minutes, with client data protected and Reg BI care documented.",
     icon: WalletCards,
     accent: "amber",
     solutions: ["AI Defense", "Splunk Observability", "AI Infrastructure"],
-    signal: "Live advisory · synthetic households + shared context",
+    signal: "Meeting-prep Deep Agent · AI Defense on client data",
     stage: "Interactive",
   },
   {
@@ -329,54 +329,54 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
   "client-advisory": {
     liveExperience: "advisory",
     transformation: {
-      friction: "Advisors assemble entitled briefing context, a research note, and live holdings by hand before each meeting.",
-      aiShift: "Suitability rules run on presenter-entered weights. The Studio model chain drafts a cited meeting brief from accepted context only.",
-      humanControl: "The advisor accept-gate owns the brief. This is a demo brief — not advice. No auto-trade.",
+      friction: "Advisors rebuild each client's picture by hand: profile, holdings, CRM notes, the latest house view, and what is suitable.",
+      aiShift: "Code rules compare profile and portfolio and size the actions; a meeting-prep Deep Agent drafts a brief whose every statement is checked.",
+      humanControl: "The advisor submits and a supervisor approves under advisory.recommendation policies. Nothing is executed.",
     },
     architecture: {
       process: [
-        { title: "Enter live holdings", detail: "Ticker + weight rows · no household catalog" },
-        { title: "Assemble entitled context", detail: "Accepted briefing + accepted research note" },
-        { title: "Run suitability rules", detail: "Concentration, single-name cap, IPS fields" },
-        { title: "Accept meeting brief", detail: "Advisor-owned localStorage write" },
+        { title: "Pick a household", detail: "Synthetic clients · CRM notes screened by AI Defense" },
+        { title: "Profile vs portfolio", detail: "Suitability rules · Reg BI care framing" },
+        { title: "Rank next-best actions", detail: "Sized in dollars · unsuitable ones excluded" },
+        { title: "Advisor, then supervisor", detail: "advisory.recommendation policies on approval" },
       ],
       ai: [
-        { point: "01 → 02", label: "Entitled context assembly", detail: "Posted accepted briefing excerpts and research snapshot fields. Off Inspection. No CRM catalog and no Tavily." },
-        { point: "02 → 03", label: "Suitability rules", detail: "CPU rules on concentration and missing IPS fields. Not an LLM and not sent to AI Defense." },
-        { point: "03 → 04", label: "Model-chain brief + advisor gate", detail: "ProtectedChatOpenAI on the Studio model chain: Sparky vLLM, else the OpenAI API with AI Defense enforcing. Defense inspects this hop only. Holdings remain if the brief is omitted." },
+        { point: "01 → 02", label: "Screened client context", detail: "AI Defense inspects CRM notes as tool results: PII is masked, an injected instruction is withheld." },
+        { point: "02 → 03", label: "Rules and sized actions", detail: "Code compares the risk profile with the portfolio and sizes each action in dollars. Not an LLM." },
+        { point: "03 → 04", label: "Meeting-prep Deep Agent", detail: "Private inference on Sparky; a hosted fallback only with AI Defense in enforce. Every statement is verified against the record." },
       ],
     },
     metrics: [], rows: [], evidence: [],
-    workbenchLabel: "Advisor brief",
-    workbenchTitle: "Live holdings + entitled context",
-    workbenchSummary: "Prepare a meeting brief from accepted studio context and presenter-entered holdings.",
-    primaryAction: "Prepare meeting brief",
+    workbenchLabel: "Meeting prep",
+    workbenchTitle: "Household, actions, and a checked brief",
+    workbenchSummary: "Pick a household, prepare the meeting, then submit for supervisor approval.",
+    primaryAction: "Prepare meeting",
   },
   "market-research": {
     liveExperience: "research",
     transformation: {
-      friction: "Researchers pull Yahoo prints, FRED series, and peer multiples by hand before writing a note.",
-      aiShift: "Allowlisted yfinance + FRED write through a cache. CPU tools emit conflict rows. The Studio model chain drafts a cited note.",
-      humanControl: "Accept research note is required. Demo recommendation — not financial advice. Numbers stay if the note is omitted.",
+      friction: "After an earnings print, strategists reread the filing, the event, and the house view before they can tell advisors what changed.",
+      aiShift: "A research Deep Agent with fundamentals, valuation, macro, and compliance subagents drafts a cited update; code verifies every claim.",
+      humanControl: "The AI never sets a rating. The strategist publishes under research.publish policies; restricted issuers stop before any call.",
     },
     architecture: {
       process: [
-        { title: "Select a ticker", detail: "Any US ticker · briefing ticker when accepted" },
-        { title: "Fetch or reuse cache", detail: "Yahoo + FRED write-through · same UTC day" },
-        { title: "Review indicators + conflicts", detail: "Earnings, peers, returns, macro, structured rows" },
-        { title: "Accept research note", detail: "Presenter-owned localStorage write" },
+        { title: "Earnings event lands", detail: "House view on file · restricted-list pre-check" },
+        { title: "Research Deep Agent", detail: "Filing, event, news, valuation, and calc tools" },
+        { title: "Verify every claim", detail: "Field values and quotes · struck claims shown" },
+        { title: "Strategist publishes", detail: "research.publish policies · then advisor handoff" },
       ],
       ai: [
-        { point: "01 → 02", label: "Fetch + snapshot cache", detail: "Named yfinance functions and allowlisted FRED series. Off Inspection. Empty provider responses fail closed." },
-        { point: "02 → 03", label: "CPU tools + conflicts", detail: "Beat-rate, peer P/E, horizon vs SPY, and structured conflicts. Not a keyword scan and not sent to Defense." },
-        { point: "03 → 04", label: "Model-chain note + accept-gate", detail: "LangChain ChatOpenAI on the Studio model chain: Sparky vLLM, else the OpenAI API. Defense inspects model hops only. Grounding drops ungrounded claims." },
+        { point: "01 → 02", label: "Pre-check + screened news", detail: "Agent Control blocks a restricted issuer before any data or model call; AI Defense inspects news as tool results." },
+        { point: "02 → 03", label: "Deep Agent + subagents", detail: "Supervisor and subagents on the Studio model chain; every tool and model call streams to the timeline and Splunk." },
+        { point: "03 → 04", label: "Claim verifier + publish gate", detail: "Unit-aware checks against the cited field or quote; no ratings or targets; the strategist decides." },
       ],
     },
     metrics: [], rows: [], evidence: [],
-    workbenchLabel: "Research note",
-    workbenchTitle: "Live Yahoo + FRED research",
-    workbenchSummary: "Analyze a ticker from cache-if-fresh or a forced refresh, then accept the note.",
-    primaryAction: "Analyze ticker",
+    workbenchLabel: "House-view update",
+    workbenchTitle: "Earnings event to a published update",
+    workbenchSummary: "Run a scenario, check each claim against its evidence, then publish to the advisor desk.",
+    primaryAction: "Run the scenario",
   },
   "transaction-llm": {
     transformation: {
@@ -471,7 +471,7 @@ const storySteps = [
   { title: "KYC intake", label: "Know the client", icon: Fingerprint, color: "blue" },
   { title: "Fraud monitoring", label: "Catch the fraud", icon: ReceiptText, color: "violet" },
   { title: "SAR investigation", label: "Investigate & report", icon: FileSearch, color: "mint" },
-  { title: "Client advisory", label: "Serve with context", icon: WalletCards, color: "amber" },
+  { title: "Advisor meeting prep", label: "Serve with context", icon: WalletCards, color: "amber" },
 ];
 
 const navItems: { id: View; label: string; icon: LucideIcon }[] = [
@@ -524,8 +524,8 @@ const FOCUS_TARGETS: Record<LiveExperience, { section: string; control: string }
   banking: { section: "banking-experience", control: ".chat-composer input" },
   fraud: { section: "fraud-experience", control: "#triage-queue" },
   briefing: { section: "briefing-experience", control: "#company-briefing-query" },
-  research: { section: "research-experience", control: "#research-ticker" },
-  advisory: { section: "advisory-experience", control: "input" },
+  research: { section: "research-experience", control: "#research-run" },
+  advisory: { section: "advisory-experience", control: "input[name='advisory-household']:checked" },
   interbank: { section: "interbank-experience", control: "#interbank-kickoff" },
   sar: { section: "sar-experience", control: "#sar-investigate" },
 };
@@ -848,10 +848,10 @@ function UseCaseWorkspace({
         <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Company briefing</h2></div><span>EDGAR + upload only · accept before store</span></div>
         <CompanyBriefing embedded inStory={inStory} onBack={onBack} onAdd={onAdd} profile={companyProfile} onProfileChange={onCompanyProfileChange} />
       </section> : frame.liveExperience === "research" ? <section id="research-experience">
-        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Wealth market research</h2></div><span>Yahoo + FRED · committed snapshots · not financial advice</span></div>
+        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Market event → house-view update</h2></div><span>Fictional issuers · synthetic data · not investment advice</span></div>
         <MarketResearch embedded inStory={inStory} companyProfile={companyProfile} note={researchNote} onNoteChange={onResearchNoteChange} />
       </section> : frame.liveExperience === "advisory" ? <section id="advisory-experience">
-        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Client advisory</h2></div><span>Synthetic households + shared context · not advice</span></div>
+        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Advisor meeting prep</h2></div><span>Synthetic households · test PII only</span></div>
         <ClientAdvisory embedded inStory={inStory} companyProfile={companyProfile} researchNote={researchNote} brief={advisoryBrief} onBriefChange={onAdvisoryBriefChange} />
       </section> : frame.liveExperience === "sar" ? <section id="sar-experience">
         <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>SAR investigation</h2></div><span>Synthetic cases · simulated e-filing · the investigator and QA decide</span></div>

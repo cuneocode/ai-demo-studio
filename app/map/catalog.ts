@@ -152,27 +152,27 @@ const briefing = journeyCase({
 
 const research = journeyCase({
   id: "market-research",
-  title: "Market research",
-  purpose: "A presenter picks a ticker, reviews the research note, and chooses whether to keep it.",
+  title: "Market event → house-view update",
+  purpose: "A strategist reviews what an earnings event changed for a covered name and decides whether to publish the update to advisors.",
   modes: ["implemented", "proposed"],
-  environment: ["Market data is fetched live or reused from the same-day cache. The note is not financial advice and the demo does not place an order."],
+  environment: ["The default issuer is fictional with synthetic data; real tickers use cached public data. The AI sets no rating and the demo places no order."],
   steps: [
-    { id: "ticker", label: "Select a ticker", text: "Presenter activity", emphasis: "customer" },
-    { id: "note", label: "Draft a research note", text: "Write from the indicator rows. The note is not advice.", emphasis: "assisted" },
-    { id: "accept", label: "Accept the research note", text: "Presenter activity", emphasis: "customer" },
+    { id: "ticker", label: "An earnings event lands", text: "Restricted-list pre-check first", emphasis: "customer" },
+    { id: "note", label: "Draft and verify the update", text: "A research Deep Agent drafts; code verifies every claim.", emphasis: "assisted" },
+    { id: "accept", label: "Publish to advisors", text: "Strategist decision under research.publish policies", emphasis: "customer" },
   ],
 });
 
 const advisory = journeyCase({
   id: "client-advisory",
-  title: "Client advisory",
-  purpose: "An advisor enters holdings, reviews a meeting brief, and chooses whether to keep it.",
+  title: "Advisor meeting prep",
+  purpose: "An advisor prepares a client meeting from a synthetic household, and a supervisor approves the brief before it is recorded.",
   modes: ["implemented", "proposed"],
-  environment: ["There is no imported book of business. The brief is not advice and the demo does not rebalance an account."],
+  environment: ["Households are synthetic with test PII only. The brief is not advice and the demo executes no trade or transfer."],
   steps: [
-    { id: "holdings", label: "Enter holdings", text: "Advisor activity", emphasis: "customer" },
-    { id: "brief", label: "Draft a meeting brief", text: "Run the suitability checks, then phrase the brief.", emphasis: "assisted" },
-    { id: "accept", label: "Accept the meeting brief", text: "Advisor activity", emphasis: "customer" },
+    { id: "holdings", label: "Pick a household", text: "CRM notes screened by AI Defense", emphasis: "customer" },
+    { id: "brief", label: "Draft a checked meeting brief", text: "Rules and sized actions, then a verified brief.", emphasis: "assisted" },
+    { id: "accept", label: "Advisor and supervisor approve", text: "advisory.recommendation policies", emphasis: "customer" },
   ],
 });
 

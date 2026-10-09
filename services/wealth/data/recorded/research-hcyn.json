@@ -1,9 +1,9 @@
 {
  "v": 1,
  "name": "research-hcyn",
- "title": "HCYN research",
- "scenario": "research",
- "recorded_at": "2026-10-09T21:20:57.201827+00:00",
+ "title": "HCYN \u00b7 earnings",
+ "scenario": "research-earnings",
+ "recorded_at": "2026-10-09T23:01:42.638314+00:00",
  "served_by": {
   "provider": "openai",
   "label": "OpenAI API",
@@ -20,50 +20,114 @@
  "synthetic": true,
  "note": "Recorded from a live run of the wealth service. Synthetic client, fictional or public market data.",
  "run": {
-  "id": "wealth-research-20261009212043-cf2c93",
+  "id": "wealth-research-20261009230052-24c086",
   "service": "wealth",
-  "label": "HCYN research",
-  "scenario": "research",
+  "label": "House-view update \u00b7 HCYN",
+  "scenario": "research-earnings",
   "status": "completed",
-  "started_at": "2026-10-09T21:20:43.630170+00:00",
-  "finished_at": "2026-10-09T21:20:57.201827+00:00",
+  "started_at": "2026-10-09T23:00:52.366065+00:00",
+  "finished_at": "2026-10-09T23:01:42.638314+00:00",
   "meta": {
-   "ticker": "HCYN"
+   "ticker": "HCYN",
+   "scenario": "earnings"
   }
  },
  "events": [
   {
    "v": 1,
-   "id": "b470e03d-7a37-4264-a3f7-713ccb59b98b",
-   "at": "2026-10-09T21:20:48.509798+00:00",
-   "ns": 4879618541,
-   "run_id": "wealth-research-20261009212043-cf2c93",
+   "id": "f6fdc3a0-4236-47c8-9a93-092ac86a0cbd",
+   "at": "2026-10-09T23:00:56.070758+00:00",
+   "ns": 3704683667,
+   "run_id": "wealth-research-20261009230052-24c086",
    "component": "wealth",
    "kind": "run",
    "status": "started",
-   "title": "Research \u00b7 HCYN",
+   "title": "House-view update \u00b7 HCYN",
    "lane": "agent",
    "source": null,
    "target": null,
-   "body": "Market data, indicators, and a compliance pre-check, then a cited draft note.",
+   "body": "Restricted-list pre-check, then market data, the event, and screened news; then the research agent drafts cited claims.",
    "data": {}
   },
   {
    "v": 1,
-   "id": "a04be1ca-e5f7-43cf-9597-b6a7d84b9a9a",
-   "at": "2026-10-09T21:20:48.511515+00:00",
-   "ns": 4881333625,
-   "run_id": "wealth-research-20261009212043-cf2c93",
+   "id": "1eef6606-730e-489c-ac91-472796af4282",
+   "at": "2026-10-09T23:00:56.072457+00:00",
+   "ns": 3706385417,
+   "run_id": "wealth-research-20261009230052-24c086",
    "component": "wealth",
    "kind": "agent.tool_call",
    "status": "info",
-   "title": "market_snapshot(HCYN)",
+   "title": "restricted_list_check(ticker=HCYN)",
    "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "restricted_list_check",
+    "agent": "workflow",
+    "arguments": {
+     "ticker": "HCYN"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "d6e1294d-17c2-4fb8-9150-af8f17f7fa11",
+   "at": "2026-10-09T23:00:56.080354+00:00",
+   "ns": 3714287708,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Restricted list \u00b7 HCYN clear",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "restricted_list_check",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "bba2a89f-374f-4c95-aab2-50a5a0e574c6",
+   "at": "2026-10-09T23:00:57.913306+00:00",
+   "ns": 5547234625,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "control",
+   "status": "allowed",
+   "title": "Agent Control \u00b7 research.precheck \u00b7 Restricted list \u00b7 allowed",
+   "lane": "security",
    "source": null,
    "target": null,
    "body": null,
    "data": {
+    "policy": "research.precheck",
+    "control": "fsi-wealth-research-precheck-restricted-v1",
+    "source": "agent_control",
+    "verdict": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "9bc6ee6f-73ae-4da7-99b2-20ef1c205b94",
+   "at": "2026-10-09T23:00:57.925098+00:00",
+   "ns": 5559031292,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "market_snapshot(ticker=HCYN, refresh=False)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
     "tool": "market_snapshot",
+    "agent": "workflow",
     "arguments": {
      "ticker": "HCYN",
      "refresh": false
@@ -72,183 +136,318 @@
   },
   {
    "v": 1,
-   "id": "ab129c52-75ad-4d9b-9db7-14a97d66747f",
-   "at": "2026-10-09T21:20:48.518252+00:00",
-   "ns": 4888069458,
-   "run_id": "wealth-research-20261009212043-cf2c93",
+   "id": "93eae113-9a0e-4fb1-b534-f511c8129b2f",
+   "at": "2026-10-09T23:00:57.932604+00:00",
+   "ns": 5566535792,
+   "run_id": "wealth-research-20261009230052-24c086",
    "component": "wealth",
    "kind": "tool.result",
    "status": "ok",
    "title": "Market data \u00b7 Fictional \u00b7 synthetic data",
    "lane": "tools",
-   "source": null,
+   "source": "workflow",
    "target": null,
    "body": null,
    "data": {
     "tool": "market_snapshot",
+    "agent": "workflow",
     "source_kind": "fictional",
-    "as_of": "2026-10-08",
     "fictional": true
    }
   },
   {
    "v": 1,
-   "id": "21e5a90f-8229-4d86-b737-efed2c667404",
-   "at": "2026-10-09T21:20:48.523094+00:00",
-   "ns": 4892911041,
-   "run_id": "wealth-research-20261009212043-cf2c93",
+   "id": "05ab4f11-b16a-4243-9bf5-d52d3eaac6f4",
+   "at": "2026-10-09T23:00:57.944157+00:00",
+   "ns": 5578090000,
+   "run_id": "wealth-research-20261009230052-24c086",
    "component": "wealth",
    "kind": "agent.tool_call",
    "status": "info",
    "title": "fred_macro()",
    "lane": "tools",
-   "source": null,
+   "source": "workflow",
    "target": null,
    "body": null,
    "data": {
-    "tool": "fred_macro"
+    "tool": "fred_macro",
+    "agent": "workflow",
+    "arguments": {}
    }
   },
   {
    "v": 1,
-   "id": "8da2ced9-bbdd-41e5-9a7e-e235fbf82e87",
-   "at": "2026-10-09T21:20:48.528956+00:00",
-   "ns": 4898772416,
-   "run_id": "wealth-research-20261009212043-cf2c93",
+   "id": "63893429-c561-44ff-ac05-53b8fba5743b",
+   "at": "2026-10-09T23:00:57.951170+00:00",
+   "ns": 5585099375,
+   "run_id": "wealth-research-20261009230052-24c086",
    "component": "wealth",
    "kind": "tool.result",
    "status": "info",
    "title": "Macro \u00b7 not available",
    "lane": "tools",
-   "source": null,
+   "source": "workflow",
    "target": null,
    "body": "Live macro series are off: add a FRED API key in Studio settings.",
    "data": {
     "tool": "fred_macro",
-    "source_kind": null
+    "agent": "workflow"
    }
   },
   {
    "v": 1,
-   "id": "2f75c70c-ad3c-4842-acc4-21a429619dbe",
-   "at": "2026-10-09T21:20:48.533707+00:00",
-   "ns": 4903526125,
-   "run_id": "wealth-research-20261009212043-cf2c93",
+   "id": "8d2a692e-432f-4617-aa82-984b943bb528",
+   "at": "2026-10-09T23:00:57.958043+00:00",
+   "ns": 5591972208,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "indicators(ticker=HCYN)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "indicators",
+    "agent": "workflow",
+    "arguments": {
+     "ticker": "HCYN"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "79f23a99-6748-43ac-bb47-d4d91b72c194",
+   "at": "2026-10-09T23:00:57.961658+00:00",
+   "ns": 5595588458,
+   "run_id": "wealth-research-20261009230052-24c086",
    "component": "wealth",
    "kind": "tool.result",
    "status": "ok",
-   "title": "Indicators \u00b7 earnings, peers, returns",
+   "title": "Indicators \u00b7 beat rate 87.5% \u00b7 P/E vs peers 13.9x / 18.4x \u00b7 1Y +19.4% vs SPY +16.9%",
    "lane": "tools",
-   "source": null,
+   "source": "workflow",
    "target": null,
-   "body": "Beat rate 87.5% \u00b7 1-year +19.4% vs SPY +16.9%, ahead by 2.5 pts \u00b7 P/E 13.9 vs peer median 18.4",
+   "body": null,
    "data": {
-    "tool": "indicators"
+    "tool": "indicators",
+    "agent": "workflow"
    }
   },
   {
    "v": 1,
-   "id": "8b8dc7ae-1b40-4467-800c-b5705cab7c74",
-   "at": "2026-10-09T21:20:48.538329+00:00",
-   "ns": 4908148416,
-   "run_id": "wealth-research-20261009212043-cf2c93",
+   "id": "388188f7-4159-4e9e-9ddd-020150250bf3",
+   "at": "2026-10-09T23:00:57.965566+00:00",
+   "ns": 5599494875,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "signal_divergences()",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "signal_divergences",
+    "agent": "workflow",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "3a8682ae-a539-464f-b9db-490464352624",
+   "at": "2026-10-09T23:00:57.969129+00:00",
+   "ns": 5603059833,
+   "run_id": "wealth-research-20261009230052-24c086",
    "component": "wealth",
    "kind": "tool.result",
    "status": "ok",
    "title": "Signal divergences \u00b7 none",
    "lane": "tools",
-   "source": null,
+   "source": "workflow",
    "target": null,
    "body": null,
    "data": {
-    "tool": "signal_divergences"
+    "tool": "signal_divergences",
+    "agent": "workflow"
    }
   },
   {
    "v": 1,
-   "id": "da08cf95-2a54-417f-83f9-2274b927e8c1",
-   "at": "2026-10-09T21:20:48.544142+00:00",
-   "ns": 4913958125,
-   "run_id": "wealth-research-20261009212043-cf2c93",
+   "id": "3549d231-1dde-48d7-b1f3-687c0a4f80f9",
+   "at": "2026-10-09T23:00:57.975419+00:00",
+   "ns": 5609351250,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "house_view(ticker=HCYN)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "house_view",
+    "agent": "workflow",
+    "arguments": {
+     "ticker": "HCYN"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "25d20519-19c2-4492-9409-a3c1175e77eb",
+   "at": "2026-10-09T23:00:57.979129+00:00",
+   "ns": 5613063875,
+   "run_id": "wealth-research-20261009230052-24c086",
    "component": "wealth",
    "kind": "tool.result",
    "status": "ok",
    "title": "House view \u00b7 Constructive \u00b7 CIO Office \u00b7 US Equity Strategy",
    "lane": "tools",
-   "source": null,
+   "source": "workflow",
    "target": null,
-   "body": "Owned by the CIO Office. The AI cannot change the rating.",
+   "body": "Owned by the CIO Office. The research agent cannot change the rating.",
    "data": {
     "tool": "house_view",
-    "synthetic": true
+    "agent": "workflow"
    }
   },
   {
    "v": 1,
-   "id": "05c0548a-797f-46ed-a003-681a90c4850d",
-   "at": "2026-10-09T21:20:48.548321+00:00",
-   "ns": 4918144083,
-   "run_id": "wealth-research-20261009212043-cf2c93",
+   "id": "2f63c15f-5df3-4e00-a40b-469e202ccf99",
+   "at": "2026-10-09T23:00:57.983829+00:00",
+   "ns": 5617760833,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "earnings_event(ticker=HCYN)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "earnings_event",
+    "agent": "workflow",
+    "arguments": {
+     "ticker": "HCYN"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "8b52ee5b-09e1-4818-9c74-dd96a653ec8e",
+   "at": "2026-10-09T23:00:57.987887+00:00",
+   "ns": 5621815417,
+   "run_id": "wealth-research-20261009230052-24c086",
    "component": "wealth",
    "kind": "tool.result",
    "status": "ok",
-   "title": "Earnings event \u00b7 Q3 FY2026 \u00b7 EPS $1.79 vs $1.62 est.",
+   "title": "Earnings event \u00b7 Q3 FY2026 \u00b7 EPS $1.79 vs $1.62",
    "lane": "tools",
-   "source": null,
+   "source": "workflow",
    "target": null,
    "body": "Raised FY2026 revenue guidance to $5.75\u20135.85B from $5.45\u20135.60B",
    "data": {
     "tool": "earnings_event",
-    "source": "Synthetic"
+    "agent": "workflow"
    }
   },
   {
    "v": 1,
-   "id": "01758f9e-c271-47e0-8c7f-5ceeac084610",
-   "at": "2026-10-09T21:20:48.553141+00:00",
-   "ns": 4922965166,
-   "run_id": "wealth-research-20261009212043-cf2c93",
+   "id": "d567fe00-86a7-46ad-951b-fbc0f4967074",
+   "at": "2026-10-09T23:00:57.991266+00:00",
+   "ns": 5625190542,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "affected_households(ticker=HCYN)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "affected_households",
+    "agent": "workflow",
+    "arguments": {
+     "ticker": "HCYN"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "43d4e68b-eb7d-42f8-a635-010d69fadb3d",
+   "at": "2026-10-09T23:00:57.994086+00:00",
+   "ns": 5628010375,
+   "run_id": "wealth-research-20261009230052-24c086",
    "component": "wealth",
    "kind": "tool.result",
    "status": "ok",
    "title": "Affected households \u00b7 214 hold it, 31 above 10%, 6 executives",
    "lane": "tools",
-   "source": null,
+   "source": "workflow",
    "target": null,
    "body": null,
    "data": {
     "tool": "affected_households",
-    "synthetic": true
+    "agent": "workflow"
    }
   },
   {
    "v": 1,
-   "id": "f195e1db-2216-4457-8f6a-9526212b51d7",
-   "at": "2026-10-09T21:20:48.557576+00:00",
-   "ns": 4927395583,
-   "run_id": "wealth-research-20261009212043-cf2c93",
+   "id": "bdb23cd9-f215-497f-81f3-b2b9256e5ee7",
+   "at": "2026-10-09T23:00:58.578195+00:00",
+   "ns": 6212123583,
+   "run_id": "wealth-research-20261009230052-24c086",
    "component": "wealth",
-   "kind": "control",
-   "status": "allowed",
-   "title": "Compliance pre-check \u00b7 restricted list \u00b7 clear",
-   "lane": "security",
-   "source": null,
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "news_feed(allowlist=wire-a, trade-b, blog-c)",
+   "lane": "tools",
+   "source": "news_feed",
    "target": null,
    "body": null,
    "data": {
-    "policy": "research.publish"
+    "tool": "news_feed",
+    "agent": "news_feed",
+    "arguments": {
+     "allowlist": "wire-a, trade-b, blog-c"
+    }
    }
   },
   {
    "v": 1,
-   "id": "8f9cdcc7-c493-47ab-aa9f-b2edb4de63f5",
-   "at": "2026-10-09T21:20:56.211391+00:00",
-   "ns": 12581193458,
-   "run_id": "wealth-research-20261009212043-cf2c93",
+   "id": "f591bbcb-b17e-40b2-ad66-59ad677a6de6",
+   "at": "2026-10-09T23:00:58.579157+00:00",
+   "ns": 6213082042,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "News feed \u00b7 4 kept, 0 withheld",
+   "lane": "tools",
+   "source": "news_feed",
+   "target": null,
+   "body": "AI Defense inspected 4 of 4 as tool results",
+   "data": {
+    "tool": "news_feed",
+    "agent": "news_feed"
+   }
+  },
+  {
+   "v": 1,
+   "id": "84b2b98a-3d3f-41d2-8cec-1f44916c1707",
+   "at": "2026-10-09T23:00:58.591588+00:00",
+   "ns": 6225513875,
+   "run_id": "wealth-research-20261009230052-24c086",
    "component": "wealth",
    "kind": "model.failover",
    "status": "flagged",
-   "title": "Model fallback \u00b7 answered by OpenAI API",
+   "title": "Model fallback \u00b7 next in chain is OpenAI API",
    "lane": "model",
    "source": null,
    "target": null,
@@ -271,14 +470,14 @@
   },
   {
    "v": 1,
-   "id": "5794cfd9-6c43-43b7-9d31-6debcf50c98a",
-   "at": "2026-10-09T21:20:56.213960+00:00",
-   "ns": 12583759875,
-   "run_id": "wealth-research-20261009212043-cf2c93",
+   "id": "41ff2bb1-b049-4537-a001-4e2e3754964a",
+   "at": "2026-10-09T23:01:01.797470+00:00",
+   "ns": 9431388458,
+   "run_id": "wealth-research-20261009230052-24c086",
    "component": "wealth",
    "kind": "llm.call",
    "status": "ok",
-   "title": "gpt-5.6-luna \u00b7 OpenAI API",
+   "title": "gpt-5.6-luna \u00b7 research supervisor",
    "lane": "model",
    "source": null,
    "target": null,
@@ -291,57 +490,1224 @@
      "kind": "openai",
      "private": false,
      "external": true,
-     "fallback": true,
+     "fallback": false,
      "reason": "Sparky vLLM unreachable (connection refused)",
      "source": "saved",
      "egress": "allow",
      "ai_defense": null
     },
-    "latency_ms": 7082,
-    "input_tokens": 1970,
-    "output_tokens": 771
+    "latency_ms": 3019,
+    "input_tokens": 1247,
+    "output_tokens": 290
    }
   },
   {
    "v": 1,
-   "id": "b1b7a10e-7cf2-40a8-b77c-a247bd11ba17",
-   "at": "2026-10-09T21:20:56.560728+00:00",
-   "ns": 12930530208,
-   "run_id": "wealth-research-20261009212043-cf2c93",
+   "id": "a0965369-da7f-4904-b2dc-1854f1044650",
+   "at": "2026-10-09T23:01:01.810232+00:00",
+   "ns": 9444145958,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.message",
+   "status": "info",
+   "title": "research supervisor \u2192 fundamentals subagent",
+   "lane": "agent",
+   "source": "research supervisor",
+   "target": "fundamentals",
+   "body": "Research HCYN fundamentals using the available earnings event, earnings history, filings, and news evidence. Return only cited findings with evidence_id, exact field_path, display value, numeric value and unit, or verbatim quotes of at least 8 consecutive words. Focus on what changed, estimates, guidance, beat history, and key risks. Do not make recommendations.",
+   "data": {
+    "subagent": "fundamentals"
+   }
+  },
+  {
+   "v": 1,
+   "id": "a9a56d07-79dd-4d1d-b80c-bfc6187b35ac",
+   "at": "2026-10-09T23:01:01.816057+00:00",
+   "ns": 9449967208,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.message",
+   "status": "info",
+   "title": "research supervisor \u2192 valuation subagent",
+   "lane": "agent",
+   "source": "research supervisor",
+   "target": "valuation",
+   "body": "Research HCYN valuation and returns using available valuation and returns evidence. Return cited findings with evidence_id, exact field_path, display value, numeric value and unit, or verbatim quotes of at least 8 consecutive words. Focus on valuation versus peers/SPY and any material change. Do not make recommendations.",
+   "data": {
+    "subagent": "valuation"
+   }
+  },
+  {
+   "v": 1,
+   "id": "d8dff61e-fec7-4df3-8157-0ac9747ec393",
+   "at": "2026-10-09T23:01:01.821492+00:00",
+   "ns": 9455404125,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.message",
+   "status": "info",
+   "title": "research supervisor \u2192 macro subagent",
+   "lane": "agent",
+   "source": "research supervisor",
+   "target": "macro",
+   "body": "Research macro context relevant to HCYN using available macro evidence. Return cited findings with evidence_id, exact field_path, display value, numeric value and unit, or verbatim quotes of at least 8 consecutive words. Identify relevant divergences or risks. Do not make recommendations.",
+   "data": {
+    "subagent": "macro"
+   }
+  },
+  {
+   "v": 1,
+   "id": "09b54dbc-df78-404f-95e4-69649a6ffefb",
+   "at": "2026-10-09T23:01:01.829158+00:00",
+   "ns": 9463070500,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_house_view()",
+   "lane": "tools",
+   "source": "research supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_house_view",
+    "agent": "research supervisor",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "00b385bf-4327-4434-8043-20306ae5a408",
+   "at": "2026-10-09T23:01:01.836384+00:00",
+   "ns": 9470295625,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "House view \u00b7 Constructive \u00b7 on the Focus List",
+   "lane": "tools",
+   "source": "research supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_house_view",
+    "agent": "research supervisor"
+   }
+  },
+  {
+   "v": 1,
+   "id": "c9f97fd9-c9e1-479e-bd2a-f51fbd17c417",
+   "at": "2026-10-09T23:01:01.841207+00:00",
+   "ns": 9475117708,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_earnings_event()",
+   "lane": "tools",
+   "source": "research supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_earnings_event",
+    "agent": "research supervisor",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "c061aea4-619f-47ba-80d1-9a9493c5cb31",
+   "at": "2026-10-09T23:01:01.843934+00:00",
+   "ns": 9477845917,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Earnings event \u00b7 $1.79 \u00b7 $1.62 \u00b7 10.5%",
+   "lane": "tools",
+   "source": "research supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_earnings_event",
+    "agent": "research supervisor"
+   }
+  },
+  {
+   "v": 1,
+   "id": "0d5b48ee-5a2a-4a1b-bde2-e8c38d67939c",
+   "at": "2026-10-09T23:01:03.075128+00:00",
+   "ns": 10709055958,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 valuation subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 1207,
+    "input_tokens": 394,
+    "output_tokens": 43
+   }
+  },
+  {
+   "v": 1,
+   "id": "441740c9-1a54-41f6-b131-09259ed1ba5c",
+   "at": "2026-10-09T23:01:03.086107+00:00",
+   "ns": 10720017667,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_valuation()",
+   "lane": "tools",
+   "source": "valuation",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_valuation",
+    "agent": "valuation",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "64a34497-3989-430a-ab11-5f23a503c04e",
+   "at": "2026-10-09T23:01:03.099113+00:00",
+   "ns": 10733033583,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Valuation vs peers \u00b7 13.9x \u00b7 11.5x \u00b7 18.4x",
+   "lane": "tools",
+   "source": "valuation",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_valuation",
+    "agent": "valuation"
+   }
+  },
+  {
+   "v": 1,
+   "id": "654e2304-fd14-45b6-9a60-d0b77d65b124",
+   "at": "2026-10-09T23:01:03.108242+00:00",
+   "ns": 10742154125,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_returns()",
+   "lane": "tools",
+   "source": "valuation",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_returns",
+    "agent": "valuation",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "dd8c6c49-5d9b-4d5c-a496-24dda4412478",
+   "at": "2026-10-09T23:01:03.116745+00:00",
+   "ns": 10750665167,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Returns vs SPY \u00b7 +4.2% \u00b7 +0.7% \u00b7 +3.5%",
+   "lane": "tools",
+   "source": "valuation",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_returns",
+    "agent": "valuation"
+   }
+  },
+  {
+   "v": 1,
+   "id": "f865faff-6ebc-40b8-a36f-af669189a7bb",
+   "at": "2026-10-09T23:01:03.178324+00:00",
+   "ns": 10812234208,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 macro subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 1308,
+    "input_tokens": 351,
+    "output_tokens": 45
+   }
+  },
+  {
+   "v": 1,
+   "id": "ab3f9731-d925-47ec-ab89-592d049e52f5",
+   "at": "2026-10-09T23:01:03.194692+00:00",
+   "ns": 10828599750,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_macro()",
+   "lane": "tools",
+   "source": "macro",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_macro",
+    "agent": "macro",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "121778bb-e29d-46ad-af4e-da82fb8a9f1e",
+   "at": "2026-10-09T23:01:03.209550+00:00",
+   "ns": 10843462292,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "info",
+   "title": "Macro \u00b7 not available",
+   "lane": "tools",
+   "source": "macro",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_macro",
+    "agent": "macro"
+   }
+  },
+  {
+   "v": 1,
+   "id": "92995959-e30e-493e-ad4d-7b73819f2935",
+   "at": "2026-10-09T23:01:03.223233+00:00",
+   "ns": 10857142458,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_signal_divergences()",
+   "lane": "tools",
+   "source": "macro",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_signal_divergences",
+    "agent": "macro",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "cfc9ee34-41f5-4987-852d-b225f86cf203",
+   "at": "2026-10-09T23:01:03.238297+00:00",
+   "ns": 10872208292,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "info",
+   "title": "Signal divergences \u00b7 not available",
+   "lane": "tools",
+   "source": "macro",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_signal_divergences",
+    "agent": "macro"
+   }
+  },
+  {
+   "v": 1,
+   "id": "786d125f-f721-467f-b537-b3ba55c58611",
+   "at": "2026-10-09T23:01:03.681559+00:00",
+   "ns": 11315477417,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 fundamentals subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 1814,
+    "input_tokens": 505,
+    "output_tokens": 139
+   }
+  },
+  {
+   "v": 1,
+   "id": "4b0f6216-9313-410b-90ca-b58e194b6dd5",
+   "at": "2026-10-09T23:01:03.688146+00:00",
+   "ns": 11322052917,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_earnings_event()",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_earnings_event",
+    "agent": "fundamentals",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "09315734-2938-4b04-993a-eeb0f1f07b0d",
+   "at": "2026-10-09T23:01:03.690995+00:00",
+   "ns": 11324900958,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Earnings event \u00b7 $1.79 \u00b7 $1.62 \u00b7 10.5%",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_earnings_event",
+    "agent": "fundamentals"
+   }
+  },
+  {
+   "v": 1,
+   "id": "047876d3-2155-4700-8c3d-a0014d150a53",
+   "at": "2026-10-09T23:01:03.693683+00:00",
+   "ns": 11327589542,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_earnings_history()",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_earnings_history",
+    "agent": "fundamentals",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "e7101356-6ed8-4381-9298-a4ff6d6ca592",
+   "at": "2026-10-09T23:01:03.696531+00:00",
+   "ns": 11330437542,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Earnings history \u00b7 87.5% \u00b7 7 \u00b7 8",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_earnings_history",
+    "agent": "fundamentals"
+   }
+  },
+  {
+   "v": 1,
+   "id": "2bd3bea8-9d16-4c06-a0dc-5ee0608f7798",
+   "at": "2026-10-09T23:01:03.699292+00:00",
+   "ns": 11333199125,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_news()",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_news",
+    "agent": "fundamentals",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "472d05e0-ff4c-4159-8b34-8e027a90be89",
+   "at": "2026-10-09T23:01:03.702749+00:00",
+   "ns": 11336655917,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "News feed \u00b7 4 items",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_news",
+    "agent": "fundamentals"
+   }
+  },
+  {
+   "v": 1,
+   "id": "6c1cd2fc-b8f9-432e-a9d5-269111e8e782",
+   "at": "2026-10-09T23:01:03.705811+00:00",
+   "ns": 11339716792,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "search_filing(query=customer concentration)",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "search_filing",
+    "agent": "fundamentals",
+    "arguments": {
+     "query": "customer concentration"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "770b973e-91f6-4bee-b3c0-a92ca3ec76ce",
+   "at": "2026-10-09T23:01:03.708312+00:00",
+   "ns": 11342218083,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "10-K search 'customer concentration' \u00b7 3 sections",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "search_filing",
+    "agent": "fundamentals"
+   }
+  },
+  {
+   "v": 1,
+   "id": "45f9da4e-1320-472f-88c9-b7c92db7161f",
+   "at": "2026-10-09T23:01:03.711272+00:00",
+   "ns": 11345178417,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "search_filing(query=export controls)",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "search_filing",
+    "agent": "fundamentals",
+    "arguments": {
+     "query": "export controls"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "e67777dc-368c-4896-b4c0-3319cfcd24fb",
+   "at": "2026-10-09T23:01:03.713750+00:00",
+   "ns": 11347656583,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "10-K search 'export controls' \u00b7 3 sections",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "search_filing",
+    "agent": "fundamentals"
+   }
+  },
+  {
+   "v": 1,
+   "id": "b574bc78-47f8-48c7-bf79-e302ab47ef77",
+   "at": "2026-10-09T23:01:03.718149+00:00",
+   "ns": 11352058125,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "search_filing(query=segment results)",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "search_filing",
+    "agent": "fundamentals",
+    "arguments": {
+     "query": "segment results"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "9eac548b-78bd-41e0-ae87-aece6a1bdf8a",
+   "at": "2026-10-09T23:01:03.721012+00:00",
+   "ns": 11354919292,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "10-K search 'segment results' \u00b7 3 sections",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "search_filing",
+    "agent": "fundamentals"
+   }
+  },
+  {
+   "v": 1,
+   "id": "5b6b659f-a30e-40e2-9758-fae4fa603dd9",
+   "at": "2026-10-09T23:01:03.724117+00:00",
+   "ns": 11358022667,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "search_filing(query=guidance estimates)",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "search_filing",
+    "agent": "fundamentals",
+    "arguments": {
+     "query": "guidance estimates"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "ca769128-9856-467f-b22c-13508253c278",
+   "at": "2026-10-09T23:01:03.726670+00:00",
+   "ns": 11360578583,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "10-K search 'guidance estimates' \u00b7 2 sections",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "search_filing",
+    "agent": "fundamentals"
+   }
+  },
+  {
+   "v": 1,
+   "id": "b1e01910-96b1-4542-85c9-ce5feeaa7c64",
+   "at": "2026-10-09T23:01:03.744797+00:00",
+   "ns": 11378705667,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "search_filing(query=key risks)",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "search_filing",
+    "agent": "fundamentals",
+    "arguments": {
+     "query": "key risks"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "95d37619-4510-4fc9-bb45-dc51dadf74be",
+   "at": "2026-10-09T23:01:03.747018+00:00",
+   "ns": 11380924375,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "10-K search 'key risks' \u00b7 3 sections",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "search_filing",
+    "agent": "fundamentals"
+   }
+  },
+  {
+   "v": 1,
+   "id": "e27e3278-1039-41e8-bc9a-39fe48f6eb10",
+   "at": "2026-10-09T23:01:04.219459+00:00",
+   "ns": 11853373375,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 macro subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 967,
+    "input_tokens": 445,
+    "output_tokens": 25
+   }
+  },
+  {
+   "v": 1,
+   "id": "b7120e73-fbe3-4396-a67e-f85297f0506b",
+   "at": "2026-10-09T23:01:08.967380+00:00",
+   "ns": 16601306042,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 valuation subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 5830,
+    "input_tokens": 1228,
+    "output_tokens": 892
+   }
+  },
+  {
+   "v": 1,
+   "id": "f3a89f13-0ad2-45f8-81ba-ea8036ff1196",
+   "at": "2026-10-09T23:01:12.460426+00:00",
+   "ns": 20094329667,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 fundamentals subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 8704,
+    "input_tokens": 5396,
+    "output_tokens": 1154
+   }
+  },
+  {
+   "v": 1,
+   "id": "c2c65718-3b59-4636-b4bb-cccb82b2216b",
+   "at": "2026-10-09T23:01:21.598014+00:00",
+   "ns": 29231891833,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 research supervisor",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 9123,
+    "input_tokens": 4685,
+    "output_tokens": 1243
+   }
+  },
+  {
+   "v": 1,
+   "id": "191956b0-f09b-4ff8-9bbb-33fb30180d48",
+   "at": "2026-10-09T23:01:21.607564+00:00",
+   "ns": 29241430000,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.message",
+   "status": "info",
+   "title": "research supervisor \u2192 compliance_critic subagent",
+   "lane": "agent",
+   "source": "research supervisor",
+   "target": "compliance_critic",
+   "body": "Review the following draft claims JSON for evidence, field-path, display-value, unit, quote, duplication, and policy compliance. Flag any claim that fails and provide corrected wording or say drop. Do not add recommendations. Draft claims: [{\"type\":\"what_changed\",\"text\":\"EPS was $1.79 versus $1.62 consensus, a 10.5% beat.\",\"evidence_id\":\"event\",\"field_path\":\"fields.eps_actual\",\"value\":1.79,\"unit\":\"usd\",\"also\":[{\"evidence_id\":\"event\",\"field_path\":\"fields.eps_estimate\",\"value\":1.62,\"unit\":\"usd\"},{\"evidence_id\":\"event\",\"field_path\":\"fields.eps_surprise\",\"value\":0.10493827160493822,\"unit\":\"fractio",
+   "data": {
+    "subagent": "compliance_critic"
+   }
+  },
+  {
+   "v": 1,
+   "id": "cbfbe03d-c300-4bb5-9680-952999eb08d4",
+   "at": "2026-10-09T23:01:30.249642+00:00",
+   "ns": 37883490667,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 compliance critic subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 8626,
+    "input_tokens": 1492,
+    "output_tokens": 1177
+   }
+  },
+  {
+   "v": 1,
+   "id": "77e673c8-525f-4bb6-b696-0de2457f7c01",
+   "at": "2026-10-09T23:01:30.265734+00:00",
+   "ns": 37899580250,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "check_draft(claims=draft)",
+   "lane": "tools",
+   "source": "compliance_critic",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "check_draft",
+    "agent": "compliance_critic",
+    "arguments": {
+     "claims": "draft"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "82487d83-f620-4164-87e2-8716a65eee6d",
+   "at": "2026-10-09T23:01:30.275374+00:00",
+   "ns": 37909225250,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "Draft check \u00b7 5 of 10 claims pass",
+   "lane": "tools",
+   "source": "compliance_critic",
+   "target": null,
+   "body": "\u2717 The 42.6% revenue growth and raised guidance reinforce the house thesis that AI build-outs \u00b7 The sentence adds what the cited evidence never says: 'guidance, rais, reinforce, thesi'.\n\u2717 Customer concentration remains a key risk to the house view: three hyperscale customers ac \u00b7 The quote does not support 'annual, billion, concentration, house'.\n\u2717 HCYN delivered a clear quarterly beat and raised its full-year revenue outlook, supported  \u00b7 The quote does not support 'clear, deliver, demand, full-year'.\n\u2717 The company is growing quickly, but the business still depends heavily on a small group of \u00b7 The quote does not support 'busines, company, depend, group'.\n\u2717 The shares trade below peer valuation levels, while recent performance has been mixed agai \u00b7 The quote does not appear in HCYN valuation vs peers.",
+   "data": {
+    "tool": "check_draft",
+    "agent": "compliance_critic"
+   }
+  },
+  {
+   "v": 1,
+   "id": "207d808e-c7ae-43b1-aff4-2b8bc2c4cd37",
+   "at": "2026-10-09T23:01:36.932971+00:00",
+   "ns": 44566820792,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 compliance critic subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 6649,
+    "input_tokens": 3352,
+    "output_tokens": 960
+   }
+  },
+  {
+   "v": 1,
+   "id": "3d9d939a-e94e-47a9-8c1b-d9ae2f392deb",
+   "at": "2026-10-09T23:01:41.871937+00:00",
+   "ns": 49505757833,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 research supervisor",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 4904,
+    "input_tokens": 6899,
+    "output_tokens": 704
+   }
+  },
+  {
+   "v": 1,
+   "id": "e26ee076-4ab0-4dfa-a190-75d64b04b05e",
+   "at": "2026-10-09T23:01:41.875166+00:00",
+   "ns": 49508983500,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "submit_update(claims=draft)",
+   "lane": "tools",
+   "source": "research supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "submit_update",
+    "agent": "research supervisor",
+    "arguments": {
+     "claims": "draft"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "0b5ef4df-1759-4836-a337-bb7f4770ee8f",
+   "at": "2026-10-09T23:01:41.885859+00:00",
+   "ns": 49519681917,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Update submitted \u00b7 5 of 5 claims pass",
+   "lane": "tools",
+   "source": "research supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "submit_update",
+    "agent": "research supervisor"
+   }
+  },
+  {
+   "v": 1,
+   "id": "dfcc638f-4aad-4ec3-a4d2-51b0cf21e439",
+   "at": "2026-10-09T23:01:41.894639+00:00",
+   "ns": 49528456167,
+   "run_id": "wealth-research-20261009230052-24c086",
    "component": "wealth",
    "kind": "claim.verdict",
-   "status": "flagged",
-   "title": "Grounding \u00b7 2 unsupported claims dropped",
+   "status": "ok",
+   "title": "Claim verified \u00b7 EPS was $1.79 versus $1.62 consensus, a 10.5% beat.",
    "lane": "security",
    "source": null,
    "target": null,
-   "body": "Claims that did not match the market data or the attached context were removed, not shown.",
+   "body": "Matches Q3 FY2026 earnings (2026-10-07) \u00b7 EPS = $1.79.",
+   "data": {
+    "evidence_id": "event",
+    "field_path": "eps_actual",
+    "check": "numeric",
+    "section": "what_changed"
+   }
+  },
+  {
+   "v": 1,
+   "id": "8c125d7d-af7d-4950-b0de-39c5695874e4",
+   "at": "2026-10-09T23:01:41.901912+00:00",
+   "ns": 49535729917,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "claim.verdict",
+   "status": "ok",
+   "title": "Claim verified \u00b7 Revenue was $1.51B, up 42.6% year over year and 5.0% above consensus.",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Matches Q3 FY2026 earnings (2026-10-07) \u00b7 Revenue = $1.51B.",
+   "data": {
+    "evidence_id": "event",
+    "field_path": "revenue",
+    "check": "numeric",
+    "section": "what_changed"
+   }
+  },
+  {
+   "v": 1,
+   "id": "4cc98a7d-f922-49fd-8a8d-656ecb6ff85e",
+   "at": "2026-10-09T23:01:41.908553+00:00",
+   "ns": 49542374167,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "claim.verdict",
+   "status": "ok",
+   "title": "Claim verified \u00b7 FY2026 revenue guidance rose to $5.75B\u2013$5.85B from $5.45B\u2013$5.6B, with the midpoint up 5.0%.",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Matches Q3 FY2026 earnings (2026-10-07) \u00b7 New guidance, low = $5.75B.",
+   "data": {
+    "evidence_id": "event",
+    "field_path": "guidance_low",
+    "check": "numeric",
+    "section": "what_changed"
+   }
+  },
+  {
+   "v": 1,
+   "id": "05ffcccc-2431-489b-92f5-e88b0cca4e50",
+   "at": "2026-10-09T23:01:41.913297+00:00",
+   "ns": 49547116542,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "claim.verdict",
+   "status": "ok",
+   "title": "Claim verified \u00b7 The earnings beat record remains strong at 87.5% across 8 observations, including a 4-quarter beat streak.",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Matches HCYN earnings history \u00b7 Beat rate = 87.5%.",
+   "data": {
+    "evidence_id": "earnings",
+    "field_path": "beat_rate",
+    "check": "numeric",
+    "section": "what_changed"
+   }
+  },
+  {
+   "v": 1,
+   "id": "fb80c4a3-1ff6-4d86-8cb8-2bbe3c27371a",
+   "at": "2026-10-09T23:01:41.916101+00:00",
+   "ns": 49549918125,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "claim.verdict",
+   "status": "ok",
+   "title": "Claim verified \u00b7 Valuation remains supportive of the house view: forward P/E is 11.5x versus a 18.4x peer median, a 24.1% discount.",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Matches HCYN valuation vs peers \u00b7 Forward P/E = 11.5x.",
+   "data": {
+    "evidence_id": "valuation",
+    "field_path": "forward_pe",
+    "check": "numeric",
+    "section": "impact"
+   }
+  },
+  {
+   "v": 1,
+   "id": "1ea70d7c-ca60-4956-824d-74217ff95b11",
+   "at": "2026-10-09T23:01:41.918618+00:00",
+   "ns": 49552435417,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "claim.verdict",
+   "status": "ok",
+   "title": "Claim verifier \u00b7 5 of 5 verified",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Each claim was checked against the cited tool output: field, value, unit, and every number in the sentence; quotes must appear verbatim.",
    "data": {}
   },
   {
    "v": 1,
-   "id": "2200e76c-ef26-4972-b786-f4a1b5581873",
-   "at": "2026-10-09T21:20:57.200433+00:00",
-   "ns": 13570246416,
-   "run_id": "wealth-research-20261009212043-cf2c93",
+   "id": "d844a163-bae7-431c-9445-5f5342b32cd2",
+   "at": "2026-10-09T23:01:41.921254+00:00",
+   "ns": 49555071333,
+   "run_id": "wealth-research-20261009230052-24c086",
+   "component": "wealth",
+   "kind": "hitl.request",
+   "status": "info",
+   "title": "Strategist approval to publish the update",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": "House view stays Constructive: only the CIO Office changes it. Publishing runs the research.publish policies.",
+   "data": {
+    "request_id": "publish",
+    "policy": "research.publish"
+   }
+  },
+  {
+   "v": 1,
+   "id": "2be6671e-de66-4948-9f7d-3c1ee9f8cb8c",
+   "at": "2026-10-09T23:01:41.923510+00:00",
+   "ns": 49557326292,
+   "run_id": "wealth-research-20261009230052-24c086",
    "component": "wealth",
    "kind": "result",
    "status": "ok",
-   "title": "Draft note ready for review",
+   "title": "Update ready \u00b7 5 verified claims \u00b7 consistent with the house view",
    "lane": "agent",
    "source": null,
    "target": null,
-   "body": "HCYN\u2019s Q3 FY2026 update strengthened the operating picture: EPS was $1.79 versus $1.62 expected, revenue reached $1,512M with 42.6% year-over-year growth, and FY2026 revenue guidance increased to $5.75\u20135.85B from $5.45\u20135.60B. The data is consistent with the CIO Office\u2019s Constructive house view, while recent three- and six-month relative performance remains weaker than the S&P 500.",
+   "body": null,
    "data": {}
   }
  ],
  "result": {
   "ticker": "HCYN",
+  "scenario": "earnings",
+  "status": "ready",
   "company": {
    "name": "Halcyon Interconnect, Inc.",
    "ticker": "HCYN",
    "sector": "Technology",
-   "industry": "Communication Equipment"
+   "industry": "Communication Equipment",
+   "metric_family": "earnings"
   },
   "source": {
    "kind": "fictional",
@@ -351,6 +1717,30 @@
    "fictional": true,
    "macro": null,
    "fresh": false
+  },
+  "precheck": {
+   "status": "clear",
+   "ticker": "HCYN",
+   "verdicts": {
+    "issuer_not_restricted": true
+   },
+   "controls": {
+    "policy": "research.precheck",
+    "allowed": true,
+    "source": "agent_control",
+    "checks": [
+     {
+      "policy": "research.precheck",
+      "control": "fsi-wealth-research-precheck-restricted-v1",
+      "label": "Restricted list",
+      "key": "issuer_not_restricted",
+      "verdict": true,
+      "status": "allowed",
+      "source": "agent_control"
+     }
+    ],
+    "detail": null
+   }
   },
   "earnings": {
    "status": "ready",
@@ -548,6 +1938,12 @@
    "series": {}
   },
   "conflicts": [],
+  "valuation": {
+   "trailing_pe": "13.9x",
+   "forward_pe": "11.5x",
+   "peer_median_pe": "18.4x",
+   "pe_vs_peers": "-24.1%"
+  },
   "context": {
    "house_view": {
     "ticker": "HCYN",
@@ -569,7 +1965,6 @@
     ],
     "rating_policy": "Only the CIO Office changes the rating. AI drafts may flag 'needs strategist review' with reasons but cannot propose a rating."
    },
-   "restricted": null,
    "event": {
     "ticker": "HCYN",
     "issuer": "Halcyon Interconnect, Inc. (fictional)",
@@ -604,90 +1999,602 @@
     "executives": 6,
     "threshold_pct": 10,
     "synthetic": true
-   }
+   },
+   "restricted": null
   },
-  "note": {
-   "summary": "HCYN\u2019s Q3 FY2026 update strengthened the operating picture: EPS was $1.79 versus $1.62 expected, revenue reached $1,512M with 42.6% year-over-year growth, and FY2026 revenue guidance increased to $5.75\u20135.85B from $5.45\u20135.60B. The data is consistent with the CIO Office\u2019s Constructive house view, while recent three- and six-month relative performance remains weaker than the S&P 500.",
-   "bullets": [
-    "Q3 EPS beat consensus by 10.5%; HCYN has beaten EPS estimates in 7 of 8 reported quarters, with a latest surprise of +10.5%.",
-    "Revenue growth accelerated to +42.6% year over year from +39.8% in Q2, and Q3 revenue exceeded the $1,440M estimate.",
-    "The stock rose from $80.1 before the event to $87.4 afterward, a +9.1% reaction based on the cited closes.",
-    "Valuation remains below the peer median: HCYN trades at 13.92x trailing earnings versus an 18.35x median, a -24.1% discount.",
-    "Key house-view risks remain customer concentration, potential displacement from co-packaged optics, and export controls."
-   ],
-   "citations": [
+  "news": [
+   {
+    "id": "hcyn-n1",
+    "evidence_id": "news:hcyn-n1",
+    "headline": "Halcyon Interconnect tops Q3 estimates, lifts full-year outlook",
+    "publisher": "allowlist:wire-a",
+    "date": "2026-10-07",
+    "body": "Halcyon reported Q3 EPS of $1.79 against a $1.62 consensus and raised FY2026 revenue guidance to $5.75\u20135.85B.",
+    "ai_defense": "allowed",
+    "ai_defense_rules": [],
+    "local": [],
+    "status": "kept",
+    "reason": null,
+    "by": "AI Defense"
+   },
+   {
+    "id": "hcyn-n2",
+    "evidence_id": "news:hcyn-n2",
+    "headline": "1.6T transceivers pass half of Halcyon's optics shipments",
+    "publisher": "allowlist:trade-b",
+    "date": "2026-10-07",
+    "body": "Management said 1.6-terabit modules made up 52% of Optical Interconnect units in the quarter.",
+    "ai_defense": "allowed",
+    "ai_defense_rules": [],
+    "local": [],
+    "status": "kept",
+    "reason": null,
+    "by": "AI Defense"
+   },
+   {
+    "id": "hcyn-n3",
+    "evidence_id": "news:hcyn-n3",
+    "headline": "Halcyon shares rise 9% after guidance raise",
+    "publisher": "allowlist:wire-a",
+    "date": "2026-10-08",
+    "body": "The stock closed at $87.40, up from $80.10 before the report.",
+    "ai_defense": "allowed",
+    "ai_defense_rules": [],
+    "local": [],
+    "status": "kept",
+    "reason": null,
+    "by": "AI Defense"
+   },
+   {
+    "id": "hcyn-n5",
+    "evidence_id": "news:hcyn-n5",
+    "headline": "Co-packaged optics remain a 2027-plus story, suppliers say",
+    "publisher": "allowlist:trade-b",
+    "date": "2026-10-08",
+    "body": "Halcyon expects co-packaged optics qualification revenue in 2027.",
+    "ai_defense": "allowed",
+    "ai_defense_rules": [],
+    "local": [],
+    "status": "kept",
+    "reason": null,
+    "by": "AI Defense"
+   }
+  ],
+  "evidence": [
+   {
+    "id": "earnings",
+    "title": "HCYN earnings history",
+    "source": "Fictional \u00b7 synthetic data",
+    "kind": "data",
+    "synthetic": true,
+    "fields": {
+     "beat_rate": {
+      "display": "87.5%",
+      "label": "Beat rate"
+     },
+     "beats": {
+      "display": "7",
+      "label": "Quarters beaten"
+     },
+     "observations": {
+      "display": "8",
+      "label": "Quarters observed"
+     },
+     "beat_streak": {
+      "display": "4",
+      "label": "Consecutive beats"
+     },
+     "latest_surprise": {
+      "display": "10.5%",
+      "label": "Latest EPS surprise"
+     },
+     "revenue_latest_yoy": {
+      "display": "42.6%",
+      "label": "Revenue growth, latest quarter YoY"
+     },
+     "revenue_prior_yoy": {
+      "display": "39.8%",
+      "label": "Revenue growth, prior quarter YoY"
+     }
+    },
+    "text": "2026-10-07: EPS $1.79 vs $1.62 est (beat); 2026-07-29: EPS $1.61 vs $1.52 est (beat); 2026-04-29: EPS $1.48 vs $1.41 est (beat); 2026-02-11: EPS $1.40 vs $1.33 est (beat); 2025-10-22: EPS $1.22 vs $1.24 est (miss); 2025-07-30: EPS $1.13 vs $1.05 est (beat); 2025-04-30: EPS $1.02 vs $0.95 est (beat); 2025-02-12: EPS $0.86 vs $0.80 est (beat)"
+   },
+   {
+    "id": "returns",
+    "title": "HCYN returns vs SPY",
+    "source": "Fictional \u00b7 synthetic data \u00b7 as of 2026-10-08",
+    "kind": "data",
+    "synthetic": true,
+    "fields": {
+     "1M.return": {
+      "display": "+4.2%",
+      "label": "1M return"
+     },
+     "1M.spy": {
+      "display": "+0.7%",
+      "label": "SPY 1M return"
+     },
+     "1M.excess": {
+      "display": "+3.5%",
+      "label": "1M vs SPY"
+     },
+     "3M.return": {
+      "display": "+1.9%",
+      "label": "3M return"
+     },
+     "3M.spy": {
+      "display": "+3.8%",
+      "label": "SPY 3M return"
+     },
+     "3M.excess": {
+      "display": "-1.9%",
+      "label": "3M vs SPY"
+     },
+     "6M.return": {
+      "display": "+11.4%",
+      "label": "6M return"
+     },
+     "6M.spy": {
+      "display": "+18.6%",
+      "label": "SPY 6M return"
+     },
+     "6M.excess": {
+      "display": "-7.3%",
+      "label": "6M vs SPY"
+     },
+     "1Y.return": {
+      "display": "+19.4%",
+      "label": "1Y return"
+     },
+     "1Y.spy": {
+      "display": "+16.9%",
+      "label": "SPY 1Y return"
+     },
+     "1Y.excess": {
+      "display": "+2.5%",
+      "label": "1Y vs SPY"
+     }
+    },
+    "text": ""
+   },
+   {
+    "id": "valuation",
+    "title": "HCYN valuation vs peers",
+    "source": "Fictional \u00b7 synthetic data",
+    "kind": "data",
+    "synthetic": true,
+    "fields": {
+     "trailing_pe": {
+      "display": "13.9x",
+      "label": "Trailing P/E"
+     },
+     "forward_pe": {
+      "display": "11.5x",
+      "label": "Forward P/E"
+     },
+     "peer_median_pe": {
+      "display": "18.4x",
+      "label": "Peer median P/E"
+     },
+     "pe_vs_peers": {
+      "display": "-24.1%",
+      "label": "P/E vs peer median"
+     }
+    },
+    "text": "Peers: ARQX 19.5x, LMFX 17.2x, VNTL 12.4x, QFLX 21.0x."
+   },
+   {
+    "id": "house_view",
+    "title": "House view \u00b7 CIO Office \u00b7 US Equity Strategy",
+    "source": "CIO Office \u00b7 US Equity Strategy \u00b7 2026-09-15",
+    "kind": "house_view",
+    "synthetic": true,
+    "fields": {
+     "rating": {
+      "display": "Constructive",
+      "label": "Rating"
+     },
+     "focus_list": {
+      "display": "on the Focus List",
+      "label": "Focus List"
+     }
+    },
+    "text": "AI cluster build-outs keep demand for 800G and 1.6T optical transceivers ahead of supply through 2027. Liquid-cooled rack systems widen the addressable market beyond optics and grew faster than optics in fiscal 2025. Trades at a discount to optical and thermal peers on trailing earnings despite faster revenue growth. Customer concentration: a handful of hyperscale buyers drive most revenue. Co-packaged optics could shrink the pluggable-module market over time. Export controls on advanced computing items limit sales to some regions. Only the CIO Office changes the rating. AI drafts may flag 'needs strategist review' with reasons but cannot propose a rating."
+   },
+   {
+    "id": "event",
+    "title": "Q3 FY2026 earnings (2026-10-07)",
+    "source": "Synthetic",
+    "kind": "data",
+    "synthetic": true,
+    "fields": {
+     "eps_actual": {
+      "display": "$1.79",
+      "label": "EPS"
+     },
+     "eps_estimate": {
+      "display": "$1.62",
+      "label": "EPS consensus"
+     },
+     "eps_surprise": {
+      "display": "10.5%",
+      "label": "EPS surprise"
+     },
+     "revenue": {
+      "display": "$1.51B",
+      "label": "Revenue"
+     },
+     "revenue_estimate": {
+      "display": "$1.44B",
+      "label": "Revenue consensus"
+     },
+     "revenue_surprise": {
+      "display": "5.0%",
+      "label": "Revenue vs consensus"
+     },
+     "revenue_yoy": {
+      "display": "42.6%",
+      "label": "Revenue growth YoY"
+     },
+     "gross_margin": {
+      "display": "42.8%",
+      "label": "Gross margin"
+     },
+     "guidance_low": {
+      "display": "$5.75B",
+      "label": "New guidance, low"
+     },
+     "guidance_high": {
+      "display": "$5.85B",
+      "label": "New guidance, high"
+     },
+     "prior_guidance_low": {
+      "display": "$5.45B",
+      "label": "Prior guidance, low"
+     },
+     "prior_guidance_high": {
+      "display": "$5.6B",
+      "label": "Prior guidance, high"
+     },
+     "guidance_midpoint_change": {
+      "display": "5.0%",
+      "label": "Guidance midpoint change"
+     },
+     "close_before": {
+      "display": "$80.10",
+      "label": "Close before the report"
+     },
+     "close_after": {
+      "display": "$87.40",
+      "label": "Close 2026-10-08"
+     },
+     "price_move": {
+      "display": "9.1%",
+      "label": "Price move"
+     }
+    },
+    "text": "Raised FY2026 revenue guidance to $5.75\u20135.85B from $5.45\u20135.60B Q3 EPS of $1.79 beat the $1.62 consensus by 10.5%. Revenue of $1,512M grew 42.6% year over year, faster than Q2's 39.8%. FY2026 revenue guidance raised to $5.75\u20135.85B from $5.45\u20135.60B on 1.6T transceiver and rack-system demand.",
+    "date": "2026-10-07"
+   },
+   {
+    "id": "households",
+    "title": "Affected households (book of record)",
+    "source": "Household book \u00b7 synthetic",
+    "kind": "book",
+    "synthetic": true,
+    "fields": {
+     "households": {
+      "display": "240",
+      "label": "Households in the book"
+     },
+     "holders": {
+      "display": "214",
+      "label": "Households holding it"
+     },
+     "concentrated": {
+      "display": "31",
+      "label": "Above 10%"
+     },
+     "executives": {
+      "display": "6",
+      "label": "Executives or affiliates"
+     }
+    },
+    "text": ""
+   },
+   {
+    "id": "news:hcyn-n1",
+    "title": "Halcyon Interconnect tops Q3 estimates, lifts full-year outlook",
+    "source": "allowlist:wire-a",
+    "kind": "news",
+    "synthetic": true,
+    "fields": {},
+    "text": "Halcyon Interconnect tops Q3 estimates, lifts full-year outlook. Halcyon reported Q3 EPS of $1.79 against a $1.62 consensus and raised FY2026 revenue guidance to $5.75\u20135.85B.",
+    "date": "2026-10-07",
+    "publisher": "allowlist:wire-a"
+   },
+   {
+    "id": "news:hcyn-n2",
+    "title": "1.6T transceivers pass half of Halcyon's optics shipments",
+    "source": "allowlist:trade-b",
+    "kind": "news",
+    "synthetic": true,
+    "fields": {},
+    "text": "1.6T transceivers pass half of Halcyon's optics shipments. Management said 1.6-terabit modules made up 52% of Optical Interconnect units in the quarter.",
+    "date": "2026-10-07",
+    "publisher": "allowlist:trade-b"
+   },
+   {
+    "id": "news:hcyn-n3",
+    "title": "Halcyon shares rise 9% after guidance raise",
+    "source": "allowlist:wire-a",
+    "kind": "news",
+    "synthetic": true,
+    "fields": {},
+    "text": "Halcyon shares rise 9% after guidance raise. The stock closed at $87.40, up from $80.10 before the report.",
+    "date": "2026-10-08",
+    "publisher": "allowlist:wire-a"
+   },
+   {
+    "id": "news:hcyn-n5",
+    "title": "Co-packaged optics remain a 2027-plus story, suppliers say",
+    "source": "allowlist:trade-b",
+    "kind": "news",
+    "synthetic": true,
+    "fields": {},
+    "text": "Co-packaged optics remain a 2027-plus story, suppliers say. Halcyon expects co-packaged optics qualification revenue in 2027.",
+    "date": "2026-10-08",
+    "publisher": "allowlist:trade-b"
+   },
+   {
+    "id": "filing:item-1-customers",
+    "title": "10-K FY2025 \u00b7 Item 1 \u00b7 Customers",
+    "source": "Synthetic 10-K (fictional issuer)",
+    "kind": "filing",
+    "synthetic": true,
+    "fields": {},
+    "text": "Our customers are hyperscale cloud providers, GPU cloud operators, original design manufacturers that build servers for those providers, and network equipment manufacturers. Our three largest end customers, each a hyperscale cloud provider, accounted for 27%, 19%, and 15% of fiscal 2025 revenue, or 61% in total, compared with 58% in fiscal 2024. We refer to them as Customer A, Customer B, and Customer C. Our backlog was approximately $3.4 billion at December 31, 2025, compared with $2.1 billion a year earlier. Most backlog is expected to ship within twelve months, but customers may reschedule or cancel orders with limited penalties.",
+    "section": "Item 1"
+   },
+   {
+    "id": "filing:item-1a-risks-related-to-our-customers-and-markets",
+    "title": "10-K FY2025 \u00b7 Item 1A \u00b7 Risks Related to Our Customers and Markets",
+    "source": "Synthetic 10-K (fictional issuer)",
+    "kind": "filing",
+    "synthetic": true,
+    "fields": {},
+    "text": "We depend on a small number of hyperscale customers, and the loss of, or a reduction in orders from, any of them would materially reduce our revenue. Our three largest customers accounted for 61% of fiscal 2025 revenue. These customers have substantial negotiating leverage, do not commit to long-term purchase volumes, and may qualify additional suppliers, design their own optics, or change architectures. A decision by Customer A alone to shift volume to a competitor could reduce our annual revenue by more than $1 billion. Demand for our products depends on continued growth in artificial intelligence infrastructure spending, which may slow or reverse. Our growth since 2023 has been driven by hyperscaler and GPU-cloud capital spending on AI clusters. If AI adoption slows, if model efficiency improvements reduce the need for compute, if customers digest previously purchased capacity, or if financing for data center construction tightens, orders for our products could fall sharply. Our revenue fell 14% in fiscal 2020 during a prior data center digestion period. Architecture transitions, including co-packaged optics and linear-drive optics, could reduce demand for our pluggable products. Switch and GPU vendors are developing co-packaged optics that place optical engines next to the silicon. If co-packaged optics are adopted faster than we expect, demand for pluggable transceivers, which represented most of Optical Interconnect revenue in fiscal 2025, could decline before our co-packaged engines are qualified. Pricing pressure could reduce our gross margin. Average selling prices",
+    "section": "Item 1A"
+   },
+   {
+    "id": "filing:item-8-segment-and-concentration-information",
+    "title": "10-K FY2025 \u00b7 Item 8 \u00b7 Segment and Concentration Information",
+    "source": "Synthetic 10-K (fictional issuer)",
+    "kind": "filing",
+    "synthetic": true,
+    "fields": {},
+    "text": "We report two segments, Optical Interconnect and Rack Systems, which our Chief Executive Officer, as chief operating decision maker, reviews based on revenue and gross profit. Operating expenses are managed on a company-wide basis and are not allocated to segments. In fiscal 2025, Customer A, Customer B, and Customer C represented 27%, 19%, and 15% of revenue, respectively, and together represented 54% of accounts receivable at December 31, 2025.",
+    "section": "Item 8"
+   },
+   {
+    "id": "filing:item-1-government-regulation-and-export-controls",
+    "title": "10-K FY2025 \u00b7 Item 1 \u00b7 Government Regulation and Export Controls",
+    "source": "Synthetic 10-K (fictional issuer)",
+    "kind": "filing",
+    "synthetic": true,
+    "fields": {},
+    "text": "Our products and technology are subject to the U.S. Export Administration Regulations. Since 2023, U.S. rules restricting exports of advanced computing items to China and certain other countries have reduced our sales to customers in those countries. Revenue from customers headquartered in China was 3% of fiscal 2025 revenue, compared with 9% in fiscal 2023. We must screen customers against the Entity List and other restricted-party lists, and we may need licenses to ship certain products. We are subject to tariffs on components imported from China and to customs rules in every country where we manufacture. Our Rack Systems products use coolant fluids and refrigerants that are subject to evolving environmental regulation, including restrictions on per- and polyfluoroalkyl substances in the European Union and several U.S. states and phase-down rules for certain hydrofluorocarbon refrigerants. We are also subject to conflict-minerals disclosure rules, the EU RoHS and REACH directives, and data privacy laws that apply to the telemetry our racks report.",
+    "section": "Item 1"
+   },
+   {
+    "id": "filing:item-1a-legal-regulatory-and-compliance-risks",
+    "title": "10-K FY2025 \u00b7 Item 1A \u00b7 Legal, Regulatory, and Compliance Risks",
+    "source": "Synthetic 10-K (fictional issuer)",
+    "kind": "filing",
+    "synthetic": true,
+    "fields": {},
+    "text": "Export controls and trade restrictions have reduced, and may further reduce, our ability to sell to certain customers. U.S. export controls on advanced computing items and related technology, and any future restrictions on optical components, could prevent sales to customers in China and other countries, require licenses that may be denied, or prompt foreign governments to retaliate against U.S. suppliers. Violations of export control laws can result in significant penalties. Tariffs and changes in trade policy could increase our costs. We import components into the United States, Malaysia, Thailand, and Mexico. New or increased tariffs, including those affecting goods assembled in Mexico, could raise our costs or make our products less competitive. Environmental regulation of coolant fluids could require product changes. Restrictions on per- and polyfluoroalkyl substances and certain refrigerants could limit the fluids our Rack Systems products use and require costly redesign or requalification. Cybersecurity incidents could disrupt our operations or expose customer data. Our racks report operating telemetry, and our systems hold customer roadmaps and designs. A cyberattack on us or our suppliers could interrupt manufacturing, compromise data, or allow tampering with product firmware.",
+    "section": "Item 1A"
+   },
+   {
+    "id": "filing:item-9a-controls-and-procedures",
+    "title": "10-K FY2025 \u00b7 Item 9A. Controls and Procedures",
+    "source": "Synthetic 10-K (fictional issuer)",
+    "kind": "filing",
+    "synthetic": true,
+    "fields": {},
+    "text": "This synthetic report includes no evaluation of disclosure controls or internal control over financial reporting, and no auditor attestation.",
+    "section": "Item 9A"
+   },
+   {
+    "id": "filing:item-7-segment-results",
+    "title": "10-K FY2025 \u00b7 Item 7 \u00b7 Segment Results",
+    "source": "Synthetic 10-K (fictional issuer)",
+    "kind": "filing",
+    "synthetic": true,
+    "fields": {},
+    "text": "($ in millions) FY2025 FY2024 Change Optical Interconnect revenue $ 2,632.1 $ 2,041.4 +28.9% Rack Systems revenue $ 1,480.5 $ 938.7 +57.7% Total revenue $ 4,112.6 $ 2,980.1 +38.0% Optical Interconnect gross profit $ 1,232.0 $ 917.6 +34.3% Optical Interconnect gross margin 46.8% 44.9% +190 bps Rack Systems gross profit $ 462.4 $ 247.6 +86.8% Rack Systems gross margin 31.2% 26.4% +480 bps Optical Interconnect revenue increased 28.9% to $2,632.1 million, or 64% of total revenue, driven by 800G volume and the 1.6T ramp. Segment gross margin increased to 46.8% as Penang yields on 1.6T improved during the second half. Rack Systems revenue increased 57.7% to $1,480.5 million, or 36% of total revenue. Segment gross margin increased to 31.2% on manufacturing scale, partly offset by $14.2 million of warranty expense for the coupling seal field remediation program.",
+    "section": "Item 7"
+   },
+   {
+    "id": "filing:item-7-results-of-operations",
+    "title": "10-K FY2025 \u00b7 Item 7 \u00b7 Results of Operations",
+    "source": "Synthetic 10-K (fictional issuer)",
+    "kind": "filing",
+    "synthetic": true,
+    "fields": {},
+    "text": "The following table summarizes our results of operations. ($ in millions, except per-share data) FY2025 FY2024 FY2023 Revenue $ 4,112.6 $ 2,980.1 $ 2,071.4 Cost of revenue $ 2,418.2 $ 1,814.9 $ 1,296.7 Gross profit $ 1,694.4 $ 1,165.2 $ 774.7 Gross margin 41.2% 39.1% 37.4% Research and development $ 452.4 $ 357.6 $ 269.3 Selling, general and administrative $ 287.9 $ 238.4 $ 186.4 Operating income $ 954.1 $ 569.2 $ 319.0 Operating margin 23.2% 19.1% 15.4% Net income $ 802.5 $ 471.8 $ 255.1 Diluted earnings per share $ 4.77 $ 2.84 $ 1.56 Revenue. Revenue increased $1,132.5 million, or 38.0%, in fiscal 2025. Unit volume growth in optical modules and the first full year of HR-series rack shipments more than offset average selling price declines of approximately 9% on comparable optical products. Revenue by geography is based on ship-to location. Shipments to the United States were 58% of revenue, Taiwan 21%, Malaysia and Singapore 9%, Mexico 7%, and all other locations 5%.",
+    "section": "Item 7"
+   },
+   {
+    "id": "filing:item-7-critical-accounting-estimates",
+    "title": "10-K FY2025 \u00b7 Item 7 \u00b7 Critical Accounting Estimates",
+    "source": "Synthetic 10-K (fictional issuer)",
+    "kind": "filing",
+    "synthetic": true,
+    "fields": {},
+    "text": "Warranty reserves. We accrue estimated warranty costs when revenue is recognized, based on historical failure rates, the cost to repair or replace products, and specific known issues. Rack Systems has limited field history, so our estimates rely partly on engineering reliability data. A 10% increase in assumed Rack Systems failure rates would have increased fiscal 2025 warranty expense by approximately $6 million. Inventory valuation. We write down inventory for excess and obsolete products based on demand forecasts. Rapid speed transitions increase the risk that older-generation inventory becomes obsolete. Revenue recognition for rack systems. Rack Systems contracts may include installation and extended warranty. We allocate the transaction price to each performance obligation based on relative standalone selling prices.",
+    "section": "Item 7"
+   },
+   {
+    "id": "filing:item-1a-risks-related-to-our-products",
+    "title": "10-K FY2025 \u00b7 Item 1A \u00b7 Risks Related to Our Products",
+    "source": "Synthetic 10-K (fictional issuer)",
+    "kind": "filing",
+    "synthetic": true,
+    "fields": {},
+    "text": "Defects in our liquid-cooled rack systems could cause coolant leaks and damage to customer equipment, resulting in warranty claims, liability, and reputational harm. Our Rack Systems products circulate coolant through manifolds and quick-disconnect couplings next to GPU servers worth several million dollars per rack. A leak, coupling failure, or coolant contamination could damage customer equipment and cause outages. Our warranty terms generally cover repair or replacement of our products but customers may seek damages for their equipment and lost service. Our warranty reserve was $64.8 million at December 31, 2025, compared with $38.1 million a year earlier, reflecting higher Rack Systems volume and a field remediation program for a coupling seal in an early HR-series production lot. Because our rack products have a limited field history, actual warranty costs may exceed our estimates. Our optical products are complex and may contain defects that are discovered only after deployment. Defects can cause link failures in large AI training jobs, which can be costly for customers. We could be required to replace large volumes of modules, pay penalties, or lose future business.",
+    "section": "Item 1A"
+   },
+   {
+    "id": "filing:item-1a-risks-related-to-our-supply-chain-and-manufacturing",
+    "title": "10-K FY2025 \u00b7 Item 1A \u00b7 Risks Related to Our Supply Chain and Manufacturing",
+    "source": "Synthetic 10-K (fictional issuer)",
+    "kind": "filing",
+    "synthetic": true,
+    "fields": {},
+    "text": "We rely on two suppliers for indium phosphide laser die, and a shortage would limit our ability to ship optical products. Indium phosphide laser die are produced by few suppliers worldwide, and capacity is constrained. One supplier, located in Japan, provided approximately 70% of our fiscal 2025 laser die volume. A fire, earthquake, export restriction, quality failure, or allocation decision at that supplier could halt production of our highest-revenue products for months, because qualifying a new laser source typically takes nine to twelve months. Indium and other inputs are also subject to export controls imposed by China. Our manufacturing is concentrated in Malaysia, and disruptions there would harm us. Most of our optical module production occurs in Penang, Malaysia. Natural disasters, power or water shortages, political events, public health crises, or changes in trade policy affecting Malaysia could disrupt production. We may not expand capacity quickly or efficiently enough. We plan capital expenditures of approximately $550 million to $650 million in fiscal 2026 for Penang expansion, Guadalajara rack integration, and test equipment. Delays, cost overruns, or yield problems on new lines could cause us to miss customer demand or lower our gross margin.",
+    "section": "Item 1A"
+   }
+  ],
+  "withheld": [],
+  "update": {
+   "status": "ready",
+   "mode": "deep_agent",
+   "mode_label": "Research Deep Agent",
+   "house_view_impact": "consistent",
+   "impact_source": "model",
+   "triggers": [],
+   "claims": [
     {
-     "field": "event.eps_actual",
-     "excerpt": "Q3 EPS of $1.79 beat the $1.62 consensus by 10.5%.",
-     "value": "1.79"
+     "text": "EPS was $1.79 versus $1.62 consensus, a 10.5% beat.",
+     "evidence_id": "event",
+     "field_path": "eps_actual",
+     "value": 1.79,
+     "unit": "usd",
+     "also": [
+      "event",
+      "event"
+     ],
+     "section": "what_changed",
+     "status": "verified",
+     "reason": "Matches Q3 FY2026 earnings (2026-10-07) \u00b7 EPS = $1.79.",
+     "check": "numeric",
+     "display": "$1.79"
     },
     {
-     "field": "event.revenue",
-     "excerpt": "Revenue of $1,512M grew 42.6% year over year, faster than Q2's 39.8%.",
-     "value": "1512000000"
+     "text": "Revenue was $1.51B, up 42.6% year over year and 5.0% above consensus.",
+     "evidence_id": "event",
+     "field_path": "revenue",
+     "value": 1512000000,
+     "unit": "usd",
+     "also": [
+      "event",
+      "event"
+     ],
+     "section": "what_changed",
+     "status": "verified",
+     "reason": "Matches Q3 FY2026 earnings (2026-10-07) \u00b7 Revenue = $1.51B.",
+     "check": "numeric",
+     "display": "$1.51B"
     },
     {
-     "field": "event.guidance_change",
-     "excerpt": "Raised FY2026 revenue guidance to $5.75\u20135.85B from $5.45\u20135.60B",
-     "value": "Raised FY2026 revenue guidance to $5.75\u20135.85B from $5.45\u20135.60B"
+     "text": "FY2026 revenue guidance rose to $5.75B\u2013$5.85B from $5.45B\u2013$5.6B, with the midpoint up 5.0%.",
+     "evidence_id": "event",
+     "field_path": "guidance_low",
+     "value": 5750000000,
+     "unit": "usd",
+     "also": [
+      "event",
+      "event",
+      "event",
+      "event"
+     ],
+     "section": "what_changed",
+     "status": "verified",
+     "reason": "Matches Q3 FY2026 earnings (2026-10-07) \u00b7 New guidance, low = $5.75B.",
+     "check": "numeric",
+     "display": "$5.75B"
     },
     {
-     "field": "earnings.beatRate",
-     "excerpt": "HCYN beat EPS estimates in 7 of 8 observations.",
-     "value": "0.875"
+     "text": "The earnings beat record remains strong at 87.5% across 8 observations, including a 4-quarter beat streak.",
+     "evidence_id": "earnings",
+     "field_path": "beat_rate",
+     "value": 0.875,
+     "unit": "fraction",
+     "also": [
+      "earnings",
+      "earnings"
+     ],
+     "section": "what_changed",
+     "status": "verified",
+     "reason": "Matches HCYN earnings history \u00b7 Beat rate = 87.5%.",
+     "check": "numeric",
+     "display": "87.5%"
     },
     {
-     "field": "peers.subjectPe",
-     "excerpt": "HCYN trades at 13.92x trailing earnings.",
-     "value": "13.92"
-    },
-    {
-     "field": "peers.medianPe",
-     "excerpt": "The peer median trailing P/E is 18.35x.",
-     "value": "18.35"
-    },
-    {
-     "field": "house_view.rating",
-     "excerpt": "The CIO Office house view is Constructive.",
-     "value": "Constructive"
+     "text": "Valuation remains supportive of the house view: forward P/E is 11.5x versus a 18.4x peer median, a 24.1% discount.",
+     "evidence_id": "valuation",
+     "field_path": "forward_pe",
+     "value": 11.5,
+     "unit": "x",
+     "also": [
+      "valuation",
+      "valuation"
+     ],
+     "section": "impact",
+     "status": "verified",
+     "reason": "Matches HCYN valuation vs peers \u00b7 Forward P/E = 11.5x.",
+     "check": "numeric",
+     "display": "11.5x"
     }
    ],
-   "status": "ready",
-   "dropped_claims": 2
+   "counts": {
+    "verified": 5,
+    "unverified": 0,
+    "policy": 0,
+    "total": 5
+   },
+   "scan": {
+    "findings": [],
+    "verdicts": {
+     "no_rating_or_price_target": true,
+     "no_guarantee": true,
+     "no_mnpi": true
+    }
+   },
+   "reason": null,
+   "rating": "Constructive"
   },
-  "recommendation": {
-   "status": "ready",
-   "action": "hold",
-   "thesis": "The Q3 earnings event improved the fundamental case through a +10.5% EPS surprise, +42.6% revenue growth, accelerating year-over-year growth, and higher FY2026 revenue guidance. This is consistent with the CIO Office\u2019s Constructive view and its thesis that demand for advanced optical transceivers and rack systems remains strong, while HCYN\u2019s 13.92x trailing P/E is below the 18.35x peer median. The main counterweight is mixed relative performance\u2014particularly the -7.3% six-month excess return versus the S&P 500\u2014alongside the house-view risks of customer concentration, co-packaged optics, and export controls.",
-   "disclaimer": "Demo research \u2014 not financial advice"
+  "publish": {
+   "status": "awaiting_approval",
+   "request_id": "publish",
+   "reason": null
   },
-  "grounding": {
-   "dropped_claims": 2
+  "one_year": {
+   "ticker": 0.19431538671768234,
+   "spy": 0.16911722608346103,
+   "excess": 0.02519816063422131
   },
+  "duration_ms": 45856,
+  "disclaimer": "Synthetic research for a fictional issuer, for demonstration only. Not investment advice.",
   "security": {
    "mode": "off",
-   "status": "disabled",
-   "checks": 0,
+   "status": "allowed",
+   "checks": 4,
    "blocked": 0,
    "errors": 0,
-   "event_ids": [],
+   "event_ids": [
+    ""
+   ],
    "fail_open": false,
    "forced": false
   },
   "usage": {
-   "llm_calls": 1,
-   "input_tokens": 1970,
-   "output_tokens": 771
-  },
-  "duration_ms": 12939,
-  "perimeter": "Yahoo + FRED allowlist only",
-  "disclaimer": "Demo research \u2014 not financial advice",
-  "telemetry": {
-   "splunk": {
-    "status": "not_configured",
-    "trace_id": "d609f42de11171670af1a90a3e650453"
-   },
-   "galileo": "recorded"
+   "llm_calls": 11,
+   "input_tokens": 25994,
+   "output_tokens": 6672,
+   "tool_calls": 25
   },
   "served_by": {
    "provider": "openai",
@@ -702,6 +2609,19 @@
    "egress": "allow",
    "ai_defense": null
   },
-  "run_id": "wealth-research-20261009212043-cf2c93"
+  "telemetry": {
+   "splunk": {
+    "status": "not_configured",
+    "trace_id": "846891e70cf4f0a420993021752d39f3"
+   },
+   "galileo": "recorded"
+  },
+  "evaluation": {
+   "status": "not_configured",
+   "label": "Evaluation not configured",
+   "verifier": "Structured claim verifier (code) checks every claim"
+  },
+  "run_id": "wealth-research-20261009230052-24c086",
+  "perimeter": "Yahoo + FRED allowlist only"
  }
 }

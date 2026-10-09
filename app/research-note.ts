@@ -1,10 +1,10 @@
-import type { BriefingTheme, CompanyBriefingRecord, SecuritySummary, StoredCompanyProfile } from "./company-profile";
+import type { SecuritySummary, StoredCompanyProfile } from "./company-profile";
 import type { RunEvent, RunInfo, ServedBy } from "./run/events";
 
+/** The published house-view update an advisor's meeting prep picks up. */
 export const RESEARCH_NOTE_STORAGE_KEY = "fsi-demo-studio.research-note";
-export const RESEARCH_DISCLAIMER = "Demo research — not financial advice";
 
-/** Example chips. services/wealth/scripts/warm_cache.py reads the tickers from this list. */
+/** Real-ticker chips (the secondary path). services/wealth/scripts/warm_cache.py reads the tickers from this list. */
 export const EXAMPLE_RESEARCH_TICKERS: readonly { ticker: string; tag?: string; title?: string }[] = [
   { ticker: "HCYN", tag: "Fictional", title: "Halcyon Interconnect, Inc. · fictional issuer, synthetic data" },
   { ticker: "NVDA" },
@@ -14,155 +14,143 @@ export const EXAMPLE_RESEARCH_TICKERS: readonly { ticker: string; tag?: string; 
   { ticker: "XOM" },
 ];
 
-/** Audience titles for signal-divergence ids (services/wealth/tools/conflicts.py TITLES), for older stored notes. */
-export const DIVERGENCE_TITLES: Record<string, string> = {
-  beat_vs_spy: "Earnings beats vs. a lagging stock",
-  pe_vs_growth: "Valuation premium vs. slowing growth",
-  macro_vs_sector: "Rates or inflation vs. a rate-sensitive sector",
+export type ResearchScenarioId = "earnings" | "restricted" | "poisoned-news" | "bank";
+export type ResearchScenario = {
+  id: ResearchScenarioId; ticker: string; title: string; summary: string; moment: string; recording: string; kind: string;
 };
 
-export type ConflictRow = {
-  id: string;
-  title: string;
-  severity: string;
-  left: string;
-  right: string;
-  detail: string;
-};
+/** The four stories. Each has a recorded golden run (services/wealth/data/recorded/<recording>.json). */
+export const RESEARCH_SCENARIOS: readonly ResearchScenario[] = [
+  { id: "earnings", ticker: "HCYN", kind: "Synthetic issuer", recording: "research-hcyn", title: "Earnings on a Focus List name",
+    summary: "Halcyon beat and raised. Does the Constructive house view still hold?", moment: "Every claim is checked against its source" },
+  { id: "restricted", ticker: "KSTL", kind: "Synthetic issuer", recording: "research-kstl-restricted", title: "Restricted issuer",
+    summary: "Kestrel Ridge is on the restricted list during a pending deal.", moment: "Agent Control stops it before any data or model call" },
+  { id: "poisoned-news", ticker: "HCYN", kind: "Attack", recording: "research-hcyn-poisoned", title: "Poisoned news story",
+    summary: "A blog post in the feed tells the agent to push a $2,000 target.", moment: "AI Defense inspects tool results and withholds it" },
+  { id: "bank", ticker: "JPM", kind: "Real data", recording: "research-jpm-bank", title: "A bank, from public data",
+    summary: "JPMorgan from cached market data. Banks are read on P/B and ROE.", moment: "Sector-appropriate metrics, no house view on file" },
+];
+
+export type ConflictRow = { id: string; title: string; severity: string; left: string; right: string; detail: string };
 
 export type ResearchSource = {
   /** live and cache are Yahoo; fixture is a committed snapshot; fictional is a synthetic issuer. */
   kind: "live" | "cache" | "fixture" | "fictional";
-  fetchedAt?: string;
-  label?: string;
-  asOf?: string;
-  fictional?: boolean;
-  macro?: string | null;
-  fresh?: boolean;
+  fetchedAt?: string; label?: string; asOf?: string; fictional?: boolean; macro?: string | null; fresh?: boolean;
 };
 
 export type EarningsPanel = {
-  status: string;
-  beatRate?: number | null;
-  observations?: number;
-  beats?: number;
-  latestSurprisePct?: number | null;
+  status: string; beatRate?: number | null; observations?: number; beats?: number; latestSurprisePct?: number | null;
   revenue?: { latestYoy?: number | null; priorYoy?: number | null; decelerating?: boolean };
 };
-
-export type PeersPanel = {
-  status: string;
-  tickers?: string[];
-  count?: number;
-  sector?: string;
-  industry?: string;
-  subjectPe?: number | null;
-  medianPe?: number | null;
-  pePremium?: number | null;
-};
-
-export type ReturnsPanel = {
-  status: string;
-  asOf?: string;
-  windows?: Record<string, { ticker?: number | null; spy?: number | null; excess?: number | null }>;
-};
-
-export type MacroPanel = {
-  status: string;
-  reason?: string;
-  series?: Record<string, { label?: string; latest?: number | null; asOf?: string; direction?: string }>;
-};
+export type PeersPanel = { status: string; tickers?: string[]; subjectPe?: number | null; medianPe?: number | null; pePremium?: number | null };
+export type ReturnsPanel = { status: string; asOf?: string; windows?: Record<string, { ticker?: number | null; spy?: number | null; excess?: number | null }> };
+export type MacroPanel = { status: string; reason?: string; series?: Record<string, { label?: string; latest?: number | null; direction?: string }> };
 
 export type HouseView = { rating?: string; owner?: string; asOf?: string; focusList?: boolean; thesisPoints: string[]; keyRisks: string[]; synthetic?: boolean };
-export type EarningsEvent = { period?: string; date?: string; epsActual?: number; epsEstimate?: number; guidanceChange?: string; whatChanged: string[]; source?: string };
+export type EarningsEvent = { period?: string; date?: string; guidanceChange?: string; whatChanged: string[]; source?: string };
 export type AffectedHouseholds = { households?: number; count?: number; concentrated?: number; executives?: number; thresholdPct?: number };
-export type ResearchContext = { houseView?: HouseView; restricted?: { reason?: string; since?: string }; event?: EarningsEvent; affected?: AffectedHouseholds };
+export type ResearchContext = { houseView?: HouseView; event?: EarningsEvent; affected?: AffectedHouseholds };
 
-export type ResearchNoteBody = {
-  status: string;
-  reason?: string;
-  summary?: string | null;
-  bullets?: string[];
-  citations?: Citation[];
+export type EvidenceField = { display: string; label?: string };
+export type EvidenceItem = {
+  id: string; title: string; source: string; kind: string; synthetic: boolean; fields: Record<string, EvidenceField>; text: string;
+  date?: string; publisher?: string; section?: string;
+};
+export type WithheldItem = { id: string; title: string; reason: string };
+
+export type ClaimStatus = "verified" | "unverified" | "policy";
+export type Claim = {
+  section: string; text: string; evidenceId?: string; fieldPath?: string; display?: string; quote?: string; also: string[];
+  status: ClaimStatus | string; reason: string; check?: string;
 };
 
-export type Citation = { field?: string; excerpt?: string; value?: string };
-
-export type ResearchRecommendation = {
-  status: string;
-  reason?: string;
-  action?: string | null;
-  thesis?: string | null;
-  disclaimer?: string;
+export type NewsRow = {
+  id: string; evidenceId: string; headline: string; publisher?: string; date?: string; body?: string;
+  status: "kept" | "withheld" | string; reason?: string; by?: string; aiDefense?: string; aiDefenseRules: string[];
 };
 
-export type SplunkStatus = {
-  status?: string;
-  serviceName?: string;
-  missing?: string[];
-  export?: string;
+export type PolicyCheck = { control?: string; label: string; key?: string; verdict?: boolean; status: string; source: string };
+export type PolicyResult = { policy: string; allowed: boolean; source: string; checks: PolicyCheck[]; detail?: string };
+
+export type Precheck = { status: string; reason?: string; since?: string; issuer?: string; controls?: PolicyResult };
+
+export type ResearchUpdate = {
+  status: string; mode: string; modeLabel: string; impact?: string; impactSource?: string; triggers: string[];
+  claims: Claim[]; counts: { verified: number; unverified: number; policy: number; total: number }; reason?: string; rating?: string;
 };
 
-export type ObservabilityStatus = {
-  tracing?: { status?: string; transport?: string; stream?: string };
-  evaluators?: { status?: string; names?: string[]; results?: string };
-  controls?: { status?: string };
+export type PublishState = {
+  status: "awaiting_approval" | "unavailable" | "blocked" | "published" | "rejected" | "denied" | string;
+  requestId?: string; reason?: string; by?: string; at?: string; controls?: PolicyResult; originLabel?: string;
 };
+
+export type SplunkStatus = { status?: string; serviceName?: string; missing?: string[]; export?: string };
+export type ObservabilityStatus = { tracing?: { status?: string; transport?: string; stream?: string }; evaluators?: { status?: string; results?: string } };
+export type Usage = { llmCalls?: number; toolCalls?: number; inputTokens?: number; outputTokens?: number };
+export type Evaluation = { status: string; label: string; verifier?: string };
 
 export type ResearchAnalyze = {
   ticker: string;
-  company: { name?: string; ticker?: string; sector?: string; industry?: string };
+  scenario?: string;
+  status: string;
+  company: { name?: string; ticker?: string; sector?: string; industry?: string; metricFamily?: string };
   source: ResearchSource;
+  precheck?: Precheck;
   earnings: EarningsPanel;
   peers: PeersPanel;
   returns: ReturnsPanel;
   macro: MacroPanel;
   conflicts: ConflictRow[];
-  note: ResearchNoteBody;
-  recommendation: ResearchRecommendation;
-  grounding?: { droppedClaims?: number };
-  security?: SecuritySummary;
-  telemetry?: { splunk?: SplunkStatus; galileo?: string };
-  durationMs?: number;
-  perimeter?: string;
-  disclaimer?: string;
+  valuation: Record<string, string>;
   context?: ResearchContext;
+  news: NewsRow[];
+  evidence: EvidenceItem[];
+  withheld: WithheldItem[];
+  update: ResearchUpdate;
+  publish: PublishState;
+  security?: SecuritySummary;
+  usage?: Usage;
+  telemetry?: { splunk?: SplunkStatus; galileo?: string };
+  evaluation?: Evaluation;
+  durationMs?: number;
+  disclaimer: string;
   servedBy?: ServedBy | null;
   runId?: string;
 };
 
 export type StoredResearchNote = {
   ticker: string;
+  /** When the strategist published it. */
   acceptedAt: string;
   analyze: ResearchAnalyze;
-  /** Set when the accepted note is a recorded run rather than a live one. */
+  /** Set when the published update is a recorded run rather than a live one. */
   recordedAt?: string;
+  publishedBy?: string;
 };
 
-export type ModelHealth = { status?: string; base_url?: string; model?: string; label?: string; private?: boolean; fallback?: boolean; reason?: string };
+export type ModelHealth = { status?: string; model?: string; label?: string; private?: boolean; fallback?: boolean; reason?: string };
 
 export type WealthHealth = {
   ready?: boolean;
-  model?: string;
   detail?: string;
   nim?: ModelHealth;
   advisoryModel?: ModelHealth;
   /** How client data may reach a hosted model: "allowed with AI Defense enforce" or "refused: …". */
   advisoryHostedFallback?: string;
-  yahoo?: { status?: string };
   fred?: { status?: string };
-  cache?: { root?: string };
   security?: SecuritySummary;
+  controls?: { status?: string; source?: string; reason?: string };
+  evaluation?: Evaluation;
+  untrusted?: string;
   galileo?: string;
   splunk?: SplunkStatus;
   observability?: ObservabilityStatus;
   perimeter?: string;
-  disclaimer?: string;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
+const asArray = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
 
 function asString(value: unknown): string | undefined {
   if (typeof value === "string" && value.trim()) return value.trim();
@@ -176,55 +164,38 @@ function asNumber(value: unknown): number | undefined {
   return undefined;
 }
 
-function asArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
-}
+const strings = (value: unknown) => asArray(value).map(asString).filter((item): item is string => Boolean(item));
+const readable = (value?: string) => (value ? value.replaceAll("_", " ") : undefined);
 
-function readableStatus(value?: string) {
-  return value ? value.replaceAll("_", " ") : undefined;
-}
-
-function normalizeSecurity(value: unknown): SecuritySummary | undefined {
+export function normalizeSecurity(value: unknown): SecuritySummary | undefined {
   if (!isRecord(value)) return undefined;
-  const status = readableStatus(asString(value.status));
-  const mode = readableStatus(asString(value.mode));
-  const verdict = readableStatus(asString(value.verdict) || asString(value.decision) || status);
+  const status = readable(asString(value.status));
+  const mode = readable(asString(value.mode));
+  const verdict = readable(asString(value.verdict) || asString(value.decision) || status);
   if (!status && !mode && !verdict) return undefined;
-  return {
-    status,
-    mode,
-    verdict,
-    failOpen: value.fail_open === true || value.failOpen === true,
-    checks: asNumber(value.checks),
-    blocked: asNumber(value.blocked),
-    errors: asNumber(value.errors),
-  };
+  return { status, mode, verdict, failOpen: value.fail_open === true, checks: asNumber(value.checks), blocked: asNumber(value.blocked), errors: asNumber(value.errors) };
 }
 
 export function normalizeSplunk(value: unknown): SplunkStatus | undefined {
+  if (!isRecord(value) || !asString(value.status)) return undefined;
+  return { status: asString(value.status), serviceName: asString(value.service_name), missing: strings(value.missing), export: asString(value.export) };
+}
+
+export function normalizeUsage(value: unknown): Usage | undefined {
   if (!isRecord(value)) return undefined;
-  const status = asString(value.status);
-  if (!status) return undefined;
-  return {
-    status,
-    serviceName: asString(value.service_name ?? value.serviceName),
-    missing: asArray(value.missing).map(asString).filter((item): item is string => Boolean(item)),
-    export: asString(value.export),
-  };
+  return { llmCalls: asNumber(value.llm_calls), toolCalls: asNumber(value.tool_calls), inputTokens: asNumber(value.input_tokens), outputTokens: asNumber(value.output_tokens) };
+}
+
+export function normalizeEvaluation(value: unknown): Evaluation | undefined {
+  if (!isRecord(value)) return undefined;
+  return { status: asString(value.status) || "not_configured", label: asString(value.label) || "Evaluation not configured", verifier: asString(value.verifier) };
 }
 
 export function observabilityLabel(health?: WealthHealth | null) {
   const status = health?.observability?.tracing?.status || health?.galileo;
-  if (!status || status === "disabled" || status === "not_configured" || status === "missing_configuration") {
-    return "Not configured";
-  }
+  if (!status || status === "disabled" || status === "not_configured" || status === "missing_configuration") return "Not configured";
   if (status === "configured" || status === "traces_present" || status === "awaiting_traces") return "Configured";
-  return readableStatus(status) || "Not configured";
-}
-
-export function splunkLabel(splunk?: SplunkStatus | null) {
-  if (!splunk?.status || splunk.status === "missing_configuration") return "Not configured";
-  return readableStatus(splunk.status) || "Not configured";
+  return readable(status) || "Not configured";
 }
 
 export function formatPct(value?: number | null, digits = 1) {
@@ -237,14 +208,23 @@ export function formatNumber(value?: number | null, digits = 2) {
   return value.toFixed(digits);
 }
 
+/** A signed percentage for comparisons: 0.194 → "+19.4%". */
+export function signedPct(value?: number | null, digits = 1) {
+  if (value == null || Number.isNaN(value)) return "Not reported";
+  const pct = value * 100;
+  return `${pct > 0 ? "+" : ""}${pct.toFixed(digits)}%`;
+}
+
+/** "+19.4% vs SPY +16.9%": a return against the benchmark, the way every wealth panel shows it. */
+export function vsSpy(ticker?: number | null, spy?: number | null) {
+  if (ticker == null) return "Not reported";
+  return spy == null ? signedPct(ticker) : `${signedPct(ticker)} vs SPY ${signedPct(spy)}`;
+}
+
 export function parseApiError(text: string, status: number) {
   try {
     const body = JSON.parse(text) as unknown;
-    if (isRecord(body)) {
-      const detail = body.detail;
-      if (typeof detail === "string") return detail;
-      if (isRecord(detail)) return asString(detail.message) || asString(detail.detail) || `Request failed (${status}).`;
-    }
+    if (isRecord(body) && typeof body.detail === "string") return body.detail;
   } catch {
     /* non-JSON */
   }
@@ -253,104 +233,113 @@ export function parseApiError(text: string, status: number) {
 
 function modelHealth(value: unknown): ModelHealth | undefined {
   if (!isRecord(value)) return undefined;
-  return {
-    status: readableStatus(asString(value.status)), base_url: asString(value.base_url), model: asString(value.model),
-    label: asString(value.label), private: value.private === true, fallback: value.fallback === true, reason: asString(value.reason),
-  };
+  return { status: readable(asString(value.status)), model: asString(value.model), label: asString(value.label),
+    private: value.private === true, fallback: value.fallback === true, reason: asString(value.reason) };
 }
 
 export function normalizeWealthHealth(value: unknown): WealthHealth | null {
   if (!isRecord(value)) return null;
-  const nim = isRecord(value.nim) ? value.nim : undefined;
-  const fred = isRecord(value.fred) ? value.fred : undefined;
+  const observability = isRecord(value.observability) ? value.observability : undefined;
+  const controls = isRecord(value.controls) ? value.controls : undefined;
   return {
     ready: value.ready === true,
-    model: asString(value.model) || asString(nim?.model),
     detail: asString(value.detail) || asString(value.error),
-    nim: modelHealth(nim),
+    nim: modelHealth(value.nim),
     advisoryModel: modelHealth(value.advisory_model),
     advisoryHostedFallback: asString(value.advisory_hosted_fallback),
-    yahoo: isRecord(value.yahoo) ? { status: readableStatus(asString(value.yahoo.status)) } : { status: "not asserted" },
-    fred: fred ? { status: readableStatus(asString(fred.status)) } : { status: "absent" },
-    cache: isRecord(value.cache) ? { root: asString(value.cache.root) } : undefined,
+    fred: isRecord(value.fred) ? { status: readable(asString(value.fred.status)) } : { status: "absent" },
     security: normalizeSecurity(value.security),
+    controls: controls ? { status: asString(controls.status), source: asString(controls.source), reason: asString(controls.reason) } : undefined,
+    evaluation: normalizeEvaluation(value.evaluation),
+    untrusted: asString(value.untrusted_inspection),
     galileo: asString(value.galileo),
     splunk: normalizeSplunk(value.splunk),
-    observability: isRecord(value.observability) ? {
-      tracing: isRecord(value.observability.tracing) ? {
-        status: asString(value.observability.tracing.status),
-        transport: asString(value.observability.tracing.transport),
-        stream: asString(value.observability.tracing.stream),
-      } : undefined,
-      evaluators: isRecord(value.observability.evaluators) ? {
-        status: asString(value.observability.evaluators.status),
-        results: asString(value.observability.evaluators.results),
-      } : undefined,
-      controls: isRecord(value.observability.controls) ? { status: asString(value.observability.controls.status) } : undefined,
+    observability: observability ? {
+      tracing: isRecord(observability.tracing) ? { status: asString(observability.tracing.status), transport: asString(observability.tracing.transport), stream: asString(observability.tracing.stream) } : undefined,
+      evaluators: isRecord(observability.evaluators) ? { status: asString(observability.evaluators.status), results: asString(observability.evaluators.results) } : undefined,
     } : undefined,
     perimeter: asString(value.perimeter) || "Yahoo + FRED allowlist only",
-    disclaimer: asString(value.disclaimer) || RESEARCH_DISCLAIMER,
   };
 }
 
 const SOURCE_KINDS = new Set<ResearchSource["kind"]>(["live", "cache", "fixture", "fictional"]);
 
 function normalizeSource(value: unknown): ResearchSource {
-  if (!isRecord(value)) return { kind: "live" };
+  if (!isRecord(value)) return { kind: "fixture" };
   const raw = asString(value.kind) as ResearchSource["kind"] | undefined;
   const kind = raw && SOURCE_KINDS.has(raw) ? raw : "live";
-  return {
-    kind,
-    fetchedAt: asString(value.fetchedAt) || asString(value.fetched_at),
-    label: asString(value.label) || "Yahoo Finance",
-    asOf: asString(value.asOf) || asString(value.as_of),
-    fictional: value.fictional === true || kind === "fictional",
-    macro: asString(value.macro),
-    fresh: value.fresh === true,
-  };
+  return { kind, fetchedAt: asString(value.fetchedAt), label: asString(value.label) || "Yahoo Finance", asOf: asString(value.asOf),
+    fictional: value.fictional === true || kind === "fictional", macro: asString(value.macro), fresh: value.fresh === true };
 }
 
 function normalizeConflicts(value: unknown): ConflictRow[] {
   return asArray(value).map((item) => {
-    if (!isRecord(item)) return null;
-    const id = asString(item.id);
-    const left = asString(item.left);
-    const right = asString(item.right);
-    if (!id || !left || !right) return null;
-    return {
-      id,
-      title: asString(item.title) || DIVERGENCE_TITLES[id] || "Signal divergence",
-      severity: asString(item.severity) || "medium",
-      left,
-      right,
-      detail: asString(item.detail) || "",
-    };
+    if (!isRecord(item) || !asString(item.id) || !asString(item.left) || !asString(item.right)) return null;
+    return { id: asString(item.id)!, title: asString(item.title) || "Signal divergence", severity: asString(item.severity) || "medium",
+      left: asString(item.left)!, right: asString(item.right)!, detail: asString(item.detail) || "" };
   }).filter((item): item is ConflictRow => Boolean(item));
 }
-
-const strings = (value: unknown) => asArray(value).map(asString).filter((item): item is string => Boolean(item));
 
 function normalizeContext(value: unknown): ResearchContext | undefined {
   if (!isRecord(value)) return undefined;
   const view = isRecord(value.house_view) ? value.house_view : undefined;
-  const restricted = isRecord(value.restricted) ? value.restricted : undefined;
   const event = isRecord(value.event) ? value.event : undefined;
   const affected = isRecord(value.affected_households) ? value.affected_households : undefined;
   return {
-    houseView: view ? {
-      rating: asString(view.rating), owner: asString(view.owner), asOf: asString(view.as_of), focusList: view.focus_list === true,
-      thesisPoints: strings(view.thesis_points), keyRisks: strings(view.key_risks), synthetic: view.synthetic === true,
-    } : undefined,
-    restricted: restricted ? { reason: asString(restricted.reason), since: asString(restricted.since) } : undefined,
-    event: event ? {
-      period: asString(event.period), date: asString(event.date), epsActual: asNumber(event.eps_actual), epsEstimate: asNumber(event.eps_estimate),
-      guidanceChange: asString(event.guidance_change), whatChanged: strings(event.what_changed), source: asString(event.source),
-    } : undefined,
-    affected: affected ? {
-      households: asNumber(affected.households), count: asNumber(affected.count), concentrated: asNumber(affected.concentrated),
-      executives: asNumber(affected.executives), thresholdPct: asNumber(affected.threshold_pct),
-    } : undefined,
+    houseView: view ? { rating: asString(view.rating), owner: asString(view.owner), asOf: asString(view.as_of), focusList: view.focus_list === true,
+      thesisPoints: strings(view.thesis_points), keyRisks: strings(view.key_risks), synthetic: view.synthetic === true } : undefined,
+    event: event ? { period: asString(event.period), date: asString(event.date), guidanceChange: asString(event.guidance_change),
+      whatChanged: strings(event.what_changed), source: asString(event.source) } : undefined,
+    affected: affected ? { households: asNumber(affected.households), count: asNumber(affected.count), concentrated: asNumber(affected.concentrated),
+      executives: asNumber(affected.executives), thresholdPct: asNumber(affected.threshold_pct) } : undefined,
   };
+}
+
+export function normalizeEvidence(value: unknown): EvidenceItem[] {
+  return asArray(value).map((item): EvidenceItem | null => {
+    if (!isRecord(item) || !asString(item.id)) return null;
+    const fields = isRecord(item.fields) ? Object.fromEntries(Object.entries(item.fields).map(([path, spec]) => {
+      const row = isRecord(spec) ? spec : {};
+      return [path, { display: asString(row.display) || "", label: asString(row.label) }];
+    })) : {};
+    return { id: asString(item.id)!, title: asString(item.title) || asString(item.id)!, source: asString(item.source) || "", kind: asString(item.kind) || "data",
+      synthetic: item.synthetic === true, fields, text: asString(item.text) || "", date: asString(item.date), publisher: asString(item.publisher), section: asString(item.section) };
+  }).filter((item): item is EvidenceItem => Boolean(item));
+}
+
+export function normalizeWithheld(value: unknown): WithheldItem[] {
+  return asArray(value).filter(isRecord).map((item) => ({ id: asString(item.id) || "", title: asString(item.title) || "", reason: asString(item.reason) || "" }));
+}
+
+export function normalizeClaims(value: unknown): Claim[] {
+  return asArray(value).filter(isRecord).map((item) => ({
+    section: asString(item.section) || "what_changed", text: asString(item.text) || "", evidenceId: asString(item.evidence_id),
+    fieldPath: asString(item.field_path), display: asString(item.display), quote: asString(item.quote), also: strings(item.also),
+    status: asString(item.status) || "unverified", reason: asString(item.reason) || "", check: asString(item.check),
+  })).filter((item) => item.text);
+}
+
+export function normalizePolicy(value: unknown): PolicyResult | undefined {
+  if (!isRecord(value)) return undefined;
+  return {
+    policy: asString(value.policy) || "", allowed: value.allowed === true, source: asString(value.source) || "local", detail: asString(value.detail),
+    checks: asArray(value.checks).filter(isRecord).map((row) => ({ control: asString(row.control), label: asString(row.label) || "", key: asString(row.key),
+      verdict: typeof row.verdict === "boolean" ? row.verdict : undefined, status: asString(row.status) || "", source: asString(row.source) || "local" })),
+  };
+}
+
+export function normalizePublish(value: unknown): PublishState {
+  if (!isRecord(value)) return { status: "unavailable" };
+  return { status: asString(value.status) || "unavailable", requestId: asString(value.request_id), reason: asString(value.reason), by: asString(value.by),
+    at: asString(value.at), controls: normalizePolicy(value.controls), originLabel: asString(value.origin_label) };
+}
+
+function normalizeNews(value: unknown): NewsRow[] {
+  return asArray(value).filter(isRecord).map((row) => ({
+    id: asString(row.id) || "", evidenceId: asString(row.evidence_id) || `news:${asString(row.id)}`, headline: asString(row.headline) || "",
+    publisher: asString(row.publisher), date: asString(row.date), body: asString(row.body), status: asString(row.status) || "kept",
+    reason: asString(row.reason), by: asString(row.by), aiDefense: asString(row.ai_defense), aiDefenseRules: strings(row.ai_defense_rules),
+  }));
 }
 
 /** A response's served_by (services/llm/studio_models.py), when the service named one. */
@@ -367,89 +356,57 @@ export function normalizeAnalyze(value: unknown, fallbackTicker?: string): Resea
   const peers = isRecord(value.peers) ? value.peers : {};
   const returns = isRecord(value.returns) ? value.returns : {};
   const macro = isRecord(value.macro) ? value.macro : {};
-  const note = isRecord(value.note) ? value.note : {};
-  const recommendation = isRecord(value.recommendation) ? value.recommendation : {};
   const revenue = isRecord(earnings.revenue) ? earnings.revenue : {};
-  const grounding = isRecord(value.grounding) ? value.grounding : undefined;
+  const update = isRecord(value.update) ? value.update : {};
+  const counts = isRecord(update.counts) ? update.counts : {};
+  const precheck = isRecord(value.precheck) ? value.precheck : undefined;
   return {
     ticker,
-    company: {
-      name: asString(company.name) || ticker,
-      ticker,
-      sector: asString(company.sector),
-      industry: asString(company.industry),
-    },
+    scenario: asString(value.scenario),
+    status: asString(value.status) || "omitted",
+    company: { name: asString(company.name) || ticker, ticker, sector: asString(company.sector), industry: asString(company.industry), metricFamily: asString(company.metric_family) },
     source: normalizeSource(value.source),
+    precheck: precheck ? { status: asString(precheck.status) || "", reason: asString(precheck.reason), since: asString(precheck.since),
+      issuer: asString(precheck.issuer), controls: normalizePolicy(precheck.controls) } : undefined,
     earnings: {
-      status: asString(earnings.status) || "absent",
-      beatRate: asNumber(earnings.beatRate ?? earnings.beat_rate),
-      observations: asNumber(earnings.observations),
-      beats: asNumber(earnings.beats),
-      latestSurprisePct: asNumber(earnings.latestSurprisePct ?? earnings.latest_surprise_pct),
-      revenue: {
-        latestYoy: asNumber(revenue.latestYoy ?? revenue.latest_yoy),
-        priorYoy: asNumber(revenue.priorYoy ?? revenue.prior_yoy),
-        decelerating: revenue.decelerating === true,
-      },
+      status: asString(earnings.status) || "absent", beatRate: asNumber(earnings.beatRate), observations: asNumber(earnings.observations), beats: asNumber(earnings.beats),
+      latestSurprisePct: asNumber(earnings.latestSurprisePct),
+      revenue: { latestYoy: asNumber(revenue.latestYoy), priorYoy: asNumber(revenue.priorYoy), decelerating: revenue.decelerating === true },
     },
-    peers: {
-      status: asString(peers.status) || "absent",
-      tickers: asArray(peers.tickers).map(asString).filter((item): item is string => Boolean(item)),
-      count: asNumber(peers.count),
-      sector: asString(peers.sector),
-      industry: asString(peers.industry),
-      subjectPe: asNumber(peers.subjectPe ?? peers.subject_pe),
-      medianPe: asNumber(peers.medianPe ?? peers.median_pe),
-      pePremium: asNumber(peers.pePremium ?? peers.pe_premium),
-    },
+    peers: { status: asString(peers.status) || "absent", tickers: strings(peers.tickers), subjectPe: asNumber(peers.subjectPe), medianPe: asNumber(peers.medianPe), pePremium: asNumber(peers.pePremium) },
     returns: {
-      status: asString(returns.status) || "absent",
-      asOf: asString(returns.asOf ?? returns.as_of),
-      windows: isRecord(returns.windows)
-        ? Object.fromEntries(Object.entries(returns.windows).map(([key, window]) => {
-          const row = isRecord(window) ? window : {};
-          return [key, { ticker: asNumber(row.ticker), spy: asNumber(row.spy), excess: asNumber(row.excess) }];
-        }))
-        : {},
+      status: asString(returns.status) || "absent", asOf: asString(returns.asOf),
+      windows: isRecord(returns.windows) ? Object.fromEntries(Object.entries(returns.windows).map(([key, window]) => {
+        const row = isRecord(window) ? window : {};
+        return [key, { ticker: asNumber(row.ticker), spy: asNumber(row.spy), excess: asNumber(row.excess) }];
+      })) : {},
     },
     macro: {
-      status: asString(macro.status) || "absent",
-      reason: asString(macro.reason),
-      series: isRecord(macro.series)
-        ? Object.fromEntries(Object.entries(macro.series).map(([key, item]) => {
-          const row = isRecord(item) ? item : {};
-          return [key, { label: asString(row.label) || key, latest: asNumber(row.latest), asOf: asString(row.asOf ?? row.as_of), direction: asString(row.direction) }];
-        }))
-        : {},
+      status: asString(macro.status) || "absent", reason: asString(macro.reason),
+      series: isRecord(macro.series) ? Object.fromEntries(Object.entries(macro.series).map(([key, item]) => {
+        const row = isRecord(item) ? item : {};
+        return [key, { label: asString(row.label) || key, latest: asNumber(row.latest), direction: asString(row.direction) }];
+      })) : {},
     },
     conflicts: normalizeConflicts(value.conflicts),
-    note: {
-      status: asString(note.status) || "omitted",
-      reason: asString(note.reason),
-      summary: asString(note.summary) || null,
-      bullets: asArray(note.bullets).map(asString).filter((item): item is string => Boolean(item)),
-      citations: asArray(note.citations).map((item): Citation | null => {
-        if (!isRecord(item)) return null;
-        return { field: asString(item.field), excerpt: asString(item.excerpt), value: asString(item.value) };
-      }).filter((item): item is Citation => Boolean(item)),
-    },
-    recommendation: {
-      status: asString(recommendation.status) || "omitted",
-      reason: asString(recommendation.reason),
-      action: asString(recommendation.action) || null,
-      thesis: asString(recommendation.thesis) || null,
-      disclaimer: asString(recommendation.disclaimer) || asString(value.disclaimer) || RESEARCH_DISCLAIMER,
-    },
-    grounding: grounding ? { droppedClaims: asNumber(grounding.dropped_claims ?? grounding.droppedClaims) ?? 0 } : undefined,
-    security: normalizeSecurity(value.security),
-    telemetry: isRecord(value.telemetry) ? {
-      splunk: normalizeSplunk(value.telemetry.splunk),
-      galileo: asString(value.telemetry.galileo),
-    } : undefined,
-    durationMs: asNumber(value.duration_ms ?? value.durationMs),
-    perimeter: asString(value.perimeter),
-    disclaimer: asString(value.disclaimer) || RESEARCH_DISCLAIMER,
+    valuation: isRecord(value.valuation) ? Object.fromEntries(Object.entries(value.valuation).map(([key, display]) => [key, asString(display) || ""])) : {},
     context: normalizeContext(value.context),
+    news: normalizeNews(value.news),
+    evidence: normalizeEvidence(value.evidence),
+    withheld: normalizeWithheld(value.withheld),
+    update: {
+      status: asString(update.status) || "unavailable", mode: asString(update.mode) || "none", modeLabel: asString(update.mode_label) || "No update drafted",
+      impact: asString(update.house_view_impact), impactSource: asString(update.impact_source), triggers: strings(update.triggers),
+      claims: normalizeClaims(update.claims), reason: asString(update.reason), rating: asString(update.rating),
+      counts: { verified: asNumber(counts.verified) ?? 0, unverified: asNumber(counts.unverified) ?? 0, policy: asNumber(counts.policy) ?? 0, total: asNumber(counts.total) ?? 0 },
+    },
+    publish: normalizePublish(value.publish),
+    security: normalizeSecurity(value.security),
+    usage: normalizeUsage(value.usage),
+    telemetry: isRecord(value.telemetry) ? { splunk: normalizeSplunk(value.telemetry.splunk), galileo: asString(value.telemetry.galileo) } : undefined,
+    evaluation: normalizeEvaluation(value.evaluation),
+    durationMs: asNumber(value.duration_ms),
+    disclaimer: asString(value.disclaimer) || "Demonstration only. Not investment advice.",
     servedBy: servedByOf(value.served_by),
     runId: asString(value.run_id),
   };
@@ -457,18 +414,8 @@ export function normalizeAnalyze(value: unknown, fallbackTicker?: string): Resea
 
 /** One golden run from GET /api/wealth/recordings/{name} (services/common/runs.py record format). */
 export type WealthRecording = {
-  name: string;
-  title: string;
-  recordedAt: string;
-  servedBy: ServedBy | null;
-  synthetic: boolean;
-  run: RunInfo | null;
-  events: RunEvent[];
-  result: unknown;
+  name: string; title: string; recordedAt: string; servedBy: ServedBy | null; synthetic: boolean; run: RunInfo | null; events: RunEvent[]; result: unknown;
 };
-
-export const RESEARCH_RECORDING = "research-hcyn";
-export const ADVISORY_RECORDING = "advisory-dana-whitfield";
 
 export async function loadWealthRecording(name: string): Promise<WealthRecording> {
   const response = await fetch(`/api/wealth/recordings/${encodeURIComponent(name)}`, { signal: AbortSignal.timeout(8000) });
@@ -476,14 +423,9 @@ export async function loadWealthRecording(name: string): Promise<WealthRecording
   const body = await response.json() as unknown;
   if (!isRecord(body)) throw new Error("The recorded run is empty.");
   return {
-    name: asString(body.name) || name,
-    title: asString(body.title) || name,
-    recordedAt: asString(body.recorded_at) || "",
-    servedBy: servedByOf(body.served_by),
-    synthetic: body.synthetic === true,
-    run: isRecord(body.run) ? body.run as RunInfo : null,
-    events: asArray(body.events).filter(isRecord) as RunEvent[],
-    result: body.result,
+    name: asString(body.name) || name, title: asString(body.title) || name, recordedAt: asString(body.recorded_at) || "",
+    servedBy: servedByOf(body.served_by), synthetic: body.synthetic === true, run: isRecord(body.run) ? body.run as RunInfo : null,
+    events: asArray(body.events).filter(isRecord) as RunEvent[], result: body.result,
   };
 }
 
@@ -493,23 +435,30 @@ export function loadResearchNote(): StoredResearchNote | null {
     const raw = window.localStorage.getItem(RESEARCH_NOTE_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as unknown;
-    if (!isRecord(parsed)) return null;
-    const analyze = normalizeAnalyze(parsed.analyze ?? parsed);
+    if (!isRecord(parsed) || !isRecord(parsed.analyze) || !isRecord(parsed.analyze.update)) return null;
+    const analyze = normalizeAnalyze(parsed.raw ?? parsed.analyze);
     if (!analyze) return null;
-    return {
-      ticker: (asString(parsed.ticker) || analyze.ticker).toUpperCase(),
-      acceptedAt: asString(parsed.acceptedAt) || asString(parsed.accepted_at) || new Date().toISOString(),
-      analyze,
-      recordedAt: asString(parsed.recordedAt),
-    };
+    return { ticker: (asString(parsed.ticker) || analyze.ticker).toUpperCase(), acceptedAt: asString(parsed.acceptedAt) || new Date().toISOString(),
+      analyze, recordedAt: asString(parsed.recordedAt), publishedBy: asString(parsed.publishedBy) };
   } catch {
     return null;
   }
 }
 
-export function saveResearchNote(note: StoredResearchNote) {
+/** Stores the published update with the raw service body, which meeting prep posts back as research context. */
+export function saveResearchNote(note: StoredResearchNote, raw?: unknown) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(RESEARCH_NOTE_STORAGE_KEY, JSON.stringify(note));
+  window.localStorage.setItem(RESEARCH_NOTE_STORAGE_KEY, JSON.stringify({ ...note, raw }));
+}
+
+export function rawResearchNote(): unknown {
+  if (typeof window === "undefined") return null;
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(RESEARCH_NOTE_STORAGE_KEY) || "null") as unknown;
+    return isRecord(parsed) ? parsed.raw ?? null : null;
+  } catch {
+    return null;
+  }
 }
 
 export function clearResearchNote() {
@@ -521,64 +470,28 @@ export function tickerFromProfile(profile?: StoredCompanyProfile | null) {
   return profile?.company.ticker?.trim().toUpperCase() || "";
 }
 
-export function entitledThemes(briefing?: CompanyBriefingRecord | null): BriefingTheme[] {
-  if (!briefing) return [];
-  return [briefing.objectives, briefing.risks, briefing.regulatory, briefing.aiInitiatives];
-}
-
 export function switcherContextLabel(profile: StoredCompanyProfile | null | undefined, note: StoredResearchNote | null | undefined, briefExists?: boolean) {
   const name = profile?.company.name;
   if (!name) return briefExists || note ? "Select a company · studio context" : "Select a company";
   const ticker = profile?.company.ticker?.trim();
   const base = ticker ? `${name} (${ticker})` : name;
   const extras = [];
-  if (note && ticker && note.ticker === ticker.toUpperCase()) extras.push("note");
+  if (note && ticker && note.ticker === ticker.toUpperCase()) extras.push("update");
   if (briefExists) extras.push("brief");
   return extras.length ? `${base} · ${extras.join(" · ")}` : base;
 }
 
-const CITATION_AREAS: Record<string, string> = {
-  earnings: "Earnings", peers: "Peers", returns: "Returns", macro: "Macro", event: "Earnings event", house_view: "House view",
-  research: "Research note", briefing: "Briefing", suitability: "Suitability", household: "Household", holdings: "Holdings",
-  context: "Context", tools: "Data",
+export const SECTION_LABEL: Record<string, string> = {
+  what_changed: "What changed", impact: "Does it change the house view?", talking_point: "Talking points for advisors",
 };
 
-/** "returns.1Y.excess" → "Returns · 1Y excess": a readable chip label for a cited payload field. */
-export function citationLabel(field?: string) {
-  if (!field) return "Source";
-  const parts = field.replace(/\[(\d+)\]/g, (_, index: string) => ` #${Number(index) + 1}`).split(".").filter(Boolean);
-  const [head, ...rest] = parts;
-  const area = CITATION_AREAS[head] ?? head.replaceAll("_", " ");
-  const detail = rest.join(" ").replaceAll("_", " ").replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase()
-    .replace(/\bpe\b/g, "P/E").replace(/\beps\b/g, "EPS").replace(/\byoy\b/g, "YoY");
-  return detail ? `${area} · ${detail}` : area;
-}
+export const IMPACT_LABEL: Record<string, string> = {
+  consistent: "Consistent with the house view", needs_strategist_review: "Needs strategist review", no_house_view: "No house view on file",
+};
 
-/** A signed percentage for comparisons: 0.194 → "+19.4%". */
-export function signedPct(value?: number | null, digits = 1) {
-  if (value == null || Number.isNaN(value)) return "Not reported";
-  const pct = value * 100;
-  return `${pct > 0 ? "+" : ""}${pct.toFixed(digits)}%`;
-}
+/** The verdict wording a claim chip shows. */
+export const CLAIM_LABEL: Record<string, string> = { verified: "Verified", unverified: "Struck · unverified", policy: "Blocked by policy" };
 
-/** "+19.4% vs SPY +16.9%": a return against the benchmark, the way every wealth panel shows it. */
-export function vsSpy(ticker?: number | null, spy?: number | null) {
-  if (ticker == null) return "Not reported";
-  return spy == null ? signedPct(ticker) : `${signedPct(ticker)} vs SPY ${signedPct(spy)}`;
-}
-
-/** A cited value as a chip shows it: 1512000000 → "1.51B", a 0.875 rate → "87.5%", long text clipped. */
-export function citationValue(field: string | undefined, value: string | undefined) {
-  if (!value) return "";
-  const number = Number(value.replace(/[,$%x]/g, ""));
-  if (value.trim() && !Number.isNaN(number) && /^[\s$+\-\d.,%x]+$/.test(value)) {
-    if (Math.abs(number) >= 1e9) return `${(number / 1e9).toFixed(2)}B`;
-    if (Math.abs(number) >= 1e6) return `${(number / 1e6).toFixed(1)}M`;
-    if (!value.includes("%") && Math.abs(number) < 1.5 && /rate|yoy|excess|premium|pct|margin|return|growth|weight/i.test(field || "")) {
-      const change = /excess|premium|return|growth|yoy/i.test(field || "");
-      return change ? signedPct(number) : `${(number * 100).toFixed(1)}%`;
-    }
-    return value;
-  }
-  return value.length > 32 ? `${value.slice(0, 30).trimEnd()}…` : value;
+export function policySourceLabel(source?: string) {
+  return source === "agent_control" ? "Agent Control" : "Local policy check";
 }

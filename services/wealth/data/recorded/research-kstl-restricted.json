@@ -1,0 +1,200 @@
+{
+ "v": 1,
+ "name": "research-kstl-restricted",
+ "title": "KSTL \u00b7 restricted",
+ "scenario": "research-restricted",
+ "recorded_at": "2026-10-09T23:05:11.745275+00:00",
+ "served_by": null,
+ "synthetic": true,
+ "note": "Recorded from a live run of the wealth service. Synthetic client, fictional or public market data.",
+ "run": {
+  "id": "wealth-research-20261009230509-6aabe6",
+  "service": "wealth",
+  "label": "House-view update \u00b7 KSTL",
+  "scenario": "research-restricted",
+  "status": "blocked",
+  "started_at": "2026-10-09T23:05:09.882535+00:00",
+  "finished_at": "2026-10-09T23:05:11.745275+00:00",
+  "meta": {
+   "ticker": "KSTL",
+   "scenario": "restricted"
+  }
+ },
+ "events": [
+  {
+   "v": 1,
+   "id": "0e454168-babd-461b-9f1a-8490b54c3d93",
+   "at": "2026-10-09T23:05:10.790321+00:00",
+   "ns": 907781583,
+   "run_id": "wealth-research-20261009230509-6aabe6",
+   "component": "wealth",
+   "kind": "run",
+   "status": "started",
+   "title": "House-view update \u00b7 KSTL",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Restricted-list pre-check, then market data, the event, and screened news; then the research agent drafts cited claims.",
+   "data": {}
+  },
+  {
+   "v": 1,
+   "id": "19c5e8a4-a7a6-4c28-a01c-b2f577bb324a",
+   "at": "2026-10-09T23:05:10.793092+00:00",
+   "ns": 910551416,
+   "run_id": "wealth-research-20261009230509-6aabe6",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "restricted_list_check(ticker=KSTL)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "restricted_list_check",
+    "agent": "workflow",
+    "arguments": {
+     "ticker": "KSTL"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "b5590220-080a-43b3-981f-fca66e1e14fe",
+   "at": "2026-10-09T23:05:10.809719+00:00",
+   "ns": 927177666,
+   "run_id": "wealth-research-20261009230509-6aabe6",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "Restricted list \u00b7 KSTL is restricted",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": "Underwriting syndicate since 2026-09-15",
+   "data": {
+    "tool": "restricted_list_check",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "1d458413-28f3-4582-b9d9-73e479fec5c5",
+   "at": "2026-10-09T23:05:11.041961+00:00",
+   "ns": 1159419458,
+   "run_id": "wealth-research-20261009230509-6aabe6",
+   "component": "wealth",
+   "kind": "control",
+   "status": "denied",
+   "title": "Agent Control \u00b7 research.precheck \u00b7 Restricted list \u00b7 denied",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "policy": "research.precheck",
+    "control": "fsi-wealth-research-precheck-restricted-v1",
+    "source": "agent_control",
+    "verdict": false
+   }
+  },
+  {
+   "v": 1,
+   "id": "f2f649fc-2e0a-4251-8798-c3377e8add76",
+   "at": "2026-10-09T23:05:11.044354+00:00",
+   "ns": 1161809250,
+   "run_id": "wealth-research-20261009230509-6aabe6",
+   "component": "wealth",
+   "kind": "result",
+   "status": "denied",
+   "title": "Stopped at the pre-check \u00b7 KSTL is on the restricted list",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Underwriting syndicate since 2026-09-15. No market data was pulled, no model was called, nothing can be published.",
+   "data": {}
+  }
+ ],
+ "result": {
+  "ticker": "KSTL",
+  "scenario": "restricted",
+  "status": "blocked",
+  "company": {
+   "name": "Kestrel Grid Storage, Inc. (fictional)",
+   "ticker": "KSTL"
+  },
+  "precheck": {
+   "status": "denied",
+   "ticker": "KSTL",
+   "reason": "Underwriting syndicate",
+   "since": "2026-09-15",
+   "issuer": "Kestrel Grid Storage, Inc. (fictional)",
+   "verdicts": {
+    "issuer_not_restricted": false
+   },
+   "controls": {
+    "policy": "research.precheck",
+    "allowed": false,
+    "source": "agent_control",
+    "checks": [
+     {
+      "policy": "research.precheck",
+      "control": "fsi-wealth-research-precheck-restricted-v1",
+      "label": "Restricted list",
+      "key": "issuer_not_restricted",
+      "verdict": false,
+      "status": "denied",
+      "source": "agent_control"
+     }
+    ],
+    "detail": null
+   }
+  },
+  "update": {
+   "status": "blocked",
+   "mode": "none",
+   "mode_label": "No update drafted",
+   "claims": []
+  },
+  "publish": {
+   "status": "blocked",
+   "reason": "Restricted issuer"
+  },
+  "evidence": [],
+  "news": [],
+  "duration_ms": 260,
+  "disclaimer": "Synthetic research for a fictional issuer, for demonstration only. Not investment advice.",
+  "security": {
+   "mode": "off",
+   "status": "disabled",
+   "checks": 0,
+   "blocked": 0,
+   "errors": 0,
+   "event_ids": [],
+   "fail_open": false,
+   "forced": false
+  },
+  "usage": {
+   "llm_calls": 0,
+   "input_tokens": null,
+   "output_tokens": null,
+   "tool_calls": 1
+  },
+  "served_by": null,
+  "telemetry": {
+   "splunk": {
+    "status": "not_configured",
+    "trace_id": "701c397b75fb2ea8f04af430851e0f49"
+   },
+   "galileo": "recorded"
+  },
+  "evaluation": {
+   "status": "not_configured",
+   "label": "Evaluation not configured",
+   "verifier": "Structured claim verifier (code) checks every claim"
+  },
+  "run_id": "wealth-research-20261009230509-6aabe6",
+  "perimeter": "Yahoo + FRED allowlist only"
+ }
+}

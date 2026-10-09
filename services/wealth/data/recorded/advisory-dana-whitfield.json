@@ -3,7 +3,7 @@
  "name": "advisory-dana-whitfield",
  "title": "Dana Whitfield \u00b7 Annual review",
  "scenario": "advisory-dana-whitfield",
- "recorded_at": "2026-10-09T21:23:34.164682+00:00",
+ "recorded_at": "2026-10-09T23:10:32.236133+00:00",
  "served_by": {
   "provider": "openai",
   "label": "OpenAI API",
@@ -20,13 +20,13 @@
  "synthetic": true,
  "note": "Recorded from a live run of the wealth service. Synthetic client, fictional or public market data.",
  "run": {
-  "id": "wealth-advisory-20261009212323-656344",
+  "id": "wealth-advisory-20261009230940-43689f",
   "service": "wealth",
   "label": "Meeting prep \u00b7 Dana Whitfield",
   "scenario": "advisory-dana-whitfield",
   "status": "completed",
-  "started_at": "2026-10-09T21:23:23.156221+00:00",
-  "finished_at": "2026-10-09T21:23:34.164682+00:00",
+  "started_at": "2026-10-09T23:09:40.388168+00:00",
+  "finished_at": "2026-10-09T23:10:32.236133+00:00",
   "meta": {
    "household_id": "dana-whitfield"
   }
@@ -34,10 +34,10 @@
  "events": [
   {
    "v": 1,
-   "id": "5f701fe8-ffa9-45a6-835d-7ef77ce33746",
-   "at": "2026-10-09T21:23:23.156336+00:00",
-   "ns": 106333,
-   "run_id": "wealth-advisory-20261009212323-656344",
+   "id": "2e7ec60a-a1de-438d-9d3e-a36c0f112148",
+   "at": "2026-10-09T23:09:41.144102+00:00",
+   "ns": 755928500,
+   "run_id": "wealth-advisory-20261009230940-43689f",
    "component": "wealth",
    "kind": "run",
    "status": "started",
@@ -45,25 +45,26 @@
    "lane": "agent",
    "source": null,
    "target": null,
-   "body": "Household, market data, suitability rules, then a meeting brief drafted from that record only.",
+   "body": "Household record and screened CRM notes, suitability rules, sized actions, the house-view update; then the brief.",
    "data": {}
   },
   {
    "v": 1,
-   "id": "7766a301-4429-42bd-91b2-ad334a5f569b",
-   "at": "2026-10-09T21:23:23.157083+00:00",
-   "ns": 857333,
-   "run_id": "wealth-advisory-20261009212323-656344",
+   "id": "cd979339-ffc3-4f6b-95c5-a0612b22150b",
+   "at": "2026-10-09T23:09:41.144542+00:00",
+   "ns": 756368958,
+   "run_id": "wealth-advisory-20261009230940-43689f",
    "component": "wealth",
    "kind": "agent.tool_call",
    "status": "info",
-   "title": "get_household(dana-whitfield)",
+   "title": "get_household(id=dana-whitfield)",
    "lane": "tools",
-   "source": null,
+   "source": "workflow",
    "target": null,
    "body": null,
    "data": {
     "tool": "get_household",
+    "agent": "workflow",
     "arguments": {
      "id": "dana-whitfield"
     }
@@ -71,39 +72,81 @@
   },
   {
    "v": 1,
-   "id": "660392f1-4ecf-47f4-ace3-2d61dde16bff",
-   "at": "2026-10-09T21:23:23.161596+00:00",
-   "ns": 5370083,
-   "run_id": "wealth-advisory-20261009212323-656344",
+   "id": "80ad331d-af95-43c9-83a9-0c472adff62a",
+   "at": "2026-10-09T23:09:41.147150+00:00",
+   "ns": 758979333,
+   "run_id": "wealth-advisory-20261009230940-43689f",
    "component": "wealth",
    "kind": "tool.result",
    "status": "ok",
-   "title": "Household \u00b7 Synthetic \u00b7 $14.2M \u00b7 Moderate profile",
+   "title": "Household \u00b7 synthetic \u00b7 $14.2M \u00b7 Moderate profile",
    "lane": "tools",
-   "source": null,
+   "source": "workflow",
    "target": null,
    "body": "SVP at Halcyon Interconnect (HCYN, fictional) \u00b7 46% in employer stock",
    "data": {
     "tool": "get_household",
-    "synthetic": true
+    "agent": "workflow"
    }
   },
   {
    "v": 1,
-   "id": "f476f5b9-5daf-4754-ace7-0a5f2aa5eb41",
-   "at": "2026-10-09T21:23:24.182156+00:00",
-   "ns": 1025926250,
-   "run_id": "wealth-advisory-20261009212323-656344",
+   "id": "e579ba19-f0cf-4552-a441-c56a7371faeb",
+   "at": "2026-10-09T23:09:41.636963+00:00",
+   "ns": 1248792583,
+   "run_id": "wealth-advisory-20261009230940-43689f",
    "component": "wealth",
    "kind": "agent.tool_call",
    "status": "info",
-   "title": "market_snapshot(HCYN, VTI, VXUS, BND)",
+   "title": "crm_notes(household=dana-whitfield)",
    "lane": "tools",
-   "source": null,
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "crm_notes",
+    "agent": "workflow",
+    "arguments": {
+     "household": "dana-whitfield"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "a1c7bbc3-20b1-4632-81fa-7ffc2af1c960",
+   "at": "2026-10-09T23:09:41.641147+00:00",
+   "ns": 1252975625,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "CRM notes \u00b7 4 usable, 0 masked, 0 withheld",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "crm_notes",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "023247df-7c9a-416b-b6e7-788d505998c0",
+   "at": "2026-10-09T23:09:41.649416+00:00",
+   "ns": 1261243875,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "market_snapshot(tickers=['HCYN', 'VTI', 'VXUS', 'BND'])",
+   "lane": "tools",
+   "source": "workflow",
    "target": null,
    "body": null,
    "data": {
     "tool": "market_snapshot",
+    "agent": "workflow",
     "arguments": {
      "tickers": [
       "HCYN",
@@ -116,203 +159,308 @@
   },
   {
    "v": 1,
-   "id": "d48045b3-33e5-43a9-b35c-1adeb18a0480",
-   "at": "2026-10-09T21:23:24.184224+00:00",
-   "ns": 1027995041,
-   "run_id": "wealth-advisory-20261009212323-656344",
+   "id": "f26ad032-755c-420a-a7f0-dd7fb625f438",
+   "at": "2026-10-09T23:09:41.664838+00:00",
+   "ns": 1276670250,
+   "run_id": "wealth-advisory-20261009230940-43689f",
    "component": "wealth",
    "kind": "tool.result",
    "status": "ok",
-   "title": "HCYN \u00b7 Fictional \u00b7 synthetic data",
+   "title": "Market data \u00b7 5 of 5 holdings",
    "lane": "tools",
-   "source": null,
+   "source": "workflow",
    "target": null,
    "body": null,
    "data": {
     "tool": "market_snapshot",
-    "ticker": "HCYN",
-    "source_kind": "fictional"
+    "agent": "workflow"
    }
   },
   {
    "v": 1,
-   "id": "09f7946b-fa3e-4793-8f66-c8af063fa4be",
-   "at": "2026-10-09T21:23:24.190160+00:00",
-   "ns": 1033930166,
-   "run_id": "wealth-advisory-20261009212323-656344",
-   "component": "wealth",
-   "kind": "tool.result",
-   "status": "ok",
-   "title": "VTI \u00b7 Yahoo Finance \u00b7 cached, as of 2026-10-09",
-   "lane": "tools",
-   "source": null,
-   "target": null,
-   "body": null,
-   "data": {
-    "tool": "market_snapshot",
-    "ticker": "VTI",
-    "source_kind": "cache"
-   }
-  },
-  {
-   "v": 1,
-   "id": "fb79efe5-b905-4b95-aaa0-5dee7146882c",
-   "at": "2026-10-09T21:23:24.198680+00:00",
-   "ns": 1042449250,
-   "run_id": "wealth-advisory-20261009212323-656344",
-   "component": "wealth",
-   "kind": "tool.result",
-   "status": "ok",
-   "title": "VXUS \u00b7 Yahoo Finance \u00b7 cached, as of 2026-10-09",
-   "lane": "tools",
-   "source": null,
-   "target": null,
-   "body": null,
-   "data": {
-    "tool": "market_snapshot",
-    "ticker": "VXUS",
-    "source_kind": "cache"
-   }
-  },
-  {
-   "v": 1,
-   "id": "48c952e4-3c42-404c-a1ac-7e1677371fe1",
-   "at": "2026-10-09T21:23:24.204723+00:00",
-   "ns": 1048492958,
-   "run_id": "wealth-advisory-20261009212323-656344",
-   "component": "wealth",
-   "kind": "tool.result",
-   "status": "ok",
-   "title": "BND \u00b7 Yahoo Finance \u00b7 cached, as of 2026-10-09",
-   "lane": "tools",
-   "source": null,
-   "target": null,
-   "body": null,
-   "data": {
-    "tool": "market_snapshot",
-    "ticker": "BND",
-    "source_kind": "cache"
-   }
-  },
-  {
-   "v": 1,
-   "id": "923e8fac-ab67-4869-a095-956314856b40",
-   "at": "2026-10-09T21:23:24.207589+00:00",
-   "ns": 1051358208,
-   "run_id": "wealth-advisory-20261009212323-656344",
+   "id": "ab81ddba-5545-4133-86dd-cfae45b412c7",
+   "at": "2026-10-09T23:09:41.667834+00:00",
+   "ns": 1279658708,
+   "run_id": "wealth-advisory-20261009230940-43689f",
    "component": "wealth",
    "kind": "agent.tool_call",
    "status": "info",
-   "title": "suitability_check",
+   "title": "suitability_rules(profile=Moderate)",
    "lane": "tools",
-   "source": null,
+   "source": "workflow",
    "target": null,
    "body": null,
    "data": {
-    "tool": "suitability_check",
-    "rules": "household policy"
+    "tool": "suitability_rules",
+    "agent": "workflow",
+    "arguments": {
+     "profile": "Moderate"
+    }
    }
   },
   {
    "v": 1,
-   "id": "31541f7f-a40e-4fea-995e-e818efc55dba",
-   "at": "2026-10-09T21:23:24.210729+00:00",
-   "ns": 1054505708,
-   "run_id": "wealth-advisory-20261009212323-656344",
+   "id": "87725919-25ac-40a2-80f8-11143689df2c",
+   "at": "2026-10-09T23:09:41.672877+00:00",
+   "ns": 1284705792,
+   "run_id": "wealth-advisory-20261009230940-43689f",
    "component": "wealth",
-   "kind": "claim.verdict",
+   "kind": "tool.result",
    "status": "flagged",
-   "title": "Suitability \u00b7 R-CONC-01 \u00b7 Single issuer above the policy limit",
-   "lane": "security",
-   "source": null,
+   "title": "Suitability rules \u00b7 3 suitability, 3 planning",
+   "lane": "tools",
+   "source": "workflow",
    "target": null,
-   "body": "HCYN is 46.0% of the household ($6.53M), above the 10% single-issuer policy.",
+   "body": null,
    "data": {
+    "tool": "suitability_rules",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "3ffe5b7c-ecc2-429e-b373-b975a55c6b93",
+   "at": "2026-10-09T23:09:41.676992+00:00",
+   "ns": 1288818417,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "R-CONC-01 \u00b7 Single issuer above policy \u00b7 high",
+   "lane": "tools",
+   "source": "suitability_rules",
+   "target": null,
+   "body": "HCYN is 46% of the household ($6.53M), above the 10% single-issuer policy and the 20% cap.",
+   "data": {
+    "tool": "suitability_rules",
     "rule": "R-CONC-01",
-    "severity": "high"
+    "severity": "high",
+    "category": "suitability"
    }
   },
   {
    "v": 1,
-   "id": "0f02222b-72c0-4078-ba8d-df52c7d651af",
-   "at": "2026-10-09T21:23:24.214361+00:00",
-   "ns": 1058140291,
-   "run_id": "wealth-advisory-20261009212323-656344",
+   "id": "c9a7fe90-9b42-48cb-930a-9c0e93b0c95a",
+   "at": "2026-10-09T23:09:41.680945+00:00",
+   "ns": 1292771167,
+   "run_id": "wealth-advisory-20261009230940-43689f",
    "component": "wealth",
-   "kind": "claim.verdict",
+   "kind": "tool.result",
    "status": "flagged",
-   "title": "Suitability \u00b7 R-RISK-02 \u00b7 Equity share above the risk band",
-   "lane": "security",
-   "source": null,
+   "title": "R-RISK-02 \u00b7 Equity share above the risk band \u00b7 high",
+   "lane": "tools",
+   "source": "suitability_rules",
    "target": null,
-   "body": "Equities are 78.0% of the household against the Moderate band of 40\u201365%.",
+   "body": "Equities are 78% of the household against the Moderate band of 40\u201365%.",
    "data": {
+    "tool": "suitability_rules",
     "rule": "R-RISK-02",
-    "severity": "high"
+    "severity": "high",
+    "category": "suitability"
    }
   },
   {
    "v": 1,
-   "id": "5f93c403-983e-4fbb-ab2b-a3e5260c9d13",
-   "at": "2026-10-09T21:23:24.217612+00:00",
-   "ns": 1061392583,
-   "run_id": "wealth-advisory-20261009212323-656344",
+   "id": "aed510d5-7e19-455c-be08-c2a29fd5b2ae",
+   "at": "2026-10-09T23:09:41.692504+00:00",
+   "ns": 1304329917,
+   "run_id": "wealth-advisory-20261009230940-43689f",
    "component": "wealth",
-   "kind": "claim.verdict",
+   "kind": "tool.result",
    "status": "flagged",
-   "title": "Suitability \u00b7 R-AFF-01 \u00b7 Affiliate or insider restrictions",
-   "lane": "security",
-   "source": null,
+   "title": "R-AFF-01 \u00b7 Affiliate or insider restrictions \u00b7 medium",
+   "lane": "tools",
+   "source": "suitability_rules",
    "target": null,
    "body": "Affiliate of HCYN: Rule 144, blackout windows, and 10b5-1 cooling-off periods govern any sale [confirm with SME].",
    "data": {
+    "tool": "suitability_rules",
     "rule": "R-AFF-01",
-    "severity": "medium"
+    "severity": "medium",
+    "category": "suitability"
    }
   },
   {
    "v": 1,
-   "id": "7fe50006-610d-4a81-9a33-75533ad841df",
-   "at": "2026-10-09T21:23:24.220416+00:00",
-   "ns": 1064190916,
-   "run_id": "wealth-advisory-20261009212323-656344",
+   "id": "f08b8737-fe7c-4ad2-8aeb-bd87d8b7dc8c",
+   "at": "2026-10-09T23:09:41.703656+00:00",
+   "ns": 1315481625,
+   "run_id": "wealth-advisory-20261009230940-43689f",
    "component": "wealth",
-   "kind": "claim.verdict",
-   "status": "flagged",
-   "title": "Suitability \u00b7 R-REV-01 \u00b7 Estate documents need review",
-   "lane": "security",
-   "source": null,
+   "kind": "tool.result",
+   "status": "info",
+   "title": "R-LIQ-02 \u00b7 Idle cash above the reserve \u00b7 medium",
+   "lane": "tools",
+   "source": "suitability_rules",
+   "target": null,
+   "body": "$620k sits idle in cash; a 6-month reserve is $120k.",
+   "data": {
+    "tool": "suitability_rules",
+    "rule": "R-LIQ-02",
+    "severity": "medium",
+    "category": "planning"
+   }
+  },
+  {
+   "v": 1,
+   "id": "600d1e32-8050-4daf-88b2-2a4660a62201",
+   "at": "2026-10-09T23:09:41.706994+00:00",
+   "ns": 1318821292,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "info",
+   "title": "R-REV-01 \u00b7 Estate documents need review \u00b7 medium",
+   "lane": "tools",
+   "source": "suitability_rules",
    "target": null,
    "body": "Revocable living trust (2009), Pour-over will (2009): never reviewed.",
    "data": {
+    "tool": "suitability_rules",
     "rule": "R-REV-01",
-    "severity": "medium"
+    "severity": "medium",
+    "category": "planning"
    }
   },
   {
    "v": 1,
-   "id": "6b568d81-ed53-4f6c-ad2c-dbd504f21423",
-   "at": "2026-10-09T21:23:24.223061+00:00",
-   "ns": 1066909750,
-   "run_id": "wealth-advisory-20261009212323-656344",
+   "id": "42d71d16-c68c-4407-9dc3-b295a3f65485",
+   "at": "2026-10-09T23:09:41.709807+00:00",
+   "ns": 1321632292,
+   "run_id": "wealth-advisory-20261009230940-43689f",
    "component": "wealth",
    "kind": "tool.result",
-   "status": "ok",
-   "title": "Attached context \u00b7 research note",
+   "status": "info",
+   "title": "R-EDU-01 \u00b7 College funding gap \u00b7 medium",
    "lane": "tools",
-   "source": null,
+   "source": "suitability_rules",
+   "target": null,
+   "body": "Daughter starts college in 2027 at about $85k a year; no 529 plan is in place.",
+   "data": {
+    "tool": "suitability_rules",
+    "rule": "R-EDU-01",
+    "severity": "medium",
+    "category": "planning"
+   }
+  },
+  {
+   "v": 1,
+   "id": "62fe2dc1-bd86-4e20-8141-248d3b31836b",
+   "at": "2026-10-09T23:09:41.712347+00:00",
+   "ns": 1324171833,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "next_best_actions(household=dana-whitfield)",
+   "lane": "tools",
+   "source": "workflow",
    "target": null,
    "body": null,
    "data": {
-    "tool": "attached_context"
+    "tool": "next_best_actions",
+    "agent": "workflow",
+    "arguments": {
+     "household": "dana-whitfield"
+    }
    }
   },
   {
    "v": 1,
-   "id": "3a1d9966-541b-45a0-99d4-5f2df5be1435",
-   "at": "2026-10-09T21:23:24.227506+00:00",
-   "ns": 1071280291,
-   "run_id": "wealth-advisory-20261009212323-656344",
+   "id": "c4926f22-ead0-4e4c-9b61-c34361135889",
+   "at": "2026-10-09T23:09:41.715095+00:00",
+   "ns": 1326921792,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Next-best actions \u00b7 7 suitable \u00b7 $5.71M investable in play",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": "Exchange fund for low-basis HCYN shares: Not suitable: a 7-year lock-up exceeds the 4-year horizon to retirement.",
+   "data": {
+    "tool": "next_best_actions",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "496db96f-d847-4850-8663-7202deea15b0",
+   "at": "2026-10-09T23:09:41.717780+00:00",
+   "ns": 1329604750,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "house_view_update(ticker=HCYN)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "house_view_update",
+    "agent": "workflow",
+    "arguments": {
+     "ticker": "HCYN"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "ca768025-9ce2-4395-ad2a-23d2616ee9ed",
+   "at": "2026-10-09T23:09:41.720934+00:00",
+   "ns": 1332760917,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "House-view update \u00b7 HCYN Constructive \u00b7 published",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": "5 verified claims attached",
+   "data": {
+    "tool": "house_view_update",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "f03804c1-47d4-4dc1-8657-88b34d974645",
+   "at": "2026-10-09T23:09:41.724584+00:00",
+   "ns": 1336408208,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "model.failover",
+   "status": "flagged",
+   "title": "Model fallback \u00b7 next in chain is OpenAI API",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": "Sparky vLLM unreachable (connection refused)",
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "cdeac73d-f2a8-499a-82ac-727c8a939f61",
+   "at": "2026-10-09T23:09:41.727601+00:00",
+   "ns": 1339428458,
+   "run_id": "wealth-advisory-20261009230940-43689f",
    "component": "wealth",
    "kind": "guardrail",
    "status": "ok",
@@ -340,10 +488,10 @@
   },
   {
    "v": 1,
-   "id": "7d57c7eb-8b84-4ff7-a8ca-7e793716f152",
-   "at": "2026-10-09T21:23:25.252094+00:00",
-   "ns": 2095876833,
-   "run_id": "wealth-advisory-20261009212323-656344",
+   "id": "e37d49f0-ad26-48b0-a10e-65c411eb31ca",
+   "at": "2026-10-09T23:09:42.235949+00:00",
+   "ns": 1847777333,
+   "run_id": "wealth-advisory-20261009230940-43689f",
    "component": "wealth",
    "kind": "guardrail",
    "status": "allowed",
@@ -362,10 +510,43 @@
   },
   {
    "v": 1,
-   "id": "9a8e95b1-ce5b-4f6f-ae8f-970ad00450c8",
-   "at": "2026-10-09T21:23:33.278567+00:00",
-   "ns": 10122320625,
-   "run_id": "wealth-advisory-20261009212323-656344",
+   "id": "6d507a8e-ceb1-416b-ae8f-70c21293c82b",
+   "at": "2026-10-09T23:09:44.194260+00:00",
+   "ns": 3806080375,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 meeting-prep supervisor",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 1941,
+    "input_tokens": 1435,
+    "output_tokens": 159
+   }
+  },
+  {
+   "v": 1,
+   "id": "2dcc17cf-4c20-4bce-a280-03c5f1176988",
+   "at": "2026-10-09T23:09:44.695528+00:00",
+   "ns": 4307352917,
+   "run_id": "wealth-advisory-20261009230940-43689f",
    "component": "wealth",
    "kind": "guardrail",
    "status": "allowed",
@@ -384,44 +565,210 @@
   },
   {
    "v": 1,
-   "id": "8109c0ed-864e-4271-aaa9-de03df6a9304",
-   "at": "2026-10-09T21:23:33.285633+00:00",
-   "ns": 10129382916,
-   "run_id": "wealth-advisory-20261009212323-656344",
+   "id": "d4e8f751-5cac-4d1b-8898-00ce9991c644",
+   "at": "2026-10-09T23:09:44.703333+00:00",
+   "ns": 4315154667,
+   "run_id": "wealth-advisory-20261009230940-43689f",
    "component": "wealth",
-   "kind": "model.failover",
-   "status": "flagged",
-   "title": "Model fallback \u00b7 answered by OpenAI API",
-   "lane": "model",
-   "source": null,
-   "target": null,
-   "body": "Sparky vLLM unreachable (connection refused)",
+   "kind": "agent.message",
+   "status": "info",
+   "title": "meeting-prep supervisor \u2192 planner subagent",
+   "lane": "agent",
+   "source": "meeting-prep supervisor",
+   "target": "planner",
+   "body": "Rank the suitable next-best actions for Dana Whitfield. Use the household profile, suitability findings, house-view update, and CRM notes available to you. Return only a ranked JSON array of suitable action IDs, up to five, most important first, with brief reasons and dollar values where available. Do not recommend securities trades or execution instructions.",
    "data": {
-    "served_by": {
-     "provider": "openai",
-     "label": "OpenAI API",
-     "model": "gpt-5.6-luna",
-     "kind": "openai",
-     "private": false,
-     "external": true,
-     "fallback": true,
-     "reason": "Sparky vLLM unreachable (connection refused)",
-     "source": "saved",
-     "egress": "require_ai_defense",
-     "ai_defense": "enforce (forced for hosted model)"
-    }
+    "subagent": "planner"
    }
   },
   {
    "v": 1,
-   "id": "41f2c3ba-01d2-4848-aef7-8f94dc6d4f1a",
-   "at": "2026-10-09T21:23:33.293165+00:00",
-   "ns": 10136916333,
-   "run_id": "wealth-advisory-20261009212323-656344",
+   "id": "7e027072-f8e7-4bad-aeaf-112f5e4e8a17",
+   "at": "2026-10-09T23:09:44.717348+00:00",
+   "ns": 4329166792,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_household_profile()",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_household_profile",
+    "agent": "meeting-prep supervisor",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "50506715-8296-4c8c-9ff1-92d27ec40eef",
+   "at": "2026-10-09T23:09:44.728049+00:00",
+   "ns": 4339870875,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Household \u00b7 Dana Whitfield \u00b7 Moderate profile",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_household_profile",
+    "agent": "meeting-prep supervisor"
+   }
+  },
+  {
+   "v": 1,
+   "id": "e9c8085c-1efb-4c0b-8aca-794b4bc17e49",
+   "at": "2026-10-09T23:09:44.737758+00:00",
+   "ns": 4349583250,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_suitability_findings()",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_suitability_findings",
+    "agent": "meeting-prep supervisor",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "06b841ba-e430-4164-ba97-23f6e1e71674",
+   "at": "2026-10-09T23:09:44.744098+00:00",
+   "ns": 4355920375,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "Suitability rules \u00b7 3 suitability, 3 planning findings",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_suitability_findings",
+    "agent": "meeting-prep supervisor"
+   }
+  },
+  {
+   "v": 1,
+   "id": "bec2d96c-6bbe-4f4d-8dc4-b5a71044e2b1",
+   "at": "2026-10-09T23:09:44.749692+00:00",
+   "ns": 4361510875,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_house_view_update()",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_house_view_update",
+    "agent": "meeting-prep supervisor",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "09f25785-2d23-4efe-b4d7-3316334a36d8",
+   "at": "2026-10-09T23:09:44.754716+00:00",
+   "ns": 4366540750,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "House-view update \u00b7 House-view update \u00b7 HCYN \u00b7 Constructive \u00b7 consistent with the house view",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_house_view_update",
+    "agent": "meeting-prep supervisor"
+   }
+  },
+  {
+   "v": 1,
+   "id": "eeee8889-fd36-4122-acca-b6a134f20894",
+   "at": "2026-10-09T23:09:44.760193+00:00",
+   "ns": 4372012333,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_crm_notes()",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_crm_notes",
+    "agent": "meeting-prep supervisor",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "04aab6f3-2b5c-4fc7-bc0a-19110b594c91",
+   "at": "2026-10-09T23:09:44.764796+00:00",
+   "ns": 4376620458,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "CRM notes \u00b7 4 usable",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_crm_notes",
+    "agent": "meeting-prep supervisor"
+   }
+  },
+  {
+   "v": 1,
+   "id": "161f7690-89c5-40c8-99a8-a97e2e54ebd9",
+   "at": "2026-10-09T23:09:45.258800+00:00",
+   "ns": 4870623750,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "717260cc-a106-4259-b989-5bffafed1f0f",
+   "at": "2026-10-09T23:09:46.424473+00:00",
+   "ns": 6036292583,
+   "run_id": "wealth-advisory-20261009230940-43689f",
    "component": "wealth",
    "kind": "llm.call",
    "status": "ok",
-   "title": "gpt-5.6-luna \u00b7 OpenAI API",
+   "title": "gpt-5.6-luna \u00b7 planner subagent",
    "lane": "model",
    "source": null,
    "target": null,
@@ -434,47 +781,806 @@
      "kind": "openai",
      "private": false,
      "external": true,
-     "fallback": true,
+     "fallback": false,
      "reason": "Sparky vLLM unreachable (connection refused)",
      "source": "saved",
      "egress": "require_ai_defense",
      "ai_defense": "enforce (forced for hosted model)"
     },
-    "latency_ms": 9055,
-    "input_tokens": 5423,
-    "output_tokens": 755
+    "latency_ms": 1155,
+    "input_tokens": 448,
+    "output_tokens": 61
    }
   },
   {
    "v": 1,
-   "id": "f92155f4-2ae8-48be-8d9e-b6bb75d4bd33",
-   "at": "2026-10-09T21:23:33.519283+00:00",
-   "ns": 10363036916,
-   "run_id": "wealth-advisory-20261009212323-656344",
+   "id": "962b8527-b150-4590-933f-90ee6a250473",
+   "at": "2026-10-09T23:09:46.832435+00:00",
+   "ns": 6444276000,
+   "run_id": "wealth-advisory-20261009230940-43689f",
    "component": "wealth",
-   "kind": "claim.verdict",
-   "status": "flagged",
-   "title": "Grounding \u00b7 3 unsupported claims dropped",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
    "lane": "security",
    "source": null,
    "target": null,
-   "body": "Claims that did not match the market data or the attached context were removed, not shown.",
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "7eabbfec-144a-463a-b07d-eb67543cc4b9",
+   "at": "2026-10-09T23:09:46.845351+00:00",
+   "ns": 6457166583,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_next_best_actions()",
+   "lane": "tools",
+   "source": "planner",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_next_best_actions",
+    "agent": "planner",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "27f0d12a-9a3c-46c6-bd75-301e8f20945a",
+   "at": "2026-10-09T23:09:46.849675+00:00",
+   "ns": 6461491667,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Next-best actions \u00b7 7 suitable, 1 not suitable",
+   "lane": "tools",
+   "source": "planner",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_next_best_actions",
+    "agent": "planner"
+   }
+  },
+  {
+   "v": 1,
+   "id": "428d7b91-bf6a-493c-a10a-e3188c16350b",
+   "at": "2026-10-09T23:09:46.853850+00:00",
+   "ns": 6465666500,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_suitability_findings()",
+   "lane": "tools",
+   "source": "planner",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_suitability_findings",
+    "agent": "planner",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "8159e8a3-bbe8-4a14-9c3c-04e518017278",
+   "at": "2026-10-09T23:09:46.857664+00:00",
+   "ns": 6469475875,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "Suitability rules \u00b7 3 suitability, 3 planning findings",
+   "lane": "tools",
+   "source": "planner",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_suitability_findings",
+    "agent": "planner"
+   }
+  },
+  {
+   "v": 1,
+   "id": "096ecc4e-6456-4e3c-86ae-0464f530181d",
+   "at": "2026-10-09T23:09:46.860255+00:00",
+   "ns": 6472066333,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_household_profile()",
+   "lane": "tools",
+   "source": "planner",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_household_profile",
+    "agent": "planner",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "02dd850a-3f9d-4ebb-8e44-c239c27a79a7",
+   "at": "2026-10-09T23:09:46.863794+00:00",
+   "ns": 6475607958,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Household \u00b7 Dana Whitfield \u00b7 Moderate profile",
+   "lane": "tools",
+   "source": "planner",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_household_profile",
+    "agent": "planner"
+   }
+  },
+  {
+   "v": 1,
+   "id": "ab47746a-4d8e-4182-a097-98c77727ef60",
+   "at": "2026-10-09T23:09:47.367339+00:00",
+   "ns": 6979153042,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "5e10bc18-fbc3-4653-86d6-bb035537c876",
+   "at": "2026-10-09T23:09:51.425427+00:00",
+   "ns": 11037233250,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 planner subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 4019,
+    "input_tokens": 3806,
+    "output_tokens": 336
+   }
+  },
+  {
+   "v": 1,
+   "id": "7716c38f-ab4d-4e89-840d-fc1a7d83a856",
+   "at": "2026-10-09T23:09:51.828751+00:00",
+   "ns": 11440559792,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "df3bb87c-2bc4-4051-a34a-b219f12fbdf9",
+   "at": "2026-10-09T23:09:52.344405+00:00",
+   "ns": 11956231458,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "766586ba-a28d-4b88-90ec-5bf9a99e1339",
+   "at": "2026-10-09T23:10:02.640511+00:00",
+   "ns": 22252305250,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 meeting-prep supervisor",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 10294,
+    "input_tokens": 4346,
+    "output_tokens": 1427
+   }
+  },
+  {
+   "v": 1,
+   "id": "f1bed862-ac82-4690-bfd2-69221d16c9dc",
+   "at": "2026-10-09T23:10:03.227181+00:00",
+   "ns": 22838962542,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "442889d6-fb41-4f38-9ccf-63166561d07a",
+   "at": "2026-10-09T23:10:03.231676+00:00",
+   "ns": 22843453958,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "agent.message",
+   "status": "info",
+   "title": "meeting-prep supervisor \u2192 compliance_reviewer subagent",
+   "lane": "agent",
+   "source": "meeting-prep supervisor",
+   "target": "compliance_reviewer",
+   "body": "Review the proposed meeting brief lines and ranked action IDs below. Check every factual line for required evidence_id/field_path/value/unit or an 8+ word verbatim quote, ensure only suitable actions are ranked, and flag unsupported numbers, execution/trade language, guarantees, or policy issues. Return concise corrections or say approved.\n\nRanked action IDs:\n[\"NBA-10B51\",\"NBA-REBALANCE\",\"NBA-529\",\"NBA-LADDER\",\"NBA-ESTATE\"]\n\nDraft lines:\n[\n{\"section\":\"opening\",\"text\":\"Dana, today we will connect your Moderate profile and 4 years to retirement with concentration, allocation, education, liquidit",
+   "data": {
+    "subagent": "compliance_reviewer"
+   }
+  },
+  {
+   "v": 1,
+   "id": "e1937710-5636-4432-b96e-fdfc9b64f4e7",
+   "at": "2026-10-09T23:10:03.755411+00:00",
+   "ns": 23367188500,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "e46a9c83-8728-46af-8d5f-416a33d9f694",
+   "at": "2026-10-09T23:10:04.720263+00:00",
+   "ns": 24332055000,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 compliance reviewer subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 953,
+    "input_tokens": 1670,
+    "output_tokens": 15
+   }
+  },
+  {
+   "v": 1,
+   "id": "9cb1c73a-937a-4d63-aaa2-59c94751a133",
+   "at": "2026-10-09T23:10:05.124739+00:00",
+   "ns": 24736527750,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "1f2de626-22a8-43d6-882c-47e00b272d09",
+   "at": "2026-10-09T23:10:05.132380+00:00",
+   "ns": 24744155417,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_issuer_policy()",
+   "lane": "tools",
+   "source": "compliance_reviewer",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_issuer_policy",
+    "agent": "compliance_reviewer",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "bca96a5c-a45c-4ca5-948a-26d1ff826d5f",
+   "at": "2026-10-09T23:10:05.144416+00:00",
+   "ns": 24756199542,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Issuer insider policy \u00b7 on file",
+   "lane": "tools",
+   "source": "compliance_reviewer",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_issuer_policy",
+    "agent": "compliance_reviewer"
+   }
+  },
+  {
+   "v": 1,
+   "id": "5a8f9ef5-a886-44e1-9a4a-ecc23593399a",
+   "at": "2026-10-09T23:10:05.685536+00:00",
+   "ns": 25297329500,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "93eb80be-e283-4e50-877e-dab9f3dbb455",
+   "at": "2026-10-09T23:10:16.074158+00:00",
+   "ns": 35685926750,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 compliance reviewer subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 10385,
+    "input_tokens": 1805,
+    "output_tokens": 1307
+   }
+  },
+  {
+   "v": 1,
+   "id": "a906152f-137d-4590-8830-1317f3ca7fa5",
+   "at": "2026-10-09T23:10:16.632610+00:00",
+   "ns": 36244375375,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "9a035205-f635-49a0-ad32-14cc4b05a63c",
+   "at": "2026-10-09T23:10:16.643394+00:00",
+   "ns": 36255139292,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "check_brief(lines=draft)",
+   "lane": "tools",
+   "source": "compliance_reviewer",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "check_brief",
+    "agent": "compliance_reviewer",
+    "arguments": {
+     "lines": "draft"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "1403c5e4-0884-43b2-8fa5-86bf0a67a74d",
+   "at": "2026-10-09T23:10:16.657882+00:00",
+   "ns": 36269626333,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "Brief check \u00b7 10 of 12 pass",
+   "lane": "tools",
+   "source": "compliance_reviewer",
+   "target": null,
+   "body": "\u2717 The college goal is about $85k a year beginning in 2027, or $340k over 4 years. \u00b7 The quote and the sentence disagree on a negation.\n\u2717 Cash is $620k against a $120k six-month reserve, leaving $500k above the reserve. \u00b7 The quote does not support 'against, leav, six-month'.",
+   "data": {
+    "tool": "check_brief",
+    "agent": "compliance_reviewer"
+   }
+  },
+  {
+   "v": 1,
+   "id": "1b95f13a-a5d1-43a4-a14f-dc2a53a09d0e",
+   "at": "2026-10-09T23:10:17.196475+00:00",
+   "ns": 36808243500,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "e5ec1a18-c7b7-45f0-9793-902b6dda759a",
+   "at": "2026-10-09T23:10:21.276675+00:00",
+   "ns": 40888411458,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 compliance reviewer subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 4063,
+    "input_tokens": 3822,
+    "output_tokens": 383
+   }
+  },
+  {
+   "v": 1,
+   "id": "e2922cea-909b-431e-a2d9-836736d86d77",
+   "at": "2026-10-09T23:10:21.767933+00:00",
+   "ns": 41379673292,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "584ef7ac-0bd7-4f81-9e31-65b39ee1401b",
+   "at": "2026-10-09T23:10:22.339966+00:00",
+   "ns": 41951719958,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "ba9b67a4-a894-4726-94ac-63feda94aee4",
+   "at": "2026-10-09T23:10:31.080063+00:00",
+   "ns": 50691793917,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 meeting-prep supervisor",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 8738,
+    "input_tokens": 6169,
+    "output_tokens": 1286
+   }
+  },
+  {
+   "v": 1,
+   "id": "ec397a58-a3b9-4d6d-8613-56a6026f538d",
+   "at": "2026-10-09T23:10:31.632263+00:00",
+   "ns": 51243973417,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "94c100f3-4f10-4ea4-8908-2ba3e2264d28",
+   "at": "2026-10-09T23:10:31.635381+00:00",
+   "ns": 51247087875,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "submit_brief(lines=draft)",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "submit_brief",
+    "agent": "meeting-prep supervisor",
+    "arguments": {
+     "lines": "draft"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "472ce6a6-9e20-4c79-86b2-7e0b95be1c8e",
+   "at": "2026-10-09T23:10:31.640304+00:00",
+   "ns": 51252011042,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Brief submitted \u00b7 19 lines, 5 actions",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "submit_brief",
+    "agent": "meeting-prep supervisor"
+   }
+  },
+  {
+   "v": 1,
+   "id": "60a3c639-2d1b-4bc6-bff5-e6ab9721ea5f",
+   "at": "2026-10-09T23:10:31.650514+00:00",
+   "ns": 51262221000,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "claim.verdict",
+   "status": "ok",
+   "title": "Brief verifier \u00b7 12 of 12 statements verified",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Statements, callouts, and the rationale are checked against the cited record; agenda lines and questions must not invent numbers.",
    "data": {}
   },
   {
    "v": 1,
-   "id": "542d1e08-8325-480e-af5f-3e681565cb38",
-   "at": "2026-10-09T21:23:34.163858+00:00",
-   "ns": 11007606958,
-   "run_id": "wealth-advisory-20261009212323-656344",
+   "id": "1497fbbd-7ec1-444a-bb91-d60cad68fd70",
+   "at": "2026-10-09T23:10:31.653368+00:00",
+   "ns": 51265074917,
+   "run_id": "wealth-advisory-20261009230940-43689f",
+   "component": "wealth",
+   "kind": "hitl.request",
+   "status": "info",
+   "title": "Advisor review, then supervisor approval",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": "Nothing is sent or executed until a supervisor approves; approval runs the advisory.recommendation policies.",
+   "data": {
+    "request_id": "advisor",
+    "policy": "advisory.recommendation"
+   }
+  },
+  {
+   "v": 1,
+   "id": "2619fe3b-d599-431b-ab45-1075dd53a914",
+   "at": "2026-10-09T23:10:31.655855+00:00",
+   "ns": 51267561958,
+   "run_id": "wealth-advisory-20261009230940-43689f",
    "component": "wealth",
    "kind": "result",
    "status": "ok",
-   "title": "Meeting brief ready for advisor review",
+   "title": "Meeting brief ready \u00b7 5 actions \u00b7 12 verified statements",
    "lane": "agent",
    "source": null,
    "target": null,
-   "body": "Review Dana Whitfield\u2019s concentrated employer exposure, four-year retirement horizon, 2027 college goal, and estate-document status in light of the latest HCYN research.",
+   "body": null,
    "data": {}
   }
  ],
@@ -482,25 +1588,33 @@
   "household": {
    "id": "dana-whitfield",
    "name": "Dana Whitfield",
-   "synthetic": true
+   "synthetic": true,
+   "risk_profile": "Moderate",
+   "total_value": 14200000.0,
+   "headline": "SVP at Halcyon Interconnect (HCYN, fictional) \u00b7 46% in employer stock",
+   "age": 58,
+   "horizon_years": 4,
+   "goals": [
+    "Retire at 62",
+    "College 2027"
+   ],
+   "affiliate": true,
+   "employer_ticker": "HCYN"
   },
   "holdings": [
    {
     "ticker": "HCYN",
     "name": "Halcyon Interconnect (fictional)",
     "weight": 0.46,
-    "sector": "Technology",
-    "industry": "Communication Equipment",
-    "trailingPE": 13.92,
-    "marketCap": 14439563760.0,
+    "asset_class": "equity",
+    "value": 6532276,
+    "account": "Taxable brokerage",
     "return_1y": 0.19431538671768234,
     "return_1y_spy": 0.16911722608346103,
     "return_1y_vs_spy": 0.02519816063422131,
-    "asset_class": "equity",
-    "value": 6532276,
+    "sector": "Technology",
     "source": {
      "kind": "fictional",
-     "fetchedAt": "2026-10-08T21:00:00+00:00",
      "label": "Fictional \u00b7 synthetic data",
      "asOf": "2026-10-08",
      "fictional": true
@@ -511,18 +1625,15 @@
     "ticker": "VTI",
     "name": "Vanguard Total Stock Market ETF",
     "weight": 0.2,
-    "sector": null,
-    "industry": null,
-    "trailingPE": 24.527016,
-    "marketCap": null,
+    "asset_class": "equity",
+    "value": 2840000,
+    "account": "401(k) and trust",
     "return_1y": 0.1642236445471421,
     "return_1y_spy": 0.16915475370385513,
     "return_1y_vs_spy": -0.0049311091567130205,
-    "asset_class": "equity",
-    "value": 2840000,
+    "sector": null,
     "source": {
      "kind": "cache",
-     "fetchedAt": "2026-10-09T21:09:55.204103+00:00",
      "label": "Yahoo Finance \u00b7 cached, as of 2026-10-09",
      "asOf": "2026-10-09",
      "fictional": false
@@ -533,18 +1644,15 @@
     "ticker": "VXUS",
     "name": "Vanguard Total International Stock ETF",
     "weight": 0.12,
-    "sector": null,
-    "industry": null,
-    "trailingPE": 16.200296,
-    "marketCap": null,
+    "asset_class": "equity",
+    "value": 1704000,
+    "account": "Trust",
     "return_1y": 0.16749902730528654,
     "return_1y_spy": 0.16915475370385513,
     "return_1y_vs_spy": -0.001655726398568591,
-    "asset_class": "equity",
-    "value": 1704000,
+    "sector": null,
     "source": {
      "kind": "cache",
-     "fetchedAt": "2026-10-09T21:09:56.715980+00:00",
      "label": "Yahoo Finance \u00b7 cached, as of 2026-10-09",
      "asOf": "2026-10-09",
      "fictional": false
@@ -555,18 +1663,15 @@
     "ticker": "BND",
     "name": "Vanguard Total Bond Market ETF",
     "weight": 0.17600000000000002,
-    "sector": null,
-    "industry": null,
-    "trailingPE": null,
-    "marketCap": null,
+    "asset_class": "fixed_income",
+    "value": 2503724,
+    "account": "401(k) and trust",
     "return_1y": -0.015969962089101286,
     "return_1y_spy": 0.16915475370385513,
     "return_1y_vs_spy": -0.18512471579295642,
-    "asset_class": "fixed_income",
-    "value": 2503724,
+    "sector": null,
     "source": {
      "kind": "cache",
-     "fetchedAt": "2026-10-09T21:09:58.451183+00:00",
      "label": "Yahoo Finance \u00b7 cached, as of 2026-10-09",
      "asOf": "2026-10-09",
      "fictional": false
@@ -579,21 +1684,112 @@
     "weight": 0.044000000000000004,
     "asset_class": "cash",
     "value": 620000,
-    "note": null,
+    "account": "Taxable brokerage",
     "source": {
      "kind": "household",
-     "label": "Household record \u00b7 Synthetic"
+     "label": "Household record \u00b7 synthetic"
     },
-    "status": "ready"
+    "status": "ready",
+    "note": null
+   }
+  ],
+  "notes": [
+   {
+    "index": 0,
+    "date": "2026-09-12",
+    "author": "Jordan (advisor)",
+    "text": "Dana said the Halcyon position is most of our net worth and she is nervous about Q3 earnings. Wants to retire at 62. Next open trading window is expected after Q3 earnings.",
+    "masked": [],
+    "status": "kept",
+    "ai_defense": "allowed",
+    "ai_defense_rules": [],
+    "local": [],
+    "event_id": ""
+   },
+   {
+    "index": 1,
+    "date": "2026-06-03",
+    "author": "Jordan (advisor)",
+    "text": "Daughter starts college fall 2027, estimated $85k a year. No 529 plan yet.",
+    "masked": [],
+    "status": "kept",
+    "ai_defense": "allowed",
+    "ai_defense_rules": [],
+    "local": [],
+    "event_id": ""
+   },
+   {
+    "index": 2,
+    "date": "2026-03-18",
+    "author": "Jordan (advisor)",
+    "text": "Revocable trust drafted in 2009 by a prior attorney and never reviewed. Dana is unsure the successor trustee is still right.",
+    "masked": [],
+    "status": "kept",
+    "ai_defense": "allowed",
+    "ai_defense_rules": [],
+    "local": [],
+    "event_id": ""
+   },
+   {
+    "index": 3,
+    "date": "2026-01-22",
+    "author": "Jordan (advisor)",
+    "text": "$620k has sat in the brokerage sweep since the January RSU sale. Dana has not decided what to do with it.",
+    "masked": [],
+    "status": "kept",
+    "ai_defense": "allowed",
+    "ai_defense_rules": [],
+    "local": [],
+    "event_id": ""
    }
   ],
   "suitability": [
    {
     "id": "R-CONC-01:HCYN",
     "rule": "R-CONC-01",
-    "title": "Single issuer above the policy limit",
+    "title": "Single issuer above policy",
     "severity": "high",
-    "detail": "HCYN is 46.0% of the household ($6.53M), above the 10% single-issuer policy.",
+    "category": "suitability",
+    "reg_bi": "Care: concentration risk against the stated risk profile and horizon.",
+    "detail": "HCYN is 46% of the household ($6.53M), above the 10% single-issuer policy and the 20% cap.",
+    "fields": {
+     "weight": {
+      "value": 0.46,
+      "unit": "fraction",
+      "display": "46%",
+      "label": "HCYN share of the household"
+     },
+     "limit": {
+      "value": 0.1,
+      "unit": "fraction",
+      "display": "10%",
+      "label": "Single-issuer policy"
+     },
+     "value": {
+      "value": 6532276.0,
+      "unit": "usd",
+      "display": "$6.53M",
+      "label": "HCYN position"
+     },
+     "excess_value": {
+      "value": 5112000.0,
+      "unit": "usd",
+      "display": "$5.11M",
+      "label": "Above the 10% policy"
+     },
+     "unrealized_gain": {
+      "value": 5710136.0,
+      "unit": "usd",
+      "display": "$5.71M",
+      "label": "Unrealized gain"
+     },
+     "cost_basis": {
+      "value": 11.0,
+      "unit": "usd",
+      "display": "$11.00",
+      "label": "Cost basis per share"
+     }
+    },
     "evidence": {
      "ticker": "HCYN",
      "weight_pct": 46.0,
@@ -605,7 +1801,41 @@
     "rule": "R-RISK-02",
     "title": "Equity share above the risk band",
     "severity": "high",
-    "detail": "Equities are 78.0% of the household against the Moderate band of 40\u201365%.",
+    "category": "suitability",
+    "reg_bi": "Care: the allocation carries more risk than the client's profile allows.",
+    "detail": "Equities are 78% of the household against the Moderate band of 40\u201365%.",
+    "fields": {
+     "equity_share": {
+      "value": 0.78,
+      "unit": "fraction",
+      "display": "78%",
+      "label": "Equity share"
+     },
+     "band_max": {
+      "value": 0.65,
+      "unit": "fraction",
+      "display": "65%",
+      "label": "Moderate maximum"
+     },
+     "band_min": {
+      "value": 0.4,
+      "unit": "fraction",
+      "display": "40%",
+      "label": "Moderate minimum"
+     },
+     "gap": {
+      "value": 0.13,
+      "unit": "fraction",
+      "display": "13.0 points",
+      "label": "Distance outside the band"
+     },
+     "shift_value": {
+      "value": 1846000.0,
+      "unit": "usd",
+      "display": "$1.85M",
+      "label": "Value to move back inside the band"
+     }
+    },
     "evidence": {
      "equity_pct": 78.0,
      "band": [
@@ -620,9 +1850,57 @@
     "rule": "R-AFF-01",
     "title": "Affiliate or insider restrictions",
     "severity": "medium",
+    "category": "suitability",
+    "reg_bi": "Care: any sale must fit Rule 144, blackout windows, and 10b5-1 rules [confirm with SME].",
     "detail": "Affiliate of HCYN: Rule 144, blackout windows, and 10b5-1 cooling-off periods govern any sale [confirm with SME].",
+    "fields": {
+     "issuer": {
+      "value": "HCYN",
+      "unit": "text",
+      "display": "HCYN",
+      "label": "Employer"
+     }
+    },
     "evidence": {
      "ticker": "HCYN"
+    }
+   },
+   {
+    "id": "R-LIQ-02",
+    "rule": "R-LIQ-02",
+    "title": "Idle cash above the reserve",
+    "severity": "medium",
+    "category": "planning",
+    "reg_bi": "Planning: cash beyond the reserve has no stated purpose.",
+    "detail": "$620k sits idle in cash; a 6-month reserve is $120k.",
+    "fields": {
+     "idle_cash": {
+      "value": 620000.0,
+      "unit": "usd",
+      "display": "$620k",
+      "label": "Idle cash"
+     },
+     "reserve": {
+      "value": 120000.0,
+      "unit": "usd",
+      "display": "$120k",
+      "label": "6-month reserve"
+     },
+     "above_reserve": {
+      "value": 500000.0,
+      "unit": "usd",
+      "display": "$500k",
+      "label": "Above the reserve"
+     },
+     "months": {
+      "value": 31.0,
+      "unit": "count",
+      "display": "31 months",
+      "label": "Months of spending"
+     }
+    },
+    "evidence": {
+     "cash": 620000.0
     }
    },
    {
@@ -630,94 +1908,1041 @@
     "rule": "R-REV-01",
     "title": "Estate documents need review",
     "severity": "medium",
+    "category": "planning",
+    "reg_bi": "Planning: estate documents are missing or out of date.",
     "detail": "Revocable living trust (2009), Pour-over will (2009): never reviewed.",
+    "fields": {
+     "last_review": {
+      "value": "never",
+      "unit": "text",
+      "display": "never",
+      "label": "Last review"
+     },
+     "years_since": {
+      "value": 17,
+      "unit": "years",
+      "display": "17 years",
+      "label": "Years since drafted"
+     },
+     "trust_value": {
+      "value": 4947724.0,
+      "unit": "usd",
+      "display": "$4.95M",
+      "label": "Trust assets"
+     }
+    },
+    "evidence": {}
+   },
+   {
+    "id": "R-EDU-01",
+    "rule": "R-EDU-01",
+    "title": "College funding gap",
+    "severity": "medium",
+    "category": "planning",
+    "reg_bi": "Planning: a near-term education goal has no dedicated funding.",
+    "detail": "Daughter starts college in 2027 at about $85k a year; no 529 plan is in place.",
+    "fields": {
+     "annual_cost": {
+      "value": 85000.0,
+      "unit": "usd",
+      "display": "$85k",
+      "label": "College cost per year"
+     },
+     "years": {
+      "value": 4,
+      "unit": "count",
+      "display": "4",
+      "label": "Years of college"
+     },
+     "total_cost": {
+      "value": 340000.0,
+      "unit": "usd",
+      "display": "$340k",
+      "label": "Estimated total"
+     },
+     "start": {
+      "value": 2027,
+      "unit": "count",
+      "display": "2027",
+      "label": "Starts"
+     }
+    },
     "evidence": {}
    }
   ],
+  "actions": [
+   {
+    "id": "NBA-10B51",
+    "type": "10b5-1-plan",
+    "title": "10b5-1 sale plan to reduce HCYN toward policy",
+    "summary": "Sell down $5.11M of the $6.53M position on a pre-set schedule, bringing HCYN from 46% toward the 10% policy.",
+    "rules": [
+     "R-CONC-01",
+     "R-AFF-01"
+    ],
+    "dollars": 5112000.0,
+    "dollars_display": "$5.11M",
+    "dollars_label": "HCYN above the 10% policy",
+    "suitable": true,
+    "fit": "Fits a Moderate profile and the 4-year runway: it cuts single-issuer risk on a schedule set in an open window.",
+    "cautions": [
+     "Adopt only in an open window; a cooling-off period applies before the first sale [confirm with SME].",
+     "Rule 144 volume limits apply to an affiliate."
+    ],
+    "fields": {
+     "dollars": {
+      "value": 5112000.0,
+      "unit": "usd",
+      "display": "$5.11M",
+      "label": "HCYN above the 10% policy"
+     },
+     "position": {
+      "value": 6532276.0,
+      "unit": "usd",
+      "display": "$6.53M",
+      "label": "HCYN position"
+     },
+     "weight": {
+      "value": 0.46,
+      "unit": "fraction",
+      "display": "46%",
+      "label": "HCYN share of the household"
+     },
+     "limit": {
+      "value": 0.1,
+      "unit": "fraction",
+      "display": "10%",
+      "label": "Single-issuer policy"
+     }
+    }
+   },
+   {
+    "id": "NBA-REBALANCE",
+    "type": "rebalance",
+    "title": "Rebalance back inside the Moderate band",
+    "summary": "Move about $1.85M so equities go from 78% to at most 65%.",
+    "rules": [
+     "R-RISK-02"
+    ],
+    "dollars": 1846000.0,
+    "dollars_display": "$1.85M",
+    "dollars_label": "Value to move",
+    "suitable": true,
+    "fit": "Brings the allocation back to the Moderate profile the client chose.",
+    "cautions": [],
+    "fields": {
+     "dollars": {
+      "value": 1846000.0,
+      "unit": "usd",
+      "display": "$1.85M",
+      "label": "Value to move"
+     }
+    }
+   },
+   {
+    "id": "NBA-LADDER",
+    "type": "treasury-ladder",
+    "title": "Treasury ladder for idle cash",
+    "summary": "Put $500k above the $120k reserve into Treasuries that mature with the plan's dates (Retire at 62, College 2027).",
+    "rules": [
+     "R-LIQ-02"
+    ],
+    "dollars": 500000.0,
+    "dollars_display": "$500k",
+    "dollars_label": "Cash above the reserve",
+    "suitable": true,
+    "fit": "Low risk and liquid at each maturity; fits every profile.",
+    "cautions": [],
+    "fields": {
+     "dollars": {
+      "value": 500000.0,
+      "unit": "usd",
+      "display": "$500k",
+      "label": "Cash above the reserve"
+     },
+     "idle_cash": {
+      "value": 620000.0,
+      "unit": "usd",
+      "display": "$620k",
+      "label": "Idle cash"
+     },
+     "reserve": {
+      "value": 120000.0,
+      "unit": "usd",
+      "display": "$120k",
+      "label": "6-month reserve"
+     }
+    }
+   },
+   {
+    "id": "NBA-529",
+    "type": "529-plan",
+    "title": "Open and fund a 529 plan",
+    "summary": "Front-load up to $95k with a five-year gift election toward about $340k of college costs.",
+    "rules": [
+     "R-EDU-01"
+    ],
+    "dollars": 95000,
+    "dollars_display": "$95k",
+    "dollars_label": "Five-year gift election, one donor",
+    "suitable": true,
+    "fit": "Tax-advantaged for a goal that starts soon; invest conservatively given the short runway.",
+    "cautions": [
+     "Gift-tax election limits apply [confirm with SME]."
+    ],
+    "fields": {
+     "dollars": {
+      "value": 95000,
+      "unit": "usd",
+      "display": "$95k",
+      "label": "Five-year gift election, one donor"
+     },
+     "total_cost": {
+      "value": 340000.0,
+      "unit": "usd",
+      "display": "$340k",
+      "label": "Estimated total"
+     }
+    }
+   },
+   {
+    "id": "NBA-ESTATE",
+    "type": "estate-review",
+    "title": "Estate document review with an attorney",
+    "summary": "Revocable living trust (2009), Pour-over will (2009): never reviewed. Refer to an estate attorney.",
+    "rules": [
+     "R-REV-01"
+    ],
+    "dollars": 4947724.0,
+    "dollars_display": "$4.95M",
+    "dollars_label": "Trust assets",
+    "suitable": true,
+    "fit": "A referral, not an investment recommendation.",
+    "cautions": [],
+    "fields": {
+     "dollars": {
+      "value": 4947724.0,
+      "unit": "usd",
+      "display": "$4.95M",
+      "label": "Trust assets"
+     }
+    }
+   },
+   {
+    "id": "NBA-COLLAR",
+    "type": "collar",
+    "title": "Collar on part of the HCYN position",
+    "summary": "Protect part of the $6.53M position against a drop while the sale plan runs.",
+    "rules": [
+     "R-CONC-01",
+     "R-AFF-01"
+    ],
+    "dollars": 5112000.0,
+    "dollars_display": "$5.11M",
+    "dollars_label": "Position that could be hedged",
+    "suitable": true,
+    "fit": "Hedging needs General Counsel pre-clearance under the issuer's insider policy.",
+    "cautions": [
+     "The insider policy requires General Counsel pre-clearance for a collar.",
+     "Listed options and short sales are prohibited."
+    ],
+    "fields": {
+     "dollars": {
+      "value": 5112000.0,
+      "unit": "usd",
+      "display": "$5.11M",
+      "label": "Position that could be hedged"
+     }
+    }
+   },
+   {
+    "id": "NBA-DAF",
+    "type": "daf-gift",
+    "title": "Gift appreciated HCYN shares to a donor-advised fund",
+    "summary": "Give $250k of low-basis shares instead of cash, avoiding about $219k of realized gain.",
+    "rules": [
+     "R-CONC-01"
+    ],
+    "dollars": 250000,
+    "dollars_display": "$250k",
+    "dollars_label": "Illustrative gift",
+    "suitable": true,
+    "fit": "Fits only if the client has charitable goals; ask before proposing.",
+    "cautions": [
+     "Ask about charitable intent first; nothing is on file.",
+     "Gifts by an affiliate still follow the insider policy."
+    ],
+    "fields": {
+     "dollars": {
+      "value": 250000,
+      "unit": "usd",
+      "display": "$250k",
+      "label": "Illustrative gift"
+     },
+     "gain_avoided": {
+      "value": 218535.46910755147,
+      "unit": "usd",
+      "display": "$219k",
+      "label": "Gain not realized"
+     },
+     "unrealized_gain": {
+      "value": 5710136.0,
+      "unit": "usd",
+      "display": "$5.71M",
+      "label": "Unrealized gain"
+     }
+    }
+   },
+   {
+    "id": "NBA-EXCHANGE",
+    "type": "exchange-fund",
+    "title": "Exchange fund for low-basis HCYN shares",
+    "summary": "Swap concentrated shares into a diversified fund without an immediate taxable sale.",
+    "rules": [
+     "R-CONC-01"
+    ],
+    "dollars": 5112000.0,
+    "dollars_display": "$5.11M",
+    "dollars_label": "Shares that could be contributed",
+    "suitable": false,
+    "fit": "Not suitable: a 7-year lock-up exceeds the 4-year horizon to retirement.",
+    "cautions": [
+     "Typical 7-year lock-up; accredited investors only."
+    ],
+    "fields": {
+     "dollars": {
+      "value": 5112000.0,
+      "unit": "usd",
+      "display": "$5.11M",
+      "label": "Shares that could be contributed"
+     }
+    }
+   }
+  ],
+  "addressable": 5707000.0,
+  "addressable_display": "$5.71M",
+  "context": {
+   "research": {
+    "origin": "published",
+    "ticker": "HCYN",
+    "rating": "Constructive",
+    "impact": "consistent",
+    "published_at": null,
+    "claims": 5
+   },
+   "issuer_policy": true,
+   "briefing": false
+  },
+  "evidence": [
+   {
+    "id": "crm:0",
+    "title": "CRM note \u00b7 2026-09-12 \u00b7 Jordan (advisor)",
+    "source": "CRM (screened)",
+    "kind": "note",
+    "synthetic": true,
+    "fields": {},
+    "text": "Dana said the Halcyon position is most of our net worth and she is nervous about Q3 earnings. Wants to retire at 62. Next open trading window is expected after Q3 earnings."
+   },
+   {
+    "id": "crm:1",
+    "title": "CRM note \u00b7 2026-06-03 \u00b7 Jordan (advisor)",
+    "source": "CRM (screened)",
+    "kind": "note",
+    "synthetic": true,
+    "fields": {},
+    "text": "Daughter starts college fall 2027, estimated $85k a year. No 529 plan yet."
+   },
+   {
+    "id": "crm:2",
+    "title": "CRM note \u00b7 2026-03-18 \u00b7 Jordan (advisor)",
+    "source": "CRM (screened)",
+    "kind": "note",
+    "synthetic": true,
+    "fields": {},
+    "text": "Revocable trust drafted in 2009 by a prior attorney and never reviewed. Dana is unsure the successor trustee is still right."
+   },
+   {
+    "id": "crm:3",
+    "title": "CRM note \u00b7 2026-01-22 \u00b7 Jordan (advisor)",
+    "source": "CRM (screened)",
+    "kind": "note",
+    "synthetic": true,
+    "fields": {},
+    "text": "$620k has sat in the brokerage sweep since the January RSU sale. Dana has not decided what to do with it."
+   },
+   {
+    "id": "household",
+    "title": "Household \u00b7 Dana Whitfield",
+    "source": "Household record \u00b7 synthetic",
+    "kind": "data",
+    "synthetic": true,
+    "fields": {
+     "total_value": {
+      "display": "$14.2M",
+      "label": "Household value"
+     },
+     "risk_profile": {
+      "display": "Moderate",
+      "label": "Risk profile"
+     },
+     "horizon_years": {
+      "display": "4 years",
+      "label": "Horizon"
+     },
+     "annual_need": {
+      "display": "$240k",
+      "label": "Annual spending need"
+     },
+     "age": {
+      "display": "58",
+      "label": "Age"
+     },
+     "holdings.HCYN.weight": {
+      "display": "46.0%",
+      "label": "HCYN weight"
+     },
+     "holdings.HCYN.value": {
+      "display": "$6.53M",
+      "label": "HCYN value"
+     },
+     "holdings.VTI.weight": {
+      "display": "20.0%",
+      "label": "VTI weight"
+     },
+     "holdings.VTI.value": {
+      "display": "$2.84M",
+      "label": "VTI value"
+     },
+     "holdings.VXUS.weight": {
+      "display": "12.0%",
+      "label": "VXUS weight"
+     },
+     "holdings.VXUS.value": {
+      "display": "$1.7M",
+      "label": "VXUS value"
+     },
+     "holdings.BND.weight": {
+      "display": "17.6%",
+      "label": "BND weight"
+     },
+     "holdings.BND.value": {
+      "display": "$2.5M",
+      "label": "BND value"
+     },
+     "holdings.CASH.weight": {
+      "display": "4.4%",
+      "label": "CASH weight"
+     },
+     "holdings.CASH.value": {
+      "display": "$620k",
+      "label": "CASH value"
+     }
+    },
+    "text": "Dana Whitfield: SVP at Halcyon Interconnect (HCYN, fictional) \u00b7 46% in employer stock. Goals: Retire at 62, College 2027. Investment policy: Growth with income, shifting to preservation at retirement; risk tolerance Moderate; horizon 4 years to retirement at 62."
+   },
+   {
+    "id": "suitability:R-CONC-01",
+    "title": "R-CONC-01 \u00b7 Single issuer above policy",
+    "source": "Suitability rules (code)",
+    "kind": "rule",
+    "synthetic": false,
+    "fields": {
+     "weight": {
+      "display": "46%",
+      "label": "HCYN share of the household"
+     },
+     "limit": {
+      "display": "10%",
+      "label": "Single-issuer policy"
+     },
+     "value": {
+      "display": "$6.53M",
+      "label": "HCYN position"
+     },
+     "excess_value": {
+      "display": "$5.11M",
+      "label": "Above the 10% policy"
+     },
+     "unrealized_gain": {
+      "display": "$5.71M",
+      "label": "Unrealized gain"
+     },
+     "cost_basis": {
+      "display": "$11.00",
+      "label": "Cost basis per share"
+     },
+     "reg_bi": {
+      "display": "Care: concentration risk against the stated risk profile and horizon.",
+      "label": "Reg BI question"
+     }
+    },
+    "text": "HCYN is 46% of the household ($6.53M), above the 10% single-issuer policy and the 20% cap."
+   },
+   {
+    "id": "suitability:R-RISK-02",
+    "title": "R-RISK-02 \u00b7 Equity share above the risk band",
+    "source": "Suitability rules (code)",
+    "kind": "rule",
+    "synthetic": false,
+    "fields": {
+     "equity_share": {
+      "display": "78%",
+      "label": "Equity share"
+     },
+     "band_max": {
+      "display": "65%",
+      "label": "Moderate maximum"
+     },
+     "band_min": {
+      "display": "40%",
+      "label": "Moderate minimum"
+     },
+     "gap": {
+      "display": "13.0 points",
+      "label": "Distance outside the band"
+     },
+     "shift_value": {
+      "display": "$1.85M",
+      "label": "Value to move back inside the band"
+     },
+     "reg_bi": {
+      "display": "Care: the allocation carries more risk than the client's profile allows.",
+      "label": "Reg BI question"
+     }
+    },
+    "text": "Equities are 78% of the household against the Moderate band of 40\u201365%."
+   },
+   {
+    "id": "suitability:R-AFF-01",
+    "title": "R-AFF-01 \u00b7 Affiliate or insider restrictions",
+    "source": "Suitability rules (code)",
+    "kind": "rule",
+    "synthetic": false,
+    "fields": {
+     "issuer": {
+      "display": "HCYN",
+      "label": "Employer"
+     },
+     "reg_bi": {
+      "display": "Care: any sale must fit Rule 144, blackout windows, and 10b5-1 rules [confirm with SME].",
+      "label": "Reg BI question"
+     }
+    },
+    "text": "Affiliate of HCYN: Rule 144, blackout windows, and 10b5-1 cooling-off periods govern any sale [confirm with SME]."
+   },
+   {
+    "id": "suitability:R-LIQ-02",
+    "title": "R-LIQ-02 \u00b7 Idle cash above the reserve",
+    "source": "Suitability rules (code)",
+    "kind": "rule",
+    "synthetic": false,
+    "fields": {
+     "idle_cash": {
+      "display": "$620k",
+      "label": "Idle cash"
+     },
+     "reserve": {
+      "display": "$120k",
+      "label": "6-month reserve"
+     },
+     "above_reserve": {
+      "display": "$500k",
+      "label": "Above the reserve"
+     },
+     "months": {
+      "display": "31 months",
+      "label": "Months of spending"
+     },
+     "reg_bi": {
+      "display": "Planning: cash beyond the reserve has no stated purpose.",
+      "label": "Reg BI question"
+     }
+    },
+    "text": "$620k sits idle in cash; a 6-month reserve is $120k."
+   },
+   {
+    "id": "suitability:R-REV-01",
+    "title": "R-REV-01 \u00b7 Estate documents need review",
+    "source": "Suitability rules (code)",
+    "kind": "rule",
+    "synthetic": false,
+    "fields": {
+     "last_review": {
+      "display": "never",
+      "label": "Last review"
+     },
+     "years_since": {
+      "display": "17 years",
+      "label": "Years since drafted"
+     },
+     "trust_value": {
+      "display": "$4.95M",
+      "label": "Trust assets"
+     },
+     "reg_bi": {
+      "display": "Planning: estate documents are missing or out of date.",
+      "label": "Reg BI question"
+     }
+    },
+    "text": "Revocable living trust (2009), Pour-over will (2009): never reviewed."
+   },
+   {
+    "id": "suitability:R-EDU-01",
+    "title": "R-EDU-01 \u00b7 College funding gap",
+    "source": "Suitability rules (code)",
+    "kind": "rule",
+    "synthetic": false,
+    "fields": {
+     "annual_cost": {
+      "display": "$85k",
+      "label": "College cost per year"
+     },
+     "years": {
+      "display": "4",
+      "label": "Years of college"
+     },
+     "total_cost": {
+      "display": "$340k",
+      "label": "Estimated total"
+     },
+     "start": {
+      "display": "2027",
+      "label": "Starts"
+     },
+     "reg_bi": {
+      "display": "Planning: a near-term education goal has no dedicated funding.",
+      "label": "Reg BI question"
+     }
+    },
+    "text": "Daughter starts college in 2027 at about $85k a year; no 529 plan is in place."
+   },
+   {
+    "id": "action:NBA-10B51",
+    "title": "10b5-1 sale plan to reduce HCYN toward policy",
+    "source": "Next-best-action catalogue (code)",
+    "kind": "action",
+    "synthetic": false,
+    "fields": {
+     "dollars": {
+      "display": "$5.11M",
+      "label": "HCYN above the 10% policy"
+     },
+     "position": {
+      "display": "$6.53M",
+      "label": "HCYN position"
+     },
+     "weight": {
+      "display": "46%",
+      "label": "HCYN share of the household"
+     },
+     "limit": {
+      "display": "10%",
+      "label": "Single-issuer policy"
+     }
+    },
+    "text": "10b5-1 sale plan to reduce HCYN toward policy. Sell down $5.11M of the $6.53M position on a pre-set schedule, bringing HCYN from 46% toward the 10% policy. Fits a Moderate profile and the 4-year runway: it cuts single-issuer risk on a schedule set in an open window. Adopt only in an open window; a cooling-off period applies before the first sale [confirm with SME]. Rule 144 volume limits apply to an affiliate."
+   },
+   {
+    "id": "action:NBA-REBALANCE",
+    "title": "Rebalance back inside the Moderate band",
+    "source": "Next-best-action catalogue (code)",
+    "kind": "action",
+    "synthetic": false,
+    "fields": {
+     "dollars": {
+      "display": "$1.85M",
+      "label": "Value to move"
+     }
+    },
+    "text": "Rebalance back inside the Moderate band. Move about $1.85M so equities go from 78% to at most 65%. Brings the allocation back to the Moderate profile the client chose."
+   },
+   {
+    "id": "action:NBA-LADDER",
+    "title": "Treasury ladder for idle cash",
+    "source": "Next-best-action catalogue (code)",
+    "kind": "action",
+    "synthetic": false,
+    "fields": {
+     "dollars": {
+      "display": "$500k",
+      "label": "Cash above the reserve"
+     },
+     "idle_cash": {
+      "display": "$620k",
+      "label": "Idle cash"
+     },
+     "reserve": {
+      "display": "$120k",
+      "label": "6-month reserve"
+     }
+    },
+    "text": "Treasury ladder for idle cash. Put $500k above the $120k reserve into Treasuries that mature with the plan's dates (Retire at 62, College 2027). Low risk and liquid at each maturity; fits every profile."
+   },
+   {
+    "id": "action:NBA-529",
+    "title": "Open and fund a 529 plan",
+    "source": "Next-best-action catalogue (code)",
+    "kind": "action",
+    "synthetic": false,
+    "fields": {
+     "dollars": {
+      "display": "$95k",
+      "label": "Five-year gift election, one donor"
+     },
+     "total_cost": {
+      "display": "$340k",
+      "label": "Estimated total"
+     }
+    },
+    "text": "Open and fund a 529 plan. Front-load up to $95k with a five-year gift election toward about $340k of college costs. Tax-advantaged for a goal that starts soon; invest conservatively given the short runway. Gift-tax election limits apply [confirm with SME]."
+   },
+   {
+    "id": "action:NBA-ESTATE",
+    "title": "Estate document review with an attorney",
+    "source": "Next-best-action catalogue (code)",
+    "kind": "action",
+    "synthetic": false,
+    "fields": {
+     "dollars": {
+      "display": "$4.95M",
+      "label": "Trust assets"
+     }
+    },
+    "text": "Estate document review with an attorney. Revocable living trust (2009), Pour-over will (2009): never reviewed. Refer to an estate attorney. A referral, not an investment recommendation."
+   },
+   {
+    "id": "action:NBA-COLLAR",
+    "title": "Collar on part of the HCYN position",
+    "source": "Next-best-action catalogue (code)",
+    "kind": "action",
+    "synthetic": false,
+    "fields": {
+     "dollars": {
+      "display": "$5.11M",
+      "label": "Position that could be hedged"
+     }
+    },
+    "text": "Collar on part of the HCYN position. Protect part of the $6.53M position against a drop while the sale plan runs. Hedging needs General Counsel pre-clearance under the issuer's insider policy. The insider policy requires General Counsel pre-clearance for a collar. Listed options and short sales are prohibited."
+   },
+   {
+    "id": "action:NBA-DAF",
+    "title": "Gift appreciated HCYN shares to a donor-advised fund",
+    "source": "Next-best-action catalogue (code)",
+    "kind": "action",
+    "synthetic": false,
+    "fields": {
+     "dollars": {
+      "display": "$250k",
+      "label": "Illustrative gift"
+     },
+     "gain_avoided": {
+      "display": "$219k",
+      "label": "Gain not realized"
+     },
+     "unrealized_gain": {
+      "display": "$5.71M",
+      "label": "Unrealized gain"
+     }
+    },
+    "text": "Gift appreciated HCYN shares to a donor-advised fund. Give $250k of low-basis shares instead of cash, avoiding about $219k of realized gain. Fits only if the client has charitable goals; ask before proposing. Ask about charitable intent first; nothing is on file. Gifts by an affiliate still follow the insider policy."
+   },
+   {
+    "id": "action:NBA-EXCHANGE",
+    "title": "Exchange fund for low-basis HCYN shares",
+    "source": "Next-best-action catalogue (code)",
+    "kind": "action",
+    "synthetic": false,
+    "fields": {
+     "dollars": {
+      "display": "$5.11M",
+      "label": "Shares that could be contributed"
+     }
+    },
+    "text": "Exchange fund for low-basis HCYN shares. Swap concentrated shares into a diversified fund without an immediate taxable sale. Not suitable: a 7-year lock-up exceeds the 4-year horizon to retirement. Typical 7-year lock-up; accredited investors only."
+   },
+   {
+    "id": "research:update",
+    "title": "House-view update \u00b7 HCYN \u00b7 Constructive \u00b7 consistent with the house view",
+    "source": "Research desk \u00b7 published",
+    "kind": "research",
+    "synthetic": true,
+    "fields": {
+     "rating": {
+      "display": "Constructive",
+      "label": "House view rating"
+     },
+     "event.eps_actual": {
+      "display": "$1.79",
+      "label": null
+     },
+     "event.revenue": {
+      "display": "$1.51B",
+      "label": null
+     },
+     "event.guidance_low": {
+      "display": "$5.75B",
+      "label": null
+     },
+     "earnings.beat_rate": {
+      "display": "87.5%",
+      "label": null
+     },
+     "valuation.forward_pe": {
+      "display": "11.5x",
+      "label": null
+     }
+    },
+    "text": "EPS was $1.79 versus $1.62 consensus, a 10.5% beat. Revenue was $1.51B, up 42.6% year over year and 5.0% above consensus. FY2026 revenue guidance rose to $5.75B\u2013$5.85B from $5.45B\u2013$5.6B, with the midpoint up 5.0%. The earnings beat record remains strong at 87.5% across 8 observations, including a 4-quarter beat streak. Valuation remains supportive of the house view: forward P/E is 11.5x versus a 18.4x peer median, a 24.1% discount."
+   },
+   {
+    "id": "issuer:policy",
+    "title": "Halcyon Interconnect insider-trading policy",
+    "source": "annual-report-fy2025.html \u00b7 Item 1A, Risks Related to Our Common Stock",
+    "kind": "policy",
+    "synthetic": true,
+    "fields": {},
+    "text": "Officers trade only in open windows after pre-clearance or under a Rule 10b5-1 plan with the required cooling-off period. Short sales, listed options, and pledging are prohibited; hedging such as a collar needs General Counsel pre-clearance. Officers are affiliates, so Rule 144 limits apply."
+   }
+  ],
+  "withheld": [],
   "brief": {
-   "opening": "Review Dana Whitfield\u2019s concentrated employer exposure, four-year retirement horizon, 2027 college goal, and estate-document status in light of the latest HCYN research.",
-   "agenda": [
-    "Assess HCYN concentration against the 10% IPS limit and Dana\u2019s retirement timeline.",
-    "Review total equity exposure against the Moderate risk band and preservation objective.",
-    "Plan liquidity for college 2027 and $240,000 annual retirement spending.",
-    "Coordinate any HCYN transaction review with affiliate restrictions and the next permitted trading window.",
-    "Confirm whether the 2009 trust and pour-over will should be referred for estate-planning review."
-   ],
-   "discussion_points": [
-    "HCYN represents 46.0% of the $14.2M household, while the IPS single-issuer limit is 10%.",
-    "Equities are 78.0% of the household versus the Moderate 40\u201365% band, with four years to retirement.",
-    "The household has $620,000 in brokerage sweep cash, and the daughter starts college in fall 2027 with no 529 plan in place.",
-    "HCYN\u2019s Q3 EPS was $1.79 versus $1.62 expected, revenue was $1,512M with 42.6% year-over-year growth, and FY2026 guidance increased to $5.75\u20135.85B.",
-    "HCYN\u2019s 13.92x trailing P/E is below the 18.35x peer median, but recent six-month performance trailed the S&P 500 by 7.3%."
-   ],
-   "suitability_callouts": [
-    "R-CONC-01:HCYN: HCYN is 46.0% of the household, materially above the 10% single-issuer policy limit; advisor to determine an appropriate risk-management path.",
-    "R-RISK-02: Equities are 78.0% versus the Moderate 40\u201365% band, warranting discussion of the transition toward retirement preservation.",
-    "R-AFF-01:HCYN: Any HCYN sale must account for Rule 144, blackout windows, and 10b5-1 cooling-off periods, with current requirements confirmed with the SME.",
-    "R-REV-01: The 2009 revocable trust and pour-over will have never been reviewed, so the advisor should discuss referral for an estate-document review."
-   ],
-   "citations": [
+   "lines": [
     {
-     "field": "household.ips.single_issuer_limit_pct",
-     "excerpt": "Single-issuer limit",
-     "value": "10"
+     "section": "opening",
+     "text": "Dana, today we will connect your Moderate profile and 4 years to retirement with concentration, allocation, education, liquidity, and estate planning priorities.",
+     "evidence_id": "household",
+     "field_path": "risk_profile",
+     "value": null,
+     "unit": "text",
+     "also": [
+      "suitability:R-CONC-01",
+      "suitability:R-RISK-02",
+      "suitability:R-EDU-01",
+      "suitability:R-LIQ-02",
+      "suitability:R-REV-01"
+     ],
+     "status": "verified",
+     "reason": "Matches Household \u00b7 Dana Whitfield \u00b7 Risk profile = Moderate.",
+     "check": "numeric",
+     "display": "Moderate"
     },
     {
-     "field": "suitability.R-CONC-01:HCYN",
-     "excerpt": "HCYN is 46.0% of the household ($6.53M), above the 10% single-issuer policy.",
-     "value": "46.0%"
+     "section": "talking_point",
+     "text": "HCYN is 46% of the household ($6.53M), above the 10% single-issuer policy and the 20% cap.",
+     "evidence_id": "suitability:R-CONC-01",
+     "quote": "HCYN is 46% of the household ($6.53M), above the 10% single-issuer policy and the 20% cap",
+     "status": "verified",
+     "reason": "Quoted from R-CONC-01 \u00b7 Single issuer above policy.",
+     "check": "quote"
     },
     {
-     "field": "suitability.R-RISK-02",
-     "excerpt": "Equities are 78.0% of the household against the Moderate band of 40\u201365%.",
-     "value": "78.0%"
+     "section": "talking_point",
+     "text": "Equities are 78% of the household against the Moderate band of 40\u201365%.",
+     "evidence_id": "suitability:R-RISK-02",
+     "quote": "Equities are 78% of the household against the Moderate band of 40\u201365%",
+     "status": "verified",
+     "reason": "Quoted from R-RISK-02 \u00b7 Equity share above the risk band.",
+     "check": "quote"
     },
     {
-     "field": "research.context.event",
-     "excerpt": "Q3 EPS of $1.79 beat the $1.62 consensus by 10.5%; revenue grew 42.6% year over year; FY2026 guidance was raised.",
-     "value": "Q3 FY2026"
+     "section": "talking_point",
+     "text": "Daughter starts college in 2027 at about $85k a year; no 529 plan is in place.",
+     "evidence_id": "suitability:R-EDU-01",
+     "quote": "Daughter starts college in 2027 at about $85k a year; no 529 plan is in place",
+     "status": "verified",
+     "reason": "Quoted from R-EDU-01 \u00b7 College funding gap.",
+     "check": "quote"
     },
     {
-     "field": "research.peers",
-     "excerpt": "HCYN trades at 13.92x trailing earnings versus an 18.35x peer median.",
-     "value": "13.92x vs 18.35x"
+     "section": "talking_point",
+     "text": "$620k sits idle in cash; a 6-month reserve is $120k.",
+     "evidence_id": "suitability:R-LIQ-02",
+     "quote": "$620k sits idle in cash; a 6-month reserve is $120k",
+     "status": "verified",
+     "reason": "Quoted from R-LIQ-02 \u00b7 Idle cash above the reserve.",
+     "check": "quote"
+    },
+    {
+     "section": "rationale",
+     "text": "With 4 years to retirement and a Moderate profile, addressing the single-issuer concentration and equity allocation first fits the stated horizon and risk tolerance.",
+     "evidence_id": "household",
+     "field_path": "horizon_years",
+     "value": 4,
+     "unit": "years",
+     "also": [
+      "suitability:R-CONC-01",
+      "suitability:R-RISK-02"
+     ],
+     "status": "verified",
+     "reason": "Matches Household \u00b7 Dana Whitfield \u00b7 Horizon = 4 years.",
+     "check": "numeric",
+     "display": "4 years"
+    },
+    {
+     "section": "callout",
+     "text": "HCYN is 46% of the household ($6.53M), above the 10% single-issuer policy and the 20% cap.",
+     "evidence_id": "suitability:R-CONC-01",
+     "quote": "HCYN is 46% of the household ($6.53M), above the 10% single-issuer policy and the 20% cap",
+     "status": "verified",
+     "reason": "Quoted from R-CONC-01 \u00b7 Single issuer above policy.",
+     "check": "quote"
+    },
+    {
+     "section": "callout",
+     "text": "Equities are 78% of the household against the Moderate band of 40\u201365%.",
+     "evidence_id": "suitability:R-RISK-02",
+     "quote": "Equities are 78% of the household against the Moderate band of 40\u201365%",
+     "status": "verified",
+     "reason": "Quoted from R-RISK-02 \u00b7 Equity share above the risk band.",
+     "check": "quote"
+    },
+    {
+     "section": "callout",
+     "text": "Affiliate of HCYN: Rule 144, blackout windows, and 10b5-1 cooling-off periods govern any sale [confirm with SME].",
+     "evidence_id": "suitability:R-AFF-01",
+     "quote": "Affiliate of HCYN: Rule 144, blackout windows, and 10b5-1 cooling-off periods govern any sale [confirm with SME]",
+     "status": "verified",
+     "reason": "Quoted from R-AFF-01 \u00b7 Affiliate or insider restrictions.",
+     "check": "quote"
+    },
+    {
+     "section": "callout",
+     "text": "$620k sits idle in cash; a 6-month reserve is $120k.",
+     "evidence_id": "suitability:R-LIQ-02",
+     "quote": "$620k sits idle in cash; a 6-month reserve is $120k",
+     "status": "verified",
+     "reason": "Quoted from R-LIQ-02 \u00b7 Idle cash above the reserve.",
+     "check": "quote"
+    },
+    {
+     "section": "callout",
+     "text": "Revocable living trust (2009), Pour-over will (2009): never reviewed.",
+     "evidence_id": "suitability:R-REV-01",
+     "quote": "Revocable living trust (2009), Pour-over will (2009): never reviewed",
+     "status": "verified",
+     "reason": "Quoted from R-REV-01 \u00b7 Estate documents need review.",
+     "check": "quote"
+    },
+    {
+     "section": "callout",
+     "text": "Daughter starts college in 2027 at about $85k a year; no 529 plan is in place.",
+     "evidence_id": "suitability:R-EDU-01",
+     "quote": "Daughter starts college in 2027 at about $85k a year; no 529 plan is in place",
+     "status": "verified",
+     "reason": "Quoted from R-EDU-01 \u00b7 College funding gap.",
+     "check": "quote"
+    },
+    {
+     "section": "agenda",
+     "text": "Review the HCYN concentration and possible planning approaches.",
+     "evidence_id": "suitability:R-CONC-01",
+     "status": "agenda",
+     "reason": "Agenda line, not a factual claim."
+    },
+    {
+     "section": "agenda",
+     "text": "Discuss whether the current allocation fits the Moderate profile.",
+     "evidence_id": "suitability:R-RISK-02",
+     "status": "agenda",
+     "reason": "Agenda line, not a factual claim."
+    },
+    {
+     "section": "agenda",
+     "text": "Plan for college funding beginning in 2027.",
+     "evidence_id": "suitability:R-EDU-01",
+     "status": "agenda",
+     "reason": "Agenda line, not a factual claim."
+    },
+    {
+     "section": "agenda",
+     "text": "Discuss cash above the reserve and estate-document review.",
+     "evidence_id": "suitability:R-LIQ-02",
+     "also": [
+      "suitability:R-REV-01"
+     ],
+     "status": "agenda",
+     "reason": "Agenda line, not a factual claim."
+    },
+    {
+     "section": "question",
+     "text": "What constraints should we consider before discussing ways to reduce the HCYN concentration?",
+     "evidence_id": "suitability:R-AFF-01",
+     "status": "question",
+     "reason": "A question for the client, not a claim."
+    },
+    {
+     "section": "question",
+     "text": "How would you prioritize retirement funding versus the 2027 college goal?",
+     "evidence_id": "household",
+     "field_path": "horizon_years",
+     "value": 4,
+     "unit": "years",
+     "also": [
+      "suitability:R-EDU-01"
+     ],
+     "status": "question",
+     "reason": "A question for the client, not a claim."
+    },
+    {
+     "section": "question",
+     "text": "Would you like us to include an estate attorney in a review of the 2009 documents?",
+     "evidence_id": "suitability:R-REV-01",
+     "quote": "Revocable living trust (2009), Pour-over will (2009): never reviewed.",
+     "status": "question",
+     "reason": "A question for the client, not a claim."
     }
    ],
+   "action_ids": [
+    "NBA-10B51",
+    "NBA-REBALANCE",
+    "NBA-529",
+    "NBA-LADDER",
+    "NBA-ESTATE"
+   ],
+   "dropped_actions": [],
+   "counts": {
+    "claims": 12,
+    "verified": 12,
+    "unverified": 0,
+    "policy": 0
+   },
    "status": "ready",
-   "dropped_claims": 3,
-   "disclaimer": "Demo brief \u2014 not advice"
+   "mode": "deep_agent",
+   "mode_label": "Meeting-prep Deep Agent",
+   "reason": null,
+   "refused": false
   },
-  "entitled": {
-   "briefing": false,
-   "research": true
+  "compliance": {
+   "findings": [],
+   "verdicts": {
+    "no_guarantee": true,
+    "no_trade_or_wire_instruction": true,
+    "suitable_for_profile": true
+   }
   },
-  "grounding": {
-   "dropped_claims": 3
+  "approval": {
+   "status": "awaiting_advisor",
+   "request_id": "advisor"
   },
+  "duration_ms": 50514,
+  "disclaimer": "Synthetic client data for demonstration only. Not investment, tax, or legal advice.",
   "security": {
    "mode": "enforce",
    "status": "allowed",
-   "checks": 2,
+   "checks": 20,
    "blocked": 0,
    "errors": 0,
-   "event_ids": [],
+   "event_ids": [
+    ""
+   ],
    "fail_open": false,
    "forced": true
   },
   "usage": {
-   "llm_calls": 1,
-   "input_tokens": 5423,
-   "output_tokens": 755
-  },
-  "duration_ms": 10363,
-  "perimeter": "Yahoo + FRED allowlist only",
-  "disclaimer": "Demo brief \u2014 not advice",
-  "telemetry": {
-   "splunk": {
-    "status": "not_configured",
-    "trace_id": "a2b6f4df0cd1bc8061ba9bb32bc24439"
-   },
-   "galileo": "recorded"
+   "llm_calls": 8,
+   "input_tokens": 23501,
+   "output_tokens": 4974,
+   "tool_calls": 16
   },
   "served_by": {
    "provider": "openai",
@@ -732,6 +2957,19 @@
    "egress": "require_ai_defense",
    "ai_defense": "enforce (forced for hosted model)"
   },
-  "run_id": "wealth-advisory-20261009212323-656344"
+  "telemetry": {
+   "splunk": {
+    "status": "not_configured",
+    "trace_id": "829bf72c1bdc0248adfd514dfe124fd2"
+   },
+   "galileo": "recorded"
+  },
+  "evaluation": {
+   "status": "not_configured",
+   "label": "Evaluation not configured",
+   "verifier": "Structured claim verifier (code) checks every claim"
+  },
+  "run_id": "wealth-advisory-20261009230940-43689f",
+  "perimeter": "Yahoo + FRED allowlist only"
  }
 }

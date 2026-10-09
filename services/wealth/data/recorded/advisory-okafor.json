@@ -1,0 +1,2372 @@
+{
+ "v": 1,
+ "name": "advisory-okafor",
+ "title": "Ruth & Samuel Okafor \u00b7 Conservative mismatch",
+ "scenario": "advisory-okafor",
+ "recorded_at": "2026-10-09T23:15:43.644538+00:00",
+ "served_by": {
+  "provider": "openai",
+  "label": "OpenAI API",
+  "model": "gpt-5.6-luna",
+  "kind": "openai",
+  "private": false,
+  "external": true,
+  "fallback": true,
+  "reason": "Sparky vLLM unreachable (connection refused)",
+  "source": "saved",
+  "egress": "require_ai_defense",
+  "ai_defense": "enforce (forced for hosted model)"
+ },
+ "synthetic": true,
+ "note": "Recorded from a live run of the wealth service. Synthetic client, fictional or public market data.",
+ "run": {
+  "id": "wealth-advisory-20261009231450-c0498c",
+  "service": "wealth",
+  "label": "Meeting prep \u00b7 Ruth & Samuel Okafor",
+  "scenario": "advisory-okafor",
+  "status": "completed",
+  "started_at": "2026-10-09T23:14:50.495687+00:00",
+  "finished_at": "2026-10-09T23:15:43.644538+00:00",
+  "meta": {
+   "household_id": "okafor"
+  }
+ },
+ "events": [
+  {
+   "v": 1,
+   "id": "3eb2772f-e752-43ff-bacc-d42dc648620f",
+   "at": "2026-10-09T23:14:51.324191+00:00",
+   "ns": 828497167,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "run",
+   "status": "started",
+   "title": "Meeting prep \u00b7 Ruth & Samuel Okafor",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Household record and screened CRM notes, suitability rules, sized actions, the house-view update; then the brief.",
+   "data": {}
+  },
+  {
+   "v": 1,
+   "id": "65164907-9b8e-4b6b-b658-09ef5b6b7b37",
+   "at": "2026-10-09T23:14:51.325776+00:00",
+   "ns": 830081209,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_household(id=okafor)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_household",
+    "agent": "workflow",
+    "arguments": {
+     "id": "okafor"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "67085cba-73ed-40e2-b835-fc78273b0b38",
+   "at": "2026-10-09T23:14:51.332743+00:00",
+   "ns": 837050542,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Household \u00b7 synthetic \u00b7 $3.4M \u00b7 Conservative profile",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": "Retired \u00b7 Conservative income profile \u00b7 68% in equities",
+   "data": {
+    "tool": "get_household",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "9609b960-cd9f-4665-bd32-d09053ffed38",
+   "at": "2026-10-09T23:14:51.923895+00:00",
+   "ns": 1428207000,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "flagged",
+   "title": "PII masked in a CRM note \u00b7 local rule masked Account number",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "AI Defense did not flag these values; the local rule masked them.",
+   "data": {
+    "stage": "tool_result",
+    "note": 2,
+    "masked": [
+     {
+      "entity": "Account number",
+      "by": "local rule"
+     }
+    ],
+    "event_id": ""
+   }
+  },
+  {
+   "v": 1,
+   "id": "c89e1cc6-f11d-4740-ac3d-c9a6d21b28af",
+   "at": "2026-10-09T23:14:51.932068+00:00",
+   "ns": 1436386084,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "crm_notes(household=okafor)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "crm_notes",
+    "agent": "workflow",
+    "arguments": {
+     "household": "okafor"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "32745c5e-d2f8-480c-9f38-2794af8efc06",
+   "at": "2026-10-09T23:14:51.944311+00:00",
+   "ns": 1448622542,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "CRM notes \u00b7 3 usable, 1 masked, 0 withheld",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "crm_notes",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "9ad9b824-d900-4de5-8621-508736fe4287",
+   "at": "2026-10-09T23:14:51.959634+00:00",
+   "ns": 1463939417,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "market_snapshot(tickers=['VTI', 'SCHD', 'VXUS', 'BND'])",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "market_snapshot",
+    "agent": "workflow",
+    "arguments": {
+     "tickers": [
+      "VTI",
+      "SCHD",
+      "VXUS",
+      "BND"
+     ]
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "fbf3824c-041c-4eda-bbda-e095bcd54c60",
+   "at": "2026-10-09T23:14:51.978467+00:00",
+   "ns": 1482774584,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Market data \u00b7 5 of 5 holdings",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "market_snapshot",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "ceba73f1-afb8-46d8-a3fa-1e205c301836",
+   "at": "2026-10-09T23:14:51.981659+00:00",
+   "ns": 1485962917,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "suitability_rules(profile=Conservative)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "suitability_rules",
+    "agent": "workflow",
+    "arguments": {
+     "profile": "Conservative"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "77a8be87-018d-45f9-b209-7f855faa88df",
+   "at": "2026-10-09T23:14:51.984009+00:00",
+   "ns": 1488311750,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "Suitability rules \u00b7 1 suitability, 3 planning",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "suitability_rules",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "9b77f764-17a7-4a5c-8c60-97b91c24ea36",
+   "at": "2026-10-09T23:14:51.986526+00:00",
+   "ns": 1490829834,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "R-RISK-02 \u00b7 Equity share above the risk band \u00b7 high",
+   "lane": "tools",
+   "source": "suitability_rules",
+   "target": null,
+   "body": "Equities are 68% of the household against the Conservative maximum of 40%.",
+   "data": {
+    "tool": "suitability_rules",
+    "rule": "R-RISK-02",
+    "severity": "high",
+    "category": "suitability"
+   }
+  },
+  {
+   "v": 1,
+   "id": "7bcc3a43-4d7b-4a8f-97f3-80934a5f88de",
+   "at": "2026-10-09T23:14:51.989036+00:00",
+   "ns": 1493339667,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "info",
+   "title": "R-LIQ-03 \u00b7 CD ladder maturing \u00b7 medium",
+   "lane": "tools",
+   "source": "suitability_rules",
+   "target": null,
+   "body": "A $400k CD ladder matures 2026-11-07.",
+   "data": {
+    "tool": "suitability_rules",
+    "rule": "R-LIQ-03",
+    "severity": "medium",
+    "category": "planning"
+   }
+  },
+  {
+   "v": 1,
+   "id": "c4f726ab-eabb-40e7-be7c-447a6c588564",
+   "at": "2026-10-09T23:14:51.991665+00:00",
+   "ns": 1495970625,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "info",
+   "title": "R-BEN-01 \u00b7 Missing beneficiary \u00b7 medium",
+   "lane": "tools",
+   "source": "suitability_rules",
+   "target": null,
+   "body": "No beneficiary on file for Samuel IRA ($483k).",
+   "data": {
+    "tool": "suitability_rules",
+    "rule": "R-BEN-01",
+    "severity": "medium",
+    "category": "planning"
+   }
+  },
+  {
+   "v": 1,
+   "id": "78aba8a5-0c80-4b52-a1ff-b5b50a8a0788",
+   "at": "2026-10-09T23:14:51.996505+00:00",
+   "ns": 1500813042,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "info",
+   "title": "R-RMD-01 \u00b7 Required distribution due \u00b7 medium",
+   "lane": "tools",
+   "source": "suitability_rules",
+   "target": null,
+   "body": "Samuel's inherited IRA has a required distribution due this year [confirm RMD rules with SME].",
+   "data": {
+    "tool": "suitability_rules",
+    "rule": "R-RMD-01",
+    "severity": "medium",
+    "category": "planning"
+   }
+  },
+  {
+   "v": 1,
+   "id": "dd1a7a4c-0add-455f-ad8d-7bdbea930db1",
+   "at": "2026-10-09T23:14:51.999560+00:00",
+   "ns": 1503865084,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "next_best_actions(household=okafor)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "next_best_actions",
+    "agent": "workflow",
+    "arguments": {
+     "household": "okafor"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "f4132f93-0d89-4ccb-aaa9-5daf750d3de8",
+   "at": "2026-10-09T23:14:52.002222+00:00",
+   "ns": 1506526625,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Next-best actions \u00b7 4 suitable \u00b7 $1.63M investable in play",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "next_best_actions",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "09b8c2b6-d337-4bb4-9843-7d366dd69e81",
+   "at": "2026-10-09T23:14:52.006436+00:00",
+   "ns": 1510740834,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "model.failover",
+   "status": "flagged",
+   "title": "Model fallback \u00b7 next in chain is OpenAI API",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": "Sparky vLLM unreachable (connection refused)",
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "8576bc86-fdfb-4d8e-ba99-9882f0260bcc",
+   "at": "2026-10-09T23:14:52.012111+00:00",
+   "ns": 1516422500,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "ok",
+   "title": "AI Defense forced to enforce \u00b7 client data bound for OpenAI API (hosted)",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Every prompt and response is inspected in enforce mode before data leaves; an unsafe verdict stops the call.",
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "policy": "require_ai_defense"
+   }
+  },
+  {
+   "v": 1,
+   "id": "c0100aa1-16c0-422b-b8d3-d909aa6e7e59",
+   "at": "2026-10-09T23:14:52.521699+00:00",
+   "ns": 2026003625,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "a170e507-75de-4a07-9a41-416bd91c2146",
+   "at": "2026-10-09T23:14:55.133460+00:00",
+   "ns": 4637760000,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 meeting-prep supervisor",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 2602,
+    "input_tokens": 1441,
+    "output_tokens": 90
+   }
+  },
+  {
+   "v": 1,
+   "id": "0f165b91-d3df-44dc-b5f2-cb8379640cd0",
+   "at": "2026-10-09T23:14:55.527459+00:00",
+   "ns": 5031762542,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "6890e22e-b01e-4f8b-93e2-1c5f5b55ae53",
+   "at": "2026-10-09T23:14:55.533742+00:00",
+   "ns": 5038040625,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "agent.message",
+   "status": "info",
+   "title": "meeting-prep supervisor \u2192 planner subagent",
+   "lane": "agent",
+   "source": "meeting-prep supervisor",
+   "target": "planner",
+   "body": "For Ruth & Samuel Okafor, rank the suitable next-best action IDs only, most important first, up to 5. Use the household profile, suitability findings, house-view update, and CRM notes available to you. Return action IDs with concise reasons and any cited evidence/values needed for drafting. Do not recommend securities trades or execution.",
+   "data": {
+    "subagent": "planner"
+   }
+  },
+  {
+   "v": 1,
+   "id": "df94acbe-4ff0-4045-bd91-2c45d762ad45",
+   "at": "2026-10-09T23:14:56.042328+00:00",
+   "ns": 5546649000,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "28c25f94-b4b8-4681-aa2e-dc4f6a104b7a",
+   "at": "2026-10-09T23:14:57.275309+00:00",
+   "ns": 6779607375,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 planner subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 1232,
+    "input_tokens": 450,
+    "output_tokens": 61
+   }
+  },
+  {
+   "v": 1,
+   "id": "4d563143-c974-4fb5-b872-3ef4835afbe5",
+   "at": "2026-10-09T23:14:57.717198+00:00",
+   "ns": 7221493625,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "574814d1-ff5f-41c9-ac1b-ac78c7b10ef1",
+   "at": "2026-10-09T23:14:57.726376+00:00",
+   "ns": 7230667792,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_next_best_actions()",
+   "lane": "tools",
+   "source": "planner",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_next_best_actions",
+    "agent": "planner",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "1cd3267a-7b7a-442f-8727-928eb234a8db",
+   "at": "2026-10-09T23:14:57.737329+00:00",
+   "ns": 7241625334,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Next-best actions \u00b7 4 suitable",
+   "lane": "tools",
+   "source": "planner",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_next_best_actions",
+    "agent": "planner"
+   }
+  },
+  {
+   "v": 1,
+   "id": "e70ec64b-a935-48e2-8acf-5a33db0d9400",
+   "at": "2026-10-09T23:14:57.745261+00:00",
+   "ns": 7249553834,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_suitability_findings()",
+   "lane": "tools",
+   "source": "planner",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_suitability_findings",
+    "agent": "planner",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "202c7159-2dd6-4c28-a7c2-80e3aec79984",
+   "at": "2026-10-09T23:14:57.749571+00:00",
+   "ns": 7253866459,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "Suitability rules \u00b7 1 suitability, 3 planning findings",
+   "lane": "tools",
+   "source": "planner",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_suitability_findings",
+    "agent": "planner"
+   }
+  },
+  {
+   "v": 1,
+   "id": "85ba08fc-9970-4d9d-9237-7e79f8333561",
+   "at": "2026-10-09T23:14:57.759078+00:00",
+   "ns": 7263370417,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_household_profile()",
+   "lane": "tools",
+   "source": "planner",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_household_profile",
+    "agent": "planner",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "1821d9c5-52ff-4555-a6e2-ceafcae7fb66",
+   "at": "2026-10-09T23:14:57.765549+00:00",
+   "ns": 7269843334,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Household \u00b7 Ruth & Samuel Okafor \u00b7 Conservative profile",
+   "lane": "tools",
+   "source": "planner",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_household_profile",
+    "agent": "planner"
+   }
+  },
+  {
+   "v": 1,
+   "id": "aa85800a-1d67-464d-b810-eb7ddb2846e8",
+   "at": "2026-10-09T23:14:58.255063+00:00",
+   "ns": 7759356917,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "4addae1f-17e6-4ac6-8483-ca1505685653",
+   "at": "2026-10-09T23:15:00.973001+00:00",
+   "ns": 10477294292,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 planner subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 2706,
+    "input_tokens": 2199,
+    "output_tokens": 241
+   }
+  },
+  {
+   "v": 1,
+   "id": "3bc59556-f3c4-455e-ad8d-146190c6a3b7",
+   "at": "2026-10-09T23:15:01.419757+00:00",
+   "ns": 10924042792,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "b9097eb9-9372-427c-844d-4cfe69b56263",
+   "at": "2026-10-09T23:15:01.900183+00:00",
+   "ns": 11404465292,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "1217c716-9efd-423a-8d16-ae761813435a",
+   "at": "2026-10-09T23:15:03.097400+00:00",
+   "ns": 12601679917,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 meeting-prep supervisor",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 1197,
+    "input_tokens": 1785,
+    "output_tokens": 74
+   }
+  },
+  {
+   "v": 1,
+   "id": "8a5182d5-1edb-4122-849c-32a1630704dc",
+   "at": "2026-10-09T23:15:03.545227+00:00",
+   "ns": 13049517875,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "361630a5-3619-4bcc-9ed7-8e001e4051e3",
+   "at": "2026-10-09T23:15:03.557984+00:00",
+   "ns": 13062260125,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_household_profile()",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_household_profile",
+    "agent": "meeting-prep supervisor",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "4cc02243-13d9-44c7-b6e6-63cc418b2ea9",
+   "at": "2026-10-09T23:15:03.572778+00:00",
+   "ns": 13077057125,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Household \u00b7 Ruth & Samuel Okafor \u00b7 Conservative profile",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_household_profile",
+    "agent": "meeting-prep supervisor"
+   }
+  },
+  {
+   "v": 1,
+   "id": "a77ecd4f-6b8e-439a-a476-9cca27216fd0",
+   "at": "2026-10-09T23:15:03.581582+00:00",
+   "ns": 13085863292,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_suitability_findings()",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_suitability_findings",
+    "agent": "meeting-prep supervisor",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "0ea2193e-c77d-444b-bcc8-41a7fbd445e6",
+   "at": "2026-10-09T23:15:03.588706+00:00",
+   "ns": 13092991542,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "Suitability rules \u00b7 1 suitability, 3 planning findings",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_suitability_findings",
+    "agent": "meeting-prep supervisor"
+   }
+  },
+  {
+   "v": 1,
+   "id": "53a87486-1611-4ed8-a31c-ac68acfb4f32",
+   "at": "2026-10-09T23:15:03.593686+00:00",
+   "ns": 13097966875,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_house_view_update()",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_house_view_update",
+    "agent": "meeting-prep supervisor",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "d6741d25-531d-44df-880f-cd426e1c789a",
+   "at": "2026-10-09T23:15:03.599003+00:00",
+   "ns": 13103288542,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "info",
+   "title": "House-view update \u00b7 none attached",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_house_view_update",
+    "agent": "meeting-prep supervisor"
+   }
+  },
+  {
+   "v": 1,
+   "id": "fe169d52-d45e-4d13-af6d-5768e08030ea",
+   "at": "2026-10-09T23:15:03.603878+00:00",
+   "ns": 13108160792,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_crm_notes()",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_crm_notes",
+    "agent": "meeting-prep supervisor",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "d11a30ba-523c-4ff2-aa82-5d073b5d61c7",
+   "at": "2026-10-09T23:15:03.607610+00:00",
+   "ns": 13111893667,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "CRM notes \u00b7 3 usable, 1 masked",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_crm_notes",
+    "agent": "meeting-prep supervisor"
+   }
+  },
+  {
+   "v": 1,
+   "id": "e9a51bc5-22d8-4e55-9f6a-f4732146b9f6",
+   "at": "2026-10-09T23:15:04.150087+00:00",
+   "ns": 13654372292,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "0591d3e4-2702-4646-b926-1b37f8b279a8",
+   "at": "2026-10-09T23:15:13.276317+00:00",
+   "ns": 22780582417,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 meeting-prep supervisor",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 9114,
+    "input_tokens": 3263,
+    "output_tokens": 1077
+   }
+  },
+  {
+   "v": 1,
+   "id": "a2cf2ffd-221d-4794-ba29-824db0ad14b9",
+   "at": "2026-10-09T23:15:14.038636+00:00",
+   "ns": 23542912250,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "55ca4746-d797-4f5b-9f77-028777db7f27",
+   "at": "2026-10-09T23:15:14.051207+00:00",
+   "ns": 23555467125,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "agent.message",
+   "status": "info",
+   "title": "meeting-prep supervisor \u2192 compliance_reviewer subagent",
+   "lane": "agent",
+   "source": "meeting-prep supervisor",
+   "target": "compliance_reviewer",
+   "body": "Review this proposed meeting brief and ranked action IDs for factual evidence compliance, suitability, best-interest framing, and prohibited execution/trade language. Flag any line that must be fixed or dropped. Return a corrected final lines JSON array and corrected ranked action IDs JSON array. All factual lines must cite evidence_id and field_path/value/unit for numbers, or quote at least 8 consecutive words verbatim for qualitative claims. Agenda/questions need evidence_id. Proposed ranked actions: [\"NBA-REBALANCE\",\"NBA-RMD\",\"NBA-CD\",\"NBA-BENEFICIARY\"]. Draft lines: [{\"section\":\"opening\",\"",
+   "data": {
+    "subagent": "compliance_reviewer"
+   }
+  },
+  {
+   "v": 1,
+   "id": "f61f6c66-01ec-4175-a27d-722df03fe656",
+   "at": "2026-10-09T23:15:14.497559+00:00",
+   "ns": 24001869625,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "c90e0386-e4c0-4049-8f38-0dcc991cb97c",
+   "at": "2026-10-09T23:15:21.724964+00:00",
+   "ns": 31229210250,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 compliance reviewer subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 7213,
+    "input_tokens": 1356,
+    "output_tokens": 980
+   }
+  },
+  {
+   "v": 1,
+   "id": "7e144259-afc0-4940-8e1c-ff7a3126cab9",
+   "at": "2026-10-09T23:15:22.183452+00:00",
+   "ns": 31687695125,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "37c91d52-8eed-45cd-8d7f-e7f28b87eaa7",
+   "at": "2026-10-09T23:15:22.193774+00:00",
+   "ns": 31698015375,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "check_brief(lines=draft)",
+   "lane": "tools",
+   "source": "compliance_reviewer",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "check_brief",
+    "agent": "compliance_reviewer",
+    "arguments": {
+     "lines": "draft"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "dc291249-3db5-4af5-b6dc-b1a6d4aae1f1",
+   "at": "2026-10-09T23:15:22.202033+00:00",
+   "ns": 31706272459,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "Brief check \u00b7 8 of 11 pass",
+   "lane": "tools",
+   "source": "compliance_reviewer",
+   "target": null,
+   "body": "\u2717 Today we will focus on reliable retirement income and legacy planning within your Conserva \u00b7 The sentence adds what the cited evidence never says: 'focu, plann, today, within'.\n\u2717 With a Conservative profile and income-and-capital-preservation policy, the equity allocat \u00b7 The quote does not support 'allocation, discussion, equity, income-and-capital-preservation'.\n\u2717 The distribution and beneficiary items are time-sensitive planning matters supporting orde \u00b7 The quote does not appear in R-RMD-01 \u00b7 Required distribution due.",
+   "data": {
+    "tool": "check_brief",
+    "agent": "compliance_reviewer"
+   }
+  },
+  {
+   "v": 1,
+   "id": "89bea2a6-0ee6-4a2f-be8b-fcf244eb5dea",
+   "at": "2026-10-09T23:15:22.700682+00:00",
+   "ns": 32204986667,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "acca4502-885f-4878-b3e6-ea4f053fed4e",
+   "at": "2026-10-09T23:15:32.994488+00:00",
+   "ns": 42498703875,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 compliance reviewer subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 10278,
+    "input_tokens": 2906,
+    "output_tokens": 1375
+   }
+  },
+  {
+   "v": 1,
+   "id": "aae40024-7a77-485d-8ceb-79a836342619",
+   "at": "2026-10-09T23:15:33.452047+00:00",
+   "ns": 42956261459,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "b6989de0-94aa-4725-b5a9-9d6b21dbb078",
+   "at": "2026-10-09T23:15:34.014961+00:00",
+   "ns": 43519182292,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "ec66a7dd-ea59-4304-b606-52dd515e2005",
+   "at": "2026-10-09T23:15:42.280366+00:00",
+   "ns": 51784558375,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 meeting-prep supervisor",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 8264,
+    "input_tokens": 5728,
+    "output_tokens": 960
+   }
+  },
+  {
+   "v": 1,
+   "id": "78a4010d-bd7a-4770-819c-fc62cffcbd35",
+   "at": "2026-10-09T23:15:42.910143+00:00",
+   "ns": 52414347459,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": true,
+    "event_id": "",
+    "classifiers": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "12e904d4-8d07-4b5e-b67f-81234166b88d",
+   "at": "2026-10-09T23:15:42.918906+00:00",
+   "ns": 52423096375,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "submit_brief(lines=draft)",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "submit_brief",
+    "agent": "meeting-prep supervisor",
+    "arguments": {
+     "lines": "draft"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "1bc8d28e-8da1-4b4c-85e3-4765acc8684e",
+   "at": "2026-10-09T23:15:42.932445+00:00",
+   "ns": 52436642125,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Brief submitted \u00b7 18 lines, 4 actions",
+   "lane": "tools",
+   "source": "meeting-prep supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "submit_brief",
+    "agent": "meeting-prep supervisor"
+   }
+  },
+  {
+   "v": 1,
+   "id": "0288861f-d7ee-4dba-b46a-14cb855d2307",
+   "at": "2026-10-09T23:15:42.947667+00:00",
+   "ns": 52451850875,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "claim.verdict",
+   "status": "flagged",
+   "title": "Struck \u00b7 A required distribution has a deadline; confirm the RMD rules with an SME.",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "The quote does not appear in R-RMD-01 \u00b7 Required distribution due.",
+   "data": {
+    "section": "rationale",
+    "evidence_id": "suitability:R-RMD-01"
+   }
+  },
+  {
+   "v": 1,
+   "id": "ef488c4c-86dd-4e28-a9b7-367c8707c071",
+   "at": "2026-10-09T23:15:42.958045+00:00",
+   "ns": 52462238334,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "claim.verdict",
+   "status": "flagged",
+   "title": "Brief verifier \u00b7 10 of 11 statements verified",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Statements, callouts, and the rationale are checked against the cited record; agenda lines and questions must not invent numbers.",
+   "data": {}
+  },
+  {
+   "v": 1,
+   "id": "f955295e-9da4-4121-a796-60241afc9821",
+   "at": "2026-10-09T23:15:42.966514+00:00",
+   "ns": 52470702792,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "hitl.request",
+   "status": "info",
+   "title": "Advisor review, then supervisor approval",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": "Nothing is sent or executed until a supervisor approves; approval runs the advisory.recommendation policies.",
+   "data": {
+    "request_id": "advisor",
+    "policy": "advisory.recommendation"
+   }
+  },
+  {
+   "v": 1,
+   "id": "e4779365-94c6-4ca2-86fa-26f82447fefc",
+   "at": "2026-10-09T23:15:42.976224+00:00",
+   "ns": 52480428459,
+   "run_id": "wealth-advisory-20261009231450-c0498c",
+   "component": "wealth",
+   "kind": "result",
+   "status": "ok",
+   "title": "Meeting brief ready \u00b7 4 actions \u00b7 10 verified statements",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {}
+  }
+ ],
+ "result": {
+  "household": {
+   "id": "okafor",
+   "name": "Ruth & Samuel Okafor",
+   "synthetic": true,
+   "risk_profile": "Conservative",
+   "total_value": 3400000.0,
+   "headline": "Retired \u00b7 Conservative income profile \u00b7 68% in equities",
+   "age": 71,
+   "horizon_years": 12,
+   "goals": [
+    "Reliable retirement income",
+    "Leave a legacy to the grandchildren"
+   ],
+   "affiliate": false,
+   "employer_ticker": null
+  },
+  "holdings": [
+   {
+    "ticker": "VTI",
+    "name": "Vanguard Total Stock Market ETF",
+    "weight": 0.4,
+    "asset_class": "equity",
+    "value": 1360000,
+    "account": "Joint brokerage and IRAs",
+    "return_1y": 0.1642236445471421,
+    "return_1y_spy": 0.16915475370385513,
+    "return_1y_vs_spy": -0.0049311091567130205,
+    "sector": null,
+    "source": {
+     "kind": "cache",
+     "label": "Yahoo Finance \u00b7 cached, as of 2026-10-09",
+     "asOf": "2026-10-09",
+     "fictional": false
+    },
+    "status": "ready"
+   },
+   {
+    "ticker": "SCHD",
+    "name": "Schwab US Dividend Equity ETF",
+    "weight": 0.18,
+    "asset_class": "equity",
+    "value": 612000,
+    "account": "Joint brokerage",
+    "return_1y": 0.2582396561806801,
+    "return_1y_spy": 0.16915475370385513,
+    "return_1y_vs_spy": 0.08908490247682499,
+    "sector": null,
+    "source": {
+     "kind": "cache",
+     "label": "Yahoo Finance \u00b7 cached, as of 2026-10-09",
+     "asOf": "2026-10-09",
+     "fictional": false
+    },
+    "status": "ready"
+   },
+   {
+    "ticker": "VXUS",
+    "name": "Vanguard Total International Stock ETF",
+    "weight": 0.1,
+    "asset_class": "equity",
+    "value": 340000,
+    "account": "Ruth IRA",
+    "return_1y": 0.16749902730528654,
+    "return_1y_spy": 0.16915475370385513,
+    "return_1y_vs_spy": -0.001655726398568591,
+    "sector": null,
+    "source": {
+     "kind": "cache",
+     "label": "Yahoo Finance \u00b7 cached, as of 2026-10-09",
+     "asOf": "2026-10-09",
+     "fictional": false
+    },
+    "status": "ready"
+   },
+   {
+    "ticker": "BND",
+    "name": "Vanguard Total Bond Market ETF",
+    "weight": 0.142,
+    "asset_class": "fixed_income",
+    "value": 482800,
+    "account": "Samuel IRA",
+    "return_1y": -0.015969962089101286,
+    "return_1y_spy": 0.16915475370385513,
+    "return_1y_vs_spy": -0.18512471579295642,
+    "sector": null,
+    "source": {
+     "kind": "cache",
+     "label": "Yahoo Finance \u00b7 cached, as of 2026-10-09",
+     "asOf": "2026-10-09",
+     "fictional": false
+    },
+    "status": "ready"
+   },
+   {
+    "ticker": "CASH",
+    "name": "Cash and CD ladder",
+    "weight": 0.17800000000000002,
+    "asset_class": "cash",
+    "value": 605200,
+    "account": "Joint brokerage",
+    "source": {
+     "kind": "household",
+     "label": "Household record \u00b7 synthetic"
+    },
+    "status": "ready",
+    "note": "Includes a $400k CD ladder maturing 2026-11-07"
+   }
+  ],
+  "notes": [
+   {
+    "index": 0,
+    "date": "2026-09-02",
+    "author": "Jordan (advisor)",
+    "text": "Ruth asked why the account swung so much in the spring. They want steady income and do not want to watch the market.",
+    "masked": [],
+    "status": "kept",
+    "ai_defense": "allowed",
+    "ai_defense_rules": [],
+    "local": [],
+    "event_id": ""
+   },
+   {
+    "index": 1,
+    "date": "2026-08-14",
+    "author": "Jordan (advisor)",
+    "text": "$400k CD ladder matures in early November. They have not said whether to roll it.",
+    "masked": [],
+    "status": "kept",
+    "ai_defense": "allowed",
+    "ai_defense_rules": [],
+    "local": [],
+    "event_id": ""
+   },
+   {
+    "index": 2,
+    "date": "2026-05-20",
+    "author": "Operations",
+    "text": "Beneficiary designation missing on Samuel's IRA ([account number masked]). Form sent, not returned.",
+    "masked": [
+     {
+      "entity": "Account number",
+      "by": "local rule"
+     }
+    ],
+    "status": "masked",
+    "ai_defense": "allowed",
+    "ai_defense_rules": [],
+    "local": [],
+    "event_id": ""
+   }
+  ],
+  "suitability": [
+   {
+    "id": "R-RISK-02",
+    "rule": "R-RISK-02",
+    "title": "Equity share above the risk band",
+    "severity": "high",
+    "category": "suitability",
+    "reg_bi": "Care: the allocation carries more risk than the client's profile allows.",
+    "detail": "Equities are 68% of the household against the Conservative maximum of 40%.",
+    "fields": {
+     "equity_share": {
+      "value": 0.68,
+      "unit": "fraction",
+      "display": "68%",
+      "label": "Equity share"
+     },
+     "band_max": {
+      "value": 0.4,
+      "unit": "fraction",
+      "display": "40%",
+      "label": "Conservative maximum"
+     },
+     "band_min": {
+      "value": 0.0,
+      "unit": "fraction",
+      "display": "0%",
+      "label": "Conservative minimum"
+     },
+     "gap": {
+      "value": 0.28,
+      "unit": "fraction",
+      "display": "28.0 points",
+      "label": "Distance outside the band"
+     },
+     "shift_value": {
+      "value": 952000.0,
+      "unit": "usd",
+      "display": "$952k",
+      "label": "Value to move back inside the band"
+     }
+    },
+    "evidence": {
+     "equity_pct": 68.0,
+     "band": [
+      0,
+      40
+     ],
+     "profile": "Conservative"
+    }
+   },
+   {
+    "id": "R-LIQ-03",
+    "rule": "R-LIQ-03",
+    "title": "CD ladder maturing",
+    "severity": "medium",
+    "category": "planning",
+    "reg_bi": "Planning: a maturity needs a decision before it rolls or sits in cash.",
+    "detail": "A $400k CD ladder matures 2026-11-07.",
+    "fields": {
+     "cd_value": {
+      "value": 400000.0,
+      "unit": "usd",
+      "display": "$400k",
+      "label": "CD ladder"
+     },
+     "matures": {
+      "value": "2026-11-07",
+      "unit": "date",
+      "display": "2026-11-07",
+      "label": "Maturity"
+     }
+    },
+    "evidence": {}
+   },
+   {
+    "id": "R-BEN-01",
+    "rule": "R-BEN-01",
+    "title": "Missing beneficiary",
+    "severity": "medium",
+    "category": "planning",
+    "reg_bi": "Planning: an account would pass without a designation.",
+    "detail": "No beneficiary on file for Samuel IRA ($483k).",
+    "fields": {
+     "accounts": {
+      "value": 1,
+      "unit": "count",
+      "display": "1",
+      "label": "Accounts without a beneficiary"
+     },
+     "value": {
+      "value": 482800.0,
+      "unit": "usd",
+      "display": "$483k",
+      "label": "Value without a beneficiary"
+     }
+    },
+    "evidence": {
+     "accounts": [
+      "Samuel IRA"
+     ]
+    }
+   },
+   {
+    "id": "R-RMD-01",
+    "rule": "R-RMD-01",
+    "title": "Required distribution due",
+    "severity": "medium",
+    "category": "planning",
+    "reg_bi": "Planning: a required distribution has a deadline [confirm rules with SME].",
+    "detail": "Samuel's inherited IRA has a required distribution due this year [confirm RMD rules with SME].",
+    "fields": {
+     "account_value": {
+      "value": 280000.0,
+      "unit": "usd",
+      "display": "$280k",
+      "label": "Samuel inherited IRA"
+     }
+    },
+    "evidence": {}
+   }
+  ],
+  "actions": [
+   {
+    "id": "NBA-REBALANCE",
+    "type": "rebalance",
+    "title": "Rebalance back inside the Conservative band",
+    "summary": "Move about $952k so equities go from 68% to at most 40%.",
+    "rules": [
+     "R-RISK-02"
+    ],
+    "dollars": 952000.0,
+    "dollars_display": "$952k",
+    "dollars_label": "Value to move",
+    "suitable": true,
+    "fit": "Brings the allocation back to the Conservative profile the client chose.",
+    "cautions": [],
+    "fields": {
+     "dollars": {
+      "value": 952000.0,
+      "unit": "usd",
+      "display": "$952k",
+      "label": "Value to move"
+     }
+    }
+   },
+   {
+    "id": "NBA-RMD",
+    "type": "rmd",
+    "title": "Schedule the required distribution",
+    "summary": "Samuel's inherited IRA has a required distribution due this year [confirm RMD rules with SME].",
+    "rules": [
+     "R-RMD-01"
+    ],
+    "dollars": 280000.0,
+    "dollars_display": "$280k",
+    "dollars_label": "Account subject to the distribution",
+    "suitable": true,
+    "fit": "Deadline-driven; fits every profile.",
+    "cautions": [],
+    "fields": {
+     "dollars": {
+      "value": 280000.0,
+      "unit": "usd",
+      "display": "$280k",
+      "label": "Account subject to the distribution"
+     }
+    }
+   },
+   {
+    "id": "NBA-CD",
+    "type": "cd-maturity",
+    "title": "Decide on the maturing CD ladder",
+    "summary": "Choose whether to roll the $400k ladder maturing 2026-11-07 or use it for income.",
+    "rules": [
+     "R-LIQ-03"
+    ],
+    "dollars": 400000.0,
+    "dollars_display": "$400k",
+    "dollars_label": "CD ladder maturing",
+    "suitable": true,
+    "fit": "Income and preservation fit a Conservative profile.",
+    "cautions": [],
+    "fields": {
+     "dollars": {
+      "value": 400000.0,
+      "unit": "usd",
+      "display": "$400k",
+      "label": "CD ladder maturing"
+     }
+    }
+   },
+   {
+    "id": "NBA-BENEFICIARY",
+    "type": "beneficiary",
+    "title": "Complete missing beneficiary designations",
+    "summary": "No beneficiary on file for Samuel IRA ($483k).",
+    "rules": [
+     "R-BEN-01"
+    ],
+    "dollars": 482800.0,
+    "dollars_display": "$483k",
+    "dollars_label": "Value without a beneficiary",
+    "suitable": true,
+    "fit": "Administrative; fits every profile.",
+    "cautions": [],
+    "fields": {
+     "dollars": {
+      "value": 482800.0,
+      "unit": "usd",
+      "display": "$483k",
+      "label": "Value without a beneficiary"
+     }
+    }
+   }
+  ],
+  "addressable": 1632000.0,
+  "addressable_display": "$1.63M",
+  "context": {
+   "research": null,
+   "issuer_policy": false,
+   "briefing": false
+  },
+  "evidence": [
+   {
+    "id": "crm:0",
+    "title": "CRM note \u00b7 2026-09-02 \u00b7 Jordan (advisor)",
+    "source": "CRM (screened)",
+    "kind": "note",
+    "synthetic": true,
+    "fields": {},
+    "text": "Ruth asked why the account swung so much in the spring. They want steady income and do not want to watch the market."
+   },
+   {
+    "id": "crm:1",
+    "title": "CRM note \u00b7 2026-08-14 \u00b7 Jordan (advisor)",
+    "source": "CRM (screened)",
+    "kind": "note",
+    "synthetic": true,
+    "fields": {},
+    "text": "$400k CD ladder matures in early November. They have not said whether to roll it."
+   },
+   {
+    "id": "crm:2",
+    "title": "CRM note \u00b7 2026-05-20 \u00b7 Operations",
+    "source": "CRM (screened)",
+    "kind": "note",
+    "synthetic": true,
+    "fields": {},
+    "text": "Beneficiary designation missing on Samuel's IRA ([account number masked]). Form sent, not returned."
+   },
+   {
+    "id": "household",
+    "title": "Household \u00b7 Ruth & Samuel Okafor",
+    "source": "Household record \u00b7 synthetic",
+    "kind": "data",
+    "synthetic": true,
+    "fields": {
+     "total_value": {
+      "display": "$3.4M",
+      "label": "Household value"
+     },
+     "risk_profile": {
+      "display": "Conservative",
+      "label": "Risk profile"
+     },
+     "horizon_years": {
+      "display": "12 years",
+      "label": "Horizon"
+     },
+     "annual_need": {
+      "display": "$150k",
+      "label": "Annual spending need"
+     },
+     "age": {
+      "display": "71",
+      "label": "Age"
+     },
+     "holdings.VTI.weight": {
+      "display": "40.0%",
+      "label": "VTI weight"
+     },
+     "holdings.VTI.value": {
+      "display": "$1.36M",
+      "label": "VTI value"
+     },
+     "holdings.SCHD.weight": {
+      "display": "18.0%",
+      "label": "SCHD weight"
+     },
+     "holdings.SCHD.value": {
+      "display": "$612k",
+      "label": "SCHD value"
+     },
+     "holdings.VXUS.weight": {
+      "display": "10.0%",
+      "label": "VXUS weight"
+     },
+     "holdings.VXUS.value": {
+      "display": "$340k",
+      "label": "VXUS value"
+     },
+     "holdings.BND.weight": {
+      "display": "14.2%",
+      "label": "BND weight"
+     },
+     "holdings.BND.value": {
+      "display": "$483k",
+      "label": "BND value"
+     },
+     "holdings.CASH.weight": {
+      "display": "17.8%",
+      "label": "CASH weight"
+     },
+     "holdings.CASH.value": {
+      "display": "$605k",
+      "label": "CASH value"
+     }
+    },
+    "text": "Ruth & Samuel Okafor: Retired \u00b7 Conservative income profile \u00b7 68% in equities. Goals: Reliable retirement income, Leave a legacy to the grandchildren. Investment policy: Income and capital preservation; risk tolerance Conservative; horizon 12+ years, income now."
+   },
+   {
+    "id": "suitability:R-RISK-02",
+    "title": "R-RISK-02 \u00b7 Equity share above the risk band",
+    "source": "Suitability rules (code)",
+    "kind": "rule",
+    "synthetic": false,
+    "fields": {
+     "equity_share": {
+      "display": "68%",
+      "label": "Equity share"
+     },
+     "band_max": {
+      "display": "40%",
+      "label": "Conservative maximum"
+     },
+     "band_min": {
+      "display": "0%",
+      "label": "Conservative minimum"
+     },
+     "gap": {
+      "display": "28.0 points",
+      "label": "Distance outside the band"
+     },
+     "shift_value": {
+      "display": "$952k",
+      "label": "Value to move back inside the band"
+     },
+     "reg_bi": {
+      "display": "Care: the allocation carries more risk than the client's profile allows.",
+      "label": "Reg BI question"
+     }
+    },
+    "text": "Equities are 68% of the household against the Conservative maximum of 40%."
+   },
+   {
+    "id": "suitability:R-LIQ-03",
+    "title": "R-LIQ-03 \u00b7 CD ladder maturing",
+    "source": "Suitability rules (code)",
+    "kind": "rule",
+    "synthetic": false,
+    "fields": {
+     "cd_value": {
+      "display": "$400k",
+      "label": "CD ladder"
+     },
+     "matures": {
+      "display": "2026-11-07",
+      "label": "Maturity"
+     },
+     "reg_bi": {
+      "display": "Planning: a maturity needs a decision before it rolls or sits in cash.",
+      "label": "Reg BI question"
+     }
+    },
+    "text": "A $400k CD ladder matures 2026-11-07."
+   },
+   {
+    "id": "suitability:R-BEN-01",
+    "title": "R-BEN-01 \u00b7 Missing beneficiary",
+    "source": "Suitability rules (code)",
+    "kind": "rule",
+    "synthetic": false,
+    "fields": {
+     "accounts": {
+      "display": "1",
+      "label": "Accounts without a beneficiary"
+     },
+     "value": {
+      "display": "$483k",
+      "label": "Value without a beneficiary"
+     },
+     "reg_bi": {
+      "display": "Planning: an account would pass without a designation.",
+      "label": "Reg BI question"
+     }
+    },
+    "text": "No beneficiary on file for Samuel IRA ($483k)."
+   },
+   {
+    "id": "suitability:R-RMD-01",
+    "title": "R-RMD-01 \u00b7 Required distribution due",
+    "source": "Suitability rules (code)",
+    "kind": "rule",
+    "synthetic": false,
+    "fields": {
+     "account_value": {
+      "display": "$280k",
+      "label": "Samuel inherited IRA"
+     },
+     "reg_bi": {
+      "display": "Planning: a required distribution has a deadline [confirm rules with SME].",
+      "label": "Reg BI question"
+     }
+    },
+    "text": "Samuel's inherited IRA has a required distribution due this year [confirm RMD rules with SME]."
+   },
+   {
+    "id": "action:NBA-REBALANCE",
+    "title": "Rebalance back inside the Conservative band",
+    "source": "Next-best-action catalogue (code)",
+    "kind": "action",
+    "synthetic": false,
+    "fields": {
+     "dollars": {
+      "display": "$952k",
+      "label": "Value to move"
+     }
+    },
+    "text": "Rebalance back inside the Conservative band. Move about $952k so equities go from 68% to at most 40%. Brings the allocation back to the Conservative profile the client chose."
+   },
+   {
+    "id": "action:NBA-RMD",
+    "title": "Schedule the required distribution",
+    "source": "Next-best-action catalogue (code)",
+    "kind": "action",
+    "synthetic": false,
+    "fields": {
+     "dollars": {
+      "display": "$280k",
+      "label": "Account subject to the distribution"
+     }
+    },
+    "text": "Schedule the required distribution. Samuel's inherited IRA has a required distribution due this year [confirm RMD rules with SME]. Deadline-driven; fits every profile."
+   },
+   {
+    "id": "action:NBA-CD",
+    "title": "Decide on the maturing CD ladder",
+    "source": "Next-best-action catalogue (code)",
+    "kind": "action",
+    "synthetic": false,
+    "fields": {
+     "dollars": {
+      "display": "$400k",
+      "label": "CD ladder maturing"
+     }
+    },
+    "text": "Decide on the maturing CD ladder. Choose whether to roll the $400k ladder maturing 2026-11-07 or use it for income. Income and preservation fit a Conservative profile."
+   },
+   {
+    "id": "action:NBA-BENEFICIARY",
+    "title": "Complete missing beneficiary designations",
+    "source": "Next-best-action catalogue (code)",
+    "kind": "action",
+    "synthetic": false,
+    "fields": {
+     "dollars": {
+      "display": "$483k",
+      "label": "Value without a beneficiary"
+     }
+    },
+    "text": "Complete missing beneficiary designations. No beneficiary on file for Samuel IRA ($483k). Administrative; fits every profile."
+   }
+  ],
+  "withheld": [],
+  "brief": {
+   "lines": [
+    {
+     "section": "opening",
+     "text": "Your goals include reliable retirement income and leaving a legacy to your grandchildren; your investment policy is income and capital preservation, with Conservative risk tolerance.",
+     "evidence_id": "household",
+     "quote": "Goals: Reliable retirement income, Leave a legacy to the grandchildren. Investment policy: Income and capital preservation; risk tolerance Conservative",
+     "status": "verified",
+     "reason": "Quoted from Household \u00b7 Ruth & Samuel Okafor.",
+     "check": "quote"
+    },
+    {
+     "section": "talking_point",
+     "text": "Equities are 68% of the household against the Conservative maximum of 40%.",
+     "evidence_id": "suitability:R-RISK-02",
+     "quote": "Equities are 68% of the household against the Conservative maximum of 40%.",
+     "status": "verified",
+     "reason": "Quoted from R-RISK-02 \u00b7 Equity share above the risk band.",
+     "check": "quote"
+    },
+    {
+     "section": "talking_point",
+     "text": "The inherited IRA has a required distribution due this year; confirm RMD rules with an SME.",
+     "evidence_id": "suitability:R-RMD-01",
+     "quote": "Samuel's inherited IRA has a required distribution due this year [confirm RMD rules with SME].",
+     "status": "verified",
+     "reason": "Quoted from R-RMD-01 \u00b7 Required distribution due.",
+     "check": "quote"
+    },
+    {
+     "section": "talking_point",
+     "text": "A $400k CD ladder matures 2026-11-07.",
+     "evidence_id": "suitability:R-LIQ-03",
+     "quote": "A $400k CD ladder matures 2026-11-07.",
+     "status": "verified",
+     "reason": "Quoted from R-LIQ-03 \u00b7 CD ladder maturing.",
+     "check": "quote"
+    },
+    {
+     "section": "talking_point",
+     "text": "No beneficiary is on file for Samuel IRA ($483k).",
+     "evidence_id": "suitability:R-BEN-01",
+     "quote": "No beneficiary on file for Samuel IRA ($483k).",
+     "status": "verified",
+     "reason": "Quoted from R-BEN-01 \u00b7 Missing beneficiary.",
+     "check": "quote"
+    },
+    {
+     "section": "rationale",
+     "text": "The investment policy is income and capital preservation, and risk tolerance is Conservative.",
+     "evidence_id": "household",
+     "quote": "Investment policy: Income and capital preservation; risk tolerance Conservative",
+     "status": "verified",
+     "reason": "Quoted from Household \u00b7 Ruth & Samuel Okafor.",
+     "check": "quote"
+    },
+    {
+     "section": "rationale",
+     "text": "A required distribution has a deadline; confirm the RMD rules with an SME.",
+     "evidence_id": "suitability:R-RMD-01",
+     "quote": "Planning: a required distribution has a deadline [confirm rules with SME].",
+     "status": "unverified",
+     "reason": "The quote does not appear in R-RMD-01 \u00b7 Required distribution due.",
+     "check": "quote"
+    },
+    {
+     "section": "callout",
+     "text": "Equities are 68% of the household against the Conservative maximum of 40%.",
+     "evidence_id": "suitability:R-RISK-02",
+     "quote": "Equities are 68% of the household against the Conservative maximum of 40%",
+     "status": "verified",
+     "reason": "Quoted from R-RISK-02 \u00b7 Equity share above the risk band.",
+     "check": "quote"
+    },
+    {
+     "section": "callout",
+     "text": "A $400k CD ladder matures 2026-11-07.",
+     "evidence_id": "suitability:R-LIQ-03",
+     "quote": "A $400k CD ladder matures 2026-11-07.",
+     "status": "verified",
+     "reason": "Quoted from R-LIQ-03 \u00b7 CD ladder maturing.",
+     "check": "quote"
+    },
+    {
+     "section": "callout",
+     "text": "No beneficiary on file for Samuel IRA ($483k).",
+     "evidence_id": "suitability:R-BEN-01",
+     "quote": "No beneficiary on file for Samuel IRA ($483k).",
+     "status": "verified",
+     "reason": "Quoted from R-BEN-01 \u00b7 Missing beneficiary.",
+     "check": "quote"
+    },
+    {
+     "section": "callout",
+     "text": "Samuel's inherited IRA has a required distribution due this year [confirm RMD rules with SME].",
+     "evidence_id": "suitability:R-RMD-01",
+     "quote": "Samuel's inherited IRA has a required distribution due this year [confirm RMD rules with SME].",
+     "status": "verified",
+     "reason": "Quoted from R-RMD-01 \u00b7 Required distribution due.",
+     "check": "quote"
+    },
+    {
+     "section": "agenda",
+     "text": "Review the equity allocation against the Conservative risk band.",
+     "evidence_id": "suitability:R-RISK-02",
+     "status": "agenda",
+     "reason": "Agenda line, not a factual claim."
+    },
+    {
+     "section": "agenda",
+     "text": "Discuss the inherited IRA distribution due this year, subject to confirming the rules with an SME.",
+     "evidence_id": "suitability:R-RMD-01",
+     "status": "agenda",
+     "reason": "Agenda line, not a factual claim."
+    },
+    {
+     "section": "agenda",
+     "text": "Plan for the $400k CD ladder maturity on 2026-11-07.",
+     "evidence_id": "suitability:R-LIQ-03",
+     "also": [
+      "household"
+     ],
+     "status": "agenda",
+     "reason": "Agenda line, not a factual claim."
+    },
+    {
+     "section": "agenda",
+     "text": "Address the missing beneficiary designation on Samuel's $483k IRA.",
+     "evidence_id": "suitability:R-BEN-01",
+     "also": [
+      "household"
+     ],
+     "status": "agenda",
+     "reason": "Agenda line, not a factual claim."
+    },
+    {
+     "section": "question",
+     "text": "How would you like the CD maturity handled for income needs?",
+     "evidence_id": "suitability:R-LIQ-03",
+     "status": "question",
+     "reason": "A question for the client, not a claim."
+    },
+    {
+     "section": "question",
+     "text": "What legacy intentions should the beneficiary designation reflect?",
+     "evidence_id": "suitability:R-BEN-01",
+     "status": "question",
+     "reason": "A question for the client, not a claim."
+    },
+    {
+     "section": "question",
+     "text": "Would you like to discuss ways to bring the equity allocation within the Conservative band?",
+     "evidence_id": "suitability:R-RISK-02",
+     "status": "question",
+     "reason": "A question for the client, not a claim."
+    }
+   ],
+   "action_ids": [
+    "NBA-REBALANCE",
+    "NBA-RMD",
+    "NBA-CD",
+    "NBA-BENEFICIARY"
+   ],
+   "dropped_actions": [],
+   "counts": {
+    "claims": 11,
+    "verified": 10,
+    "unverified": 1,
+    "policy": 0
+   },
+   "status": "ready",
+   "mode": "deep_agent",
+   "mode_label": "Meeting-prep Deep Agent",
+   "reason": null,
+   "refused": false
+  },
+  "compliance": {
+   "findings": [],
+   "verdicts": {
+    "no_guarantee": true,
+    "no_trade_or_wire_instruction": true,
+    "suitable_for_profile": true
+   }
+  },
+  "approval": {
+   "status": "awaiting_advisor",
+   "request_id": "advisor"
+  },
+  "duration_ms": 51660,
+  "disclaimer": "Synthetic client data for demonstration only. Not investment, tax, or legal advice.",
+  "security": {
+   "mode": "enforce",
+   "status": "allowed",
+   "checks": 19,
+   "blocked": 0,
+   "errors": 0,
+   "event_ids": [
+    ""
+   ],
+   "fail_open": false,
+   "forced": true
+  },
+  "usage": {
+   "llm_calls": 8,
+   "input_tokens": 19128,
+   "output_tokens": 4858,
+   "tool_calls": 14
+  },
+  "served_by": {
+   "provider": "openai",
+   "label": "OpenAI API",
+   "model": "gpt-5.6-luna",
+   "kind": "openai",
+   "private": false,
+   "external": true,
+   "fallback": true,
+   "reason": "Sparky vLLM unreachable (connection refused)",
+   "source": "saved",
+   "egress": "require_ai_defense",
+   "ai_defense": "enforce (forced for hosted model)"
+  },
+  "telemetry": {
+   "splunk": {
+    "status": "not_configured",
+    "trace_id": "d00453ba43fc2beb09f907e772ffcbea"
+   },
+   "galileo": "recorded"
+  },
+  "evaluation": {
+   "status": "not_configured",
+   "label": "Evaluation not configured",
+   "verifier": "Structured claim verifier (code) checks every claim"
+  },
+  "run_id": "wealth-advisory-20261009231450-c0498c",
+  "perimeter": "Yahoo + FRED allowlist only"
+ }
+}

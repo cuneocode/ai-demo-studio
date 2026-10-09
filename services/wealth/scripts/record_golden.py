@@ -1,7 +1,10 @@
 """Record a golden run from the running wealth service into data/recorded/ (after a person reviews it).
 
     cd services/wealth && .venv/bin/python scripts/record_golden.py research HCYN
-    cd services/wealth && .venv/bin/python scripts/record_golden.py advisory dana-whitfield
+    cd services/wealth && .venv/bin/python scripts/record_golden.py research KSTL --scenario restricted --name research-kstl-restricted
+    cd services/wealth && .venv/bin/python scripts/record_golden.py research HCYN --scenario poisoned-news --name research-hcyn-poisoned
+    cd services/wealth && .venv/bin/python scripts/record_golden.py research JPM --scenario bank --name research-jpm-bank
+    cd services/wealth && .venv/bin/python scripts/record_golden.py advisory dana-whitfield --with-research research-hcyn
 
 Makes one live call (a paid model call when the chain answers from a hosted provider), then saves the
 run's events and the full response in the services/common/runs.py recording format. The studio replays
@@ -21,21 +24,9 @@ import httpx
 
 SERVICE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SERVICE.parent / "common"))
-from runs import SCHEMA_VERSION, redact  # noqa: E402
+from runs import SCHEMA_VERSION, redact
 
 RECORDED = SERVICE / "data" / "recorded"
-
-
-def notes_from_household(record: dict) -> str:
-    """The same text the studio puts in the notes box when a household is picked (app/advisory-brief.ts)."""
-    ips = record.get("ips") or {}
-    lines = [
-        f"Investment policy: {ips.get('objective')}; risk tolerance {ips.get('risk_tolerance')}; horizon {ips.get('horizon')}.",
-        f"Goals: {', '.join(record.get('goals') or [])}.",
-        "CRM notes:",
-        *[f"- {note.get('date')} · {note.get('author')}: {note.get('text')}" for note in record.get("crm_notes") or []],
-    ]
-    return "\n".join(lines)
 
 
 def main() -> int:
@@ -44,7 +35,8 @@ def main() -> int:
     parser.add_argument("subject", help="ticker (research) or household id (advisory)")
     parser.add_argument("--base", default="http://localhost:3000")
     parser.add_argument("--name", help="recording name (default research-<ticker> / advisory-<household>)")
-    parser.add_argument("--with-research", help="attach this research recording's note to an advisory run")
+    parser.add_argument("--scenario", default="earnings", help="research scenario: earnings, restricted, poisoned-news, bank")
+    parser.add_argument("--with-research", help="attach this research recording's update to an advisory run")
     parser.add_argument("--keep-unready", action="store_true", help="save even when the AI output is not ready")
     args = parser.parse_args()
 
@@ -54,19 +46,13 @@ def main() -> int:
     if args.kind == "research":
         ticker = args.subject.upper()
         name = args.name or f"research-{ticker.lower()}"
-        response = client.post("/api/wealth/research/analyze", json={"ticker": ticker, "run_id": run_id})
-        title = f"{ticker} research"
-        ai = "note"
+        response = client.post("/api/wealth/research/analyze", json={"ticker": ticker, "scenario": args.scenario, "run_id": run_id})
+        title = f"{ticker} · {args.scenario}"
+        ai = "update"
     else:
         record = client.get(f"/api/wealth/households/{args.subject}").raise_for_status().json()
         name = args.name or f"advisory-{record['id']}"
-        payload = {
-            "household_id": record["id"],
-            "weights_unit": "percent",
-            "holdings": [{"ticker": row["ticker"], "weight": row["weight_pct"]} for row in record["holdings"]],
-            "clientNotes": notes_from_household(record),
-            "run_id": run_id,
-        }
+        payload = {"household_id": record["id"], "run_id": run_id}
         if args.with_research:
             attached = json.loads((RECORDED / f"{args.with_research}.json").read_text(encoding="utf-8"))
             payload["research"] = attached["result"]
@@ -78,6 +64,8 @@ def main() -> int:
         print(f"Live call failed ({response.status_code}): {body.get('detail')}")
         return 1
     status = (body.get(ai) or {}).get("status")
+    if body.get("status") == "blocked":
+        status = "ready"  # a restricted issuer is the story: blocked before any data or model call
     print(f"{ai} status: {status} · served_by: {json.dumps(body.get('served_by'))}")
     print(f"security: {json.dumps(body.get('security'))} · usage: {json.dumps(body.get('usage'))}")
     if status != "ready" and not args.keep_unready:

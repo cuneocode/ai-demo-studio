@@ -1,0 +1,2050 @@
+{
+ "v": 1,
+ "name": "research-jpm-bank",
+ "title": "JPM \u00b7 bank",
+ "scenario": "research-bank",
+ "recorded_at": "2026-10-09T23:06:28.360301+00:00",
+ "served_by": {
+  "provider": "openai",
+  "label": "OpenAI API",
+  "model": "gpt-5.6-luna",
+  "kind": "openai",
+  "private": false,
+  "external": true,
+  "fallback": true,
+  "reason": "Sparky vLLM unreachable (connection refused)",
+  "source": "saved",
+  "egress": "allow",
+  "ai_defense": null
+ },
+ "synthetic": true,
+ "note": "Recorded from a live run of the wealth service. Synthetic client, fictional or public market data.",
+ "run": {
+  "id": "wealth-research-20261009230555-d31830",
+  "service": "wealth",
+  "label": "House-view update \u00b7 JPM",
+  "scenario": "research-bank",
+  "status": "completed",
+  "started_at": "2026-10-09T23:05:55.684684+00:00",
+  "finished_at": "2026-10-09T23:06:28.360301+00:00",
+  "meta": {
+   "ticker": "JPM",
+   "scenario": "bank"
+  }
+ },
+ "events": [
+  {
+   "v": 1,
+   "id": "9f97e134-eb67-4865-93f1-235c27bedf2e",
+   "at": "2026-10-09T23:05:56.492664+00:00",
+   "ns": 807983000,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "run",
+   "status": "started",
+   "title": "House-view update \u00b7 JPM",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Restricted-list pre-check, then market data, the event, and screened news; then the research agent drafts cited claims.",
+   "data": {}
+  },
+  {
+   "v": 1,
+   "id": "9d8d09e2-6682-422e-80db-5734a3904155",
+   "at": "2026-10-09T23:05:56.494145+00:00",
+   "ns": 809457833,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "restricted_list_check(ticker=JPM)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "restricted_list_check",
+    "agent": "workflow",
+    "arguments": {
+     "ticker": "JPM"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "60d9da46-6d28-47c2-9943-3da3dabbc82f",
+   "at": "2026-10-09T23:05:56.506647+00:00",
+   "ns": 821964208,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Restricted list \u00b7 JPM clear",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "restricted_list_check",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "8b7ebfdc-4dad-40ce-9b58-468f57dca54b",
+   "at": "2026-10-09T23:05:57.404390+00:00",
+   "ns": 1719701375,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "control",
+   "status": "allowed",
+   "title": "Agent Control \u00b7 research.precheck \u00b7 Restricted list \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "policy": "research.precheck",
+    "control": "fsi-wealth-research-precheck-restricted-v1",
+    "source": "agent_control",
+    "verdict": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "3fecd990-fc7f-4ab2-aac6-6994cd99a1c0",
+   "at": "2026-10-09T23:05:57.422578+00:00",
+   "ns": 1737889125,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "market_snapshot(ticker=JPM, refresh=False)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "market_snapshot",
+    "agent": "workflow",
+    "arguments": {
+     "ticker": "JPM",
+     "refresh": false
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "253a2304-57ef-4458-ae04-c9363acee015",
+   "at": "2026-10-09T23:05:57.425940+00:00",
+   "ns": 1741252083,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Market data \u00b7 Yahoo Finance \u00b7 cached, as of 2026-10-09",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "market_snapshot",
+    "agent": "workflow",
+    "source_kind": "cache",
+    "fictional": false
+   }
+  },
+  {
+   "v": 1,
+   "id": "2e57ef16-4e83-4af8-90a8-1d8f8d20f7ab",
+   "at": "2026-10-09T23:05:57.429829+00:00",
+   "ns": 1745139875,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "fred_macro()",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "fred_macro",
+    "agent": "workflow",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "7cb86817-8b18-4a61-b247-9d9868b955b8",
+   "at": "2026-10-09T23:05:57.433815+00:00",
+   "ns": 1749129625,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "info",
+   "title": "Macro \u00b7 not available",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": "Live macro series are off: add a FRED API key in Studio settings.",
+   "data": {
+    "tool": "fred_macro",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "646e9303-62b0-4712-9cd0-ba470ef6d7d4",
+   "at": "2026-10-09T23:05:57.437126+00:00",
+   "ns": 1752435333,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "indicators(ticker=JPM)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "indicators",
+    "agent": "workflow",
+    "arguments": {
+     "ticker": "JPM"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "592f449c-af63-4e25-95f8-f0302347f56c",
+   "at": "2026-10-09T23:05:57.440105+00:00",
+   "ns": 1755414917,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Indicators \u00b7 beat rate 81.8% \u00b7 P/B, ROE 2.50x / 17.8% \u00b7 1Y +11.7% vs SPY +17.0%",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": "Bank metrics: price to book and return on equity lead; P/E is secondary.",
+   "data": {
+    "tool": "indicators",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "dc2d98c4-a27b-4e62-a5c7-be0eeeb5a1d7",
+   "at": "2026-10-09T23:05:57.443173+00:00",
+   "ns": 1758483750,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "signal_divergences()",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "signal_divergences",
+    "agent": "workflow",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "145a77fe-f79b-43f4-ada0-ae88a7d1defc",
+   "at": "2026-10-09T23:05:57.446450+00:00",
+   "ns": 1761761417,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "Signal divergences \u00b7 1",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": "Earnings beats vs. a lagging stock",
+   "data": {
+    "tool": "signal_divergences",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "23f28340-69c2-43b1-89ca-02df1efca7ba",
+   "at": "2026-10-09T23:05:57.451103+00:00",
+   "ns": 1766413333,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "affected_households(ticker=JPM)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "affected_households",
+    "agent": "workflow",
+    "arguments": {
+     "ticker": "JPM"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "c61d85ed-715e-4abc-8e66-af34cc3a9acd",
+   "at": "2026-10-09T23:05:57.456142+00:00",
+   "ns": 1771452000,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Affected households \u00b7 133 hold it, 102 above 10%, 2 executives",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "affected_households",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "5bd112ff-8b40-4528-8f66-874c82c137c3",
+   "at": "2026-10-09T23:05:57.460698+00:00",
+   "ns": 1776014583,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "model.failover",
+   "status": "flagged",
+   "title": "Model fallback \u00b7 next in chain is OpenAI API",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": "Sparky vLLM unreachable (connection refused)",
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "bc45b68a-8fcf-4f23-803d-2bc55406c6d0",
+   "at": "2026-10-09T23:06:00.366178+00:00",
+   "ns": 4681493042,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 research supervisor",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 2863,
+    "input_tokens": 1234,
+    "output_tokens": 264
+   }
+  },
+  {
+   "v": 1,
+   "id": "355dcb96-77f4-45fb-810a-fc247d35b02b",
+   "at": "2026-10-09T23:06:00.375819+00:00",
+   "ns": 4691124875,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.message",
+   "status": "info",
+   "title": "research supervisor \u2192 fundamentals subagent",
+   "lane": "agent",
+   "source": "research supervisor",
+   "target": "fundamentals",
+   "body": "Research JPM's latest earnings event, earnings history, and relevant filings/news. Return only cited findings with evidence_id, exact field_path, display value, numeric value and unit, or verbatim quotes of at least 8 consecutive words. Focus on EPS versus consensus, revenue growth, guidance, and beat history.",
+   "data": {
+    "subagent": "fundamentals"
+   }
+  },
+  {
+   "v": 1,
+   "id": "ef820bab-5143-465d-b12a-7d1926969fb9",
+   "at": "2026-10-09T23:06:00.386167+00:00",
+   "ns": 4701473750,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.message",
+   "status": "info",
+   "title": "research supervisor \u2192 valuation subagent",
+   "lane": "agent",
+   "source": "research supervisor",
+   "target": "valuation",
+   "body": "Research JPM valuation versus peers and returns versus SPY. Return only cited findings with evidence_id, exact field_path, display value, numeric value and unit, or verbatim quotes of at least 8 consecutive words. Include relevant valuation and return indicators.",
+   "data": {
+    "subagent": "valuation"
+   }
+  },
+  {
+   "v": 1,
+   "id": "34d0a6d6-dae4-4d6e-bb5c-0f0dc7312b12",
+   "at": "2026-10-09T23:06:00.393918+00:00",
+   "ns": 4709226042,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.message",
+   "status": "info",
+   "title": "research supervisor \u2192 macro subagent",
+   "lane": "agent",
+   "source": "research supervisor",
+   "target": "macro",
+   "body": "Research JPM-related macro series and signal divergences. Return only cited findings with evidence_id, exact field_path, display value, numeric value and unit, or verbatim quotes of at least 8 consecutive words. Identify material divergences and their indicators.",
+   "data": {
+    "subagent": "macro"
+   }
+  },
+  {
+   "v": 1,
+   "id": "6b3f0261-0e41-445a-9345-7dae267024e6",
+   "at": "2026-10-09T23:06:00.403486+00:00",
+   "ns": 4718792958,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_house_view()",
+   "lane": "tools",
+   "source": "research supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_house_view",
+    "agent": "research supervisor",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "eff12e78-282c-4707-adb1-5d75b73645b2",
+   "at": "2026-10-09T23:06:00.410579+00:00",
+   "ns": 4725890000,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "info",
+   "title": "House view \u00b7 not available",
+   "lane": "tools",
+   "source": "research supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_house_view",
+    "agent": "research supervisor"
+   }
+  },
+  {
+   "v": 1,
+   "id": "4c4aa8f7-3726-4c08-bc87-327e924f0ca9",
+   "at": "2026-10-09T23:06:00.414749+00:00",
+   "ns": 4730055792,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_earnings_event()",
+   "lane": "tools",
+   "source": "research supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_earnings_event",
+    "agent": "research supervisor",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "93ab5ba2-a936-4125-9e3d-9bf2335ae4dd",
+   "at": "2026-10-09T23:06:00.417767+00:00",
+   "ns": 4733075125,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "info",
+   "title": "Earnings event \u00b7 not available",
+   "lane": "tools",
+   "source": "research supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_earnings_event",
+    "agent": "research supervisor"
+   }
+  },
+  {
+   "v": 1,
+   "id": "f5f4f954-b08e-4a9c-9190-31aa6d65c2cd",
+   "at": "2026-10-09T23:06:01.500811+00:00",
+   "ns": 5816131625,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 macro subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 1055,
+    "input_tokens": 346,
+    "output_tokens": 45
+   }
+  },
+  {
+   "v": 1,
+   "id": "d639ce14-2b2f-422b-a425-3fe019f522a2",
+   "at": "2026-10-09T23:06:01.509313+00:00",
+   "ns": 5824616375,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_macro()",
+   "lane": "tools",
+   "source": "macro",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_macro",
+    "agent": "macro",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "55c516c0-682e-4681-a027-36898d516711",
+   "at": "2026-10-09T23:06:01.521627+00:00",
+   "ns": 5836935042,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "info",
+   "title": "Macro \u00b7 not available",
+   "lane": "tools",
+   "source": "macro",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_macro",
+    "agent": "macro"
+   }
+  },
+  {
+   "v": 1,
+   "id": "7d5dbd6c-24e7-4fd9-bd0b-3cd02f4a2c86",
+   "at": "2026-10-09T23:06:01.530504+00:00",
+   "ns": 5845817208,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_signal_divergences()",
+   "lane": "tools",
+   "source": "macro",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_signal_divergences",
+    "agent": "macro",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "fd2a105c-7461-402f-8968-ae1eac886948",
+   "at": "2026-10-09T23:06:01.535854+00:00",
+   "ns": 5851157000,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Signal divergences",
+   "lane": "tools",
+   "source": "macro",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_signal_divergences",
+    "agent": "macro"
+   }
+  },
+  {
+   "v": 1,
+   "id": "80f65c98-2a24-49ef-a870-486f8c988d9b",
+   "at": "2026-10-09T23:06:01.541896+00:00",
+   "ns": 5857200542,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 valuation subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 1097,
+    "input_tokens": 383,
+    "output_tokens": 43
+   }
+  },
+  {
+   "v": 1,
+   "id": "747ff6d3-b056-405d-b181-51af68f3f9e4",
+   "at": "2026-10-09T23:06:01.570754+00:00",
+   "ns": 5886052917,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_valuation()",
+   "lane": "tools",
+   "source": "valuation",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_valuation",
+    "agent": "valuation",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "f8794434-08e4-4fca-8aa8-7946a39f18c6",
+   "at": "2026-10-09T23:06:01.574426+00:00",
+   "ns": 5889724792,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Valuation vs peers \u00b7 2.50x \u00b7 1.82x \u00b7 17.8%",
+   "lane": "tools",
+   "source": "valuation",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_valuation",
+    "agent": "valuation"
+   }
+  },
+  {
+   "v": 1,
+   "id": "a44d3a1b-af3d-4768-82f6-56f6f5082361",
+   "at": "2026-10-09T23:06:01.577186+00:00",
+   "ns": 5892485000,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_returns()",
+   "lane": "tools",
+   "source": "valuation",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_returns",
+    "agent": "valuation",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "ee2b26d5-822d-449e-a41a-02a66711c5d2",
+   "at": "2026-10-09T23:06:01.580207+00:00",
+   "ns": 5895504125,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Returns vs SPY \u00b7 -5.3% \u00b7 +1.9% \u00b7 -7.2%",
+   "lane": "tools",
+   "source": "valuation",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_returns",
+    "agent": "valuation"
+   }
+  },
+  {
+   "v": 1,
+   "id": "a286f30d-b74a-4555-9b82-0e23197bf9b9",
+   "at": "2026-10-09T23:06:02.141712+00:00",
+   "ns": 6457017917,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 fundamentals subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 1697,
+    "input_tokens": 495,
+    "output_tokens": 105
+   }
+  },
+  {
+   "v": 1,
+   "id": "c607cbb0-df0a-43be-bd6a-0c6cd182ba2a",
+   "at": "2026-10-09T23:06:02.161959+00:00",
+   "ns": 6477258042,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_earnings_event()",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_earnings_event",
+    "agent": "fundamentals",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "6603f546-22e5-4298-92b5-f81b1de1aa6e",
+   "at": "2026-10-09T23:06:02.173012+00:00",
+   "ns": 6488312333,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "info",
+   "title": "Earnings event \u00b7 not available",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_earnings_event",
+    "agent": "fundamentals"
+   }
+  },
+  {
+   "v": 1,
+   "id": "df93b395-5ab3-4766-84bd-c7137bfdd644",
+   "at": "2026-10-09T23:06:02.183848+00:00",
+   "ns": 6499154875,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_earnings_history()",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_earnings_history",
+    "agent": "fundamentals",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "60a34b00-a8d1-4490-b062-faaa1c556565",
+   "at": "2026-10-09T23:06:02.192656+00:00",
+   "ns": 6507968208,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Earnings history \u00b7 81.8% \u00b7 9 \u00b7 11",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_earnings_history",
+    "agent": "fundamentals"
+   }
+  },
+  {
+   "v": 1,
+   "id": "f705371d-41ef-4327-9f66-27fa4a9e8c77",
+   "at": "2026-10-09T23:06:02.198288+00:00",
+   "ns": 6513591208,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_news()",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_news",
+    "agent": "fundamentals",
+    "arguments": {}
+   }
+  },
+  {
+   "v": 1,
+   "id": "43b81e2f-9684-4fc9-a6b3-ba0ac744319f",
+   "at": "2026-10-09T23:06:02.203585+00:00",
+   "ns": 6518892792,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "News feed \u00b7 0 items",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_news",
+    "agent": "fundamentals"
+   }
+  },
+  {
+   "v": 1,
+   "id": "fa37e938-d5a1-463e-ae22-37ac39b6f632",
+   "at": "2026-10-09T23:06:02.208281+00:00",
+   "ns": 6523582208,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "search_filing(query=guidance revenue earnings EPS consensus customer concentration segment results)",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "search_filing",
+    "agent": "fundamentals",
+    "arguments": {
+     "query": "guidance revenue earnings EPS consensus customer concentration segment results"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "5bd4666a-3c45-4b67-aa8a-139425b6be2b",
+   "at": "2026-10-09T23:06:02.211896+00:00",
+   "ns": 6527203333,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "info",
+   "title": "10-K \u00b7 no filing on file for this issuer",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "search_filing",
+    "agent": "fundamentals"
+   }
+  },
+  {
+   "v": 1,
+   "id": "a8e48cd6-6619-4b64-bb60-7db3dac30338",
+   "at": "2026-10-09T23:06:02.216281+00:00",
+   "ns": 6531581875,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "search_filing(query=export controls regulatory risks outlook net interest income)",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "search_filing",
+    "agent": "fundamentals",
+    "arguments": {
+     "query": "export controls regulatory risks outlook net interest income"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "d147ed3c-0946-4d48-baec-a49852b40db0",
+   "at": "2026-10-09T23:06:02.220153+00:00",
+   "ns": 6535458125,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "info",
+   "title": "10-K \u00b7 no filing on file for this issuer",
+   "lane": "tools",
+   "source": "fundamentals",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "search_filing",
+    "agent": "fundamentals"
+   }
+  },
+  {
+   "v": 1,
+   "id": "37fa859a-a490-40ca-b563-7c7e3ab859ac",
+   "at": "2026-10-09T23:06:03.473189+00:00",
+   "ns": 7788511708,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 macro subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 1904,
+    "input_tokens": 508,
+    "output_tokens": 131
+   }
+  },
+  {
+   "v": 1,
+   "id": "5ce7cf5e-8d12-4017-a378-49b8a6785d5c",
+   "at": "2026-10-09T23:06:06.079092+00:00",
+   "ns": 10394404583,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 fundamentals subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 3845,
+    "input_tokens": 1087,
+    "output_tokens": 472
+   }
+  },
+  {
+   "v": 1,
+   "id": "e6a50a20-7905-45af-8f23-3c1d3eb4af48",
+   "at": "2026-10-09T23:06:07.548918+00:00",
+   "ns": 11864227083,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 valuation subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 5962,
+    "input_tokens": 1428,
+    "output_tokens": 853
+   }
+  },
+  {
+   "v": 1,
+   "id": "1c7c8406-d6d3-498f-93ee-f572ebf768f4",
+   "at": "2026-10-09T23:06:14.573248+00:00",
+   "ns": 18888520833,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 research supervisor",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 7011,
+    "input_tokens": 3061,
+    "output_tokens": 781
+   }
+  },
+  {
+   "v": 1,
+   "id": "479d7700-6cd0-40db-a2a7-b2e0f3f0af27",
+   "at": "2026-10-09T23:06:14.576580+00:00",
+   "ns": 18891850375,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.message",
+   "status": "info",
+   "title": "research supervisor \u2192 compliance_critic subagent",
+   "lane": "agent",
+   "source": "research supervisor",
+   "target": "compliance_critic",
+   "body": "Review the following draft claims JSON for evidence citation, exact display values, units, qualitative quote rules, and policy compliance. Flag any claim that fails and provide corrected wording or say drop. Draft: [{\"type\":\"what_changed\",\"text\":\"JPM's earnings beat history remains strong: 81.8% of observations were beats, with 9 beats across 11 observations.\",\"evidence_id\":\"earnings\",\"field_path\":\"fields.beat_rate\",\"value\":0.8181818181818182,\"unit\":\"fraction\",\"also\":[\"earnings\"]},{\"type\":\"what_changed\",\"text\":\"Latest revenue growth was 17.8% year over year.\",\"evidence_id\":\"earnings\",\"field_pa",
+   "data": {
+    "subagent": "compliance_critic"
+   }
+  },
+  {
+   "v": 1,
+   "id": "c221a423-452a-4ee3-ad3b-0b06bf640f88",
+   "at": "2026-10-09T23:06:19.606669+00:00",
+   "ns": 23921948333,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 compliance critic subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 5019,
+    "input_tokens": 1053,
+    "output_tokens": 735
+   }
+  },
+  {
+   "v": 1,
+   "id": "86455230-c662-48fc-aa62-f163a6cce7df",
+   "at": "2026-10-09T23:06:19.631013+00:00",
+   "ns": 23946280125,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "check_draft(claims=draft)",
+   "lane": "tools",
+   "source": "compliance_critic",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "check_draft",
+    "agent": "compliance_critic",
+    "arguments": {
+     "claims": "draft"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "4521834e-8fc4-414f-b7ea-52b9f0551fe9",
+   "at": "2026-10-09T23:06:19.642878+00:00",
+   "ns": 23958148875,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "Draft check \u00b7 4 of 7 claims pass",
+   "lane": "tools",
+   "source": "compliance_critic",
+   "target": null,
+   "body": "\u2717 The key indicator is a divergence: JPM has beaten estimates in 9 of 11 quarters, yet its 1 \u00b7 The quote does not support 'beaten, divergence, indicator, jpm'.\n\u2717 JPM has continued to deliver earnings beats, but the stock has lagged the broader market o \u00b7 The quote does not support 'broader, continu, deliver, earning'.\n\u2717 The latest data show strong revenue growth, alongside a valuation that is higher on book v \u00b7 The quote does not support 'alongside, book, data, growth'.",
+   "data": {
+    "tool": "check_draft",
+    "agent": "compliance_critic"
+   }
+  },
+  {
+   "v": 1,
+   "id": "899877a7-3a0a-4948-81ab-5360c22cf5d7",
+   "at": "2026-10-09T23:06:23.110150+00:00",
+   "ns": 27425409708,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 compliance critic subagent",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 3449,
+    "input_tokens": 2278,
+    "output_tokens": 343
+   }
+  },
+  {
+   "v": 1,
+   "id": "5ea1cbf9-896d-41ff-8817-bf13187d202e",
+   "at": "2026-10-09T23:06:27.608388+00:00",
+   "ns": 31923645750,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 research supervisor",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": false,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 4479,
+    "input_tokens": 4196,
+    "output_tokens": 539
+   }
+  },
+  {
+   "v": 1,
+   "id": "3965db91-8b6e-40bb-9c5c-a5089528a5a6",
+   "at": "2026-10-09T23:06:27.616610+00:00",
+   "ns": 31931852875,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "submit_update(claims=draft)",
+   "lane": "tools",
+   "source": "research supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "submit_update",
+    "agent": "research supervisor",
+    "arguments": {
+     "claims": "draft"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "8bceab2d-5125-4f35-8ae0-16550d602ddb",
+   "at": "2026-10-09T23:06:27.623754+00:00",
+   "ns": 31939003083,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Update submitted \u00b7 4 of 6 claims pass",
+   "lane": "tools",
+   "source": "research supervisor",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "submit_update",
+    "agent": "research supervisor"
+   }
+  },
+  {
+   "v": 1,
+   "id": "68a36dae-faf8-4b92-bf75-1b595db3357f",
+   "at": "2026-10-09T23:06:27.630509+00:00",
+   "ns": 31945750333,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "claim.verdict",
+   "status": "ok",
+   "title": "Claim verified \u00b7 JPM's earnings beat history is 81.8% of observations, with 9 beats across 11 observations.",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Matches JPM earnings history \u00b7 Beat rate = 81.8%.",
+   "data": {
+    "evidence_id": "earnings",
+    "field_path": "beat_rate",
+    "check": "numeric",
+    "section": "what_changed"
+   }
+  },
+  {
+   "v": 1,
+   "id": "12c64b98-2cfd-4ed6-b6e5-8bcf8bff50b8",
+   "at": "2026-10-09T23:06:27.641978+00:00",
+   "ns": 31957220500,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "claim.verdict",
+   "status": "ok",
+   "title": "Claim verified \u00b7 Latest revenue growth was 17.8% year over year.",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Matches JPM earnings history \u00b7 Revenue growth, latest quarter YoY = 17.8%.",
+   "data": {
+    "evidence_id": "earnings",
+    "field_path": "revenue_latest_yoy",
+    "check": "numeric",
+    "section": "what_changed"
+   }
+  },
+  {
+   "v": 1,
+   "id": "d2d259ae-fdc2-4dc4-9186-dca67daa6f84",
+   "at": "2026-10-09T23:06:27.645871+00:00",
+   "ns": 31961119167,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "claim.verdict",
+   "status": "ok",
+   "title": "Claim verified \u00b7 JPM trades at 2.50x price-to-book versus a 1.82x peer median, while ROE is 17.8% versus 12.7% for peers.",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Matches JPM valuation vs peers (bank metrics) \u00b7 Price to book = 2.50x.",
+   "data": {
+    "evidence_id": "valuation",
+    "field_path": "price_to_book",
+    "check": "numeric",
+    "section": "what_changed"
+   }
+  },
+  {
+   "v": 1,
+   "id": "58c88cbf-f471-4f54-ab7a-8c30ee59f4af",
+   "at": "2026-10-09T23:06:27.649840+00:00",
+   "ns": 31965089000,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "claim.verdict",
+   "status": "flagged",
+   "title": "Claim struck \u00b7 unverified \u00b7 JPM beat estimates in 9 of 11 quarters (81.8%); its 1-year return was +11.7% versus SPY at +17.0%, behind by 5.2 percent",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "The sentence adds what the cited evidence never says: 'jpm, percentage, point'.",
+   "data": {
+    "evidence_id": "divergences",
+    "field_path": null,
+    "check": "quote",
+    "section": "impact"
+   }
+  },
+  {
+   "v": 1,
+   "id": "91ccce67-b39a-46b0-8e42-d39e27e6893a",
+   "at": "2026-10-09T23:06:27.653410+00:00",
+   "ns": 31968663250,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "claim.verdict",
+   "status": "ok",
+   "title": "Claim verified \u00b7 Valuation is mixed: JPM's 13.3x forward P/E is below the 15.4x peer median, while its 2.50x price-to-book is above the 1",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Matches JPM valuation vs peers (bank metrics) \u00b7 Forward P/E = 13.3x.",
+   "data": {
+    "evidence_id": "valuation",
+    "field_path": "forward_pe",
+    "check": "numeric",
+    "section": "impact"
+   }
+  },
+  {
+   "v": 1,
+   "id": "ff12bbcd-040c-4f34-9b92-9ba2fe399ba0",
+   "at": "2026-10-09T23:06:27.657695+00:00",
+   "ns": 31972940000,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "claim.verdict",
+   "status": "flagged",
+   "title": "Claim struck \u00b7 unverified \u00b7 JPM beat estimates in 9 of 11 quarters (81.8%); its 1-year return was +11.7% versus SPY at +17.0%, behind by 5.2 percent",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "The sentence adds what the cited evidence never says: 'jpm, percentage, point'.",
+   "data": {
+    "evidence_id": "divergences",
+    "field_path": null,
+    "check": "quote",
+    "section": "talking_point"
+   }
+  },
+  {
+   "v": 1,
+   "id": "f5d97219-fd64-4ad6-8440-7ea1722be513",
+   "at": "2026-10-09T23:06:27.660671+00:00",
+   "ns": 31975916375,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "claim.verdict",
+   "status": "flagged",
+   "title": "Claim verifier \u00b7 4 of 6 verified",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Each claim was checked against the cited tool output: field, value, unit, and every number in the sentence; quotes must appear verbatim.",
+   "data": {}
+  },
+  {
+   "v": 1,
+   "id": "0f9a0477-5f1c-45b1-aefd-ca6a4a77d3db",
+   "at": "2026-10-09T23:06:27.664723+00:00",
+   "ns": 31979970167,
+   "run_id": "wealth-research-20261009230555-d31830",
+   "component": "wealth",
+   "kind": "result",
+   "status": "ok",
+   "title": "Update ready \u00b7 4 verified claims \u00b7 no house view on file",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {}
+  }
+ ],
+ "result": {
+  "ticker": "JPM",
+  "scenario": "bank",
+  "status": "ready",
+  "company": {
+   "name": "JP Morgan Chase & Co.",
+   "ticker": "JPM",
+   "sector": "Financial Services",
+   "industry": "Banks - Diversified",
+   "metric_family": "bank"
+  },
+  "source": {
+   "kind": "cache",
+   "fetchedAt": "2026-10-09T19:30:20.661051+00:00",
+   "label": "Yahoo Finance \u00b7 cached, as of 2026-10-09",
+   "asOf": "2026-10-09",
+   "fictional": false,
+   "macro": null,
+   "fresh": true
+  },
+  "precheck": {
+   "status": "clear",
+   "ticker": "JPM",
+   "verdicts": {
+    "issuer_not_restricted": true
+   },
+   "controls": {
+    "policy": "research.precheck",
+    "allowed": true,
+    "source": "agent_control",
+    "checks": [
+     {
+      "policy": "research.precheck",
+      "control": "fsi-wealth-research-precheck-restricted-v1",
+      "label": "Restricted list",
+      "key": "issuer_not_restricted",
+      "verdict": true,
+      "status": "allowed",
+      "source": "agent_control"
+     }
+    ],
+    "detail": null
+   }
+  },
+  "earnings": {
+   "status": "ready",
+   "quarters": [
+    {
+     "period": "2026-07-14",
+     "epsActual": 6.14,
+     "epsEstimate": 5.8,
+     "surprisePct": 5.86,
+     "beat": true
+    },
+    {
+     "period": "2026-04-14",
+     "epsActual": 5.94,
+     "epsEstimate": 5.51,
+     "surprisePct": 7.78,
+     "beat": true
+    },
+    {
+     "period": "2026-01-13",
+     "epsActual": 4.63,
+     "epsEstimate": 4.82,
+     "surprisePct": -3.91,
+     "beat": false
+    },
+    {
+     "period": "2025-10-14",
+     "epsActual": 5.07,
+     "epsEstimate": 4.87,
+     "surprisePct": 4.01,
+     "beat": true
+    },
+    {
+     "period": "2025-07-15",
+     "epsActual": 4.96,
+     "epsEstimate": 4.48,
+     "surprisePct": 10.62,
+     "beat": true
+    },
+    {
+     "period": "2025-04-11",
+     "epsActual": 5.07,
+     "epsEstimate": 4.64,
+     "surprisePct": 9.15,
+     "beat": true
+    },
+    {
+     "period": "2025-01-15",
+     "epsActual": 4.81,
+     "epsEstimate": 4.04,
+     "surprisePct": 19.18,
+     "beat": true
+    },
+    {
+     "period": "2024-10-11",
+     "epsActual": 4.37,
+     "epsEstimate": 3.99,
+     "surprisePct": 9.63,
+     "beat": true
+    }
+   ],
+   "observations": 11,
+   "beats": 9,
+   "beatRate": 0.8181818181818182,
+   "latestSurprisePct": 5.86,
+   "revenue": {
+    "quarters": [
+     {
+      "period": "2025-06-30",
+      "revenue": 44882000000.0
+     },
+     {
+      "period": "2025-09-30",
+      "revenue": 46430000000.0
+     },
+     {
+      "period": "2025-12-31",
+      "revenue": 45796000000.0
+     },
+     {
+      "period": "2026-03-31",
+      "revenue": 49833000000.0
+     },
+     {
+      "period": "2026-06-30",
+      "revenue": 52852000000.0
+     }
+    ],
+    "yoy": [
+     {
+      "period": "2026-06-30",
+      "growth": 0.1775767568290183
+     }
+    ],
+    "latestYoy": 0.1775767568290183,
+    "priorYoy": null,
+    "decelerating": false
+   }
+  },
+  "peers": {
+   "status": "ready",
+   "tickers": [
+    "BAC",
+    "RY",
+    "WFC",
+    "C",
+    "TD",
+    "BNY"
+   ],
+   "count": 6,
+   "sector": "Financial Services",
+   "industry": "Banks - Diversified",
+   "subjectPe": 14.27742,
+   "medianPe": 15.360861,
+   "pePremium": -0.07053256975634381,
+   "pePercentile": 0.5,
+   "members": [
+    {
+     "ticker": "BAC",
+     "name": "Bank of America Corporation",
+     "marketCap": 379992932352.0,
+     "trailingPE": 12.549885
+    },
+    {
+     "ticker": "RY",
+     "name": "Royal Bank Of Canada",
+     "marketCap": 265547481088.0,
+     "trailingPE": 16.76661
+    },
+    {
+     "ticker": "WFC",
+     "name": "Wells Fargo & Company",
+     "marketCap": 253904961536.0,
+     "trailingPE": 12.203968
+    },
+    {
+     "ticker": "C",
+     "name": "Citigroup, Inc.",
+     "marketCap": 217571950592.0,
+     "trailingPE": 14.007019
+    },
+    {
+     "ticker": "TD",
+     "name": "Toronto Dominion Bank (The)",
+     "marketCap": 187927560192.0,
+     "trailingPE": 17.074184
+    },
+    {
+     "ticker": "BNY",
+     "name": "The Bank of New York Mellon Cor",
+     "marketCap": 97192321024.0,
+     "trailingPE": 16.714703
+    }
+   ]
+  },
+  "returns": {
+   "status": "ready",
+   "asOf": "2026-10-09",
+   "windows": {
+    "1M": {
+     "ticker": -0.05265066571163435,
+     "spy": 0.019327385450045087,
+     "excess": -0.07197805116167943
+    },
+    "3M": {
+     "ticker": 0.01293778510618071,
+     "spy": 0.04744293460483062,
+     "excess": -0.03450514949864991
+    },
+    "6M": {
+     "ticker": 0.13862293019719196,
+     "spy": 0.1879492565978944,
+     "excess": -0.04932632640070245
+    },
+    "1Y": {
+     "ticker": 0.11716952938883529,
+     "spy": 0.16954520241190973,
+     "excess": -0.05237567302307444
+    }
+   }
+  },
+  "macro": {
+   "status": "absent",
+   "reason": "Live macro series are off: add a FRED API key in Studio settings.",
+   "series": {}
+  },
+  "conflicts": [
+   {
+    "id": "beat_vs_spy",
+    "title": "Earnings beats vs. a lagging stock",
+    "severity": "medium",
+    "left": "Beat estimates in 9 of 11 quarters (81.8%)",
+    "right": "1-year return +11.7% vs SPY +17.0%, behind by 5.2 pts",
+    "detail": "Reported earnings beat estimates most quarters while the stock lagged SPY over the last year."
+   }
+  ],
+  "valuation": {
+   "price_to_book": "2.50x",
+   "peer_median_pb": "1.82x",
+   "roe": "17.8%",
+   "peer_median_roe": "12.7%",
+   "trailing_pe": "14.3x",
+   "forward_pe": "13.3x",
+   "peer_median_pe": "15.4x",
+   "pe_vs_peers": "-7.1%"
+  },
+  "context": {
+   "house_view": null,
+   "event": null,
+   "affected_households": {
+    "ticker": "JPM",
+    "households": 240,
+    "count": 133,
+    "concentrated": 102,
+    "executives": 2,
+    "threshold_pct": 10,
+    "synthetic": true
+   },
+   "restricted": null
+  },
+  "news": [],
+  "evidence": [
+   {
+    "id": "earnings",
+    "title": "JPM earnings history",
+    "source": "Yahoo Finance \u00b7 cached, as of 2026-10-09",
+    "kind": "data",
+    "synthetic": false,
+    "fields": {
+     "beat_rate": {
+      "display": "81.8%",
+      "label": "Beat rate"
+     },
+     "beats": {
+      "display": "9",
+      "label": "Quarters beaten"
+     },
+     "observations": {
+      "display": "11",
+      "label": "Quarters observed"
+     },
+     "beat_streak": {
+      "display": "2",
+      "label": "Consecutive beats"
+     },
+     "latest_surprise": {
+      "display": "5.9%",
+      "label": "Latest EPS surprise"
+     },
+     "revenue_latest_yoy": {
+      "display": "17.8%",
+      "label": "Revenue growth, latest quarter YoY"
+     }
+    },
+    "text": "2026-07-14: EPS $6.14 vs $5.80 est (beat); 2026-04-14: EPS $5.94 vs $5.51 est (beat); 2026-01-13: EPS $4.63 vs $4.82 est (miss); 2025-10-14: EPS $5.07 vs $4.87 est (beat); 2025-07-15: EPS $4.96 vs $4.48 est (beat); 2025-04-11: EPS $5.07 vs $4.64 est (beat); 2025-01-15: EPS $4.81 vs $4.04 est (beat); 2024-10-11: EPS $4.37 vs $3.99 est (beat)"
+   },
+   {
+    "id": "returns",
+    "title": "JPM returns vs SPY",
+    "source": "Yahoo Finance \u00b7 cached, as of 2026-10-09 \u00b7 as of 2026-10-09",
+    "kind": "data",
+    "synthetic": false,
+    "fields": {
+     "1M.return": {
+      "display": "-5.3%",
+      "label": "1M return"
+     },
+     "1M.spy": {
+      "display": "+1.9%",
+      "label": "SPY 1M return"
+     },
+     "1M.excess": {
+      "display": "-7.2%",
+      "label": "1M vs SPY"
+     },
+     "3M.return": {
+      "display": "+1.3%",
+      "label": "3M return"
+     },
+     "3M.spy": {
+      "display": "+4.7%",
+      "label": "SPY 3M return"
+     },
+     "3M.excess": {
+      "display": "-3.5%",
+      "label": "3M vs SPY"
+     },
+     "6M.return": {
+      "display": "+13.9%",
+      "label": "6M return"
+     },
+     "6M.spy": {
+      "display": "+18.8%",
+      "label": "SPY 6M return"
+     },
+     "6M.excess": {
+      "display": "-4.9%",
+      "label": "6M vs SPY"
+     },
+     "1Y.return": {
+      "display": "+11.7%",
+      "label": "1Y return"
+     },
+     "1Y.spy": {
+      "display": "+17.0%",
+      "label": "SPY 1Y return"
+     },
+     "1Y.excess": {
+      "display": "-5.2%",
+      "label": "1Y vs SPY"
+     }
+    },
+    "text": ""
+   },
+   {
+    "id": "valuation",
+    "title": "JPM valuation vs peers (bank metrics)",
+    "source": "Yahoo Finance \u00b7 cached, as of 2026-10-09",
+    "kind": "data",
+    "synthetic": false,
+    "fields": {
+     "price_to_book": {
+      "display": "2.50x",
+      "label": "Price to book"
+     },
+     "peer_median_pb": {
+      "display": "1.82x",
+      "label": "Peer median P/B"
+     },
+     "roe": {
+      "display": "17.8%",
+      "label": "Return on equity"
+     },
+     "peer_median_roe": {
+      "display": "12.7%",
+      "label": "Peer median ROE"
+     },
+     "trailing_pe": {
+      "display": "14.3x",
+      "label": "Trailing P/E"
+     },
+     "forward_pe": {
+      "display": "13.3x",
+      "label": "Forward P/E"
+     },
+     "peer_median_pe": {
+      "display": "15.4x",
+      "label": "Peer median P/E"
+     },
+     "pe_vs_peers": {
+      "display": "-7.1%",
+      "label": "P/E vs peer median"
+     }
+    },
+    "text": "Peers: BAC 12.5x, RY 16.8x, WFC 12.2x, C 14.0x, TD 17.1x, BNY 16.7x."
+   },
+   {
+    "id": "divergences",
+    "title": "Signal divergences",
+    "source": "Computed by code",
+    "kind": "computed",
+    "synthetic": false,
+    "fields": {},
+    "text": "Earnings beats vs. a lagging stock: Beat estimates in 9 of 11 quarters (81.8%); 1-year return +11.7% vs SPY +17.0%, behind by 5.2 pts."
+   },
+   {
+    "id": "households",
+    "title": "Affected households (book of record)",
+    "source": "Household book \u00b7 synthetic",
+    "kind": "book",
+    "synthetic": true,
+    "fields": {
+     "households": {
+      "display": "240",
+      "label": "Households in the book"
+     },
+     "holders": {
+      "display": "133",
+      "label": "Households holding it"
+     },
+     "concentrated": {
+      "display": "102",
+      "label": "Above 10%"
+     },
+     "executives": {
+      "display": "2",
+      "label": "Executives or affiliates"
+     }
+    },
+    "text": ""
+   }
+  ],
+  "withheld": [],
+  "update": {
+   "status": "ready",
+   "mode": "deep_agent",
+   "mode_label": "Research Deep Agent",
+   "house_view_impact": "no_house_view",
+   "impact_source": "model",
+   "triggers": [],
+   "claims": [
+    {
+     "text": "JPM's earnings beat history is 81.8% of observations, with 9 beats across 11 observations.",
+     "evidence_id": "earnings",
+     "field_path": "beat_rate",
+     "value": 0.8181818181818182,
+     "unit": "fraction",
+     "also": [
+      "earnings"
+     ],
+     "section": "what_changed",
+     "status": "verified",
+     "reason": "Matches JPM earnings history \u00b7 Beat rate = 81.8%.",
+     "check": "numeric",
+     "display": "81.8%"
+    },
+    {
+     "text": "Latest revenue growth was 17.8% year over year.",
+     "evidence_id": "earnings",
+     "field_path": "revenue_latest_yoy",
+     "value": 0.1775767568290183,
+     "unit": "fraction",
+     "section": "what_changed",
+     "status": "verified",
+     "reason": "Matches JPM earnings history \u00b7 Revenue growth, latest quarter YoY = 17.8%.",
+     "check": "numeric",
+     "display": "17.8%"
+    },
+    {
+     "text": "JPM trades at 2.50x price-to-book versus a 1.82x peer median, while ROE is 17.8% versus 12.7% for peers.",
+     "evidence_id": "valuation",
+     "field_path": "price_to_book",
+     "value": 2.5035522,
+     "unit": "x",
+     "also": [
+      "valuation"
+     ],
+     "section": "what_changed",
+     "status": "verified",
+     "reason": "Matches JPM valuation vs peers (bank metrics) \u00b7 Price to book = 2.50x.",
+     "check": "numeric",
+     "display": "2.50x"
+    },
+    {
+     "text": "JPM beat estimates in 9 of 11 quarters (81.8%); its 1-year return was +11.7% versus SPY at +17.0%, behind by 5.2 percentage points.",
+     "evidence_id": "divergences",
+     "quote": "Beat estimates in 9 of 11 quarters (81.8%); 1-year return +11.7% vs SPY +17.0%, behind by 5.2 pts.",
+     "section": "impact",
+     "status": "unverified",
+     "reason": "The sentence adds what the cited evidence never says: 'jpm, percentage, point'.",
+     "check": "quote"
+    },
+    {
+     "text": "Valuation is mixed: JPM's 13.3x forward P/E is below the 15.4x peer median, while its 2.50x price-to-book is above the 1.82x peer median.",
+     "evidence_id": "valuation",
+     "field_path": "forward_pe",
+     "value": 13.26442,
+     "unit": "x",
+     "also": [
+      "valuation"
+     ],
+     "section": "impact",
+     "status": "verified",
+     "reason": "Matches JPM valuation vs peers (bank metrics) \u00b7 Forward P/E = 13.3x.",
+     "check": "numeric",
+     "display": "13.3x"
+    },
+    {
+     "text": "JPM beat estimates in 9 of 11 quarters (81.8%); its 1-year return was +11.7% versus SPY at +17.0%, behind by 5.2 percentage points.",
+     "evidence_id": "divergences",
+     "quote": "Beat estimates in 9 of 11 quarters (81.8%); 1-year return +11.7% vs SPY +17.0%, behind by 5.2 pts.",
+     "section": "talking_point",
+     "status": "unverified",
+     "reason": "The sentence adds what the cited evidence never says: 'jpm, percentage, point'.",
+     "check": "quote"
+    }
+   ],
+   "counts": {
+    "verified": 4,
+    "unverified": 2,
+    "policy": 0,
+    "total": 6
+   },
+   "scan": {
+    "findings": [],
+    "verdicts": {
+     "no_rating_or_price_target": true,
+     "no_guarantee": true,
+     "no_mnpi": true
+    }
+   },
+   "reason": null,
+   "rating": null
+  },
+  "publish": {
+   "status": "unavailable",
+   "request_id": null,
+   "reason": "No house view on file: the CIO Office covers this issuer first."
+  },
+  "one_year": {
+   "ticker": 0.11716952938883529,
+   "spy": 0.16954520241190973,
+   "excess": -0.05237567302307444
+  },
+  "duration_ms": 31176,
+  "disclaimer": "Demonstration only, from public market data. Not investment advice.",
+  "security": {
+   "mode": "off",
+   "status": "disabled",
+   "checks": 0,
+   "blocked": 0,
+   "errors": 0,
+   "event_ids": [],
+   "fail_open": false,
+   "forced": false
+  },
+  "usage": {
+   "llm_calls": 11,
+   "input_tokens": 16069,
+   "output_tokens": 4311,
+   "tool_calls": 19
+  },
+  "served_by": {
+   "provider": "openai",
+   "label": "OpenAI API",
+   "model": "gpt-5.6-luna",
+   "kind": "openai",
+   "private": false,
+   "external": true,
+   "fallback": true,
+   "reason": "Sparky vLLM unreachable (connection refused)",
+   "source": "saved",
+   "egress": "allow",
+   "ai_defense": null
+  },
+  "telemetry": {
+   "splunk": {
+    "status": "not_configured",
+    "trace_id": "8a15e6f50cfbe3e636a1450c3d621e40"
+   },
+   "galileo": "recorded"
+  },
+  "evaluation": {
+   "status": "not_configured",
+   "label": "Evaluation not configured",
+   "verifier": "Structured claim verifier (code) checks every claim"
+  },
+  "run_id": "wealth-research-20261009230555-d31830",
+  "perimeter": "Yahoo + FRED allowlist only"
+ }
+}

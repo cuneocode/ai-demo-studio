@@ -104,70 +104,74 @@ test('Briefing capability keeps Defense off EDGAR/filesystem and on model hops',
   assert.ok(graph.note.includes('does not assert live SEC or OpenAI'));
  }
 });
-test('Live research keeps Defense off fetch, cache, FRED, tools, conflicts, and grounding',()=>{
+test('Live research keeps Defense off calc tools, the verifier, and policy checks',()=>{
  const live=researchRuntime();
- const offInspection=new Set(['yahoo','cache','fred','tools','macro','conflicts','indicators','grounding','fetchFail','source','ticker']);
+ const offInspection=new Set(['fixtures','cache','tools','grounding','scan','precheck','control','gate','store']);
  assert.ok(!live.edges.some(e=>offInspection.has(e.from)&&e.to==='defense'));
  assert.ok(!live.edges.some(e=>e.from==='defense'&&offInspection.has(e.to)));
- assert.ok(live.nodes.some(n=>n.id==='gate'&&n.title.includes('Accept research note')));
+ assert.ok(live.edges.some(e=>e.from==='news'&&e.to==='defense'),'news is inspected as a tool result');
+ assert.ok(live.edges.some(e=>e.from==='api'&&e.to==='precheck'),'the restricted-list pre-check runs first');
+ assert.ok(live.edges.some(e=>e.from==='precheck'&&e.to==='blocked'));
+ assert.ok(live.nodes.some(n=>n.id==='gate'&&n.title.includes('Strategist publishes')));
  assert.ok(live.note.includes('does not assert live Yahoo, FRED, or model'));
- assert.ok(live.note.includes('not financial advice')||live.nodes.some(n=>/not financial advice/i.test(`${n.title} ${n.detail}`)));
+ assert.ok(/not investment advice/i.test(live.note));
  assert.ok(!live.nodes.some(n=>/vector index|tavily|fixture pack/i.test(`${n.title} ${n.subtitle} ${n.detail}`)));
 });
-test('Live research puts Defense on model hops and keeps indicators if the note is omitted',()=>{
+test('Live research puts Defense on model hops and never dies without a model',()=>{
  const live=researchRuntime();
  assert.ok(live.edges.some(e=>e.from==='nim'&&e.to==='defense'));
  assert.ok(live.edges.some(e=>e.from==='model'&&e.to==='defense'));
  assert.ok(live.edges.some(e=>e.from==='defense'&&e.to==='omit'));
- assert.ok(live.edges.some(e=>e.from==='tools'&&e.to==='indicators'));
- assert.ok(live.edges.some(e=>e.from==='conflicts'&&e.to==='indicators'));
+ assert.ok(live.edges.some(e=>e.from==='nim'&&e.to==='grounding'));
+ assert.ok(live.edges.some(e=>e.from==='gate'&&e.to==='control'));
+ assert.ok(/fixture summary|code-written/i.test(live.nodes.find(n=>n.id==='omit')?.detail||''));
  assert.ok(live.nodes.find(n=>n.id==='model')?.detail.includes('127.0.0.1:8003')||live.nodes.find(n=>n.id==='compute')?.detail.includes('127.0.0.1:8003'));
 });
-test('Research cache map has no vector index and no committed snapshot pack',()=>{
+test('Research evidence map has no vector index and searches the filing by section',()=>{
  const knowledge=researchKnowledge();
  assert.ok(knowledge.nodes.some(n=>n.id==='snap'));
- assert.ok(knowledge.nodes.some(n=>n.id==='fredCache'));
+ assert.ok(knowledge.nodes.some(n=>n.id==='filing'));
  assert.ok(knowledge.note.includes('No vector index'));
- assert.ok(knowledge.note.includes('no committed snapshot pack'));
  assert.ok(!knowledge.nodes.some(n=>/embedding model|vector index|tavily/i.test(`${n.title} ${n.detail}`)));
 });
-test('Research capability keeps Defense off tools/cache and on the model hop',()=>{
+test('Research capability keeps Defense off evidence and the verifier and on the model hop',()=>{
  for(const step of [0,1,2,3]){
   const graph=capabilityDiagram(researchFrame,step,'market-research');
-  assert.ok(!graph.edges.some(e=>['yahoo','cache','tools','conflicts','grounding'].includes(e.from)&&e.to==='defense'));
+  assert.ok(!graph.edges.some(e=>['evidence','grounding','precheck'].includes(e.from)&&e.to==='defense'));
   assert.ok(graph.edges.some(e=>e.from==='nim'&&e.to==='defense'));
-  assert.ok(graph.edges.some(e=>e.from==='tools'&&e.to==='conflicts')||graph.nodes.some(n=>n.id==='conflicts'));
+  assert.ok(graph.edges.some(e=>e.from==='news'&&e.to==='defense'));
   assert.ok(graph.note.includes('does not assert live Yahoo, FRED, or model'));
  }
 });
-test('Live advisory keeps Defense off entitled context, suitability, holdings, and grounding',()=>{
+test('Live advisory keeps Defense off rules, actions, and the verifier, and on CRM notes',()=>{
  const live=advisoryRuntime();
- const offInspection=new Set(['briefingCtx','researchCtx','liveMetrics','suitability','ips','assemble','rows','grounding','posted','holdingsIn','metricsFail']);
+ const offInspection=new Set(['suitability','nba','grounding','rows','metrics','household','posted','gate','supervisor','control','store']);
  assert.ok(!live.edges.some(e=>offInspection.has(e.from)&&e.to==='defense'));
  assert.ok(!live.edges.some(e=>e.from==='defense'&&offInspection.has(e.to)));
- assert.ok(live.nodes.some(n=>n.id==='gate'&&n.title.includes('Accept meeting brief')));
+ assert.ok(live.edges.some(e=>e.from==='notes'&&e.to==='defense'),'CRM notes are inspected as tool results');
+ assert.ok(live.edges.some(e=>e.from==='gate'&&e.to==='supervisor')&&live.edges.some(e=>e.from==='supervisor'&&e.to==='control'));
  assert.ok(live.note.includes('does not assert live Yahoo, FRED, or model'));
- assert.ok(live.note.includes('not advice')||live.nodes.some(n=>/not advice/i.test(`${n.title} ${n.detail}`)));
+ assert.ok(/not advice/i.test(live.note));
 });
-test('Live advisory puts Defense on model hops and keeps holdings if the brief is omitted',()=>{
+test('Live advisory puts Defense on model hops and keeps findings if no model may answer',()=>{
  const live=advisoryRuntime();
  assert.ok(live.edges.some(e=>e.from==='nim'&&e.to==='defense'));
- assert.ok(live.edges.some(e=>e.from==='model'&&e.to==='defense'));
  assert.ok(live.edges.some(e=>e.from==='defense'&&e.to==='omit'));
- assert.ok(live.edges.some(e=>e.from==='suitability'&&e.to==='rows')||live.edges.some(e=>e.from==='assemble'&&e.to==='rows'));
- assert.ok(live.nodes.find(n=>n.id==='omit')?.detail.toLowerCase().includes('remain')||live.nodes.find(n=>n.id==='rows'));
+ assert.ok(live.edges.some(e=>e.from==='model'&&e.to==='egress')&&live.edges.some(e=>e.from==='egress'&&e.to==='defense'));
+ assert.ok(live.edges.some(e=>e.from==='suitability'&&e.to==='rows'));
+ assert.ok(live.nodes.find(n=>n.id==='omit')?.detail.toLowerCase().includes('remain'));
 });
-test('Advisory entitled-context map has no household catalog and no vector index',()=>{
+test('Advisory client-context map has only synthetic households and no vector index',()=>{
  const knowledge=advisoryKnowledge();
  assert.ok(knowledge.nodes.some(n=>n.id==='briefing'));
  assert.ok(knowledge.nodes.some(n=>n.id==='research'));
  assert.ok(knowledge.note.includes('No household CRM catalog'));
-  assert.ok(!knowledge.nodes.some(n=>/embedding model|vector index|tavily/i.test(`${n.title} ${n.detail}`)));
+ assert.ok(!knowledge.nodes.some(n=>/embedding model|vector index|tavily/i.test(`${n.title} ${n.detail}`)));
 });
-test('Advisory capability keeps Defense off rules/context and on the model hop',()=>{
+test('Advisory capability keeps Defense off rules and actions and on notes and the model hop',()=>{
  for(const step of [0,1,2,3]){
   const graph=capabilityDiagram(advisoryFrame,step,'client-advisory');
-  assert.ok(!graph.edges.some(e=>['entitled','holdings','suitability','metrics','grounding'].includes(e.from)&&e.to==='defense'));
+  assert.ok(!graph.edges.some(e=>['suitability','nba','household','grounding'].includes(e.from)&&e.to==='defense'));
   assert.ok(graph.edges.some(e=>e.from==='nim'&&e.to==='defense'));
   assert.ok(graph.note.includes('does not assert live Yahoo, FRED, or model'));
  }
@@ -208,10 +212,10 @@ test('Wealth model host is Sparky on a DGX Spark dev box, with Cisco AI POD prop
   assert.match(profiles[id].gpu,/proposed/);
  }
 });
-test('Wealth profiles describe snapshot cache, FRED, and accept-gates',()=>{
+test('Wealth profiles describe evidence, publish, and approval gates',()=>{
  assert.ok(profiles['market-research'].store.toLowerCase().includes('cache'));
- assert.ok(profiles['market-research'].gate.toLowerCase().includes('research note'));
- assert.ok(profiles['client-advisory'].gate.toLowerCase().includes('meeting brief'));
+ assert.ok(profiles['market-research'].gate.toLowerCase().includes('publishes'));
+ assert.ok(profiles['client-advisory'].gate.toLowerCase().includes('supervisor approves'));
  assert.ok(profiles['client-advisory'].right.toLowerCase().includes('suitability'));
 });
 test('Live research and advisory show optional Galileo / Splunk Agent Observability as telemetry',()=>{
@@ -281,17 +285,17 @@ test('Zoom altitudes keep the live perimeters', () => {
 
   const research = zoomText(zoomMaps['market-research']);
   assert.match(research, /127\.0\.0\.1:8003/);
-  assert.match(research, /not financial advice/i);
+  assert.match(research, /not investment advice/i);
   assert.match(research, /No vector index/);
   assert.match(research, /never enter Inspection/);
   assert.match(research, /only when configured/i);
+  assert.match(research, /Agent Control/);
 
   const advisory = zoomText(zoomMaps['client-advisory']);
   assert.match(advisory, /No household CRM catalog/);
   assert.match(advisory, /not advice/i);
-  assert.match(advisory, /Holdings remain/);
-  assert.equal(zoomMaps['client-advisory'].coreEdges.some(edge => edge.from === 'workload' && edge.to === 'defense' && /holdings/i.test(edge.label)), false);
-
+  assert.match(advisory, /Findings remain/);
+  assert.equal(zoomMaps['client-advisory'].coreEdges.some(edge => edge.from === 'workload' && edge.to === 'defense'), false);
   assert.equal(zoomMaps['transaction-llm'].coreEdges.some(edge => edge.from === 'pipeline' && edge.to === 'defense'), false);
   assert.equal(zoomMaps['fraud-modeling'].interiors.observe.entities.some(entity => /eval model/i.test(entity.title)), false);
   assert.equal(zoomMaps['kyc-processing'].implemented, false);
