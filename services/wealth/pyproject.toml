@@ -4,6 +4,10 @@ version = "0.1.0"
 description = "Studio sidecar for live wealth research and client advisory"
 requires-python = ">=3.12,<3.14"
 dependencies = [
+  "agent-control-evaluators==8.5.0",
+  "agent-control-models==8.5.0",
+  "agent-control-sdk==8.5.0",
+  "deepagents==0.7.15",
   "fastapi>=0.115.13,<0.116",
   "galileo==2.6.0",
   "httpx>=0.28,<0.29",
