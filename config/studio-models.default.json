@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "chain": ["sparky-vllm", "openai"],
+  "useCases": {
+    "client-advisory": { "externalPolicy": "require_ai_defense" }
+  },
+  "providers": {
+    "sparky-vllm": {
+      "label": "Sparky vLLM",
+      "kind": "vllm",
+      "baseUrl": "http://127.0.0.1:8003/v1",
+      "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4",
+      "apiKeyEnv": "VLLM_API_KEY",
+      "responsesApi": false,
+      "private": true
+    },
+    "openai": {
+      "label": "OpenAI API",
+      "kind": "openai",
+      "baseUrl": "https://api.openai.com/v1",
+      "model": "gpt-4o-mini",
+      "apiKeyEnv": "OPENAI_API_KEY",
+      "responsesApi": true,
+      "private": false
+    }
+  },
+  "env": {
+    "sparky-vllm": { "baseUrl": ["SPARKY_VLLM_BASE_URL", "NIM_BASE_URL"], "model": ["SPARKY_VLLM_MODEL", "NIM_MODEL"], "requires": "baseUrl" },
+    "openai": { "model": ["MODEL_NAME"] }
+  }
+}

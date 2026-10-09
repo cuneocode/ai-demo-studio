@@ -1,53 +1,112 @@
-// /api/studio/models: the model registry. Python services read the saved file from disk.
+// /api/studio/models: the model registry. Python services read the saved file (or the
+// committed defaults) from disk, so this module applies the same rules as
+// services/llm/studio_models.py: same defaults file, same .env overrides, same probe.
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import path from "node:path";
-import { KEY_NAMES, MODEL_USE_CASES, baseUrlProblem, defaultRegistry, providerFor, validateRegistry, type ModelProvider, type ModelRegistry } from "../app/studio-models.ts";
+import { KEY_NAMES, MODEL_USE_CASES, baseUrlProblem, chainFor, chainLabel, validateRegistry, type ModelProvider, type ModelRegistry } from "../app/studio-models.ts";
 import type { ModelState } from "../app/studio-settings.ts";
 import { ROOT, envValue } from "./studio-env.ts";
 import { fetchText, networkProblem, readJson, send, writeRefusal } from "./studio-http.ts";
 
 export const STUDIO_MODELS_PATH = "/api/studio/models";
 const registryFile = () => process.env.STUDIO_MODELS_FILE ?? path.join(ROOT, ".studio", "models.json");
+const defaultsFile = () => process.env.STUDIO_MODELS_DEFAULT_FILE ?? path.join(ROOT, "config", "studio-models.default.json");
 
 /** Only allowlisted key variables are ever read, and keys never reach the browser. */
 const keyValue = (name: string) => ((KEY_NAMES as readonly string[]).includes(name) ? envValue(name) : "");
 
-export function loadRegistry(): { saved: boolean; problem: string | null; registry: ModelRegistry } {
+type EnvSpec = { baseUrl?: string[]; model?: string[]; requires?: "baseUrl" | "model" };
+const firstEnv = (names?: string[]) => (names ?? []).map((name) => envValue(name).trim()).find(Boolean) ?? "";
+
+/** The committed defaults with .env applied, and the providers .env does not configure. */
+function defaults(): { registry: ModelRegistry; unconfigured: Record<string, string> } {
+  const raw = JSON.parse(readFileSync(defaultsFile(), "utf8")) as Record<string, unknown> & { env?: Record<string, EnvSpec>; providers: Record<string, ModelProvider> };
+  const providers = Object.fromEntries(Object.entries(raw.providers).map(([id, provider]) => [id, { ...provider }]));
+  const unconfigured: Record<string, string> = {};
+  for (const [id, spec] of Object.entries(raw.env ?? {})) {
+    if (!providers[id]) continue;
+    const baseUrl = firstEnv(spec.baseUrl);
+    const model = firstEnv(spec.model);
+    if (baseUrl) providers[id].baseUrl = baseUrl;
+    if (model) providers[id].model = model;
+    if (spec.requires && !firstEnv(spec[spec.requires])) unconfigured[id] = `not configured in .env (${spec[spec.requires]?.[0]})`;
+  }
+  const parsed = validateRegistry({ ...raw, providers });
+  if ("error" in parsed) throw new Error(`config/studio-models.default.json: ${parsed.error}`);
+  return { registry: parsed.registry, unconfigured };
+}
+
+export function loadRegistry(): { saved: boolean; problem: string | null; registry: ModelRegistry; unconfigured: Record<string, string> } {
   const file = registryFile();
-  const fallback = defaultRegistry(envValue("MODEL_NAME") || undefined, envValue("NIM_MODEL") || undefined);
-  if (!existsSync(file)) return { saved: false, problem: null, registry: fallback };
+  const fallback = defaults();
+  if (!existsSync(file)) return { saved: false, problem: null, ...fallback };
   let parsed: ReturnType<typeof validateRegistry>;
   try { parsed = validateRegistry(JSON.parse(readFileSync(file, "utf8"))); } catch { parsed = { error: "The saved file is not valid JSON." }; }
-  return "registry" in parsed ? { saved: true, problem: null, registry: parsed.registry } : { saved: false, problem: parsed.error, registry: fallback };
+  return "registry" in parsed ? { saved: true, problem: null, registry: parsed.registry, unconfigured: {} } : { saved: false, problem: parsed.error, ...fallback };
 }
 
-/** Whether a use case's model has what it needs, from the registry or each service's .env fallback. */
+const configuredProblem = (provider: ModelProvider) =>
+  provider.kind === "openai" && !keyValue(provider.apiKeyEnv) ? `${provider.apiKeyEnv || "A key"} is not set` : null;
+
+/** Whether a use case's chain has at least one configured backend. */
 export function modelState(useCase: string): ModelState {
-  const { saved, registry } = loadRegistry();
-  if (!saved) {
-    if (useCase === "market-research" || useCase === "client-advisory") return { label: "Local vLLM (.env)", ok: true, detail: "" };
-    if (useCase === "fraud-modeling") return { label: ".env settings", ok: true, detail: "" };
-    return envValue("OPENAI_API_KEY")
-      ? { label: ".env settings", ok: true, detail: "" }
-      : { label: ".env settings", ok: false, detail: "OPENAI_API_KEY" };
-  }
-  const { provider } = providerFor(registry, useCase);
-  if (!provider) return { label: "Unknown", ok: false, detail: "A model provider" };
-  if (provider.kind === "openai" && !keyValue(provider.apiKeyEnv)) return { label: provider.label, ok: false, detail: `${provider.apiKeyEnv || "A key"} for ${provider.label}` };
-  return { label: provider.label, ok: true, detail: "" };
+  const { registry, unconfigured } = loadRegistry();
+  const entries = chainFor(registry, useCase).providers.filter(({ id }) => !unconfigured[id]);
+  const label = chainLabel(registry, useCase, unconfigured) || "No backend";
+  if (entries.some(({ provider }) => provider && !configuredProblem(provider))) return { label, ok: true, detail: "" };
+  const first = entries[0]?.provider;
+  return { label, ok: false, detail: first ? `${first.apiKeyEnv || "A key"} for ${first.label}` : "A model provider" };
 }
 
-function snapshot() {
+type Health = { up: boolean; detail: string };
+let healthCache: { at: number; key: string; value: Promise<Record<string, Health>> } | null = null;
+
+/** GET {baseUrl}/models for every provider, as the services probe them (cached 10 s). */
+export function providerHealth(registry: ModelRegistry, unconfigured: Record<string, string>): Promise<Record<string, Health>> {
+  const key = JSON.stringify([registry.providers, unconfigured]);
+  if (healthCache && healthCache.key === key && Date.now() - healthCache.at < 10_000) return healthCache.value;
+  const value = Promise.all(Object.entries(registry.providers).map(async ([id, provider]): Promise<[string, Health]> => {
+    if (unconfigured[id]) return [id, { up: false, detail: unconfigured[id] }];
+    const missing = configuredProblem(provider);
+    if (missing) return [id, { up: false, detail: missing }];
+    const secret = keyValue(provider.apiKeyEnv);
+    try {
+      const { status } = await fetchText(`${provider.baseUrl}/models`, { timeout: 2000, headers: secret ? { authorization: `Bearer ${secret}` } : {} });
+      if (status === 401 || status === 403) return [id, { up: false, detail: "rejected the key" }];
+      return [id, status >= 200 && status < 300 ? { up: true, detail: "answering" } : { up: false, detail: `answered ${status}` }];
+    } catch (error) {
+      return [id, { up: false, detail: networkProblem(error) }];
+    }
+  })).then(Object.fromEntries);
+  healthCache = { at: Date.now(), key, value };
+  return value;
+}
+
+/** Per use case: the chain .env leaves configured, and the provider that would answer right now. */
+function routes(registry: ModelRegistry, unconfigured: Record<string, string>, health: Record<string, Health>) {
+  return Object.fromEntries(MODEL_USE_CASES.map((useCase) => {
+    const ids = chainFor(registry, useCase.id).ids.filter((id) => !unconfigured[id]);
+    const active = ids.find((id) => health[id]?.up) ?? null;
+    return [useCase.id, { chain: ids, active, fallback: Boolean(active && ids.indexOf(active) > 0) }];
+  }));
+}
+
+async function snapshot() {
+  const loaded = loadRegistry();
+  const health = await providerHealth(loaded.registry, loaded.unconfigured);
   return {
-    ...loadRegistry(),
+    ...loaded,
     file: path.relative(ROOT, registryFile()) || registryFile(),
+    defaultsFile: path.relative(ROOT, defaultsFile()),
     keys: Object.fromEntries(KEY_NAMES.map((name) => [name, Boolean(keyValue(name))])),
     useCases: MODEL_USE_CASES,
+    health,
+    routes: routes(loaded.registry, loaded.unconfigured, health),
   };
 }
 
-function save(input: unknown) {
+async function save(input: unknown) {
   const result = validateRegistry(input);
   if ("error" in result) return { status: 422, body: { error: result.error } };
   const file = registryFile();
@@ -55,7 +114,8 @@ function save(input: unknown) {
   const temporary = `${file}.${process.pid}.tmp`;
   writeFileSync(temporary, `${JSON.stringify(result.registry, null, 2)}\n`, { mode: 0o644 });
   renameSync(temporary, file);
-  return { status: 200, body: snapshot() };
+  healthCache = null;
+  return { status: 200, body: await snapshot() };
 }
 
 /** Checks a provider before saving: lists its models with the named key. */
@@ -84,11 +144,11 @@ async function check(input: unknown) {
 }
 
 export async function handleModels(request: IncomingMessage, response: ServerResponse) {
-  if (request.method === "GET") return send(response, 200, snapshot());
+  if (request.method === "GET") return send(response, 200, await snapshot());
   if (request.method !== "PUT" && request.method !== "POST") return send(response, 405, { error: "Use GET, PUT, or POST." });
   const refusal = writeRefusal(request);
   if (refusal) return send(response, refusal.status, { error: refusal.error });
   const body = await readJson(request);
-  const result = request.method === "PUT" ? save(body) : await check(body);
+  const result = request.method === "PUT" ? await save(body) : await check(body);
   send(response, result.status, result.body);
 }

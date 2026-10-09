@@ -101,3 +101,33 @@
 @media (max-width: 900px) {
   .st-row.services { grid-template-columns: 1fr; }
 }
+
+.st-chain { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; }
+.st-chain.compact { gap: 6px; }
+.st-chain-item { display: flex; align-items: center; gap: 10px; min-width: 250px; padding: 9px 10px 9px 12px; border: 1px solid #304353; border-radius: 9px; background: #111c27; }
+.st-chain.compact .st-chain-item { min-width: 0; padding: 5px 6px 5px 9px; gap: 7px; }
+.st-chain-item.up { border-color: rgba(87,195,143,.4); }
+.st-chain-item.skip { opacity: .7; border-style: dashed; }
+.st-chain-index { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(95,143,242,.18); color: #b9cdfb; font-size: var(--font-meta); font-weight: 700; }
+.st-chain-copy { display: grid; gap: 1px; flex: 1; min-width: 0; }
+.st-chain-copy strong { display: inline-flex; align-items: center; gap: 6px; font-size: var(--font-control); font-weight: 650; color: var(--text); }
+.st-chain-copy small { color: var(--muted-2); font-size: var(--font-meta); overflow-wrap: anywhere; }
+.st-chain-actions { display: inline-flex; gap: 2px; }
+.st-chain-actions .st-icon { margin-left: 0; padding: 4px; }
+.st-icon.plain:not(:disabled):hover { border-color: rgba(95,143,242,.4); color: #b9cdfb; }
+.st-page select.st-chain-add { width: auto; min-width: 150px; min-height: 36px; align-self: center; }
+.st-health { font-size: var(--font-meta); font-weight: 600; }
+.st-health.up { color: #9fd9bd; }
+.st-health.down { color: #e2cf9f; }
+.st-health.skip { color: var(--muted-2); }
+.st-row.st-route { grid-template-columns: minmax(170px, .9fr) minmax(170px, 1fr) minmax(260px, 1.6fr) minmax(200px, 1fr); align-items: start; }
+.st-route-chain { display: grid; gap: 6px; justify-items: start; }
+.st-chain-text { font-weight: 600; }
+.st-applies { display: block; margin-top: 4px; font-size: var(--font-meta); line-height: 1.4; }
+.st-answering { font-size: var(--font-meta); font-weight: 600; }
+.st-answering.up { color: #9fd9bd; }
+.st-answering.fallback, .st-answering.down { color: #e2cf9f; }
+
+@media (max-width: 900px) {
+  .st-row.st-route { grid-template-columns: 1fr; }
+}

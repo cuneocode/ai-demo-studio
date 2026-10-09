@@ -2,11 +2,10 @@
 // bell, Cisco platform rows, Controls, Telemetry, help, story readiness).
 // It passes on status fields only; no setting value beyond URLs and names.
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { KEY_NAMES } from "../app/studio-models.ts";
 import type { StudioStatus, UseCaseHealth } from "../app/studio-status.ts";
 import { envValue } from "./studio-env.ts";
 import { fetchText, send } from "./studio-http.ts";
-import { loadRegistry } from "./studio-models-api.ts";
+import { loadRegistry, providerHealth } from "./studio-models-api.ts";
 import { settingsSnapshot } from "./studio-settings-api.ts";
 import { INTERBANK, SERVICES } from "./studio-services.ts";
 
@@ -42,17 +41,13 @@ function serviceHealth(id: string, label: string, raw: unknown): UseCaseHealth {
   };
 }
 
+/** Private (self-hosted) endpoints in use, for the AI Infrastructure row. */
 async function probeModels() {
-  const { registry } = loadRegistry();
-  return Promise.all(Object.entries(registry.providers).filter(([, provider]) => provider.kind === "vllm").map(async ([id, provider]) => {
-    const key = (KEY_NAMES as readonly string[]).includes(provider.apiKeyEnv) ? envValue(provider.apiKeyEnv) : "";
-    let up = false;
-    try {
-      const { status } = await fetchText(`${provider.baseUrl}/models`, { timeout: 2000, headers: key ? { authorization: `Bearer ${key}` } : {} });
-      up = status === 200;
-    } catch { /* reported as down */ }
-    return { id, label: provider.label, host: new URL(provider.baseUrl).host, up };
-  }));
+  const { registry, unconfigured } = loadRegistry();
+  const health = await providerHealth(registry, unconfigured);
+  return Object.entries(registry.providers)
+    .filter(([id, provider]) => provider.private && !unconfigured[id])
+    .map(([id, provider]) => ({ id, label: provider.label, host: new URL(provider.baseUrl).host, up: Boolean(health[id]?.up) }));
 }
 
 async function build(): Promise<StudioStatus> {

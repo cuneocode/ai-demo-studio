@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CircleAlert, CircleCheck, Cpu, KeyRound, PlugZap, Plus, RefreshCw, RotateCcw, Save, ServerCog, Trash2 } from "lucide-react";
-import { KEY_NAMES, MODEL_USE_CASES, PROVIDER_ID, providerFor, validateRegistry, type ModelProvider, type ModelRegistry } from "./studio-models";
+import { ArrowDown, ArrowUp, CircleAlert, CircleCheck, Cpu, KeyRound, PlugZap, Plus, RefreshCw, RotateCcw, Save, ServerCog, Trash2, X } from "lucide-react";
+import { KEY_NAMES, MODEL_USE_CASES, POLICY_LABEL, PROVIDER_ID, chainFor, defaultPolicy, policyFor, validateRegistry, type ExternalPolicy, type ModelProvider, type ModelRegistry } from "./studio-models";
 import { SETTING_GROUPS, settingProblem, type Readiness, type SettingGroup, type SettingState } from "./studio-settings";
 import "./studio-settings.css";
 
@@ -10,7 +10,12 @@ const MODELS_API = "/api/studio/models";
 const SETTINGS_API = "/api/studio/settings";
 const SERVICES_API = "/api/studio/services";
 
-type ModelSnapshot = { saved: boolean; problem: string | null; file: string; registry: ModelRegistry; keys: Record<string, boolean> };
+type ProviderHealth = { up: boolean; detail: string };
+type Route = { chain: string[]; active: string | null; fallback: boolean };
+export type ModelSnapshot = {
+  saved: boolean; problem: string | null; file: string; defaultsFile?: string; registry: ModelRegistry; keys: Record<string, boolean>;
+  unconfigured?: Record<string, string>; health?: Record<string, ProviderHealth>; routes?: Record<string, Route>;
+};
 type SettingsSnapshot = { file: string; settings: Record<string, SettingState>; readiness: Readiness[] };
 type ServiceRow = { id: string; label: string; port: number; up: boolean; detail?: string; managed: boolean; installed: boolean; install: string; pending: string[] | null };
 type ServicesSnapshot = {
@@ -290,16 +295,25 @@ function ModelsPanel({ modelKeys, onKeysSaved, onModelsSaved }: { modelKeys: Rec
     while (draft.providers[`endpoint-${index}`]) index += 1;
     const id = `endpoint-${index}`;
     if (!PROVIDER_ID.test(id)) return;
-    update({ ...draft, providers: { ...draft.providers, [id]: { label: `Endpoint ${index}`, kind: "vllm", baseUrl: "http://127.0.0.1:8000/v1", model: "", apiKeyEnv: "", responsesApi: false } } });
+    update({ ...draft, providers: { ...draft.providers, [id]: { label: `Endpoint ${index}`, kind: "vllm", baseUrl: "http://127.0.0.1:8000/v1", model: "", apiKeyEnv: "", responsesApi: false, private: true } } });
   };
   const removeProvider = (id: string) => {
-    const useCases = Object.fromEntries(Object.entries(draft.useCases).filter(([, providerId]) => providerId !== id));
-    update({ ...draft, providers: without(draft.providers, id), useCases });
+    const useCases = Object.fromEntries(Object.entries(draft.useCases).map(([useCase, route]) => {
+      const chain = route.chain?.filter((item) => item !== id);
+      return [useCase, { ...route, chain: chain?.length ? chain : undefined }];
+    }));
+    update({ ...draft, chain: draft.chain.filter((item) => item !== id), providers: without(draft.providers, id), useCases });
   };
-  const assign = (useCase: string, providerId: string) => {
+  const setUseCase = (useCase: string, patch: Partial<{ chain: string[] | undefined; externalPolicy: ExternalPolicy | undefined }>, keepChain = false) => {
+    const next = { ...draft.useCases[useCase], ...patch };
+    if (!keepChain && next.chain && JSON.stringify(next.chain) === JSON.stringify(draft.chain)) delete next.chain;
+    if (next.externalPolicy === defaultPolicy(useCase)) delete next.externalPolicy;
     const rest = without(draft.useCases, useCase);
-    update({ ...draft, useCases: providerId === draft.default || !providerId ? rest : { ...rest, [useCase]: providerId } });
+    update({ ...draft, useCases: next.chain || next.externalPolicy ? { ...rest, [useCase]: next } : rest });
   };
+  const unconfigured = snapshot.saved ? {} : snapshot.unconfigured ?? {};
+  const providerStatus = (id: string) => unconfigured[id] ? { tone: "skip", text: `Skipped: ${unconfigured[id]}` }
+    : snapshot.health?.[id] ? { tone: snapshot.health[id].up ? "up" : "down", text: snapshot.health[id].up ? "Answering" : snapshot.health[id].detail } : null;
   const runCheck = async (id: string) => {
     const provider = draft.providers[id];
     setChecks((current) => ({ ...current, [id]: { state: "running" } }));
@@ -342,39 +356,41 @@ function ModelsPanel({ modelKeys, onKeysSaved, onModelsSaved }: { modelKeys: Rec
           <button className="primary-button" disabled={(!dirty && snapshot.saved) || saving || Boolean(problem)} onClick={save}><Save size={16} /> {saving ? "Saving…" : "Save models"}</button>
         </div>
       </div>
-      <p className="st-muted st-intro">The OpenAI-compatible endpoint every live use case calls, with optional overrides. Changes apply on each use case&apos;s next request; no restart needed.</p>
+      <p className="st-muted st-intro">Every live use case tries its chain in order and uses the first backend that answers a health check, so one setting serves all demos: for example Sparky when it is up, otherwise OpenAI. Each response reports which model answered. Changes apply on the next request; no restart needed (interbank needs one lab rebuild).</p>
 
-      {snapshot.problem ? <div className="st-banner danger"><CircleAlert size={18} /><span>The saved file at <code>{snapshot.file}</code> was rejected ({snapshot.problem}). Services use their own <code>.env</code> settings until you save again.</span></div>
-        : !snapshot.saved ? <div className="st-banner"><CircleAlert size={18} /><span>Nothing saved yet, so each service uses its own <code>.env</code> model settings. Saving writes <code>{snapshot.file}</code>.</span></div>
+      {snapshot.problem ? <div className="st-banner danger"><CircleAlert size={18} /><span>The saved file at <code>{snapshot.file}</code> was rejected ({snapshot.problem}). Services use the committed defaults until you save again.</span></div>
+        : !snapshot.saved ? <div className="st-banner"><CircleAlert size={18} /><span>Nothing saved yet, so every service uses the committed defaults in <code>{snapshot.defaultsFile ?? "config/studio-models.default.json"}</code>, shown below. Saving writes <code>{snapshot.file}</code>.</span></div>
         : dirty ? <div className="st-banner"><CircleAlert size={18} /><span>Unsaved model changes.</span></div>
         : null}
       {(saveError || (dirty && problem)) && <div className="st-banner danger" role="alert"><CircleAlert size={18} /><span>{saveError ?? problem}</span></div>}
 
-      <h3 className="st-subhead">Default for all use cases</h3>
-      <div className="st-default" role="radiogroup" aria-label="Default backend">
-        {providers.map(([id, provider]) => (
-          <button key={id} role="radio" aria-checked={draft.default === id} className={draft.default === id ? "active" : ""} onClick={() => update({ ...draft, default: id, useCases: Object.fromEntries(Object.entries(draft.useCases).filter(([, providerId]) => providerId !== id)) })}>
-            <Cpu size={17} /><span><strong>{provider.label}</strong><small>{provider.model || "No model"}</small></span>
-          </button>
-        ))}
-      </div>
+      <h3 className="st-subhead">Default chain for all use cases</h3>
+      <ChainEditor label="Default chain" chain={draft.chain} providers={draft.providers} status={providerStatus} onChange={(chain) => update({ ...draft, chain })} />
 
       <h3 className="st-subhead">Per use case</h3>
       <div className="st-table" role="table" aria-label="Use case overrides">
-        <div className="st-row head" role="row"><span role="columnheader">Use case</span><span role="columnheader">Model calls</span><span role="columnheader">Backend</span><span role="columnheader">Takes effect</span></div>
+        <div className="st-row head st-route" role="row"><span role="columnheader">Use case</span><span role="columnheader">Model calls</span><span role="columnheader">Chain</span><span role="columnheader">Hosted models</span></div>
         {MODEL_USE_CASES.map((useCase) => {
-          const current = providerFor(draft, useCase.id);
+          const current = chainFor(draft, useCase.id);
+          const policy = policyFor(draft, useCase.id);
+          const route = !dirty ? snapshot.routes?.[useCase.id] : undefined;
           return (
-            <div className="st-row" role="row" key={useCase.id}>
-              <strong role="cell">{useCase.title}</strong>
+            <div className="st-row st-route" role="row" key={useCase.id} aria-label={useCase.title}>
+              <span role="cell"><strong>{useCase.title}</strong><small className="st-muted st-applies">{useCase.applies}</small></span>
               <span role="cell">{useCase.calls}</span>
-              <span role="cell">
-                <select aria-label={`${useCase.title} backend`} value={current.overridden ? current.id : ""} onChange={(event) => assign(useCase.id, event.target.value)}>
-                  <option value="">Default ({draft.providers[draft.default]?.label})</option>
-                  {providers.filter(([id]) => id !== draft.default).map(([id, provider]) => <option key={id} value={id}>{provider.label}</option>)}
-                </select>
+              <span role="cell" className="st-route-chain">
+                {current.overridden
+                  ? <ChainEditor label={`${useCase.title} chain`} chain={current.ids} providers={draft.providers} status={providerStatus} compact onChange={(chain) => setUseCase(useCase.id, { chain })} />
+                  : <span className="st-chain-text">{current.providers.filter(({ id }) => !unconfigured[id]).map(({ id, provider }) => provider?.label ?? id).join(" → ") || "No backend"} <small className="st-muted">(default)</small></span>}
+                <button type="button" className="text-button" onClick={() => setUseCase(useCase.id, { chain: current.overridden ? undefined : [...draft.chain] }, true)}>{current.overridden ? "Use default chain" : "Customize"}</button>
+                {route && <small className={`st-answering ${route.active ? (route.fallback ? "fallback" : "up") : "down"}`}>{route.active ? `Answering now: ${draft.providers[route.active]?.label}${route.fallback ? " (fallback)" : ""}` : "No backend answering"}</small>}
               </span>
-              <span role="cell" className="st-muted">{useCase.applies}</span>
+              <span role="cell">
+                <select aria-label={`${useCase.title} hosted models`} value={policy} onChange={(event) => setUseCase(useCase.id, { externalPolicy: event.target.value as ExternalPolicy })}>
+                  {(Object.keys(POLICY_LABEL) as ExternalPolicy[]).filter((value) => !(useCase.clientData && value === "allow")).map((value) => <option key={value} value={value}>{POLICY_LABEL[value]}</option>)}
+                </select>
+                {useCase.clientData && <small className="st-muted st-applies">Client data: a hosted model is used only after Cisco AI Defense (enforce) inspects the request; without AI Defense the demo replays a recorded run.</small>}
+              </span>
             </div>
           );
         })}
@@ -387,15 +403,18 @@ function ModelsPanel({ modelKeys, onKeysSaved, onModelsSaved }: { modelKeys: Rec
       <div className="st-providers">
         {providers.map(([id, provider]) => {
           const check = checks[id];
-          const inUse = draft.default === id || Object.values(draft.useCases).includes(id);
+          const inDefault = draft.chain.includes(id);
+          const inUse = inDefault || Object.values(draft.useCases).some((route) => route.chain?.includes(id));
           const keyName = provider.apiKeyEnv;
+          const status = providerStatus(id);
           return (
             <article className="st-provider" key={id} aria-label={provider.label}>
               <header>
                 <span className={`st-kind ${provider.kind}`}>{KIND_LABEL[provider.kind]}</span>
                 <code>{id}</code>
-                {inUse && <span className="st-inuse">{draft.default === id ? "Default" : "In use"}</span>}
-                <button className="st-icon" aria-label={`Remove ${provider.label}`} disabled={draft.default === id || providers.length === 1} onClick={() => removeProvider(id)}><Trash2 size={16} /></button>
+                {inUse && <span className="st-inuse">{inDefault ? "Default chain" : "In use"}</span>}
+                {status && <span className={`st-health ${status.tone}`}>{status.text}</span>}
+                <button className="st-icon" aria-label={`Remove ${provider.label}`} disabled={(inDefault && draft.chain.length === 1) || providers.length === 1} onClick={() => removeProvider(id)}><Trash2 size={16} /></button>
               </header>
               <label><span>Name</span><input value={provider.label} onChange={(event) => editProvider(id, { label: event.target.value })} /></label>
               <label><span>Type</span>
@@ -422,6 +441,10 @@ function ModelsPanel({ modelKeys, onKeysSaved, onModelsSaved }: { modelKeys: Rec
                 </label>
               )}
               <label className="st-check wide">
+                <input type="checkbox" checked={provider.private} onChange={(event) => editProvider(id, { private: event.target.checked })} />
+                <span>Private: data stays on infrastructure you control (Sparky, a Cisco UCS node). Hosted providers trigger AI Defense pre-egress inspection for client data.</span>
+              </label>
+              <label className="st-check wide">
                 <input type="checkbox" checked={provider.responsesApi} onChange={(event) => editProvider(id, { responsesApi: event.target.checked })} />
                 <span>Responses API with reasoning summaries (interbank only; without it, interbank uses Chat Completions)</span>
               </label>
@@ -438,22 +461,65 @@ function ModelsPanel({ modelKeys, onKeysSaved, onModelsSaved }: { modelKeys: Rec
   );
 }
 
-/** The backend a live use case will call, linking to Studio settings. */
+type StatusFn = (id: string) => { tone: string; text: string } | null;
+
+/** An ordered list of providers: the first healthy one answers. */
+function ChainEditor({ label, chain, providers, status, onChange, compact = false }: {
+  label: string; chain: string[]; providers: Record<string, ModelProvider>; status: StatusFn; onChange: (chain: string[]) => void; compact?: boolean;
+}) {
+  const move = (index: number, by: number) => {
+    const next = [...chain];
+    next.splice(index + by, 0, ...next.splice(index, 1));
+    onChange(next);
+  };
+  const available = Object.entries(providers).filter(([id]) => !chain.includes(id));
+  return (
+    <div className={`st-chain${compact ? " compact" : ""}`} role="list" aria-label={label}>
+      {chain.map((id, index) => {
+        const provider = providers[id];
+        const state = status(id);
+        return (
+          <div className={`st-chain-item ${state?.tone ?? ""}`} role="listitem" key={id} aria-label={`${index + 1}. ${provider?.label ?? id}`}>
+            <span className="st-chain-index">{index + 1}</span>
+            <span className="st-chain-copy"><strong><Cpu size={14} /> {provider?.label ?? id}</strong>{!compact && <small>{provider?.model}{provider?.private ? " · private" : " · hosted"}</small>}{state && <small className={`st-health ${state.tone}`}>{state.text}</small>}</span>
+            <span className="st-chain-actions">
+              <button type="button" className="st-icon plain" aria-label={`Move ${provider?.label ?? id} up in ${label}`} disabled={index === 0} onClick={() => move(index, -1)}><ArrowUp size={14} /></button>
+              <button type="button" className="st-icon plain" aria-label={`Move ${provider?.label ?? id} down in ${label}`} disabled={index === chain.length - 1} onClick={() => move(index, 1)}><ArrowDown size={14} /></button>
+              <button type="button" className="st-icon" aria-label={`Remove ${provider?.label ?? id} from ${label}`} disabled={chain.length === 1} onClick={() => onChange(chain.filter((item) => item !== id))}><X size={14} /></button>
+            </span>
+          </div>
+        );
+      })}
+      {available.length > 0 && (
+        <select className="st-chain-add" aria-label={`Add a backend to ${label}`} value="" onChange={(event) => { if (event.target.value) onChange([...chain, event.target.value]); }}>
+          <option value="">Add fallback…</option>
+          {available.map(([id, provider]) => <option key={id} value={id}>{provider.label}</option>)}
+        </select>
+      )}
+    </div>
+  );
+}
+
+/** The chain a live use case will try, linking to Studio settings; the tooltip says which backend answers now. */
 export function ModelChip({ experience, onOpen }: { experience?: string; onOpen: () => void }) {
   const useCase = MODEL_USE_CASES.find((item) => item.experience === experience);
-  const [label, setLabel] = useState<string | null>(null);
+  const [state, setState] = useState<{ label: string; title: string } | null>(null);
   useEffect(() => {
     if (!useCase) return;
     let live = true;
     getJson<ModelSnapshot>(MODELS_API)
       .then((snapshot) => {
         if (!live) return;
-        const { provider } = providerFor(snapshot.registry, useCase.id);
-        setLabel(snapshot.saved ? provider?.label ?? "Unknown" : ".env settings");
+        const unconfigured = snapshot.saved ? {} : snapshot.unconfigured ?? {};
+        const ids = chainFor(snapshot.registry, useCase.id).ids.filter((id) => !unconfigured[id]);
+        const name = (id: string) => snapshot.registry.providers[id]?.label ?? id;
+        const route = snapshot.routes?.[useCase.id];
+        const answering = route?.active ? `Answering now: ${name(route.active)}${route.fallback ? " (fallback)" : ""}` : "No backend is answering right now";
+        setState({ label: ids.map(name).join(" → ") || "No backend", title: `${answering}. Change in Studio settings.` });
       })
-      .catch(() => live && setLabel(null));
+      .catch(() => live && setState(null));
     return () => { live = false; };
   }, [useCase]);
-  if (!useCase || !label) return null;
-  return <button className="prototype-chip st-chip" onClick={onOpen} title="Change in Studio settings"><Cpu size={15} /> Model · {label}</button>;
+  if (!useCase || !state) return null;
+  return <button className="prototype-chip st-chip" onClick={onOpen} title={state.title}><Cpu size={15} /> Model · {state.label}</button>;
 }

@@ -1,11 +1,19 @@
+import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { MODEL_USE_CASES, defaultRegistry, type ModelRegistry } from "../app/studio-models.ts";
+import { MODEL_USE_CASES, type ModelRegistry } from "../app/studio-models.ts";
 import { SETTING_FIELDS, readiness, type SettingState } from "../app/studio-settings.ts";
+
+/** The committed defaults, without their env section, as the studio serves them when nothing is saved. */
+function committedRegistry(): ModelRegistry {
+  const registry = JSON.parse(readFileSync("config/studio-models.default.json", "utf8"));
+  delete registry.env;
+  return registry;
+}
 
 /** Every studio API is mocked so the spec never rewrites .env or restarts services. */
 async function mockStudio(page: Page) {
   const state = {
-    registry: defaultRegistry("gpt-5.6-luna"), saved: false,
+    registry: committedRegistry(), saved: false,
     puts: [] as ModelRegistry[], checks: [] as unknown[], settingPuts: [] as { set?: Record<string, string>; clear?: string[] }[],
     settingChecks: [] as unknown[], serviceActions: [] as unknown[],
     values: { GALILEO_CONSOLE_URL: "https://console.multitenant.galileocloud.io", GALILEO_PROJECT: "demo", AIDEFENSE_API_KEY: "k".repeat(40), OPENAI_API_KEY: "o".repeat(40) } as Record<string, string>,
@@ -117,22 +125,36 @@ test("studio settings clears a saved AI Defense key and changes a mode", async (
   await expect(page.getByRole("article", { name: "Company briefing readiness" })).toContainText("Needs API key (Cisco AI Defense)");
 });
 
-test("model backends saves a global default and per-use-case overrides without key values", async ({ page }) => {
+test("model backends saves an ordered default chain and per-use-case overrides without key values", async ({ page }) => {
   const state = await mockStudio(page);
   await openSettings(page);
   const models = section(page, "Model backends");
   await expect(models.locator(".st-banner").first()).toContainText("Nothing saved yet");
-  await expect(page.getByRole("table", { name: "Use case overrides" }).getByRole("row")).toHaveCount(MODEL_USE_CASES.length + 1);
+  const table = page.getByRole("table", { name: "Use case overrides" });
+  await expect(table.getByRole("row")).toHaveCount(MODEL_USE_CASES.length + 1);
 
-  await models.getByRole("radio", { name: /Sparky vLLM/ }).click();
-  await page.getByLabel("Interbank settlement investigation backend").selectOption("openai");
+  const chain = models.getByRole("list", { name: "Default chain" });
+  await expect(chain.getByRole("listitem")).toHaveText([/Sparky vLLM/, /OpenAI API/]);
+  await chain.getByRole("button", { name: "Move OpenAI API up in Default chain" }).click();
+  await expect(chain.getByRole("listitem")).toHaveText([/OpenAI API/, /Sparky vLLM/]);
+
+  const interbank = table.getByRole("row", { name: "Interbank settlement investigation" });
+  await interbank.getByRole("button", { name: "Customize" }).click();
+  await interbank.getByRole("button", { name: "Remove OpenAI API from Interbank settlement investigation chain" }).click();
+  await page.getByLabel("Wealth market research hosted models").selectOption("deny");
+  const advisoryPolicies = await page.getByLabel("Client advisory hosted models").locator("option").allTextContents();
+  expect(advisoryPolicies).not.toContain("Hosted models allowed");
+
   await models.getByRole("button", { name: "Save models" }).click();
   await expect(models.locator(".st-banner")).toHaveCount(0);
 
   expect(state.puts).toHaveLength(1);
   const saved = state.puts[0];
-  expect(saved.default).toBe("sparky-vllm");
-  expect(saved.useCases).toEqual({ "interbank-a2a": "openai" });
+  expect(saved.version).toBe(2);
+  expect(saved.chain).toEqual(["openai", "sparky-vllm"]);
+  expect(saved.useCases["interbank-a2a"]?.chain).toEqual(["sparky-vllm"]);
+  expect(saved.useCases["market-research"]?.externalPolicy).toBe("deny");
+  expect(saved.useCases["client-advisory"]?.externalPolicy).toBe("require_ai_defense");
   expect(JSON.stringify(saved)).not.toMatch(/sk-|Bearer/);
   expect(saved.providers.openai.apiKeyEnv).toBe("OPENAI_API_KEY");
 
@@ -163,16 +185,13 @@ test("a provider key is saved to .env from its card and an invalid provider bloc
   expect(state.puts).toHaveLength(0);
 });
 
-test("the use case model chip opens Studio settings", async ({ page }) => {
-  const state = await mockStudio(page);
-  await openSettings(page);
-  await page.getByLabel("Brahe Bank assistant backend").selectOption("sparky-vllm");
-  await section(page, "Model backends").getByRole("button", { name: "Save models" }).click();
-  await expect.poll(() => state.puts.length).toBe(1);
+test("the use case model chip shows the chain and opens Studio settings", async ({ page }) => {
+  await mockStudio(page);
+  await page.goto("/", { waitUntil: "networkidle" });
   await page.locator(".side-nav").getByRole("button", { name: "Use case library" }).click();
   await page.getByRole("button", { name: "Open Brahe Bank assistant experience" }).click();
   const chip = page.locator(".st-chip");
-  await expect(chip).toHaveText(/Model · Sparky vLLM/);
+  await expect(chip).toHaveText(/Model · Sparky vLLM → OpenAI API/);
   await chip.click();
   await expect(page.getByRole("heading", { name: "Studio settings", level: 1 })).toBeVisible();
 });
