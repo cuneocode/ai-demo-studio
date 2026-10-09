@@ -37,7 +37,7 @@
     {"type": "Revocable trust", "number": "0000-0000-8815", "value": 4947724, "created": 2009, "last_review": null, "beneficiary": "Per trust document"}
   ],
   "estate": {"documents": ["Revocable living trust (2009)", "Pour-over will (2009)"], "last_review": null},
-  "dependents": [{"relation": "Daughter", "age": 17, "note": "Starts college fall 2027; no 529 plan in place"}],
+  "dependents": [{"relation": "Daughter", "age": 17, "college_start": 2027, "college_cost_per_year": 85000, "college_years": 4, "plan_529": false, "note": "Starts college fall 2027; no 529 plan in place"}],
   "rmd_due": false,
   "crm_notes": [
     {"date": "2026-09-12", "author": "Jordan (advisor)", "text": "Dana said the Halcyon position is most of our net worth and she is nervous about Q3 earnings. Wants to retire at 62. Next open trading window is expected after Q3 earnings."},

@@ -76,6 +76,8 @@ def info(ticker: str) -> dict:
         "marketCap": _finite(raw.get("marketCap")),
         "trailingPE": _finite(raw.get("trailingPE") or raw.get("forwardPE")),
         "forwardPE": _finite(raw.get("forwardPE")),
+        "priceToBook": _finite(raw.get("priceToBook")),
+        "returnOnEquity": _finite(raw.get("returnOnEquity")),
         "currency": raw.get("currency") or "USD",
         "quoteType": raw.get("quoteType"),
     }
@@ -204,6 +206,8 @@ def discover_peers(ticker: str, meta: dict, limit: int = 6) -> list[dict]:
             "industry": peer_info.get("industry") or meta.get("industry"),
             "marketCap": peer_info.get("marketCap") or item.get("marketCap"),
             "trailingPE": peer_info.get("trailingPE") or item.get("trailingPE"),
+            "priceToBook": peer_info.get("priceToBook"),
+            "returnOnEquity": peer_info.get("returnOnEquity"),
             "history": peer_history,
         })
     return peers
