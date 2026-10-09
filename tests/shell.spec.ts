@@ -25,6 +25,7 @@ const STATUS: StudioStatus = {
     { id: "client-advisory", title: "Client advisory", ready: false, missing: ["OPENAI_API_KEY"], notes: [] },
     ready("interbank-a2a", "Interbank settlement investigation"),
   ],
+    ready("sar-support", "SAR investigation"),
 };
 
 async function open(page: Page) {

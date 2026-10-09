@@ -745,6 +745,7 @@ kbd { border: 1px solid #344653; background: #17232e; color: var(--muted); font:
   .management-plane { grid-template-columns: 1fr 1fr; }
   .management-plane > div { grid-column: 1/-1; }
   .banking-demo .banking-layout { grid-template-columns: 1fr; }
+  .case-frame-heading .heading-actions { flex-wrap: wrap; flex-shrink: 1; min-width: 0; }
 }
 @media (max-width: 680px) {
   .story-map, .hero-story .story-map { min-width: 0; grid-template-columns: 1fr; }

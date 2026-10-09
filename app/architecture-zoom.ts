@@ -451,13 +451,13 @@ export const zoomMaps: Record<string, ZoomMap> = {
   },
   "sar-support": {
     implemented: true,
-    note: "Synthetic cases, deterministic typology rules, an investigation Deep Agent on the Studio model chain (a hosted model only with AI Defense forced to enforce), a citation verifier, and hosted Agent Control on the approval path. Nothing is filed: e-filing is simulated. This map does not assert live Sparky or OpenAI availability.",
+    note: "Synthetic cases, deterministic typology rules, a Deep Agent on the Studio model chain, a citation verifier, and hosted Agent Control on the approval path. A hosted model runs only with AI Defense forced to enforce. Nothing is filed: e-filing is simulated.",
     cores: [
-      box("evidence", "Synthetic case file", "Fixtures + fraud handoff", "KYC (SSN, date of birth, and street address withheld from the model), accounts, transactions, counterparties, prior alerts, customer documents, and the fraud referral. Every fact is an evidence item with a stable id.", "store"),
+      box("evidence", "Case file", "Synthetic fixtures", "KYC, transactions, counterparties, alerts, and documents. Stable evidence ids; SSN and DOB never reach the model.", "store"),
       box("workload", "Investigation service", "FastAPI /runs · port 8015", "Runs the agent, the typology rules, the citation verifier, the investigator and QA steps, and the simulated e-filing."),
       box("model", "Studio model chain", "Sparky vLLM → OpenAI API", "Sparky first. The case file is client PII, so the hosted fallback is used only with AI Defense forced to enforce; otherwise the call is refused and the recorded run or the sample narrative is offered.", "ai"),
-      box("defense", "Cisco AI Defense", "Untrusted text and model hops", "Inspects payment memos and customer documents one segment at a time before the agent sees them, and every model prompt and response. Flagged segments are withheld.", "cisco"),
-      box("observe", "Splunk Agent Observability", "Agent Control and traces", "Hosted controls gate the narrative release, customer contact, and filing. Agent traces through the Galileo SDK; OTLP export only when configured.", "cisco"),
+      box("defense", "Cisco AI Defense", "Untrusted text and model hops", "Inspects memos and documents segment by segment before the agent reads them, and every model hop. Flagged text is withheld.", "cisco"),
+      box("observe", "Splunk Agent Observability", "Agent Control and traces", "Hosted controls gate release, contact, and filing. Galileo SDK traces; OTLP export only when configured.", "cisco"),
     ],
     coreEdges: [
       { from: "evidence", to: "workload", label: "case tools" },

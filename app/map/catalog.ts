@@ -201,8 +201,7 @@ const sar = journeyCase({
   steps: [
     { id: "case", label: "Open the case", text: "Alert, or a fraud referral from the inbox", emphasis: "customer" },
     { id: "draft", label: "Assemble, draft, and verify", text: "Agent gathers evidence; every sentence must cite it.", emphasis: "assisted" },
-    { id: "decide", label: "Investigator decides", text: "Edit, then file or no SAR with a rationale", emphasis: "customer" },
-    { id: "qa", label: "Second-line QA approves", text: "A different reviewer; Agent Control gates filing", emphasis: "customer" },
+    { id: "decide", label: "Investigator and QA decide", text: "File or no SAR; separate QA approval", emphasis: "customer" },
   ],
 });
 
