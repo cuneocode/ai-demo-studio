@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import os
 import time
+from datetime import datetime
 from pathlib import Path
 
 import httpx
@@ -67,7 +68,26 @@ def decision_for(probability: float, cut: float) -> str:
     return {"high": "hold", "elevated": "review", "low": "clear"}[risk_band(probability, cut)]
 
 
+def _explain(raw) -> dict:
+    """TreeSHAP metadata from the sidecar: method, units (log_odds), and the base value the groups add to."""
+    if not isinstance(raw, dict):
+        return {"method": "unknown", "units": "unknown", "base_value": None}
+    base = raw.get("base_value")
+    return {"method": str(raw.get("method") or "unknown"), "units": str(raw.get("units") or "unknown"),
+            "base_value": float(base) if isinstance(base, (int, float)) else None}
+
+
+def _timing(raw) -> dict | None:
+    if not isinstance(raw, dict):
+        return None
+    timing = {key: round(float(value), 3) for key, value in raw.items() if isinstance(value, (int, float))}
+    if isinstance(raw.get("sampled_edges"), dict):
+        timing["sampled_edges"] = {str(k): int(v) for k, v in raw["sampled_edges"].items() if isinstance(v, (int, float))}
+    return timing
+
+
 def normalize_score(payload: dict) -> dict:
+    """Probability, TreeSHAP groups (log-odds when explain.units says so), and the sidecar's timing, passed through."""
     probability = float(payload["probability"])
     if not 0 <= probability <= 1:
         raise ScoreError("Probability is out of range.")
@@ -81,7 +101,25 @@ def normalize_score(payload: dict) -> dict:
             "value": value,
             "direction": item.get("direction") or ("risk" if value >= 0 else "protective"),
         })
-    return {"probability": probability, "shap": shap}
+    device = payload.get("device") or (payload.get("served_by") or {}).get("device")
+    return {"probability": probability, "shap": shap, "explain": _explain(payload.get("explain")),
+            "timing_ms": _timing(payload.get("timing_ms")), "device": device if isinstance(device, str) else None,
+            "as_of": payload.get("as_of") if isinstance(payload.get("as_of"), str) else None}
+
+
+def recorded_label(recorded_at: str | None) -> str:
+    """"Recorded run · Oct 2, 2026" for scores replayed from .cache/scores.json."""
+    if not recorded_at:
+        return "Recorded run · date unknown"
+    try:
+        stamp = datetime.fromisoformat(recorded_at.replace("Z", "+00:00"))
+    except ValueError:
+        return f"Recorded run · {recorded_at[:10]}"
+    return f"Recorded run · {stamp:%b} {stamp.day}, {stamp.year}"
+
+
+def backend_label(backend: str, recorded_at: str | None = None) -> str:
+    return recorded_label(recorded_at) if backend == CACHE else BACKEND_LABEL.get(backend, "Unavailable")
 
 
 def _read_scores(path: Path) -> dict:
@@ -172,7 +210,7 @@ class Scorer:
     def health(self):
         return {
             "backend": self.backend,
-            "backend_label": BACKEND_LABEL.get(self.backend, "Unavailable"),
+            "backend_label": backend_label(self.backend, self.recorded_at),
             "engine": self.engine,
             "ready": self.ready,
             "model": {
@@ -214,7 +252,7 @@ class Scorer:
                 continue
             result.update({
                 "backend": backend,
-                "backend_label": BACKEND_LABEL[backend],
+                "backend_label": backend_label(backend, result.get("recorded_at")),
                 "engine": ("sidecar" if self.live_ready else "triton") if backend == LIVE else None,
                 "latency_ms": round((time.monotonic() - started) * 1000, 1),
                 "fallback": skipped,

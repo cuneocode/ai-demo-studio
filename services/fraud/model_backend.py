@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "llm"))
-from studio_models import Backend, ChainUnavailable, Selection, call_with_failover, pick, resolve  # noqa: E402,F401
+from studio_models import Backend, ChainUnavailable, Selection, call_with_failover, egress_decision, pick, resolve  # noqa: E402,F401
 
 USE_CASE = "fraud-modeling"
 

@@ -29,43 +29,43 @@ def test_health_and_cases(client):
     assert health["cases"] == 5
     cases = client.get("/api/fraud/cases").json()["cases"]
     assert {item["id"] for item in cases} == {
-        "txn-clean-pos", "txn-compromised-merchant", "txn-mule-ach", "txn-cnp-review", "txn-subscription",
+        "cpp-orbit", "card-testing", "ato-illustrative", "clean-grocery", "cnp-verify",
     }
 
 
 def test_fixture_scores_and_unknown_case(client):
-    clean = client.post("/api/fraud/score", json={"case_id": "txn-clean-pos"}).json()
+    clean = client.post("/api/fraud/score", json={"case_id": "clean-grocery"}).json()
     assert clean["decision"] == "clear"
-    assert clean["probability"] == 0.08
+    assert clean["probability"] == 0.06
     assert clean["narrative"]["status"] == "disabled"
     assert clean["shap"][0]["feature"]
-    hold = client.post("/api/fraud/score", json={"case_id": "txn-compromised-merchant"}).json()
+    hold = client.post("/api/fraud/score", json={"case_id": "cpp-orbit"}).json()
     assert hold["decision"] == "hold"
-    review = client.post("/api/fraud/score", json={"case_id": "txn-cnp-review"}).json()
+    review = client.post("/api/fraud/score", json={"case_id": "cnp-verify"}).json()
     assert review["decision"] == "review"
     missing = client.post("/api/fraud/score", json={"case_id": "nope"})
     assert missing.status_code == 404
 
 
 def test_score_reports_band_action_and_backend(client):
-    body = client.post("/api/fraud/score", json={"case_id": "txn-compromised-merchant"}).json()
+    body = client.post("/api/fraud/score", json={"case_id": "cpp-orbit"}).json()
     assert (body["risk_band"], body["risk_label"]) == ("high", "High risk")
     assert body["suggested_action"] == "Contact customer, then block and reissue"
     assert (body["backend"], body["backend_label"], body["synthetic"]) == ("fixture", "Sample scores", True)
     assert body["shap"][0]["label"] == "Merchant's network of linked cards"
-    assert client.post("/api/fraud/score", json={"case_id": "txn-cnp-review"}).json()["risk_band"] == "elevated"
-    assert client.post("/api/fraud/score", json={"case_id": "txn-clean-pos"}).json()["risk_band"] == "low"
+    assert client.post("/api/fraud/score", json={"case_id": "cnp-verify"}).json()["risk_band"] == "elevated"
+    assert client.post("/api/fraud/score", json={"case_id": "clean-grocery"}).json()["risk_band"] == "low"
 
 
 def test_presenter_hints_never_reach_the_browser(client):
     cases = client.get("/api/fraud/cases").json()["cases"]
     assert all("hint" not in item for item in cases)
-    body = client.post("/api/fraud/score", json={"case_id": "txn-clean-pos"}).json()
+    body = client.post("/api/fraud/score", json={"case_id": "clean-grocery"}).json()
     assert "hint" not in body["case"]
 
 
 def test_score_emits_a_run_under_the_client_run_id(client):
-    body = client.post("/api/fraud/score", json={"case_id": "txn-compromised-merchant", "run_id": "fraud-test-run-001"}).json()
+    body = client.post("/api/fraud/score", json={"case_id": "cpp-orbit", "run_id": "fraud-test-run-001"}).json()
     assert body["run_id"] == "fraud-test-run-001"
     page = client.get("/api/fraud/runs/fraud-test-run-001").json()
     assert page["run"]["status"] == "completed"
@@ -79,7 +79,7 @@ def test_score_emits_a_run_under_the_client_run_id(client):
     assert events[-1]["title"] == "High risk · Contact customer, then block and reissue"
     assert client.get("/api/fraud/runs/fraud-test-run-001?after=5").json()["events"][0]["kind"] == "result"
     assert client.get("/api/fraud/runs/fraud-unknown-999").status_code == 404
-    again = client.post("/api/fraud/score", json={"case_id": "txn-clean-pos", "run_id": "fraud-test-run-001"}).json()
+    again = client.post("/api/fraud/score", json={"case_id": "clean-grocery", "run_id": "fraud-test-run-001"}).json()
     assert again["run_id"] != "fraud-test-run-001"
 
 
@@ -104,12 +104,12 @@ def test_score_survives_blocked_narrative(client, monkeypatch):
     monkeypatch.setenv("FRAUD_NARRATIVE_MODEL", "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4")
     monkeypatch.setattr(security.defense, "mode", "enforce")
     monkeypatch.setattr(security.defense, "inspect", blocked)
-    response = client.post("/api/fraud/score", json={"case_id": "txn-mule-ach", "include_narrative": True, "run_id": "fraud-test-block-1"})
+    response = client.post("/api/fraud/score", json={"case_id": "card-testing", "include_narrative": True, "run_id": "fraud-test-block-1"})
     assert response.status_code == 200
     events = client.get("/api/fraud/runs/fraud-test-block-1").json()["events"]
     assert any(event["kind"] == "run" and event["status"] == "flagged" and "omitted" in event["title"] for event in events)
     body = response.json()
-    assert body["probability"] == 0.67
+    assert body["probability"] == 0.91
     assert body["decision"] == "hold"
     assert body["narrative"]["status"] == "blocked"
     assert body["narrative"]["text"] is None
@@ -119,15 +119,15 @@ def test_score_survives_blocked_narrative(client, monkeypatch):
 def test_forced_backend_unavailable(client, monkeypatch):
     monkeypatch.setattr(scorer.scorer, "ready", False)
     monkeypatch.setattr(scorer.scorer, "detail", "Triton /v2/health/ready is not reachable.")
-    response = client.post("/api/fraud/score", json={"case_id": "txn-clean-pos"})
+    response = client.post("/api/fraud/score", json={"case_id": "clean-grocery"})
     assert response.status_code == 503
 
 
 def test_cache_backend_reads_export(tmp_path, monkeypatch):
     cache = tmp_path / "scores.json"
-    cache.write_text('{"txn-clean-pos": {"probability": 0.22, "shap": [{"feature": "amount", "value": 0.1}]}}')
+    cache.write_text('{"clean-grocery": {"probability": 0.22, "shap": [{"feature": "amount", "value": 0.1}]}}')
     monkeypatch.setattr(scorer, "CACHE_PATH", cache)
-    assert scorer.load_cache()["txn-clean-pos"]["probability"] == 0.22
+    assert scorer.load_cache()["clean-grocery"]["probability"] == 0.22
     assert Path(cache).is_file()
 
 
@@ -158,13 +158,13 @@ def test_generated_narrative_reports_provider_usage(client, monkeypatch):
     monkeypatch.setenv("FRAUD_NARRATIVE_API_KEY", "not-needed")
     monkeypatch.setenv("FRAUD_NARRATIVE_BASE_URL", "http://127.0.0.1:8003/v1")
     monkeypatch.setattr(narrative.httpx, "AsyncClient", Client)
-    body = client.post("/api/fraud/score", json={"case_id": "txn-mule-ach", "include_narrative": True, "run_id": "fraud-test-narr-01"}).json()
+    body = client.post("/api/fraud/score", json={"case_id": "card-testing", "include_narrative": True, "run_id": "fraud-test-narr-01"}).json()
     assert body["narrative"]["status"] == "generated"
     assert body["narrative"]["usage"] == {"llm_calls": 1, "input_tokens": 120, "output_tokens": 18}
     events = client.get("/api/fraud/runs/fraud-test-narr-01").json()["events"]
     call = next(event for event in events if event["kind"] == "llm.call")
     assert call["data"]["served_by"]["model"] and call["data"]["input_tokens"] == 120 and call["status"] == "ok"
-    off = client.post("/api/fraud/score", json={"case_id": "txn-mule-ach"}).json()
+    off = client.post("/api/fraud/score", json={"case_id": "card-testing"}).json()
     assert "usage" not in off["narrative"]
 
 
@@ -202,7 +202,7 @@ def test_ai_defense_verdicts_land_on_the_timeline(client, monkeypatch):
     monkeypatch.setattr(security.defense, "key", "test-only-placeholder")
     monkeypatch.setattr(security.defense, "valid", True)
     monkeypatch.setattr(narrative.httpx, "AsyncClient", Client)
-    body = client.post("/api/fraud/score", json={"case_id": "txn-compromised-merchant", "include_narrative": True,
+    body = client.post("/api/fraud/score", json={"case_id": "cpp-orbit", "include_narrative": True,
                                                  "run_id": "fraud-test-guard-1"}).json()
     assert body["narrative"]["status"] == "generated" and body["security"]["checks"] == 2
     events = client.get("/api/fraud/runs/fraud-test-guard-1").json()["events"]

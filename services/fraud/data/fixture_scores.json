@@ -1,48 +1,153 @@
 {
-  "_about": "Synthetic sample scores for the five studio cases. Used only when neither the live GNN sidecar nor recorded scores can answer. Not model output.",
-  "txn-clean-pos": {
-    "probability": 0.08,
-    "shap": [
-      {"feature": "merchant_neighborhood", "value": -0.11, "direction": "protective"},
-      {"feature": "account_history", "value": -0.07, "direction": "protective"},
-      {"feature": "transaction_amount", "value": 0.02, "direction": "risk"},
-      {"feature": "payment_channel", "value": -0.03, "direction": "protective"}
-    ]
-  },
-  "txn-compromised-merchant": {
+  "_about": "Synthetic sample scores for the studio's fixture cases (data/cases.json). Used only when neither the live GNN sidecar nor recorded scores can answer. Not model output; values are illustrative log-odds contributions.",
+  "cpp-orbit": {
     "probability": 0.74,
+    "explain": {
+      "method": "sample",
+      "units": "log_odds",
+      "base_value": -2.2
+    },
     "shap": [
-      {"feature": "merchant_neighborhood", "value": 0.41, "direction": "risk"},
-      {"feature": "account_gnn_embedding", "value": -0.06, "direction": "protective"},
-      {"feature": "transaction_amount", "value": 0.09, "direction": "risk"},
-      {"feature": "payment_channel", "value": 0.08, "direction": "risk"}
+      {
+        "feature": "merchant_neighborhood",
+        "value": 2.7,
+        "direction": "risk"
+      },
+      {
+        "feature": "payment_channel",
+        "value": 0.48,
+        "direction": "risk"
+      },
+      {
+        "feature": "transaction_amount",
+        "value": 0.43,
+        "direction": "risk"
+      },
+      {
+        "feature": "account_gnn_embedding",
+        "value": -0.36,
+        "direction": "protective"
+      }
     ]
   },
-  "txn-mule-ach": {
-    "probability": 0.67,
+  "card-testing": {
+    "probability": 0.91,
+    "explain": {
+      "method": "sample",
+      "units": "log_odds",
+      "base_value": -2.2
+    },
     "shap": [
-      {"feature": "account_neighborhood", "value": 0.29, "direction": "risk"},
-      {"feature": "transaction_amount", "value": 0.18, "direction": "risk"},
-      {"feature": "payment_channel", "value": 0.11, "direction": "risk"},
-      {"feature": "merchant_neighborhood", "value": 0.04, "direction": "risk"}
+      {
+        "feature": "account_neighborhood",
+        "value": 2.05,
+        "direction": "risk"
+      },
+      {
+        "feature": "merchant_neighborhood",
+        "value": 1.12,
+        "direction": "risk"
+      },
+      {
+        "feature": "transaction_amount",
+        "value": 0.92,
+        "direction": "risk"
+      },
+      {
+        "feature": "payment_channel",
+        "value": 0.42,
+        "direction": "risk"
+      }
     ]
   },
-  "txn-cnp-review": {
+  "ato-illustrative": {
+    "probability": 0.18,
+    "explain": {
+      "method": "sample",
+      "units": "log_odds",
+      "base_value": -2.2
+    },
+    "shap": [
+      {
+        "feature": "transaction_amount",
+        "value": 0.48,
+        "direction": "risk"
+      },
+      {
+        "feature": "payment_channel",
+        "value": 0.31,
+        "direction": "risk"
+      },
+      {
+        "feature": "merchant_neighborhood",
+        "value": -0.08,
+        "direction": "protective"
+      },
+      {
+        "feature": "account_gnn_embedding",
+        "value": -0.03,
+        "direction": "protective"
+      }
+    ]
+  },
+  "clean-grocery": {
+    "probability": 0.06,
+    "explain": {
+      "method": "sample",
+      "units": "log_odds",
+      "base_value": -2.2
+    },
+    "shap": [
+      {
+        "feature": "merchant_neighborhood",
+        "value": -0.25,
+        "direction": "protective"
+      },
+      {
+        "feature": "account_history",
+        "value": -0.22,
+        "direction": "protective"
+      },
+      {
+        "feature": "payment_channel",
+        "value": -0.12,
+        "direction": "protective"
+      },
+      {
+        "feature": "transaction_amount",
+        "value": 0.04,
+        "direction": "risk"
+      }
+    ]
+  },
+  "cnp-verify": {
     "probability": 0.41,
+    "explain": {
+      "method": "sample",
+      "units": "log_odds",
+      "base_value": -2.2
+    },
     "shap": [
-      {"feature": "payment_channel", "value": 0.14, "direction": "risk"},
-      {"feature": "raw_account_features", "value": 0.09, "direction": "risk"},
-      {"feature": "merchant_neighborhood", "value": -0.05, "direction": "protective"},
-      {"feature": "transaction_amount", "value": 0.07, "direction": "risk"}
-    ]
-  },
-  "txn-subscription": {
-    "probability": 0.11,
-    "shap": [
-      {"feature": "payment_channel", "value": -0.12, "direction": "protective"},
-      {"feature": "merchant_neighborhood", "value": -0.08, "direction": "protective"},
-      {"feature": "account_history", "value": -0.06, "direction": "protective"},
-      {"feature": "transaction_amount", "value": 0.01, "direction": "risk"}
+      {
+        "feature": "transaction_amount",
+        "value": 0.98,
+        "direction": "risk"
+      },
+      {
+        "feature": "payment_channel",
+        "value": 0.61,
+        "direction": "risk"
+      },
+      {
+        "feature": "merchant_neighborhood",
+        "value": -0.12,
+        "direction": "protective"
+      },
+      {
+        "feature": "account_gnn_embedding",
+        "value": 0.37,
+        "direction": "risk"
+      }
     ]
   }
 }

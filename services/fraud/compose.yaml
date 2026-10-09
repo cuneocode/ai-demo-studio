@@ -1,4 +1,7 @@
 # Live NVIDIA GraphSAGE + XGBoost sidecar. Artifacts are gitignored.
+# Same mounts as scripts/serve.sh: the whole graph (training split + test window) so
+# neighbourhoods have real history, and scripts/ because infer_server.py imports
+# temporal_graph.py from it.
 services:
   fraud-gnn:
     image: ${FRAUD_TRAIN_IMAGE:-nvcr.io/nvidia/cugraph/financial-fraud-training:3.0.0}
@@ -12,7 +15,7 @@ services:
       FRAUD_GRAPH_DATA: /data
     volumes:
       - ./.cache/train:/workspace/output:ro
-      - ./.cache/graph/test_gnn:/data:ro
-      - ./scripts/infer_server.py:/workspace/infer_server.py:ro
-    entrypoint: ["python3", "/workspace/infer_server.py"]
+      - ./.cache/graph:/data:ro
+      - ./scripts:/workspace/scripts:ro
+    entrypoint: ["python3", "/workspace/scripts/infer_server.py"]
     profiles: ["gnn"]

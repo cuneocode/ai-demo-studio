@@ -6,7 +6,7 @@ import pytest
 import scorer as scorer_module
 from scorer import (ScoreError, Scorer, decision_for, normalize_score, risk_band, suggested_action, threshold)
 
-CASE = {"id": "txn-compromised-merchant"}
+CASE = {"id": "cpp-orbit"}
 
 
 def offline(monkeypatch, tmp_path, cache: dict | None = None):
@@ -61,8 +61,8 @@ def test_normalize_adds_plain_english_labels():
 
 def test_fixture_scores_live_in_data_file():
     fixtures = scorer_module.load_fixture()
-    assert set(fixtures) == {"txn-clean-pos", "txn-compromised-merchant", "txn-mule-ach", "txn-cnp-review", "txn-subscription"}
-    assert fixtures["txn-compromised-merchant"]["probability"] == 0.74
+    assert {key for key in fixtures if not key.startswith("_")} == {"cpp-orbit", "card-testing", "ato-illustrative", "clean-grocery", "cnp-verify"}
+    assert fixtures["cpp-orbit"]["probability"] == 0.74
 
 
 def test_auto_without_sidecar_or_cache_falls_back_to_fixture(monkeypatch, tmp_path):

@@ -1,9 +1,11 @@
-"""Local studio adapter for NVIDIA financial fraud scoring.
+"""Card fraud triage: the studio adapter for NVIDIA GraphSAGE + XGBoost fraud scoring.
 
-The request path returns a probability and Shapley groups. It does not flag fraud.
-Optional narratives are inspected separately and may be omitted without dropping the score.
-Each score is also a run on the shared timeline (GET /api/fraud/runs/{id}).
+POST /api/fraud/runs starts a triage run (triage.py): queue scoring, the triage agent's investigation,
+and the analyst's policy-gated disposition, all on the shared timeline. POST /api/fraud/score is the
+original single-score endpoint. The score is evidence; it never flags fraud on its own.
 """
+import asyncio
+import json
 import os
 import time
 from contextvars import Token
@@ -17,15 +19,20 @@ from pydantic import BaseModel, Field
 truststore.inject_into_ssl()
 load_dotenv(Path(os.getenv("FRAUD_ENV_FILE", Path(__file__).resolve().parents[2] / ".env")))
 
-from cases import get_case, load_cases, public_case
+import controls
+import triage
+from cases import get_case, load_cases, load_scenarios, public_case
 from narrative import explain, health as narrative_health
 from runlog import router as runs_router, store
 from scorer import FIXTURE, ScoreError, decision_for, risk_band, risk_label, scorer, suggested_action, threshold
 from security import security_run, SecurityRun, defense
 from telemetry import telemetry
 
+ROOT = Path(__file__).resolve().parent
+MODEL_CARDS = (ROOT / ".cache" / "model_card.json", ROOT / "data" / "recorded" / "model_card.json")
+
 app = FastAPI(docs_url=None, redoc_url=None)
-app.include_router(runs_router(store, "/api/fraud"))
+app.include_router(runs_router(store, "/api/fraud", start=triage.start))
 
 CHANNEL = {"pos": "card present", "cnp": "card not present", "ach": "ACH transfer", "recurring": "recurring"}
 
@@ -44,6 +51,7 @@ def live_cases() -> bool:
 @app.on_event("startup")
 async def startup():
     await scorer.resolve(force=True)
+    asyncio.get_running_loop().create_task(controls.controls.ensure())
 
 
 @app.get("/api/fraud/health")
@@ -64,14 +72,80 @@ async def health():
         "cache_cases": scoring["cache_cases"],
         "recorded_at": scoring["recorded_at"],
         "narrative": narrative_health(),
+        "agent": await asyncio.to_thread(triage.agent_health),
+        "controls": controls.health(),
         "security": defense.health(),
         "splunk": telemetry.health(),
+        "model_card": _model_card()["status"],
     }
 
 
 @app.get("/api/fraud/cases")
 async def cases():
     return {"cases": [public_case(case) for case in load_cases(live_cases())], "threshold": threshold()}
+
+
+@app.get("/api/fraud/scenarios")
+async def scenarios():
+    doc = load_scenarios()
+    return {"scenarios": doc["scenarios"], "illustrative": doc.get("illustrative", {}), "synthetic": True}
+
+
+def _model_card() -> dict:
+    """The measured card from a Sparky run (build_model_card.py), else not_measured. Never filled in by hand."""
+    for path, source in zip(MODEL_CARDS, ("cache", "recorded")):
+        try:
+            card = json.loads(path.read_text())
+        except (OSError, ValueError):
+            continue
+        if isinstance(card, dict) and card.get("schema_version") == 1:
+            model = card.get("model") or {}
+            return {"status": card.get("status") or "partial", "source": source, "tag": card.get("tag"),
+                    "generated_at": card.get("generated_at"), "headline": card.get("headline") or {},
+                    "model": {key: model.get(key) for key in ("id", "name", "image", "gnn_trained", "explain", "neighbourhood")},
+                    "dataset": {key: (card.get("dataset") or {}).get(key) for key in ("name", "synthetic", "train", "test")},
+                    "hardware": card.get("hardware") or {},
+                    "host_label": (card.get("provenance") or {}).get("host_label"), "missing": card.get("missing") or []}
+    return {"status": "not_measured", "source": None, "tag": "Not measured yet — run on Sparky", "headline": {}, "missing": []}
+
+
+@app.get("/api/fraud/model-card")
+async def model_card():
+    return _model_card()
+
+
+class NoteRequest(BaseModel):
+    note: str = Field(min_length=1, max_length=2000)
+    case_id: str = Field(min_length=1, max_length=80)
+    run_id: str | None = Field(default=None, max_length=90)
+
+
+@app.post("/api/fraud/notes")
+async def save_note(request: NoteRequest):
+    """An analyst case note: AI Defense inspects it, then the local fraud.note_pii policy. Saved only if both pass."""
+    run = store.get(request.run_id) if request.run_id else None
+    if run is None:
+        run = store.open(None, label=f"Case note · {request.case_id}", scenario="case-note", prefix="fraud",
+                         meta={"case_id": request.case_id, "synthetic": True})
+    security = SecurityRun()
+    token: Token = security_run.set(security)
+    try:
+        with store.bind(run.id):
+            store.emit(run.id, "agent.tool_call", "Save case note", lane="human", data={"tool": "add_note", "case_id": request.case_id})
+            inspection = await defense.check([{"role": "user", "content": request.note}], "analyst_note")
+            policy = await controls.enforce_note(request.note)
+            store.emit(run.id, "control", f"{policy['engine_label']} · fraud.note_pii · {policy['decision']}" + (f" · {', '.join(policy['entities'])}" if policy.get("entities") else ""),
+                       status="allowed" if policy["decision"] == "allow" else "denied", body=policy.get("detail") or policy["reason"],
+                       data={key: value for key, value in policy.items() if key != "masked"})
+            saved = policy["decision"] == "allow" and not inspection["withhold"]
+            store.emit(run.id, "tool.result", "Case note saved" if saved else "Case note not saved", status="ok" if saved else "blocked",
+                       body=request.note if saved else None, data={"tool": "add_note", "saved": saved})
+            if run.scenario == "case-note":
+                store.finish(run.id, "completed" if saved else "blocked")
+    finally:
+        security_run.reset(token)
+    return {"saved": saved, "run_id": run.id, "ai_defense": inspection, "policy": policy,
+            "masked": policy.get("masked") if not saved else None}
 
 
 @app.post("/api/fraud/score")

@@ -1,4 +1,9 @@
-"""Inspection applies only to optional fraud narratives, never to the score path."""
+"""Cisco AI Defense inspection for the triage agent's untrusted text and model hops, never the score path.
+
+Stages: the cardholder's dispute text and analyst notes (untrusted input), the agent's prompt before it
+leaves for the model, the agent's summary, and the legacy optional narrative. The tenant returns a verdict
+(is_safe, classifications, matched rules); it does not redact, so any masking is done by the application.
+"""
 import os
 import uuid
 from contextvars import ContextVar
@@ -8,7 +13,11 @@ import httpx
 
 from runlog import emit_current
 
-STAGE_LABEL = {"narrative_input": "analyst-summary prompt", "narrative_output": "analyst summary"}
+STAGE_LABEL = {
+    "narrative_input": "analyst-summary prompt", "narrative_output": "analyst summary",
+    "dispute_text": "cardholder dispute note", "analyst_note": "analyst case note",
+    "agent_input": "agent prompt", "agent_output": "agent summary",
+}
 
 
 class DefenseBlocked(Exception):
@@ -43,6 +52,17 @@ class SecurityRun:
 security_run: ContextVar[SecurityRun | None] = ContextVar("fraud_security_run", default=None)
 
 
+def _rules(verdict: dict) -> list[str]:
+    """Matched rule names with entity types, e.g. "Prompt Injection", "PCI · Credit Card Number"."""
+    out = []
+    for rule in verdict.get("rules") or []:
+        if not isinstance(rule, dict) or not isinstance(rule.get("rule_name"), str):
+            continue
+        entities = [item for item in rule.get("entity_types") or [] if isinstance(item, str)]
+        out.append(f"{rule['rule_name']}{' · ' + ', '.join(entities[:3]) if entities else ''}")
+    return out[:6]
+
+
 class Defense:
     def __init__(self):
         self.key = os.getenv("AIDEFENSE_API_KEY", "")
@@ -63,6 +83,10 @@ class Defense:
             if region_host else ""
         )
 
+    @property
+    def configured(self) -> bool:
+        return self.mode != "off" and bool(self.key) and self.valid
+
     def health(self):
         return {
             "status": "disabled" if self.mode == "off" else "configured" if self.key and self.valid else "missing_configuration",
@@ -70,55 +94,74 @@ class Defense:
             "fail_open": self.fail_open,
         }
 
-    async def inspect(self, messages, stage="narrative_input"):
+    async def _call(self, messages, stage: str) -> dict:
+        run = security_run.get()
+        if not self.valid or not self.key:
+            raise ValueError("Invalid security configuration")
+        async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=False) as client:
+            response = await client.post(
+                self.endpoint,
+                headers={"X-Cisco-AI-Defense-API-Key": self.key},
+                json={
+                    "messages": messages,
+                    "metadata": {
+                        "src_app": "fsi-ai-studio-fraud-scoring",
+                        "client_transaction_id": f"{run.request_id if run else uuid.uuid4()}:{stage}",
+                    },
+                },
+            )
+            response.raise_for_status()
+            verdict = response.json()
+        if type(verdict.get("is_safe")) is not bool:
+            raise ValueError("Missing inspection verdict")
+        return verdict
+
+    async def check(self, messages, stage: str, *, title: str | None = None, enforce: bool = False) -> dict:
+        """One inspection, emitted on the timeline; never raises.
+
+        Returns {status: allowed|blocked|flagged|unavailable|off, safe, withhold, rules, classifiers, event_id}.
+        withhold is True when the application must not use the text (blocked, or unavailable and failing closed).
+        enforce blocks a violation even in monitor mode (the Studio egress policy require_ai_defense).
+        """
+        what = title or STAGE_LABEL.get(stage, stage)
         if self.mode == "off":
-            return
+            return {"status": "off", "safe": None, "withhold": False, "rules": [], "classifiers": [], "event_id": None}
         run = security_run.get()
         try:
-            if not self.valid or not self.key:
-                raise ValueError("Invalid security configuration")
-            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=False) as client:
-                response = await client.post(
-                    self.endpoint,
-                    headers={"X-Cisco-AI-Defense-API-Key": self.key},
-                    json={
-                        "messages": messages,
-                        "metadata": {
-                            "src_app": "fsi-ai-studio-fraud-scoring",
-                            "client_transaction_id": f"{run.request_id if run else uuid.uuid4()}:{stage}",
-                        },
-                    },
-                )
-                response.raise_for_status()
-                verdict = response.json()
-            if type(verdict.get("is_safe")) is not bool:
-                raise ValueError("Missing inspection verdict")
+            verdict = await self._call(messages, stage)
         except Exception:
             if run:
                 run.errors += 1
-            what = STAGE_LABEL.get(stage, stage)
+            withhold = not self.fail_open
             emit_current("guardrail", f"AI Defense · {what} · inspection unavailable", status="error",
-                         body="Failed open; the summary continues." if self.fail_open else "Failed closed; the summary is omitted. The score is unaffected.",
+                         body="Failed closed: the text is withheld." if withhold else "Failed open: the text is used uninspected.",
                          data={"stage": stage, "mode": self.mode})
-            if not self.fail_open:
-                raise DefenseUnavailable("AI Defense inspection is unavailable. Narrative omitted.") from None
-            return
-        event_id = verdict.get("event_id")
+            return {"status": "unavailable", "safe": None, "withhold": withhold, "rules": [], "classifiers": [], "event_id": None}
+        event_id = verdict.get("event_id") if isinstance(verdict.get("event_id"), str) else None
+        safe = verdict["is_safe"]
         if run:
             run.checks += 1
-            if isinstance(event_id, str) and event_id and event_id not in run.event_ids:
+            if event_id and event_id not in run.event_ids:
                 run.event_ids.append(event_id)
-            if not verdict["is_safe"]:
+            if not safe:
                 run.blocked += 1
-        what = STAGE_LABEL.get(stage, stage)
-        safe = verdict["is_safe"]
-        status = "allowed" if safe else "blocked" if self.mode == "enforce" else "flagged"
         raw = verdict.get("classifications")
-        classifiers = [item for item in raw if isinstance(item, str)] if isinstance(raw, list) else []
-        emit_current("guardrail", f"AI Defense · {what} · {'clean' if safe else 'blocked' if status == 'blocked' else 'violation (monitor)'}",
-                     status=status, data={"stage": stage, "mode": self.mode, "event_id": event_id if isinstance(event_id, str) else None,
-                                          "classifiers": classifiers[:6]})
-        if not safe and self.mode == "enforce":
+        classifiers = [item for item in raw if isinstance(item, str)][:6] if isinstance(raw, list) else []
+        rules = _rules(verdict)
+        status = "allowed" if safe else "blocked" if self.mode == "enforce" or enforce else "flagged"
+        label = "clean" if safe else f"{', '.join(rules) or 'violation'} · {'blocked' if status == 'blocked' else 'flagged (monitor)'}"
+        emit_current("guardrail", f"AI Defense · {what} · {label}", status=status,
+                     data={"stage": stage, "mode": self.mode, "event_id": event_id, "classifiers": classifiers, "rules": rules,
+                           "action": verdict.get("action") if isinstance(verdict.get("action"), str) else None})
+        return {"status": status, "safe": safe, "withhold": status == "blocked", "rules": rules,
+                "classifiers": classifiers, "event_id": event_id}
+
+    async def inspect(self, messages, stage="narrative_input"):
+        """The legacy narrative path: raises DefenseBlocked / DefenseUnavailable instead of returning a verdict."""
+        result = await self.check(messages, stage)
+        if result["status"] == "unavailable" and result["withhold"]:
+            raise DefenseUnavailable("AI Defense inspection is unavailable. Narrative omitted.")
+        if result["status"] == "blocked":
             raise DefenseBlocked("AI Defense blocked the narrative. Score was still released.")
 
 
