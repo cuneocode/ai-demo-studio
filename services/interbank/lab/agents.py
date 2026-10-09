@@ -52,9 +52,10 @@ class DeepAgent:
         self._spec = {"name": name, "system_prompt": system_prompt, "tools": list(tools)}
         self._graph = None
         self._signature: tuple | None = None
+        self.served_by: dict = {}
 
     def current(self):
-        backend = models.backend()
+        backend, self.served_by = models.select()
         if self._graph is None or backend.signature != self._signature:
             self._graph = create_deep_agent(model=chat_model(backend), checkpointer=InMemorySaver(), **self._spec)
             self._signature = backend.signature
@@ -68,7 +69,12 @@ def build_deep_agent(*, name: str, system_prompt: str, tools: Sequence[Any]) -> 
 async def run_turn(agent: DeepAgent, *, prompt: str, thread_id: str, run_id: str) -> str:
     """Run one conversational turn, reporting every model step to the timeline."""
     answer = ""
-    stream = agent.current().astream(
+    graph = agent.current()
+    served = agent.served_by
+    if served.get("fallback"):
+        await emit(run_id, "model.failover", f"{SERVICE_NAME} on {served.get('label')}", body=served.get("reason"),
+                   data={"served_by": served})
+    stream = graph.astream(
         {"messages": [HumanMessage(content=prompt)]},
         config={"configurable": {"thread_id": thread_id}, "recursion_limit": 60},
         stream_mode="updates",
@@ -82,7 +88,8 @@ async def run_turn(agent: DeepAgent, *, prompt: str, thread_id: str, run_id: str
                 if isinstance(message, AIMessage):
                     usage = message.usage_metadata or {}
                     await emit(run_id, "llm.call", f"{SERVICE_NAME} model call",
-                               data={"input_tokens": usage.get("input_tokens"), "output_tokens": usage.get("output_tokens")})
+                               data={"input_tokens": usage.get("input_tokens"), "output_tokens": usage.get("output_tokens"),
+                                     "served_by": {k: served.get(k) for k in ("provider", "label", "model", "private", "fallback")}})
                     for thought in reasoning_summaries(message.content):
                         await emit(run_id, "agent.thinking", _headline(thought), body=thought)
                     content = message.text.strip()

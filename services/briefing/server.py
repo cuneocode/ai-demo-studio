@@ -253,17 +253,19 @@ async def analyze(
             logger.exception("Briefing agent incomplete")
             failure = (502, str(exc) or "The briefing agent could not complete this request.")
         except Exception as exc:
+            model_backend.mark_failed(exc)
             logger.exception("Briefing agent failed: %s", type(exc).__name__)
             failure = (502, "The briefing agent could not complete this request.")
         if failure:
             return JSONResponse(
                 status_code=failure[0],
-                content={"detail": failure[1], "security": run.summary(), "usage": usage.summary()},
+                content={"detail": failure[1], "security": run.summary(), "usage": usage.summary(), "served_by": model_backend.served_by()},
             )
         payload = {
             **briefing,
             "security": run.summary(),
             "usage": usage.summary(),
+            "served_by": model_backend.served_by(),
             "telemetry": {"splunk": telemetry.delivery(run_id, [
                 {"name": f"briefing.tool.{name}", "attrs": {"run_id": run_id, "tool": name}}
                 for name in (briefing.get("trail") or {}).get("tools") or []

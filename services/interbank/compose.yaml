@@ -18,6 +18,7 @@ x-python: &python
 x-agent-env: &agent-env
   SPLUNK_AO_HOME_DIR: /tmp/.splunk
   STUDIO_MODELS_FILE: /studio/models.json
+  STUDIO_MODELS_DEFAULT_FILE: /config/studio-models.default.json
   EVENT_SINK_URL: http://demo:8090/events
   SSL_CERT_FILE: /runtime/egress-ca-bundle.pem
 
@@ -55,7 +56,7 @@ services:
       TLS_KEY_FILE: /runtime/agent.key
       TLS_CLIENT_CA_FILE: /runtime/bank-a-ca.crt
       GATEWAY_JWKS_FILE: /runtime/gateway-jwks.json
-    volumes: [./.runtime/roles/bank-a-agent:/runtime:ro, ../../.studio:/studio:ro]
+    volumes: [./.runtime/roles/bank-a-agent:/runtime:ro, ../../.studio:/studio:ro, ../../config:/config:ro]
     # A studio model endpoint on this machine (Sparky's vLLM) is host.docker.internal.
     extra_hosts: ["host.docker.internal:host-gateway"]
     networks: [bank-a-internal, bank-a-egress, events]
@@ -108,7 +109,7 @@ services:
       TLS_KEY_FILE: /runtime/agent.key
       TLS_CLIENT_CA_FILE: /runtime/bank-b-ca.crt
       GATEWAY_JWKS_FILE: /runtime/gateway-jwks.json
-    volumes: [./.runtime/roles/bank-b-agent:/runtime:ro, ../../.studio:/studio:ro]
+    volumes: [./.runtime/roles/bank-b-agent:/runtime:ro, ../../.studio:/studio:ro, ../../config:/config:ro]
     extra_hosts: ["host.docker.internal:host-gateway"]
     networks: [bank-b-internal, bank-b-egress, events]
     healthcheck:
@@ -153,9 +154,11 @@ services:
       EVIDENCE_DIR: /evidence
       CONSOLE_TOKEN_FILE: /runtime/console.jwt
       STUDIO_MODELS_FILE: /studio/models.json
+      STUDIO_MODELS_DEFAULT_FILE: /config/studio-models.default.json
     volumes:
       - ./.runtime/roles/console:/runtime:ro
       - ../../.studio:/studio:ro
+      - ../../config:/config:ro
       - ./evidence:/evidence
       - ./gateways:/app/gateways:ro
       - ./otel:/app/otel:ro

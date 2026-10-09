@@ -159,14 +159,16 @@ async def telemetry() -> dict:
 @app.get("/api/runtime")
 async def runtime() -> dict:
     """What this lab is configured to run, for the studio's runtime card. No secrets."""
-    backend = models.backend()
+    backend, served = await asyncio.to_thread(models.select, True)
     # Mirrors lab.agents.chat_model.
     effort = (os.getenv("MODEL_REASONING_EFFORT", "medium") if backend.responses_api
               else "none" if backend.kind == "vllm" or backend.model.startswith("gpt-5") else "default")
     return {
         "model": {**backend.public(), "name": backend.model,
                   "reasoning_effort": effort,
-                  "reasoning_summary": "detailed" if backend.responses_api else "none"},
+                  "reasoning_summary": "detailed" if backend.responses_api else "none",
+                  "fallback": served["fallback"], "reason": served["reason"],
+                  "chain": [item.label for item in models.chain()]},
         "agents": {"framework": "LangChain Deep Agents", "protocol": "A2A 1.0 (JSON-RPC)",
                    "bank_a": ["bank-a-coordinator", "bank-a-responder"],
                    "bank_b": ["bank-b-investigator"]},

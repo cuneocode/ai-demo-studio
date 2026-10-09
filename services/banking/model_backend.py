@@ -1,20 +1,37 @@
-"""Brahe's model endpoint: the model chosen in Studio settings, else MODEL_NAME from .env."""
+"""Brahe's model endpoint: the first healthy backend in the Studio settings chain.
+
+The graph is rebuilt when signature() changes, so a backend going down moves the next
+conversation to the next one in the chain. MODEL_NAME from .env is the last resort.
+"""
 import os
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "llm"))
-from studio_models import resolve  # noqa: E402
+from studio_models import ChainUnavailable, Selection, mark_down, pick, resolve, retryable  # noqa: E402
 
 USE_CASE = "brahe-bank"
+_built: dict = {}
+
+
+def selection() -> Selection | None:
+    try:
+        return pick(USE_CASE)
+    except ChainUnavailable as exc:
+        _built["unavailable"] = exc.served_by()
+        return None
 
 
 def model_settings() -> dict:
     """ChatOpenAI arguments shared by the supervisor, both specialists, and the judge."""
-    backend = resolve(USE_CASE)
+    chosen = selection()
+    backend = chosen.backend if chosen else resolve(USE_CASE)
     if backend is None:
         name = os.environ["MODEL_NAME"]
+        _built["served_by"] = {"provider": "env", "label": "Lab .env", "model": name, "fallback": False, "reason": ""}
         return {"model": name, "reasoning_effort": "none" if name.startswith("gpt-5.6") else None}
+    _built["served_by"] = chosen.served_by() if chosen else {**backend.public(), "fallback": False, "reason": "health unknown"}
+    _built["backend"] = backend
     settings = backend.chat_kwargs()
     if not backend.vllm and backend.model.startswith("gpt-5.6"):
         settings["reasoning_effort"] = "none"
@@ -29,10 +46,27 @@ def judge_settings() -> dict:
 
 
 def signature() -> tuple:
-    backend = resolve(USE_CASE)
+    chosen = selection()
+    backend = chosen.backend if chosen else resolve(USE_CASE)
     return backend.signature if backend else ("env", os.getenv("MODEL_NAME"))
 
 
+def mark_failed(exc: BaseException) -> None:
+    """A connect failure or 5xx marks the backend down, so the next request rebuilds on the next one."""
+    backend = _built.get("backend")
+    if backend is not None and retryable(exc):
+        mark_down(backend)
+
+
+def served_by() -> dict | None:
+    """The backend the current graph was built on."""
+    return _built.get("served_by")
+
+
 def describe() -> dict:
-    backend = resolve(USE_CASE)
-    return backend.public() if backend else {"provider": "env", "model": os.getenv("MODEL_NAME")}
+    """The backend answering now (health-checked), with the one the current graph was built on."""
+    chosen = selection()
+    backend = chosen.backend if chosen else resolve(USE_CASE)
+    base = backend.public() if backend else {"provider": "env", "model": os.getenv("MODEL_NAME")}
+    answering = chosen.served_by() if chosen else _built.get("unavailable")
+    return {**base, "answering": answering, "served_by": served_by()}

@@ -191,7 +191,8 @@ async def chat(request: Request):
                     failure = (503, "Agent Observability quality checks are unavailable. No answer was released.")
                 except asyncio.TimeoutError:
                     failure = (504, "The assistant timed out. Please try again.")
-                except Exception:
+                except Exception as exc:
+                    model_backend.mark_failed(exc)
                     failure = (502, "The assistant could not complete this request. Please try again.")
                 finally:
                     sessions[sid][0] = time.monotonic()
@@ -221,7 +222,7 @@ async def chat(request: Request):
     if failure:
         return JSONResponse(status_code=failure[0], content={"detail": failure[1],
             "security": security.summary(), "controls": controls.summary(), "session_reset": True,
-            "telemetry": {"splunk": splunk, "galileo": telemetry}, "usage": trace.usage()})
+            "telemetry": {"splunk": splunk, "galileo": telemetry}, "usage": trace.usage(), "served_by": model_backend.served_by()})
     return {"session_id": sid, "answer": answer, "trace": trace.events,
             "sources": trace.sources, "security": security.summary(), "controls": controls.summary(), "telemetry": {"galileo": telemetry, "splunk": splunk},
-            "usage": trace.usage(), "duration_ms": round((time.monotonic() - now) * 1000)}
+            "usage": trace.usage(), "served_by": model_backend.served_by(), "duration_ms": round((time.monotonic() - now) * 1000)}

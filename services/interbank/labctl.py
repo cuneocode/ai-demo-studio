@@ -94,6 +94,8 @@ def import_vendor_env() -> None:
         "AIDEFENSE_TIMEOUT": source.get("AIDEFENSE_TIMEOUT", "30"),
         "MODEL_NAME": source.get("MODEL_NAME", ""),
         "MODEL_REASONING_EFFORT": source.get("MODEL_REASONING_EFFORT", "medium"),
+        # Non-secret overrides for config/studio-models.default.json when nothing is saved.
+        **{k: source[k] for k in ("SPARKY_VLLM_BASE_URL", "SPARKY_VLLM_MODEL", "NIM_BASE_URL", "NIM_MODEL") if source.get(k)},
     }
     write_private(RUNTIME / "vendor.env", "".join(f"{k}={v}\n" for k, v in values.items()))
     # Only the two agent containers mount model.env: the model credentials a studio
