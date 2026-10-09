@@ -40,8 +40,8 @@ const LIVE_CASES = [
   { title: "Brahe Bank assistant", section: "banking-experience", cta: "Open assistant" },
   { title: "Card fraud triage", section: "fraud-experience", cta: "Triage queue" },
   { title: "Company briefing", section: "briefing-experience", cta: "Extract briefing" },
-  { title: "Wealth market research", section: "research-experience", cta: "Analyze ticker" },
-  { title: "Client advisory", section: "advisory-experience", cta: "Prepare meeting brief" },
+  { title: "Market event → house-view update", section: "research-experience", cta: "Run the scenario" },
+  { title: "Advisor meeting prep", section: "advisory-experience", cta: "Prepare meeting" },
   { title: "Interbank settlement investigation", section: "interbank-experience", cta: "Start investigation" },
 ];
 
@@ -59,31 +59,31 @@ test("the fraud header CTA reads 'Triage queue'", async ({ page }) => {
   await expect(heading(page).getByRole("button", { name: "Review next alert" })).toHaveCount(0);
 });
 
-test("the advisory header CTA focuses the first holding or household input", async ({ page }) => {
-  await openCase(page, "Client advisory");
-  await heading(page).getByRole("button", { name: "Prepare meeting brief" }).click();
+test("the advisory header CTA focuses the selected household", async ({ page }) => {
+  await openCase(page, "Advisor meeting prep");
+  await heading(page).getByRole("button", { name: "Prepare meeting" }).click();
   await expect.poll(() => focused(page, "advisory-experience")).toMatchObject({ inside: true, enabled: true, tag: "INPUT" });
 });
 
-test("'advisory' + Enter in the launcher opens Client advisory", async ({ page }) => {
+test("'meeting prep' + Enter in the launcher opens Advisor meeting prep", async ({ page }) => {
   await page.route("**/api/studio/status", (route) => route.fulfill({ json: status() }));
   await page.goto("/", { waitUntil: "networkidle" });
   await page.keyboard.press("ControlOrMeta+k");
-  await page.getByLabel("Search demos and pages").fill("advisory");
-  await expect(page.getByRole("list", { name: "Search results" }).getByRole("listitem").first()).toContainText("Client advisory");
+  await page.getByLabel("Search demos and pages").fill("meeting prep");
+  await expect(page.getByRole("list", { name: "Search results" }).getByRole("listitem").first()).toContainText("Advisor meeting prep");
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("heading", { name: "Client advisory", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Advisor meeting prep", level: 1 })).toBeVisible();
 });
 
 test("the header says Live only when the use case's service is up and ready", async ({ page }) => {
-  await openCase(page, "Wealth market research");
+  await openCase(page, "Market event → house-view update");
   await expect(chip(page)).toHaveText(/^\s*Live · /);
 });
 
 test("a downed service never shows Live in the header", async ({ page }) => {
   const down = status({ services: [service("banking", "Brahe Bank", false), service("wealth", "Wealth", false), service("fraud", "Fraud scoring", true, false)], interbankUp: false });
 
-  await openCase(page, "Wealth market research", down);
+  await openCase(page, "Market event → house-view update", down);
   await expect(chip(page)).toHaveText(/Offline · recorded runs available/);
   await expect(chip(page)).not.toHaveText(/^\s*Live/);
 

@@ -306,13 +306,12 @@ export const zoomMaps: Record<string, ZoomMap> = {
         entities: [
           box("view", "House view", "CIO Office", "Rating, thesis points, and key risks. The rating is the CIO office's call.", "store"),
           box("event", "Earnings event", "Synthetic print", "EPS, revenue, and guidance for HCYN.", "store"),
-          box("filing", "Synthetic 10-K", "By section", "Item 1, 1A, 7, 8, and 9A sections as separate evidence items.", "store"),
           box("news", "Allowlisted news", "Screened", "Kept or withheld after AI Defense inspects each item.", "store"),
+          box("filing", "Synthetic 10-K", "By section", "Item 1, 1A, 7, 8, and 9A sections as separate evidence items.", "store"),
         ],
         edges: [
-          { from: "view", to: "event", label: "context" },
-          { from: "event", to: "filing", label: "context" },
-          { from: "filing", to: "news", label: "context" },
+          { from: "event", to: "view", label: "tests" },
+          { from: "news", to: "view", label: "informs" },
         ],
         stubs: [],
       },

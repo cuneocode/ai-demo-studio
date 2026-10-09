@@ -11,6 +11,7 @@ const STATUS: StudioStatus = {
     { id: "fraud", label: "Fraud scoring", up: true, ready: false, detail: "Start scripts/serve.sh.", aiDefense: { status: "configured", mode: "enforce" }, agentControl: null, tracing: null, otel: "missing_configuration" },
     { id: "briefing", label: "Company briefing", up: false, ready: false, detail: "Not running", aiDefense: null, agentControl: null, tracing: null, otel: null },
     { id: "wealth", label: "Wealth research and advisory", up: true, ready: true, detail: "", aiDefense: { status: "disabled", mode: "off" }, agentControl: null, tracing: "configured", otel: "exporting" },
+    { id: "sar", label: "SAR investigation", up: true, ready: true, detail: "", aiDefense: null, agentControl: null, tracing: null, otel: null },
   ],
   interbank: {
     up: true, aiDefense: { mode: "enforce, fail closed", region: "us-west-2", hops: 5 }, agentControl: "<bank>.send_a2a_message",
@@ -21,11 +22,11 @@ const STATUS: StudioStatus = {
   links: { agentObservability: "https://console.example.test", splunkObservability: null },
   readiness: [
     ready("brahe-bank", "Brahe Bank assistant"), ready("company-briefing", "Company briefing"), ready("fraud-modeling", "Card fraud triage"),
-    ready("market-research", "Wealth market research"),
-    { id: "client-advisory", title: "Client advisory", ready: false, missing: ["OPENAI_API_KEY"], notes: [] },
+    ready("market-research", "Market event → house-view update"),
+    { id: "client-advisory", title: "Advisor meeting prep", ready: false, missing: ["OPENAI_API_KEY"], notes: [] },
     ready("interbank-a2a", "Interbank settlement investigation"),
-  ],
     ready("sar-support", "SAR investigation"),
+  ],
 };
 
 async function open(page: Page) {
@@ -43,7 +44,7 @@ test("top bar tabs open live Controls and Telemetry pages", async ({ page }) => 
 
   await page.locator(".product-nav").getByRole("button", { name: "Telemetry" }).click();
   await expect(page.getByRole("link", { name: /Open Splunk Agent Observability/ })).toHaveAttribute("href", "https://console.example.test");
-  await expect(page.getByRole("table", { name: "Telemetry by use case" }).getByRole("row", { name: /Wealth market research/ })).toContainText("exporting");
+  await expect(page.getByRole("table", { name: "Telemetry by use case" }).getByRole("row", { name: /Market event → house-view update/ })).toContainText("exporting");
   await expect(page.getByRole("table", { name: "Recent interbank investigations" })).toContainText("inv-1");
 
   await page.getByRole("button", { name: "Open", exact: true }).first().click();
@@ -116,9 +117,9 @@ test("the story is reordered, scored from live readiness, and presented full scr
   await expect(page.locator(".story-outline")).toContainText("Needs OPENAI_API_KEY");
 
   await page.getByRole("button", { name: "Edit sequence" }).click();
-  await page.getByRole("button", { name: "Move Client advisory up" }).click();
-  await expect(page.locator(".outline-item strong").nth(1)).toHaveText("Client advisory");
-  await page.getByRole("button", { name: "Remove Client advisory from the story" }).click();
+  await page.getByRole("button", { name: "Move Advisor meeting prep up" }).click();
+  await expect(page.locator(".outline-item strong").nth(1)).toHaveText("Advisor meeting prep");
+  await page.getByRole("button", { name: "Remove Advisor meeting prep from the story" }).click();
   await expect(page.locator(".story-score strong")).toHaveText("100%");
   await page.getByRole("button", { name: "Done" }).click();
 

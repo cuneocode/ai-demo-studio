@@ -141,8 +141,8 @@ test("model backends saves an ordered default chain and per-use-case overrides w
   const interbank = table.getByRole("row", { name: "Interbank settlement investigation" });
   await interbank.getByRole("button", { name: "Customize" }).click();
   await interbank.getByRole("button", { name: "Remove OpenAI API from Interbank settlement investigation chain" }).click();
-  await page.getByLabel("Wealth market research hosted models").selectOption("deny");
-  const advisoryPolicies = await page.getByLabel("Client advisory hosted models").locator("option").allTextContents();
+  await page.getByLabel("Market event → house-view update hosted models").selectOption("deny");
+  const advisoryPolicies = await page.getByLabel("Advisor meeting prep hosted models").locator("option").allTextContents();
   expect(advisoryPolicies).not.toContain("Hosted models allowed");
 
   await models.getByRole("button", { name: "Save models" }).click();

@@ -292,5 +292,11 @@ def test_supervisor_approval_runs_the_advisory_policies(offline, no_models):
 
 def test_recordings_are_served_when_present():
     recordings = TestClient(server.app).get("/api/wealth/recordings").json()["recordings"]
+    assert {"research-hcyn", "research-kstl-restricted", "research-hcyn-poisoned", "advisory-dana-whitfield",
+            "advisory-priya-raman"} <= {item["name"] for item in recordings}
     for item in recordings:
-        assert item["synthetic"] is True and item["served_by"]
+        assert item["synthetic"] is True
+        if item["scenario"] == "research-restricted":
+            assert item["served_by"] is None, "the restricted issuer is blocked before any model call"
+        else:
+            assert item["served_by"]
