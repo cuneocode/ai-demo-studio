@@ -1,0 +1,3175 @@
+{
+ "v": 1,
+ "name": "explained-novak",
+ "title": "Explained activity \u00b7 home-sale proceeds",
+ "scenario": "explained-novak",
+ "recorded_at": "2026-10-09T22:54:41.853502+00:00",
+ "served_by": {
+  "provider": "openai",
+  "label": "OpenAI API",
+  "model": "gpt-5.6-luna",
+  "kind": "openai",
+  "private": false,
+  "external": true,
+  "fallback": true,
+  "reason": "Sparky vLLM unreachable (connection refused)",
+  "source": "saved",
+  "egress": "require_ai_defense",
+  "ai_defense": "enforce (forced for hosted model)"
+ },
+ "synthetic": true,
+ "note": "Recorded from a live run of the SAR service. Synthetic case and fake PII; e-filing is simulated.",
+ "run": {
+  "id": "sar-golden-explained-novak-20261009225420",
+  "service": "sar",
+  "label": "SAR investigation \u00b7 Gabriel Novak",
+  "scenario": "explained-novak",
+  "status": "completed",
+  "started_at": "2026-10-09T22:54:23.009661+00:00",
+  "finished_at": "2026-10-09T22:54:41.853502+00:00",
+  "meta": {
+   "scenario": "explained-novak",
+   "mode": "live",
+   "handoff": false
+  }
+ },
+ "events": [
+  {
+   "v": 1,
+   "id": "b7d92067-3dc5-4780-aa36-86070cd57359",
+   "at": "2026-10-09T22:54:23.937575+00:00",
+   "ns": 927921541,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "run",
+   "status": "started",
+   "title": "Investigation \u00b7 Explained activity \u00b7 home-sale proceeds",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Alert ALR-2026-0930-0517 \u00b7 detected 2026-09-30 \u00b7 due 2026-10-30 (day 9 of 30).",
+   "data": {
+    "case": {
+     "id": "explained-novak",
+     "label": "Explained activity \u00b7 home-sale proceeds",
+     "scenario": "explained-novak",
+     "kind": "control",
+     "title": "Explained activity \u00b7 home-sale proceeds",
+     "subject": {
+      "name": "Gabriel Novak",
+      "kind": "individual",
+      "detail": "Retired high-school teacher",
+      "location": "Alameda, CA",
+      "ssn_masked": "***-**-9034"
+     },
+     "alert": {
+      "id": "ALR-2026-0930-0517",
+      "detected": "2026-09-30",
+      "source": "Transaction monitoring rule TM-WIRE-11 (large inbound wire versus profile)",
+      "summary": "A $418,500 inbound wire is about 60 times the customer's usual monthly inflow.",
+      "queue": "FIU \u00b7 large-value review",
+      "priority": "medium"
+     },
+     "deadline": {
+      "detected": "2026-09-30",
+      "due": "2026-10-30",
+      "as_of": "2026-10-09",
+      "day": 9,
+      "of": 30,
+      "days_left": 21
+     },
+     "accounts": [
+      "****2954",
+      "****8120"
+     ],
+     "handoff": false,
+     "synthetic": true
+    },
+    "mode": "live"
+   }
+  },
+  {
+   "v": 1,
+   "id": "bd46c8d2-a36e-4326-bfe1-b3a23dd0e714",
+   "at": "2026-10-09T22:54:24.658537+00:00",
+   "ns": 1648866166,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "model.failover",
+   "status": "flagged",
+   "title": "Model fallback \u00b7 next in chain is OpenAI API",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": "Sparky vLLM unreachable (connection refused)",
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "b9a1e63c-590d-4982-91c8-61af08710961",
+   "at": "2026-10-09T22:54:24.659041+00:00",
+   "ns": 1649370041,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "ok",
+   "title": "AI Defense forced to enforce \u00b7 case data bound for OpenAI API (hosted)",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Every prompt and response is inspected in enforce mode before data leaves; an unsafe verdict stops the call.",
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "policy": "require_ai_defense"
+   }
+  },
+  {
+   "v": 1,
+   "id": "7dda8bb4-5225-4fae-b6fe-2b1bd0e7db5f",
+   "at": "2026-10-09T22:54:24.668846+00:00",
+   "ns": 1659178291,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "agent.thinking",
+   "status": "info",
+   "title": "Investigation agent planning",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Deep Agent with write_todos and nine tools; temperature 0.",
+   "data": {
+    "agent": "sar-investigator"
+   }
+  },
+  {
+   "v": 1,
+   "id": "7d5c073d-f2f2-46e4-9a7a-efffed1dbb73",
+   "at": "2026-10-09T22:54:25.287392+00:00",
+   "ns": 2277733500,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "37b3d81a-5f67-442e-99b2-e083bf261204",
+   "at": "2026-10-09T22:54:26.232243+00:00",
+   "ns": 3222572125,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans get_alert",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 934,
+    "input_tokens": 2634,
+    "output_tokens": 13
+   }
+  },
+  {
+   "v": 1,
+   "id": "72ed664f-fbd0-4535-bc64-0985a3354e5a",
+   "at": "2026-10-09T22:54:26.681484+00:00",
+   "ns": 3671820041,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "87bfbad1-bb09-4688-806b-b10ec6b46bd4",
+   "at": "2026-10-09T22:54:26.686087+00:00",
+   "ns": 3676412958,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_alert()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_alert"
+   }
+  },
+  {
+   "v": 1,
+   "id": "03270ef9-402d-4470-af82-9fb333c546f9",
+   "at": "2026-10-09T22:54:26.688399+00:00",
+   "ns": 3678724416,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Alert ALR-2026-0930-0517 \u00b7 detected 2026-09-30 \u00b7 due 2026-10-30 (day 9 of 30)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "ALERT-1"
+    ],
+    "count": 1
+   }
+  },
+  {
+   "v": 1,
+   "id": "0997a40b-8aa6-4a71-b331-7da0981b24bc",
+   "at": "2026-10-09T22:54:27.197637+00:00",
+   "ns": 4187967666,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "f7b91dae-de68-4559-a114-6a38f0eded6d",
+   "at": "2026-10-09T22:54:28.441023+00:00",
+   "ns": 5431360625,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans get_kyc_profile, get_account_activity, get_counterparties, get_prior_alerts, get_customer_documents, compute_typology_indicators, search_adverse_media",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 1239,
+    "input_tokens": 2755,
+    "output_tokens": 116
+   }
+  },
+  {
+   "v": 1,
+   "id": "00aa1234-c9a1-40d1-a2b3-57df88b0c7e7",
+   "at": "2026-10-09T22:54:28.902479+00:00",
+   "ns": 5892809708,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "a448a480-ebdf-460f-8d5e-aa33e3520599",
+   "at": "2026-10-09T22:54:28.912648+00:00",
+   "ns": 5902972958,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_kyc_profile()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_kyc_profile"
+   }
+  },
+  {
+   "v": 1,
+   "id": "98500e84-95d7-4794-8a4d-6640fd570d52",
+   "at": "2026-10-09T22:54:28.928470+00:00",
+   "ns": 5918796500,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "ok",
+   "title": "Data minimization \u00b7 SSN, date of birth, and street address withheld from the model",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "The case file keeps them; the narrative does not need them. A local rule, not AI Defense.",
+   "data": {
+    "withheld_fields": [
+     "ssn",
+     "date_of_birth",
+     "address.line1",
+     "phone",
+     "email"
+    ],
+    "engine": "local"
+   }
+  },
+  {
+   "v": 1,
+   "id": "bb9708f4-f632-42f7-9ef5-2a0fbfa3c950",
+   "at": "2026-10-09T22:54:28.937365+00:00",
+   "ns": 5927688916,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "KYC \u00b7 Gabriel Novak \u00b7 risk Low \u00b7 2 account(s)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "KYC-1",
+     "ACCT-1",
+     "ACCT-2"
+    ],
+    "count": 3
+   }
+  },
+  {
+   "v": 1,
+   "id": "3c7c9584-c509-42c6-8ce5-2222918fd94d",
+   "at": "2026-10-09T22:54:28.943268+00:00",
+   "ns": 5933593875,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_account_activity()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Posted and declined transactions in the review window, with deterministic aggregates.",
+   "data": {
+    "tool": "get_account_activity"
+   }
+  },
+  {
+   "v": 1,
+   "id": "322dd637-dbaf-4735-83dc-9d8c34ea6282",
+   "at": "2026-10-09T22:54:28.949452+00:00",
+   "ns": 5939782458,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_counterparties()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_counterparties"
+   }
+  },
+  {
+   "v": 1,
+   "id": "c94303cf-32e3-44b1-a031-3d28ac9b6c0a",
+   "at": "2026-10-09T22:54:28.954114+00:00",
+   "ns": 5944444500,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Counterparties \u00b7 4",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "CP-01",
+     "CP-02",
+     "CP-03",
+     "CP-04"
+    ],
+    "count": 4
+   }
+  },
+  {
+   "v": 1,
+   "id": "3b98efee-fee2-4492-a30d-490f55d080b1",
+   "at": "2026-10-09T22:54:28.958684+00:00",
+   "ns": 5949009416,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_prior_alerts()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Prior alerts, dispositions, and branch notes.",
+   "data": {
+    "tool": "get_prior_alerts"
+   }
+  },
+  {
+   "v": 1,
+   "id": "99b6c2bb-6a2d-4d25-bf25-f9102831be97",
+   "at": "2026-10-09T22:54:28.961511+00:00",
+   "ns": 5951836583,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Prior alerts \u00b7 0 \u00b7 branch notes \u00b7 0",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [],
+    "count": 0
+   }
+  },
+  {
+   "v": 1,
+   "id": "5a524210-3d4a-4a0f-908b-3bb95cb1b784",
+   "at": "2026-10-09T22:54:28.966021+00:00",
+   "ns": 5956361208,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_customer_documents()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Customer-supplied text is untrusted: inspected segment by segment before the agent sees it.",
+   "data": {
+    "tool": "get_customer_documents"
+   }
+  },
+  {
+   "v": 1,
+   "id": "83a70904-2aee-4723-b161-be6091e21cab",
+   "at": "2026-10-09T22:54:28.973063+00:00",
+   "ns": 5963397833,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "compute_typology_indicators()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Deterministic rules from the typology catalogue; no model involved.",
+   "data": {
+    "tool": "compute_typology_indicators"
+   }
+  },
+  {
+   "v": 1,
+   "id": "c921fce3-c017-4f38-8b50-8b2cccd96f0b",
+   "at": "2026-10-09T22:54:28.976360+00:00",
+   "ns": 5966689708,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Typologies \u00b7 none matched",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "IND-MM-01",
+     "IND-MM-02",
+     "IND-MM-03",
+     "IND-MM-04",
+     "IND-MM-05",
+     "IND-MM-06",
+     "TYP-MM",
+     "IND-ST-01",
+     "IND-ST-02",
+     "IND-ST-03",
+     "IND-ST-04",
+     "IND-ST-05",
+     "TYP-ST",
+     "IND-FA-01",
+     "IND-FA-02",
+     "IND-FA-03",
+     "TYP-FA"
+    ],
+    "count": 17,
+    "typologies": [
+     {
+      "id": "money_mule",
+      "matched": false,
+      "fired": 1
+     },
+     {
+      "id": "structuring",
+      "matched": false,
+      "fired": 0
+     },
+     {
+      "id": "funnel_account",
+      "matched": false,
+      "fired": 0
+     }
+    ]
+   }
+  },
+  {
+   "v": 1,
+   "id": "295accb1-d9f4-4e50-b9f0-13ab6b7ba40e",
+   "at": "2026-10-09T22:54:29.014433+00:00",
+   "ns": 6004756750,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "search_adverse_media(Gabriel Novak)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Allowlisted source only: FinCrime Wire (fictional newswire). No web search.",
+   "data": {
+    "tool": "search_adverse_media"
+   }
+  },
+  {
+   "v": 1,
+   "id": "ef91a5f8-9ff7-43dd-8db3-dc2e0c467cf1",
+   "at": "2026-10-09T22:54:29.015134+00:00",
+   "ns": 6005453916,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Adverse media \u00b7 0 hits in FinCrime Wire (fictional newswire)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "AMS-1"
+    ],
+    "count": 1,
+    "source": "allowlist"
+   }
+  },
+  {
+   "v": 1,
+   "id": "aef06d35-2b27-4eb2-bfad-8f5b0428d0a7",
+   "at": "2026-10-09T22:54:29.521442+00:00",
+   "ns": 6511778833,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 customer document \u00b7 3 segments inspected \u00b7 3 clean",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "inspected": 3,
+    "clean": 3,
+    "mode": "enforce"
+   }
+  },
+  {
+   "v": 1,
+   "id": "9bb1df86-4072-4c86-9b28-dfc160953e6e",
+   "at": "2026-10-09T22:54:29.535552+00:00",
+   "ns": 6525888083,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Customer documents \u00b7 3 segments",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "DOC-1.1",
+     "DOC-1.2",
+     "DOC-1.3"
+    ],
+    "count": 3
+   }
+  },
+  {
+   "v": 1,
+   "id": "e7c37470-7b45-4976-9bd2-6bdfde349e56",
+   "at": "2026-10-09T22:54:29.550315+00:00",
+   "ns": 6540694458,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 payment memos \u00b7 4 segments inspected \u00b7 4 clean",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "inspected": 4,
+    "clean": 4,
+    "mode": "enforce"
+   }
+  },
+  {
+   "v": 1,
+   "id": "4c5fb351-028f-4c59-a236-8abfc3448b6c",
+   "at": "2026-10-09T22:54:29.562169+00:00",
+   "ns": 6552502750,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Account activity \u00b7 4 transactions \u00b7 2026-09-29 to 2026-10-03",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "AGG-IN",
+     "AGG-OUT",
+     "AGG-IN-ACH",
+     "AGG-IN-WIRE",
+     "AGG-OUT-CARD",
+     "AGG-OUT-OWN",
+     "TXN-01",
+     "TXN-02",
+     "TXN-03",
+     "TXN-04"
+    ],
+    "count": 10
+   }
+  },
+  {
+   "v": 1,
+   "id": "24edbda3-4453-4e5e-aa2d-cec5d4bbd762",
+   "at": "2026-10-09T22:54:30.088361+00:00",
+   "ns": 7078686083,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "5e5538c7-0a25-44a4-ad1c-a993ee85012a",
+   "at": "2026-10-09T22:54:39.698145+00:00",
+   "ns": 16688445708,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 drafts",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 9598,
+    "input_tokens": 4629,
+    "output_tokens": 814
+   }
+  },
+  {
+   "v": 1,
+   "id": "053da32a-87d1-4bd7-95ce-34360ada04fc",
+   "at": "2026-10-09T22:54:40.180890+00:00",
+   "ns": 17171189333,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "726b4971-0b71-416c-9b42-89cb35d0024a",
+   "at": "2026-10-09T22:54:40.954184+00:00",
+   "ns": 17944496833,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "claim.verdict",
+   "status": "ok",
+   "title": "Citations \u00b7 11 of 11 sentences verified against the evidence",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "kept": 11,
+    "total": 11,
+    "missing_sections": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "9b421c46-39a2-4c4a-9266-4f5f1052362e",
+   "at": "2026-10-09T22:54:40.958328+00:00",
+   "ns": 17948625791,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "claim.verdict",
+   "status": "ok",
+   "title": "Recommendation \u00b7 no SAR \u00b7 agrees with the typology indicators",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "No typology matched.",
+   "data": {
+    "agent": "no_file",
+    "indicators": "no_file"
+   }
+  },
+  {
+   "v": 1,
+   "id": "cd44fec4-8686-4412-9681-4cdca789d99c",
+   "at": "2026-10-09T22:54:41.441546+00:00",
+   "ns": 18431841083,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "control",
+   "status": "allowed",
+   "title": "Agent Control \u00b7 sar.no_tipping_off \u00b7 allow",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "No step in the draft contacts the subject or reveals the review.",
+   "data": {
+    "policy": "sar-no-tipping-off-v1",
+    "short": "sar.no_tipping_off",
+    "engine": "hosted",
+    "verdict": {
+     "no_subject_contact": true
+    },
+    "failed": [],
+    "step": "sar-customer-contact",
+    "stage": "pre"
+   }
+  },
+  {
+   "v": 1,
+   "id": "183967ed-767d-4824-bae1-7fdd46b75ad7",
+   "at": "2026-10-09T22:54:41.697825+00:00",
+   "ns": 18688122083,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "control",
+   "status": "allowed",
+   "title": "Agent Control \u00b7 sar.narrative_cited \u00b7 allow",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Every kept sentence cites evidence that states its figures and dates.",
+   "data": {
+    "policy": "sar-narrative-cited-v1",
+    "short": "sar.narrative_cited",
+    "engine": "hosted",
+    "verdict": {
+     "every_sentence_cited": true,
+     "every_fact_verified": true
+    },
+    "failed": [],
+    "step": "sar-narrative-release",
+    "stage": "post"
+   }
+  },
+  {
+   "v": 1,
+   "id": "74a3b707-f773-4241-9fbe-442b5f26a29d",
+   "at": "2026-10-09T22:54:41.698949+00:00",
+   "ns": 18689239958,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "hitl.request",
+   "status": "info",
+   "title": "Investigator review \u00b7 edit, decide file or no SAR, give a rationale",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "request_id": "investigator-1",
+    "stage": "investigator",
+    "round": 1,
+    "qa_note": null,
+    "package": {
+     "case": {
+      "id": "explained-novak",
+      "label": "Explained activity \u00b7 home-sale proceeds",
+      "scenario": "explained-novak",
+      "kind": "control",
+      "title": "Explained activity \u00b7 home-sale proceeds",
+      "subject": {
+       "name": "Gabriel Novak",
+       "kind": "individual",
+       "detail": "Retired high-school teacher",
+       "location": "Alameda, CA",
+       "ssn_masked": "***-**-9034"
+      },
+      "alert": {
+       "id": "ALR-2026-0930-0517",
+       "detected": "2026-09-30",
+       "source": "Transaction monitoring rule TM-WIRE-11 (large inbound wire versus profile)",
+       "summary": "A $418,500 inbound wire is about 60 times the customer's usual monthly inflow.",
+       "queue": "FIU \u00b7 large-value review",
+       "priority": "medium"
+      },
+      "deadline": {
+       "detected": "2026-09-30",
+       "due": "2026-10-30",
+       "as_of": "2026-10-09",
+       "day": 9,
+       "of": 30,
+       "days_left": 21
+      },
+      "accounts": [
+       "****2954",
+       "****8120"
+      ],
+      "handoff": false,
+      "synthetic": true
+     },
+     "mode": "live",
+     "typologies": [
+      {
+       "id": "money_mule",
+       "label": "Money mule",
+       "reference": "FinCEN money-mule red flags; FFIEC BSA/AML Manual appendix F (illustrative paraphrase)",
+       "matched": false,
+       "fired": 1,
+       "total": 6,
+       "rule": "4 of 6, including MM-01",
+       "indicators": [
+        {
+         "id": "MM-01",
+         "label": "Pass-through: inbound funds left within 48 hours",
+         "observed": 0.0,
+         "observed_text": "0.0%",
+         "threshold_text": "\u2265 80%",
+         "status": "clear"
+        },
+        {
+         "id": "MM-02",
+         "label": "Many-to-one: distinct unrelated P2P senders in 14 days",
+         "observed": 0,
+         "observed_text": "0",
+         "threshold_text": "\u2265 8",
+         "status": "clear"
+        },
+        {
+         "id": "MM-03",
+         "label": "Inflow far above the KYC expected activity",
+         "observed": 60.273221428571425,
+         "observed_text": "60.3 times",
+         "threshold_text": "\u2265 3 times",
+         "status": "fired"
+        },
+        {
+         "id": "MM-04",
+         "label": "Inbound transfers funded by instruments on a fraud list",
+         "observed": 0,
+         "observed_text": "0",
+         "threshold_text": "\u2265 1",
+         "status": "clear"
+        },
+        {
+         "id": "MM-05",
+         "label": "New account: opened within 90 days of the activity",
+         "observed": 10407,
+         "observed_text": "10407 days",
+         "threshold_text": "\u2264 90 days",
+         "status": "clear"
+        },
+        {
+         "id": "MM-06",
+         "label": "Cash-out channels: ATM cash, crypto exchange, or P2P out",
+         "observed": 0.0,
+         "observed_text": "0.0%",
+         "threshold_text": "\u2265 70%",
+         "status": "clear"
+        }
+       ]
+      },
+      {
+       "id": "structuring",
+       "label": "Structuring",
+       "reference": "31 U.S.C. 5324; FFIEC BSA/AML Manual, structuring red flags (illustrative paraphrase)",
+       "matched": false,
+       "fired": 0,
+       "total": 5,
+       "rule": "3 of 5, including ST-01 and ST-02",
+       "indicators": [
+        {
+         "id": "ST-01",
+         "label": "Cash deposits just under the $10,000 CTR threshold",
+         "observed": null,
+         "observed_text": "not applicable",
+         "threshold_text": "\u2265 3",
+         "status": "not_applicable"
+        },
+        {
+         "id": "ST-02",
+         "label": "Cash above $10,000 in a rolling 7 days with no single deposit at or over it",
+         "observed": null,
+         "observed_text": "not applicable",
+         "threshold_text": "\u2265 $10,000",
+         "status": "not_applicable"
+        },
+        {
+         "id": "ST-03",
+         "label": "Cash deposits spread across branches",
+         "observed": null,
+         "observed_text": "not applicable",
+         "threshold_text": "\u2265 3",
+         "status": "not_applicable"
+        },
+        {
+         "id": "ST-04",
+         "label": "Statement about avoiding the reporting threshold",
+         "observed": 0,
+         "observed_text": "0",
+         "threshold_text": "\u2265 1",
+         "status": "clear"
+        },
+        {
+         "id": "ST-05",
+         "label": "Cash far above the KYC expected cash",
+         "observed": null,
+         "observed_text": "not applicable",
+         "threshold_text": "\u2265 3 times",
+         "status": "not_applicable"
+        }
+       ]
+      },
+      {
+       "id": "funnel_account",
+       "label": "Funnel account",
+       "reference": "FinCEN advisory FIN-2014-A005 on funnel accounts (illustrative paraphrase)",
+       "matched": false,
+       "fired": 0,
+       "total": 3,
+       "rule": "2 of 3, including FA-01",
+       "indicators": [
+        {
+         "id": "FA-01",
+         "label": "Cash deposits in several states by several depositors",
+         "observed": null,
+         "observed_text": "not applicable",
+         "threshold_text": "\u2265 3",
+         "status": "not_applicable"
+        },
+        {
+         "id": "FA-02",
+         "label": "Withdrawals or wires out of area soon after deposits",
+         "observed": null,
+         "observed_text": "not applicable",
+         "threshold_text": "\u2265 50%",
+         "status": "not_applicable"
+        },
+        {
+         "id": "FA-03",
+         "label": "Low retained balance: under 10% of inflow kept",
+         "observed": null,
+         "observed_text": "not applicable",
+         "threshold_text": "\u2264 10%",
+         "status": "not_applicable"
+        }
+       ]
+      }
+     ],
+     "evidence": [
+      {
+       "id": "ALERT-1",
+       "kind": "alert",
+       "title": "Alert ALR-2026-0930-0517",
+       "text": "Alert ALR-2026-0930-0517 detected 2026-09-30 by Transaction monitoring rule TM-WIRE-11 (large inbound wire versus profile): A $418,500 inbound wire is about 60 times the customer's usual monthly inflow. Filing deadline 2026-10-30 (30 days from detection); case snapshot 2026-10-09 is day 9 of 30.",
+       "source": "Transaction monitoring (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "KYC-1",
+       "kind": "kyc",
+       "title": "KYC profile (minimized)",
+       "text": "Gabriel Novak, age 64, Retired high-school teacher, customer since 1998-04-02, located in Alameda, CA. Risk rating Low. Expected activity: Pension and Social Security deposits; household spending; occasional transfers to own brokerage. Source of funds: Pension, Social Security, savings. PEP: no. Sanctions screening: clear.",
+       "source": "KYC system (synthetic); SSN, date of birth, and street address withheld from the model",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "ACCT-1",
+       "kind": "account",
+       "title": "Account ****2954",
+       "text": "checking ****2954 opened 1998-04-02, status open, balance before the review window $18,640.12.",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "ACCT-2",
+       "kind": "account",
+       "title": "Account ****8120",
+       "text": "brokerage ****8120 opened 2011-06-17, status open.",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-01",
+       "kind": "transaction",
+       "title": "inbound wire $418,500.00",
+       "text": "2026-09-29 10:42 \u00b7 inbound wire \u00b7 $418,500.00 \u00b7 from Bayside Title & Escrow (fictional) (CP-01) \u00b7 memo \"Seller proceeds 22 Linden Ct escrow 26-1187\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-02",
+       "kind": "transaction",
+       "title": "ACH credit $3,412.55",
+       "text": "2026-10-01 03:00 \u00b7 ACH credit \u00b7 $3,412.55 \u00b7 from Teachers' pension fund (fictional) (CP-02) \u00b7 memo \"CalSTRS-style pension (fictional)\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-03",
+       "kind": "transaction",
+       "title": "transfer to own account $400,000.00",
+       "text": "2026-10-01 09:15 \u00b7 transfer to own account \u00b7 $400,000.00 \u00b7 to Own brokerage account ****8120 (CP-03) \u00b7 memo \"invest house proceeds\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-04",
+       "kind": "transaction",
+       "title": "debit card purchase $186.40",
+       "text": "2026-10-03 12:20 \u00b7 debit card purchase \u00b7 $186.40 \u00b7 to Neighborhood grocer (fictional) (CP-04) \u00b7 memo \"groceries\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-IN",
+       "kind": "aggregate",
+       "title": "Posted credits",
+       "text": "Posted credits: 2 totalling $421,912.55, 2026-09-29 to 2026-10-01 (3 days), 2 distinct counterparties, smallest $3,412.55, largest $418,500.00.",
+       "source": "Computed from core-banking transactions (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-OUT",
+       "kind": "aggregate",
+       "title": "Posted debits",
+       "text": "Posted debits: 2 totalling $400,186.40, 2026-10-01 to 2026-10-03 (3 days), 2 distinct counterparties, smallest $186.40, largest $400,000.00; 94.9% of all posted credits.",
+       "source": "Computed from core-banking transactions (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-IN-ACH",
+       "kind": "aggregate",
+       "title": "ACH credits",
+       "text": "ACH credits: 1 totalling $3,412.55, 2026-10-01 to 2026-10-01 (1 day), 1 distinct counterparty.",
+       "source": "Computed from core-banking transactions (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-IN-WIRE",
+       "kind": "aggregate",
+       "title": "Inbound wires",
+       "text": "Inbound wires: 1 totalling $418,500.00, 2026-09-29 to 2026-09-29 (1 day), 1 distinct counterparty.",
+       "source": "Computed from core-banking transactions (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-OUT-CARD",
+       "kind": "aggregate",
+       "title": "Debit card purchases",
+       "text": "Debit card purchases: 1 totalling $186.40, 2026-10-03 to 2026-10-03 (1 day), 1 distinct counterparty; 0.0% of all posted credits.",
+       "source": "Computed from core-banking transactions (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-OUT-OWN",
+       "kind": "aggregate",
+       "title": "Transfers to own accounts",
+       "text": "Transfers to own accounts: 1 totalling $400,000.00, 2026-10-01 to 2026-10-01 (1 day), 1 distinct counterparty; 94.8% of all posted credits.",
+       "source": "Computed from core-banking transactions (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-01",
+       "kind": "counterparty",
+       "title": "Bayside Title & Escrow (fictional)",
+       "text": "Bayside Title & Escrow (fictional) (title and escrow company); relationship on file: none; licensed escrow agent named on the settlement statement.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-02",
+       "kind": "counterparty",
+       "title": "Teachers' pension fund (fictional)",
+       "text": "Teachers' pension fund (fictional) (pension payer); relationship on file: monthly since 2021.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-03",
+       "kind": "counterparty",
+       "title": "Own brokerage account ****8120",
+       "text": "Own brokerage account ****8120 (internal account, same owner); relationship on file: customer's own account.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-04",
+       "kind": "counterparty",
+       "title": "Neighborhood grocer (fictional)",
+       "text": "Neighborhood grocer (fictional) (merchant); relationship on file: regular.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AM-1",
+       "kind": "adverse_media",
+       "title": "State regulator warns consumers about Coinvault Exchange (fictional)",
+       "text": "FinCrime Wire (fictional newswire), 2026-07-22: State regulator warns consumers about Coinvault Exchange (fictional). A fictional state regulator says Coinvault Exchange onboarded accounts without identity checks and was used to cash out P2P scam proceeds.",
+       "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AM-2",
+       "kind": "adverse_media",
+       "title": "Free-zone trader Bramblecoast Trading named in trade-based laundering notice (fictional)",
+       "text": "FinCrime Wire (fictional newswire), 2026-06-14: Free-zone trader Bramblecoast Trading named in trade-based laundering notice (fictional). A fictional regulator lists Bramblecoast Trading FZE among companies that received cash-funded wires against over-invoiced auto-parts shipments.",
+       "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AM-3",
+       "kind": "adverse_media",
+       "title": "Card data skimmed at online retailer Orbit Digital Goods (fictional)",
+       "text": "FinCrime Wire (fictional newswire), 2026-09-30: Card data skimmed at online retailer Orbit Digital Goods (fictional). Orbit Digital Goods confirms malicious checkout code captured card details for three weeks in September; issuers report fraud and P2P cash-out attempts.",
+       "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AM-4",
+       "kind": "adverse_media",
+       "title": "Title firms report wire-fraud attempts during closings (fictional)",
+       "text": "FinCrime Wire (fictional newswire), 2026-05-03: Title firms report wire-fraud attempts during closings (fictional). Bayside Title & Escrow (fictional) stopped a spoofed wire-instruction email; the firm itself was the target, and no wrongdoing by the firm is alleged.",
+       "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "DOC-1.1",
+       "kind": "document",
+       "title": "Seller settlement statement (closing disclosure), segment 1",
+       "text": "Seller settlement statement (closing disclosure) (received 2026-09-30, customer-supplied at the Alameda branch, verified against the escrow number), segment 1: Settlement statement for the sale of 22 Linden Court, Alameda CA, escrow 26-1187, closing date 2026-09-29.",
+       "source": "Customer-supplied document (untrusted)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "DOC-1.2",
+       "kind": "document",
+       "title": "Seller settlement statement (closing disclosure), segment 2",
+       "text": "Seller settlement statement (closing disclosure) (received 2026-09-30, customer-supplied at the Alameda branch, verified against the escrow number), segment 2: Sale price $455,000.00; mortgage payoff $31,240.00; commissions and fees $5,260.00; net proceeds to seller $418,500.00.",
+       "source": "Customer-supplied document (untrusted)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "DOC-1.3",
+       "kind": "document",
+       "title": "Seller settlement statement (closing disclosure), segment 3",
+       "text": "Seller settlement statement (closing disclosure) (received 2026-09-30, customer-supplied at the Alameda branch, verified against the escrow number), segment 3: Disbursed by wire to the seller's checking account ending 2954. Escrow officer: Bayside Title & Escrow (fictional).",
+       "source": "Customer-supplied document (untrusted)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-MM-01",
+       "kind": "indicator",
+       "title": "MM-01 Pass-through: inbound funds left within 48 hours",
+       "text": "MM-01 Pass-through: inbound funds left within 48 hours: observed 0.0% (threshold \u2265 80%) \u00b7 not fired.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-MM-02",
+       "kind": "indicator",
+       "title": "MM-02 Many-to-one: distinct unrelated P2P senders in 14 days",
+       "text": "MM-02 Many-to-one: distinct unrelated P2P senders in 14 days: observed 0 (threshold \u2265 8) \u00b7 not fired.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-MM-03",
+       "kind": "indicator",
+       "title": "MM-03 Inflow far above the KYC expected activity",
+       "text": "MM-03 Inflow far above the KYC expected activity: observed 60.3 times (threshold \u2265 3 times) \u00b7 FIRED.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-MM-04",
+       "kind": "indicator",
+       "title": "MM-04 Inbound transfers funded by instruments on a fraud list",
+       "text": "MM-04 Inbound transfers funded by instruments on a fraud list: observed 0 (threshold \u2265 1) \u00b7 not fired.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-MM-05",
+       "kind": "indicator",
+       "title": "MM-05 New account: opened within 90 days of the activity",
+       "text": "MM-05 New account: opened within 90 days of the activity: observed 10407 days (threshold \u2264 90 days) \u00b7 not fired.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-MM-06",
+       "kind": "indicator",
+       "title": "MM-06 Cash-out channels: ATM cash, crypto exchange, or P2P out",
+       "text": "MM-06 Cash-out channels: ATM cash, crypto exchange, or P2P out: observed 0.0% (threshold \u2265 70%) \u00b7 not fired.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TYP-MM",
+       "kind": "typology",
+       "title": "Money mule",
+       "text": "Money mule typology: 1 of 6 indicators fired (MM-03); a match needs 4 of 6, including MM-01 \u00b7 not matched.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-ST-01",
+       "kind": "indicator",
+       "title": "ST-01 Cash deposits just under the $10,000 CTR threshold",
+       "text": "ST-01 Cash deposits just under the $10,000 CTR threshold: observed not applicable (threshold \u2265 3) \u00b7 not applicable.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-ST-02",
+       "kind": "indicator",
+       "title": "ST-02 Cash above $10,000 in a rolling 7 days with no single deposit at or over it",
+       "text": "ST-02 Cash above $10,000 in a rolling 7 days with no single deposit at or over it: observed not applicable (threshold \u2265 $10,000) \u00b7 not applicable.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-ST-03",
+       "kind": "indicator",
+       "title": "ST-03 Cash deposits spread across branches",
+       "text": "ST-03 Cash deposits spread across branches: observed not applicable (threshold \u2265 3) \u00b7 not applicable.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-ST-04",
+       "kind": "indicator",
+       "title": "ST-04 Statement about avoiding the reporting threshold",
+       "text": "ST-04 Statement about avoiding the reporting threshold: observed 0 (threshold \u2265 1) \u00b7 not fired.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-ST-05",
+       "kind": "indicator",
+       "title": "ST-05 Cash far above the KYC expected cash",
+       "text": "ST-05 Cash far above the KYC expected cash: observed not applicable (threshold \u2265 3 times) \u00b7 not applicable.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TYP-ST",
+       "kind": "typology",
+       "title": "Structuring",
+       "text": "Structuring typology: 0 of 5 indicators fired; a match needs 3 of 5, including ST-01 and ST-02 \u00b7 not matched.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-FA-01",
+       "kind": "indicator",
+       "title": "FA-01 Cash deposits in several states by several depositors",
+       "text": "FA-01 Cash deposits in several states by several depositors: observed not applicable (threshold \u2265 3) \u00b7 not applicable.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-FA-02",
+       "kind": "indicator",
+       "title": "FA-02 Withdrawals or wires out of area soon after deposits",
+       "text": "FA-02 Withdrawals or wires out of area soon after deposits: observed not applicable (threshold \u2265 50%) \u00b7 not applicable.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-FA-03",
+       "kind": "indicator",
+       "title": "FA-03 Low retained balance: under 10% of inflow kept",
+       "text": "FA-03 Low retained balance: under 10% of inflow kept: observed not applicable (threshold \u2264 10%) \u00b7 not applicable.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TYP-FA",
+       "kind": "typology",
+       "title": "Funnel account",
+       "text": "Funnel account typology: 0 of 3 indicators fired; a match needs 2 of 3, including FA-01 \u00b7 not matched.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AMS-1",
+       "kind": "adverse_media",
+       "title": "Adverse media search \u00b7 0 articles",
+       "text": "Search of FinCrime Wire (fictional newswire), the only allowlisted source, for Gabriel Novak: no articles.",
+       "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      }
+     ],
+     "security": {
+      "mode": "enforce",
+      "status": "allowed",
+      "checks": 13,
+      "blocked": 0,
+      "errors": 0,
+      "withheld_segments": 0,
+      "local_flags": 0,
+      "event_ids": [],
+      "fail_open": false,
+      "forced": true
+     },
+     "usage": {
+      "llm_calls": 3,
+      "input_tokens": 10018,
+      "output_tokens": 943
+     },
+     "telemetry": {
+      "splunk": {
+       "status": "not_configured",
+       "trace_id": "ef67d991e2db3b45313be29e34f1b4d0"
+      },
+      "galileo": "recorded"
+     },
+     "served_by": {
+      "provider": "openai",
+      "label": "OpenAI API",
+      "model": "gpt-5.6-luna",
+      "kind": "openai",
+      "private": false,
+      "external": true,
+      "fallback": true,
+      "reason": "Sparky vLLM unreachable (connection refused)",
+      "source": "saved",
+      "egress": "require_ai_defense",
+      "ai_defense": "enforce (forced for hosted model)"
+     },
+     "would_serve": {
+      "provider": "openai",
+      "label": "OpenAI API",
+      "model": "gpt-5.6-luna",
+      "kind": "openai",
+      "private": false,
+      "external": true,
+      "fallback": true,
+      "reason": "Sparky vLLM unreachable (connection refused)",
+      "source": "saved",
+      "egress": "require_ai_defense",
+      "ai_defense": "enforce (forced for hosted model)"
+     },
+     "duration_ms": 17010,
+     "tools_used": [
+      "get_alert",
+      "get_kyc_profile",
+      "get_account_activity",
+      "get_counterparties",
+      "get_prior_alerts",
+      "get_customer_documents",
+      "compute_typology_indicators",
+      "search_adverse_media"
+     ],
+     "draft": {
+      "sections": [
+       {
+        "section": "who",
+        "sentences": [
+         {
+          "text": "Gabriel Novak is a 64-year-old retired high-school teacher and a low-risk customer since 1998, with expected activity consisting of pension and Social Security deposits, household spending, and occasional transfers to his own brokerage account.",
+          "cites": [
+           "KYC-1"
+          ],
+          "valid_cites": [
+           "KYC-1"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S1",
+          "section": "who"
+         }
+        ]
+       },
+       {
+        "section": "what",
+        "sentences": [
+         {
+          "text": "The account received one inbound wire of $418,500.00 from Bayside Title & Escrow and subsequently transferred $400,000.00 to Novak\u2019s own brokerage account ending 8120.",
+          "cites": [
+           "AGG-IN-WIRE",
+           "AGG-OUT-OWN"
+          ],
+          "valid_cites": [
+           "AGG-IN-WIRE",
+           "AGG-OUT-OWN"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S2",
+          "section": "what"
+         },
+         {
+          "text": "The inbound wire represented 60.3 times the customer\u2019s expected monthly inflow, causing the large-inflow indicator to fire; no money-mule, structuring, or funnel-account typology matched.",
+          "cites": [
+           "IND-MM-03",
+           "TYP-MM",
+           "TYP-ST",
+           "TYP-FA"
+          ],
+          "valid_cites": [
+           "IND-MM-03",
+           "TYP-MM",
+           "TYP-ST",
+           "TYP-FA"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S3",
+          "section": "what"
+         }
+        ]
+       },
+       {
+        "section": "when",
+        "sentences": [
+         {
+          "text": "The inbound wire posted on 2026-09-29, and the transfer to the customer\u2019s own brokerage account posted on 2026-10-01.",
+          "cites": [
+           "AGG-IN-WIRE",
+           "AGG-OUT-OWN"
+          ],
+          "valid_cites": [
+           "AGG-IN-WIRE",
+           "AGG-OUT-OWN"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S4",
+          "section": "when"
+         },
+         {
+          "text": "The review activity occurred from 2026-09-29 through 2026-10-03.",
+          "cites": [
+           "AGG-IN",
+           "AGG-OUT"
+          ],
+          "valid_cites": [
+           "AGG-IN",
+           "AGG-OUT"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S5",
+          "section": "when"
+         }
+        ]
+       },
+       {
+        "section": "where",
+        "sentences": [
+         {
+          "text": "The wire was credited to checking account ending 2954 and the subsequent transfer was sent internally to brokerage account ending 8120.",
+          "cites": [
+           "ACCT-1",
+           "ACCT-2",
+           "AGG-OUT-OWN"
+          ],
+          "valid_cites": [
+           "ACCT-1",
+           "ACCT-2",
+           "AGG-OUT-OWN"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S6",
+          "section": "where"
+         },
+         {
+          "text": "The customer supplied the settlement statement at the Alameda branch.",
+          "cites": [
+           "DOC-1.1"
+          ],
+          "valid_cites": [
+           "DOC-1.1"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S7",
+          "section": "where"
+         }
+        ]
+       },
+       {
+        "section": "why",
+        "sentences": [
+         {
+          "text": "The activity was alerted because the $418,500.00 inbound wire was about 60 times the customer\u2019s usual monthly inflow.",
+          "cites": [
+           "ALERT-1"
+          ],
+          "valid_cites": [
+           "ALERT-1"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S8",
+          "section": "why"
+         },
+         {
+          "text": "The settlement statement identifies the funds as net proceeds from the 2026-09-29 sale of 22 Linden Court, with a sale price of $455,000.00, mortgage payoff of $31,240.00, commissions and fees of $5,260.00, and net proceeds of $418,500.00.",
+          "cites": [
+           "DOC-1.1",
+           "DOC-1.2"
+          ],
+          "valid_cites": [
+           "DOC-1.1",
+           "DOC-1.2"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S9",
+          "section": "why"
+         }
+        ]
+       },
+       {
+        "section": "how",
+        "sentences": [
+         {
+          "text": "Bayside Title & Escrow, identified as a licensed escrow agent on the settlement statement, disbursed the net sale proceeds by wire to checking account ending 2954.",
+          "cites": [
+           "CP-01",
+           "DOC-1.3"
+          ],
+          "valid_cites": [
+           "CP-01",
+           "DOC-1.3"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S10",
+          "section": "how"
+         },
+         {
+          "text": "The customer then transferred $400,000.00 to his own brokerage account, while total posted debits were $400,186.40, or 94.9% of all posted credits.",
+          "cites": [
+           "AGG-OUT",
+           "AGG-OUT-OWN"
+          ],
+          "valid_cites": [
+           "AGG-OUT",
+           "AGG-OUT-OWN"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S11",
+          "section": "how"
+         }
+        ]
+       }
+      ],
+      "dropped": [],
+      "verification": {
+       "total": 11,
+       "kept": 11,
+       "failing": 0,
+       "cited_share": 1.0,
+       "missing_sections": []
+      },
+      "recommendation": "no_file",
+      "indicator_recommendation": "no_file",
+      "agrees": true,
+      "rationale": {
+       "text": "The unusual inflow is documented by a verified seller settlement statement and is consistent with a home-sale transaction; the funds were transferred to the customer\u2019s own brokerage account rather than a cash-out or unrelated-party channel. No typology matched, and no adverse media or prior alerts were identified.",
+       "cites": [
+        "DOC-1.1",
+        "DOC-1.2",
+        "DOC-1.3",
+        "AGG-OUT-OWN",
+        "TYP-MM",
+        "TYP-ST",
+        "TYP-FA",
+        "AMS-1"
+       ],
+       "valid_cites": [
+        "DOC-1.1",
+        "DOC-1.2",
+        "DOC-1.3",
+        "AGG-OUT-OWN",
+        "TYP-MM",
+        "TYP-ST",
+        "TYP-FA",
+        "AMS-1"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "R",
+       "section": "rationale"
+      },
+      "next_steps": [
+       "Retain the verified settlement statement and escrow verification in the case record.",
+       "Document the no-file decision and the rationale that the activity is consistent with home-sale proceeds.",
+       "Monitor for future activity inconsistent with the customer\u2019s stated source of funds or expected activity."
+      ],
+      "removed_steps": [],
+      "policies": [
+       {
+        "policy": "sar.no_tipping_off",
+        "name": "sar-no-tipping-off-v1",
+        "label": "No tipping off",
+        "allowed": true,
+        "failed": [],
+        "engine": "hosted",
+        "reason": ""
+       },
+       {
+        "policy": "sar.narrative_cited",
+        "name": "sar-narrative-cited-v1",
+        "label": "Narrative must cite evidence",
+        "allowed": true,
+        "failed": [],
+        "engine": "hosted",
+        "reason": ""
+       }
+      ],
+      "released": true,
+      "contact_attempts": 0
+     },
+     "provenance": "live"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "1917ab73-cc9a-4dba-ae07-9d451045ac7a",
+   "at": "2026-10-09T22:54:41.827764+00:00",
+   "ns": 18818058125,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "hitl.decision",
+   "status": "info",
+   "title": "Theo Marsh \u00b7 no_file",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "request_id": "investigator-1",
+    "decision": "no_file",
+    "by": "Theo Marsh",
+    "rationale": "The unusual inflow is documented by a verified seller settlement statement and is consistent with a home-sale transaction; the funds were transferred to the customer\u2019s own brokerage account rather than a cash-out or unrelated-party channel. No typology matched, and no adverse media or prior alerts were identified.",
+    "note": "The unusual inflow is documented by a verified seller settlement statement and is consistent with a home-sale transaction; the funds were transferred to the customer\u2019s own brokerage account rather than a cash-out or unrelated-party channel. No typology matched, and no adverse media or prior alerts w"
+   }
+  },
+  {
+   "v": 1,
+   "id": "a1b5bbb5-1d2c-4d6d-91bd-dba81f093fb3",
+   "at": "2026-10-09T22:54:41.833412+00:00",
+   "ns": 18823702291,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "hitl.request",
+   "status": "info",
+   "title": "Second-line QA \u00b7 approve closing without a SAR or return",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "request_id": "qa-1",
+    "stage": "qa",
+    "round": 1,
+    "decision": "no_file",
+    "investigator": "Theo Marsh",
+    "rationale": "The unusual inflow is documented by a verified seller settlement statement and is consistent with a home-sale transaction; the funds were transferred to the customer\u2019s own brokerage account rather than a cash-out or unrelated-party channel. No typology matched, and no adverse media or prior alerts were identified.",
+    "sections": null
+   }
+  },
+  {
+   "v": 1,
+   "id": "d99d977e-6e6c-4fba-9702-0182e0326865",
+   "at": "2026-10-09T22:54:41.843772+00:00",
+   "ns": 18834064166,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "hitl.decision",
+   "status": "ok",
+   "title": "Lena Ortiz \u00b7 approve",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "request_id": "qa-1",
+    "decision": "approve",
+    "by": "Lena Ortiz",
+    "note": ""
+   }
+  },
+  {
+   "v": 1,
+   "id": "4a1f7383-8e8b-4983-afae-4a87e6cd64fa",
+   "at": "2026-10-09T22:54:41.848856+00:00",
+   "ns": 18839146166,
+   "run_id": "sar-golden-explained-novak-20261009225420",
+   "component": "sar",
+   "kind": "result",
+   "status": "ok",
+   "title": "Case closed \u00b7 no SAR \u00b7 rationale on file",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Theo Marsh's no-file rationale approved by Lena Ortiz.",
+   "data": {}
+  }
+ ],
+ "result": {
+  "case": {
+   "id": "explained-novak",
+   "label": "Explained activity \u00b7 home-sale proceeds",
+   "scenario": "explained-novak",
+   "kind": "control",
+   "title": "Explained activity \u00b7 home-sale proceeds",
+   "subject": {
+    "name": "Gabriel Novak",
+    "kind": "individual",
+    "detail": "Retired high-school teacher",
+    "location": "Alameda, CA",
+    "ssn_masked": "***-**-9034"
+   },
+   "alert": {
+    "id": "ALR-2026-0930-0517",
+    "detected": "2026-09-30",
+    "source": "Transaction monitoring rule TM-WIRE-11 (large inbound wire versus profile)",
+    "summary": "A $418,500 inbound wire is about 60 times the customer's usual monthly inflow.",
+    "queue": "FIU \u00b7 large-value review",
+    "priority": "medium"
+   },
+   "deadline": {
+    "detected": "2026-09-30",
+    "due": "2026-10-30",
+    "as_of": "2026-10-09",
+    "day": 9,
+    "of": 30,
+    "days_left": 21
+   },
+   "accounts": [
+    "****2954",
+    "****8120"
+   ],
+   "handoff": false,
+   "synthetic": true
+  },
+  "mode": "live",
+  "typologies": [
+   {
+    "id": "money_mule",
+    "label": "Money mule",
+    "reference": "FinCEN money-mule red flags; FFIEC BSA/AML Manual appendix F (illustrative paraphrase)",
+    "matched": false,
+    "fired": 1,
+    "total": 6,
+    "rule": "4 of 6, including MM-01",
+    "indicators": [
+     {
+      "id": "MM-01",
+      "label": "Pass-through: inbound funds left within 48 hours",
+      "observed": 0.0,
+      "observed_text": "0.0%",
+      "threshold_text": "\u2265 80%",
+      "status": "clear"
+     },
+     {
+      "id": "MM-02",
+      "label": "Many-to-one: distinct unrelated P2P senders in 14 days",
+      "observed": 0,
+      "observed_text": "0",
+      "threshold_text": "\u2265 8",
+      "status": "clear"
+     },
+     {
+      "id": "MM-03",
+      "label": "Inflow far above the KYC expected activity",
+      "observed": 60.273221428571425,
+      "observed_text": "60.3 times",
+      "threshold_text": "\u2265 3 times",
+      "status": "fired"
+     },
+     {
+      "id": "MM-04",
+      "label": "Inbound transfers funded by instruments on a fraud list",
+      "observed": 0,
+      "observed_text": "0",
+      "threshold_text": "\u2265 1",
+      "status": "clear"
+     },
+     {
+      "id": "MM-05",
+      "label": "New account: opened within 90 days of the activity",
+      "observed": 10407,
+      "observed_text": "10407 days",
+      "threshold_text": "\u2264 90 days",
+      "status": "clear"
+     },
+     {
+      "id": "MM-06",
+      "label": "Cash-out channels: ATM cash, crypto exchange, or P2P out",
+      "observed": 0.0,
+      "observed_text": "0.0%",
+      "threshold_text": "\u2265 70%",
+      "status": "clear"
+     }
+    ]
+   },
+   {
+    "id": "structuring",
+    "label": "Structuring",
+    "reference": "31 U.S.C. 5324; FFIEC BSA/AML Manual, structuring red flags (illustrative paraphrase)",
+    "matched": false,
+    "fired": 0,
+    "total": 5,
+    "rule": "3 of 5, including ST-01 and ST-02",
+    "indicators": [
+     {
+      "id": "ST-01",
+      "label": "Cash deposits just under the $10,000 CTR threshold",
+      "observed": null,
+      "observed_text": "not applicable",
+      "threshold_text": "\u2265 3",
+      "status": "not_applicable"
+     },
+     {
+      "id": "ST-02",
+      "label": "Cash above $10,000 in a rolling 7 days with no single deposit at or over it",
+      "observed": null,
+      "observed_text": "not applicable",
+      "threshold_text": "\u2265 $10,000",
+      "status": "not_applicable"
+     },
+     {
+      "id": "ST-03",
+      "label": "Cash deposits spread across branches",
+      "observed": null,
+      "observed_text": "not applicable",
+      "threshold_text": "\u2265 3",
+      "status": "not_applicable"
+     },
+     {
+      "id": "ST-04",
+      "label": "Statement about avoiding the reporting threshold",
+      "observed": 0,
+      "observed_text": "0",
+      "threshold_text": "\u2265 1",
+      "status": "clear"
+     },
+     {
+      "id": "ST-05",
+      "label": "Cash far above the KYC expected cash",
+      "observed": null,
+      "observed_text": "not applicable",
+      "threshold_text": "\u2265 3 times",
+      "status": "not_applicable"
+     }
+    ]
+   },
+   {
+    "id": "funnel_account",
+    "label": "Funnel account",
+    "reference": "FinCEN advisory FIN-2014-A005 on funnel accounts (illustrative paraphrase)",
+    "matched": false,
+    "fired": 0,
+    "total": 3,
+    "rule": "2 of 3, including FA-01",
+    "indicators": [
+     {
+      "id": "FA-01",
+      "label": "Cash deposits in several states by several depositors",
+      "observed": null,
+      "observed_text": "not applicable",
+      "threshold_text": "\u2265 3",
+      "status": "not_applicable"
+     },
+     {
+      "id": "FA-02",
+      "label": "Withdrawals or wires out of area soon after deposits",
+      "observed": null,
+      "observed_text": "not applicable",
+      "threshold_text": "\u2265 50%",
+      "status": "not_applicable"
+     },
+     {
+      "id": "FA-03",
+      "label": "Low retained balance: under 10% of inflow kept",
+      "observed": null,
+      "observed_text": "not applicable",
+      "threshold_text": "\u2264 10%",
+      "status": "not_applicable"
+     }
+    ]
+   }
+  ],
+  "evidence": [
+   {
+    "id": "ALERT-1",
+    "kind": "alert",
+    "title": "Alert ALR-2026-0930-0517",
+    "text": "Alert ALR-2026-0930-0517 detected 2026-09-30 by Transaction monitoring rule TM-WIRE-11 (large inbound wire versus profile): A $418,500 inbound wire is about 60 times the customer's usual monthly inflow. Filing deadline 2026-10-30 (30 days from detection); case snapshot 2026-10-09 is day 9 of 30.",
+    "source": "Transaction monitoring (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "KYC-1",
+    "kind": "kyc",
+    "title": "KYC profile (minimized)",
+    "text": "Gabriel Novak, age 64, Retired high-school teacher, customer since 1998-04-02, located in Alameda, CA. Risk rating Low. Expected activity: Pension and Social Security deposits; household spending; occasional transfers to own brokerage. Source of funds: Pension, Social Security, savings. PEP: no. Sanctions screening: clear.",
+    "source": "KYC system (synthetic); SSN, date of birth, and street address withheld from the model",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "ACCT-1",
+    "kind": "account",
+    "title": "Account ****2954",
+    "text": "checking ****2954 opened 1998-04-02, status open, balance before the review window $18,640.12.",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "ACCT-2",
+    "kind": "account",
+    "title": "Account ****8120",
+    "text": "brokerage ****8120 opened 2011-06-17, status open.",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-01",
+    "kind": "transaction",
+    "title": "inbound wire $418,500.00",
+    "text": "2026-09-29 10:42 \u00b7 inbound wire \u00b7 $418,500.00 \u00b7 from Bayside Title & Escrow (fictional) (CP-01) \u00b7 memo \"Seller proceeds 22 Linden Ct escrow 26-1187\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-02",
+    "kind": "transaction",
+    "title": "ACH credit $3,412.55",
+    "text": "2026-10-01 03:00 \u00b7 ACH credit \u00b7 $3,412.55 \u00b7 from Teachers' pension fund (fictional) (CP-02) \u00b7 memo \"CalSTRS-style pension (fictional)\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-03",
+    "kind": "transaction",
+    "title": "transfer to own account $400,000.00",
+    "text": "2026-10-01 09:15 \u00b7 transfer to own account \u00b7 $400,000.00 \u00b7 to Own brokerage account ****8120 (CP-03) \u00b7 memo \"invest house proceeds\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-04",
+    "kind": "transaction",
+    "title": "debit card purchase $186.40",
+    "text": "2026-10-03 12:20 \u00b7 debit card purchase \u00b7 $186.40 \u00b7 to Neighborhood grocer (fictional) (CP-04) \u00b7 memo \"groceries\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-IN",
+    "kind": "aggregate",
+    "title": "Posted credits",
+    "text": "Posted credits: 2 totalling $421,912.55, 2026-09-29 to 2026-10-01 (3 days), 2 distinct counterparties, smallest $3,412.55, largest $418,500.00.",
+    "source": "Computed from core-banking transactions (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-OUT",
+    "kind": "aggregate",
+    "title": "Posted debits",
+    "text": "Posted debits: 2 totalling $400,186.40, 2026-10-01 to 2026-10-03 (3 days), 2 distinct counterparties, smallest $186.40, largest $400,000.00; 94.9% of all posted credits.",
+    "source": "Computed from core-banking transactions (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-IN-ACH",
+    "kind": "aggregate",
+    "title": "ACH credits",
+    "text": "ACH credits: 1 totalling $3,412.55, 2026-10-01 to 2026-10-01 (1 day), 1 distinct counterparty.",
+    "source": "Computed from core-banking transactions (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-IN-WIRE",
+    "kind": "aggregate",
+    "title": "Inbound wires",
+    "text": "Inbound wires: 1 totalling $418,500.00, 2026-09-29 to 2026-09-29 (1 day), 1 distinct counterparty.",
+    "source": "Computed from core-banking transactions (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-OUT-CARD",
+    "kind": "aggregate",
+    "title": "Debit card purchases",
+    "text": "Debit card purchases: 1 totalling $186.40, 2026-10-03 to 2026-10-03 (1 day), 1 distinct counterparty; 0.0% of all posted credits.",
+    "source": "Computed from core-banking transactions (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-OUT-OWN",
+    "kind": "aggregate",
+    "title": "Transfers to own accounts",
+    "text": "Transfers to own accounts: 1 totalling $400,000.00, 2026-10-01 to 2026-10-01 (1 day), 1 distinct counterparty; 94.8% of all posted credits.",
+    "source": "Computed from core-banking transactions (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-01",
+    "kind": "counterparty",
+    "title": "Bayside Title & Escrow (fictional)",
+    "text": "Bayside Title & Escrow (fictional) (title and escrow company); relationship on file: none; licensed escrow agent named on the settlement statement.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-02",
+    "kind": "counterparty",
+    "title": "Teachers' pension fund (fictional)",
+    "text": "Teachers' pension fund (fictional) (pension payer); relationship on file: monthly since 2021.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-03",
+    "kind": "counterparty",
+    "title": "Own brokerage account ****8120",
+    "text": "Own brokerage account ****8120 (internal account, same owner); relationship on file: customer's own account.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-04",
+    "kind": "counterparty",
+    "title": "Neighborhood grocer (fictional)",
+    "text": "Neighborhood grocer (fictional) (merchant); relationship on file: regular.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AM-1",
+    "kind": "adverse_media",
+    "title": "State regulator warns consumers about Coinvault Exchange (fictional)",
+    "text": "FinCrime Wire (fictional newswire), 2026-07-22: State regulator warns consumers about Coinvault Exchange (fictional). A fictional state regulator says Coinvault Exchange onboarded accounts without identity checks and was used to cash out P2P scam proceeds.",
+    "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AM-2",
+    "kind": "adverse_media",
+    "title": "Free-zone trader Bramblecoast Trading named in trade-based laundering notice (fictional)",
+    "text": "FinCrime Wire (fictional newswire), 2026-06-14: Free-zone trader Bramblecoast Trading named in trade-based laundering notice (fictional). A fictional regulator lists Bramblecoast Trading FZE among companies that received cash-funded wires against over-invoiced auto-parts shipments.",
+    "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AM-3",
+    "kind": "adverse_media",
+    "title": "Card data skimmed at online retailer Orbit Digital Goods (fictional)",
+    "text": "FinCrime Wire (fictional newswire), 2026-09-30: Card data skimmed at online retailer Orbit Digital Goods (fictional). Orbit Digital Goods confirms malicious checkout code captured card details for three weeks in September; issuers report fraud and P2P cash-out attempts.",
+    "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AM-4",
+    "kind": "adverse_media",
+    "title": "Title firms report wire-fraud attempts during closings (fictional)",
+    "text": "FinCrime Wire (fictional newswire), 2026-05-03: Title firms report wire-fraud attempts during closings (fictional). Bayside Title & Escrow (fictional) stopped a spoofed wire-instruction email; the firm itself was the target, and no wrongdoing by the firm is alleged.",
+    "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "DOC-1.1",
+    "kind": "document",
+    "title": "Seller settlement statement (closing disclosure), segment 1",
+    "text": "Seller settlement statement (closing disclosure) (received 2026-09-30, customer-supplied at the Alameda branch, verified against the escrow number), segment 1: Settlement statement for the sale of 22 Linden Court, Alameda CA, escrow 26-1187, closing date 2026-09-29.",
+    "source": "Customer-supplied document (untrusted)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "DOC-1.2",
+    "kind": "document",
+    "title": "Seller settlement statement (closing disclosure), segment 2",
+    "text": "Seller settlement statement (closing disclosure) (received 2026-09-30, customer-supplied at the Alameda branch, verified against the escrow number), segment 2: Sale price $455,000.00; mortgage payoff $31,240.00; commissions and fees $5,260.00; net proceeds to seller $418,500.00.",
+    "source": "Customer-supplied document (untrusted)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "DOC-1.3",
+    "kind": "document",
+    "title": "Seller settlement statement (closing disclosure), segment 3",
+    "text": "Seller settlement statement (closing disclosure) (received 2026-09-30, customer-supplied at the Alameda branch, verified against the escrow number), segment 3: Disbursed by wire to the seller's checking account ending 2954. Escrow officer: Bayside Title & Escrow (fictional).",
+    "source": "Customer-supplied document (untrusted)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-MM-01",
+    "kind": "indicator",
+    "title": "MM-01 Pass-through: inbound funds left within 48 hours",
+    "text": "MM-01 Pass-through: inbound funds left within 48 hours: observed 0.0% (threshold \u2265 80%) \u00b7 not fired.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-MM-02",
+    "kind": "indicator",
+    "title": "MM-02 Many-to-one: distinct unrelated P2P senders in 14 days",
+    "text": "MM-02 Many-to-one: distinct unrelated P2P senders in 14 days: observed 0 (threshold \u2265 8) \u00b7 not fired.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-MM-03",
+    "kind": "indicator",
+    "title": "MM-03 Inflow far above the KYC expected activity",
+    "text": "MM-03 Inflow far above the KYC expected activity: observed 60.3 times (threshold \u2265 3 times) \u00b7 FIRED.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-MM-04",
+    "kind": "indicator",
+    "title": "MM-04 Inbound transfers funded by instruments on a fraud list",
+    "text": "MM-04 Inbound transfers funded by instruments on a fraud list: observed 0 (threshold \u2265 1) \u00b7 not fired.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-MM-05",
+    "kind": "indicator",
+    "title": "MM-05 New account: opened within 90 days of the activity",
+    "text": "MM-05 New account: opened within 90 days of the activity: observed 10407 days (threshold \u2264 90 days) \u00b7 not fired.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-MM-06",
+    "kind": "indicator",
+    "title": "MM-06 Cash-out channels: ATM cash, crypto exchange, or P2P out",
+    "text": "MM-06 Cash-out channels: ATM cash, crypto exchange, or P2P out: observed 0.0% (threshold \u2265 70%) \u00b7 not fired.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TYP-MM",
+    "kind": "typology",
+    "title": "Money mule",
+    "text": "Money mule typology: 1 of 6 indicators fired (MM-03); a match needs 4 of 6, including MM-01 \u00b7 not matched.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-ST-01",
+    "kind": "indicator",
+    "title": "ST-01 Cash deposits just under the $10,000 CTR threshold",
+    "text": "ST-01 Cash deposits just under the $10,000 CTR threshold: observed not applicable (threshold \u2265 3) \u00b7 not applicable.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-ST-02",
+    "kind": "indicator",
+    "title": "ST-02 Cash above $10,000 in a rolling 7 days with no single deposit at or over it",
+    "text": "ST-02 Cash above $10,000 in a rolling 7 days with no single deposit at or over it: observed not applicable (threshold \u2265 $10,000) \u00b7 not applicable.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-ST-03",
+    "kind": "indicator",
+    "title": "ST-03 Cash deposits spread across branches",
+    "text": "ST-03 Cash deposits spread across branches: observed not applicable (threshold \u2265 3) \u00b7 not applicable.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-ST-04",
+    "kind": "indicator",
+    "title": "ST-04 Statement about avoiding the reporting threshold",
+    "text": "ST-04 Statement about avoiding the reporting threshold: observed 0 (threshold \u2265 1) \u00b7 not fired.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-ST-05",
+    "kind": "indicator",
+    "title": "ST-05 Cash far above the KYC expected cash",
+    "text": "ST-05 Cash far above the KYC expected cash: observed not applicable (threshold \u2265 3 times) \u00b7 not applicable.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TYP-ST",
+    "kind": "typology",
+    "title": "Structuring",
+    "text": "Structuring typology: 0 of 5 indicators fired; a match needs 3 of 5, including ST-01 and ST-02 \u00b7 not matched.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-FA-01",
+    "kind": "indicator",
+    "title": "FA-01 Cash deposits in several states by several depositors",
+    "text": "FA-01 Cash deposits in several states by several depositors: observed not applicable (threshold \u2265 3) \u00b7 not applicable.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-FA-02",
+    "kind": "indicator",
+    "title": "FA-02 Withdrawals or wires out of area soon after deposits",
+    "text": "FA-02 Withdrawals or wires out of area soon after deposits: observed not applicable (threshold \u2265 50%) \u00b7 not applicable.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-FA-03",
+    "kind": "indicator",
+    "title": "FA-03 Low retained balance: under 10% of inflow kept",
+    "text": "FA-03 Low retained balance: under 10% of inflow kept: observed not applicable (threshold \u2264 10%) \u00b7 not applicable.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TYP-FA",
+    "kind": "typology",
+    "title": "Funnel account",
+    "text": "Funnel account typology: 0 of 3 indicators fired; a match needs 2 of 3, including FA-01 \u00b7 not matched.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AMS-1",
+    "kind": "adverse_media",
+    "title": "Adverse media search \u00b7 0 articles",
+    "text": "Search of FinCrime Wire (fictional newswire), the only allowlisted source, for Gabriel Novak: no articles.",
+    "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   }
+  ],
+  "security": {
+   "mode": "enforce",
+   "status": "allowed",
+   "checks": 13,
+   "blocked": 0,
+   "errors": 0,
+   "withheld_segments": 0,
+   "local_flags": 0,
+   "event_ids": [],
+   "fail_open": false,
+   "forced": true
+  },
+  "usage": {
+   "llm_calls": 3,
+   "input_tokens": 10018,
+   "output_tokens": 943
+  },
+  "telemetry": {
+   "splunk": {
+    "status": "not_configured",
+    "trace_id": "ef67d991e2db3b45313be29e34f1b4d0"
+   },
+   "galileo": "recorded"
+  },
+  "served_by": {
+   "provider": "openai",
+   "label": "OpenAI API",
+   "model": "gpt-5.6-luna",
+   "kind": "openai",
+   "private": false,
+   "external": true,
+   "fallback": true,
+   "reason": "Sparky vLLM unreachable (connection refused)",
+   "source": "saved",
+   "egress": "require_ai_defense",
+   "ai_defense": "enforce (forced for hosted model)"
+  },
+  "would_serve": {
+   "provider": "openai",
+   "label": "OpenAI API",
+   "model": "gpt-5.6-luna",
+   "kind": "openai",
+   "private": false,
+   "external": true,
+   "fallback": true,
+   "reason": "Sparky vLLM unreachable (connection refused)",
+   "source": "saved",
+   "egress": "require_ai_defense",
+   "ai_defense": "enforce (forced for hosted model)"
+  },
+  "duration_ms": 17010,
+  "tools_used": [
+   "get_alert",
+   "get_kyc_profile",
+   "get_account_activity",
+   "get_counterparties",
+   "get_prior_alerts",
+   "get_customer_documents",
+   "compute_typology_indicators",
+   "search_adverse_media"
+  ],
+  "draft": {
+   "sections": [
+    {
+     "section": "who",
+     "sentences": [
+      {
+       "text": "Gabriel Novak is a 64-year-old retired high-school teacher and a low-risk customer since 1998, with expected activity consisting of pension and Social Security deposits, household spending, and occasional transfers to his own brokerage account.",
+       "cites": [
+        "KYC-1"
+       ],
+       "valid_cites": [
+        "KYC-1"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S1",
+       "section": "who"
+      }
+     ]
+    },
+    {
+     "section": "what",
+     "sentences": [
+      {
+       "text": "The account received one inbound wire of $418,500.00 from Bayside Title & Escrow and subsequently transferred $400,000.00 to Novak\u2019s own brokerage account ending 8120.",
+       "cites": [
+        "AGG-IN-WIRE",
+        "AGG-OUT-OWN"
+       ],
+       "valid_cites": [
+        "AGG-IN-WIRE",
+        "AGG-OUT-OWN"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S2",
+       "section": "what"
+      },
+      {
+       "text": "The inbound wire represented 60.3 times the customer\u2019s expected monthly inflow, causing the large-inflow indicator to fire; no money-mule, structuring, or funnel-account typology matched.",
+       "cites": [
+        "IND-MM-03",
+        "TYP-MM",
+        "TYP-ST",
+        "TYP-FA"
+       ],
+       "valid_cites": [
+        "IND-MM-03",
+        "TYP-MM",
+        "TYP-ST",
+        "TYP-FA"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S3",
+       "section": "what"
+      }
+     ]
+    },
+    {
+     "section": "when",
+     "sentences": [
+      {
+       "text": "The inbound wire posted on 2026-09-29, and the transfer to the customer\u2019s own brokerage account posted on 2026-10-01.",
+       "cites": [
+        "AGG-IN-WIRE",
+        "AGG-OUT-OWN"
+       ],
+       "valid_cites": [
+        "AGG-IN-WIRE",
+        "AGG-OUT-OWN"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S4",
+       "section": "when"
+      },
+      {
+       "text": "The review activity occurred from 2026-09-29 through 2026-10-03.",
+       "cites": [
+        "AGG-IN",
+        "AGG-OUT"
+       ],
+       "valid_cites": [
+        "AGG-IN",
+        "AGG-OUT"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S5",
+       "section": "when"
+      }
+     ]
+    },
+    {
+     "section": "where",
+     "sentences": [
+      {
+       "text": "The wire was credited to checking account ending 2954 and the subsequent transfer was sent internally to brokerage account ending 8120.",
+       "cites": [
+        "ACCT-1",
+        "ACCT-2",
+        "AGG-OUT-OWN"
+       ],
+       "valid_cites": [
+        "ACCT-1",
+        "ACCT-2",
+        "AGG-OUT-OWN"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S6",
+       "section": "where"
+      },
+      {
+       "text": "The customer supplied the settlement statement at the Alameda branch.",
+       "cites": [
+        "DOC-1.1"
+       ],
+       "valid_cites": [
+        "DOC-1.1"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S7",
+       "section": "where"
+      }
+     ]
+    },
+    {
+     "section": "why",
+     "sentences": [
+      {
+       "text": "The activity was alerted because the $418,500.00 inbound wire was about 60 times the customer\u2019s usual monthly inflow.",
+       "cites": [
+        "ALERT-1"
+       ],
+       "valid_cites": [
+        "ALERT-1"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S8",
+       "section": "why"
+      },
+      {
+       "text": "The settlement statement identifies the funds as net proceeds from the 2026-09-29 sale of 22 Linden Court, with a sale price of $455,000.00, mortgage payoff of $31,240.00, commissions and fees of $5,260.00, and net proceeds of $418,500.00.",
+       "cites": [
+        "DOC-1.1",
+        "DOC-1.2"
+       ],
+       "valid_cites": [
+        "DOC-1.1",
+        "DOC-1.2"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S9",
+       "section": "why"
+      }
+     ]
+    },
+    {
+     "section": "how",
+     "sentences": [
+      {
+       "text": "Bayside Title & Escrow, identified as a licensed escrow agent on the settlement statement, disbursed the net sale proceeds by wire to checking account ending 2954.",
+       "cites": [
+        "CP-01",
+        "DOC-1.3"
+       ],
+       "valid_cites": [
+        "CP-01",
+        "DOC-1.3"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S10",
+       "section": "how"
+      },
+      {
+       "text": "The customer then transferred $400,000.00 to his own brokerage account, while total posted debits were $400,186.40, or 94.9% of all posted credits.",
+       "cites": [
+        "AGG-OUT",
+        "AGG-OUT-OWN"
+       ],
+       "valid_cites": [
+        "AGG-OUT",
+        "AGG-OUT-OWN"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S11",
+       "section": "how"
+      }
+     ]
+    }
+   ],
+   "dropped": [],
+   "verification": {
+    "total": 11,
+    "kept": 11,
+    "failing": 0,
+    "cited_share": 1.0,
+    "missing_sections": []
+   },
+   "recommendation": "no_file",
+   "indicator_recommendation": "no_file",
+   "agrees": true,
+   "rationale": {
+    "text": "The unusual inflow is documented by a verified seller settlement statement and is consistent with a home-sale transaction; the funds were transferred to the customer\u2019s own brokerage account rather than a cash-out or unrelated-party channel. No typology matched, and no adverse media or prior alerts were identified.",
+    "cites": [
+     "DOC-1.1",
+     "DOC-1.2",
+     "DOC-1.3",
+     "AGG-OUT-OWN",
+     "TYP-MM",
+     "TYP-ST",
+     "TYP-FA",
+     "AMS-1"
+    ],
+    "valid_cites": [
+     "DOC-1.1",
+     "DOC-1.2",
+     "DOC-1.3",
+     "AGG-OUT-OWN",
+     "TYP-MM",
+     "TYP-ST",
+     "TYP-FA",
+     "AMS-1"
+    ],
+    "unverified": [],
+    "problems": [],
+    "ok": true,
+    "id": "R",
+    "section": "rationale"
+   },
+   "next_steps": [
+    "Retain the verified settlement statement and escrow verification in the case record.",
+    "Document the no-file decision and the rationale that the activity is consistent with home-sale proceeds.",
+    "Monitor for future activity inconsistent with the customer\u2019s stated source of funds or expected activity."
+   ],
+   "removed_steps": [],
+   "policies": [
+    {
+     "policy": "sar.no_tipping_off",
+     "name": "sar-no-tipping-off-v1",
+     "label": "No tipping off",
+     "allowed": true,
+     "failed": [],
+     "engine": "hosted",
+     "reason": ""
+    },
+    {
+     "policy": "sar.narrative_cited",
+     "name": "sar-narrative-cited-v1",
+     "label": "Narrative must cite evidence",
+     "allowed": true,
+     "failed": [],
+     "engine": "hosted",
+     "reason": ""
+    }
+   ],
+   "released": true,
+   "contact_attempts": 0
+  },
+  "provenance": "live",
+  "outcome": "closed_no_sar",
+  "final_sections": [
+   {
+    "section": "who",
+    "sentences": [
+     {
+      "text": "Gabriel Novak is a 64-year-old retired high-school teacher and a low-risk customer since 1998, with expected activity consisting of pension and Social Security deposits, household spending, and occasional transfers to his own brokerage account.",
+      "cites": [
+       "KYC-1"
+      ],
+      "valid_cites": [
+       "KYC-1"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S1",
+      "section": "who"
+     }
+    ]
+   },
+   {
+    "section": "what",
+    "sentences": [
+     {
+      "text": "The account received one inbound wire of $418,500.00 from Bayside Title & Escrow and subsequently transferred $400,000.00 to Novak\u2019s own brokerage account ending 8120.",
+      "cites": [
+       "AGG-IN-WIRE",
+       "AGG-OUT-OWN"
+      ],
+      "valid_cites": [
+       "AGG-IN-WIRE",
+       "AGG-OUT-OWN"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S2",
+      "section": "what"
+     },
+     {
+      "text": "The inbound wire represented 60.3 times the customer\u2019s expected monthly inflow, causing the large-inflow indicator to fire; no money-mule, structuring, or funnel-account typology matched.",
+      "cites": [
+       "IND-MM-03",
+       "TYP-MM",
+       "TYP-ST",
+       "TYP-FA"
+      ],
+      "valid_cites": [
+       "IND-MM-03",
+       "TYP-MM",
+       "TYP-ST",
+       "TYP-FA"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S3",
+      "section": "what"
+     }
+    ]
+   },
+   {
+    "section": "when",
+    "sentences": [
+     {
+      "text": "The inbound wire posted on 2026-09-29, and the transfer to the customer\u2019s own brokerage account posted on 2026-10-01.",
+      "cites": [
+       "AGG-IN-WIRE",
+       "AGG-OUT-OWN"
+      ],
+      "valid_cites": [
+       "AGG-IN-WIRE",
+       "AGG-OUT-OWN"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S4",
+      "section": "when"
+     },
+     {
+      "text": "The review activity occurred from 2026-09-29 through 2026-10-03.",
+      "cites": [
+       "AGG-IN",
+       "AGG-OUT"
+      ],
+      "valid_cites": [
+       "AGG-IN",
+       "AGG-OUT"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S5",
+      "section": "when"
+     }
+    ]
+   },
+   {
+    "section": "where",
+    "sentences": [
+     {
+      "text": "The wire was credited to checking account ending 2954 and the subsequent transfer was sent internally to brokerage account ending 8120.",
+      "cites": [
+       "ACCT-1",
+       "ACCT-2",
+       "AGG-OUT-OWN"
+      ],
+      "valid_cites": [
+       "ACCT-1",
+       "ACCT-2",
+       "AGG-OUT-OWN"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S6",
+      "section": "where"
+     },
+     {
+      "text": "The customer supplied the settlement statement at the Alameda branch.",
+      "cites": [
+       "DOC-1.1"
+      ],
+      "valid_cites": [
+       "DOC-1.1"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S7",
+      "section": "where"
+     }
+    ]
+   },
+   {
+    "section": "why",
+    "sentences": [
+     {
+      "text": "The activity was alerted because the $418,500.00 inbound wire was about 60 times the customer\u2019s usual monthly inflow.",
+      "cites": [
+       "ALERT-1"
+      ],
+      "valid_cites": [
+       "ALERT-1"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S8",
+      "section": "why"
+     },
+     {
+      "text": "The settlement statement identifies the funds as net proceeds from the 2026-09-29 sale of 22 Linden Court, with a sale price of $455,000.00, mortgage payoff of $31,240.00, commissions and fees of $5,260.00, and net proceeds of $418,500.00.",
+      "cites": [
+       "DOC-1.1",
+       "DOC-1.2"
+      ],
+      "valid_cites": [
+       "DOC-1.1",
+       "DOC-1.2"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S9",
+      "section": "why"
+     }
+    ]
+   },
+   {
+    "section": "how",
+    "sentences": [
+     {
+      "text": "Bayside Title & Escrow, identified as a licensed escrow agent on the settlement statement, disbursed the net sale proceeds by wire to checking account ending 2954.",
+      "cites": [
+       "CP-01",
+       "DOC-1.3"
+      ],
+      "valid_cites": [
+       "CP-01",
+       "DOC-1.3"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S10",
+      "section": "how"
+     },
+     {
+      "text": "The customer then transferred $400,000.00 to his own brokerage account, while total posted debits were $400,186.40, or 94.9% of all posted credits.",
+      "cites": [
+       "AGG-OUT",
+       "AGG-OUT-OWN"
+      ],
+      "valid_cites": [
+       "AGG-OUT",
+       "AGG-OUT-OWN"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S11",
+      "section": "how"
+     }
+    ]
+   }
+  ],
+  "decision": {
+   "choice": "no_file",
+   "rationale": "The unusual inflow is documented by a verified seller settlement statement and is consistent with a home-sale transaction; the funds were transferred to the customer\u2019s own brokerage account rather than a cash-out or unrelated-party channel. No typology matched, and no adverse media or prior alerts were identified.",
+   "investigator": "Theo Marsh",
+   "qa": "Lena Ortiz"
+  },
+  "audit": [
+   {
+    "at": "2026-10-09T18:54:41-04:00",
+    "actor": "Investigation agent",
+    "role": "agent",
+    "action": "Draft released for review",
+    "detail": "11 verified sentences \u00b7 recommends no SAR"
+   },
+   {
+    "at": "2026-10-09T18:54:41-04:00",
+    "actor": "Theo Marsh",
+    "role": "investigator",
+    "action": "Decided No SAR",
+    "detail": "The unusual inflow is documented by a verified seller settlement statement and is consistent with a home-sale transaction; the funds were transferred to the customer\u2019s own brokerage account rather than a cash-out or unrelated-party channel. No typology matched, and no adverse media or prior alerts were identified."
+   },
+   {
+    "at": "2026-10-09T18:54:41-04:00",
+    "actor": "Lena Ortiz",
+    "role": "qa",
+    "action": "Approved closing without a SAR",
+    "detail": ""
+   }
+  ]
+ }
+}

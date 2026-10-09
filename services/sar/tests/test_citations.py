@@ -45,6 +45,8 @@ def test_dates_inside_a_cited_window_and_masked_refs():
     assert not check_sentence("Credits continued on 2026-11-30.", ["AGG-IN"], cf.ledger, cf.year)["ok"]
     assert check_sentence("Checking account ending 6620 was opened on 2026-08-28.", ["ACCT-1"], cf.ledger, cf.year)["ok"]
     assert "ending 9999" in check_sentence("Account ending 9999 was opened on 2026-08-28.", ["ACCT-1"], cf.ledger, cf.year)["unverified"]
+    assert check_sentence("The checking account ends in 6620.", ["ACCT-1"], cf.ledger, cf.year)["ok"]
+    assert "ending 9999" in check_sentence("The checking account ends in 9999.", ["ACCT-1"], cf.ledger, cf.year)["unverified"]
 
 
 def test_a_comma_after_a_number_is_punctuation_not_a_thousands_separator():

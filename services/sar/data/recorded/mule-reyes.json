@@ -1,0 +1,5216 @@
+{
+ "v": 1,
+ "name": "mule-reyes",
+ "title": "Money mule \u00b7 linked to the card-fraud ring",
+ "scenario": "mule-reyes",
+ "recorded_at": "2026-10-09T22:55:00.401389+00:00",
+ "served_by": {
+  "provider": "openai",
+  "label": "OpenAI API",
+  "model": "gpt-5.6-luna",
+  "kind": "openai",
+  "private": false,
+  "external": true,
+  "fallback": true,
+  "reason": "Sparky vLLM unreachable (connection refused)",
+  "source": "saved",
+  "egress": "require_ai_defense",
+  "ai_defense": "enforce (forced for hosted model)"
+ },
+ "synthetic": true,
+ "note": "Recorded from a live run of the SAR service. Synthetic case and fake PII; e-filing is simulated.",
+ "run": {
+  "id": "sar-golden-mule-reyes-20261009225420",
+  "service": "sar",
+  "label": "SAR investigation \u00b7 Kendall Reyes",
+  "scenario": "mule-reyes",
+  "status": "completed",
+  "started_at": "2026-10-09T22:54:20.825800+00:00",
+  "finished_at": "2026-10-09T22:55:00.401389+00:00",
+  "meta": {
+   "scenario": "mule-reyes",
+   "mode": "live",
+   "handoff": false
+  }
+ },
+ "events": [
+  {
+   "v": 1,
+   "id": "06942879-00f1-43a8-850f-789a0ab2baf9",
+   "at": "2026-10-09T22:54:20.827138+00:00",
+   "ns": 1334542,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "run",
+   "status": "started",
+   "title": "Investigation \u00b7 Money mule \u00b7 linked to the card-fraud ring",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Alert ALR-2026-1003-0412 \u00b7 detected 2026-10-03 \u00b7 due 2026-11-02 (day 6 of 30).",
+   "data": {
+    "case": {
+     "id": "mule-reyes",
+     "label": "Money mule \u00b7 card-funded P2P cash-out",
+     "scenario": "mule-reyes",
+     "kind": "case",
+     "title": "Money mule \u00b7 linked to the card-fraud ring",
+     "subject": {
+      "name": "Kendall Reyes",
+      "kind": "individual",
+      "detail": "Student, part-time barista (fictional employer Bluebird Coffee Co.)",
+      "location": "Oakland, CA",
+      "ssn_masked": "***-**-2207"
+     },
+     "alert": {
+      "id": "ALR-2026-1003-0412",
+      "detected": "2026-10-03",
+      "source": "Transaction monitoring rule TM-P2P-07 (rapid in/out P2P) and a fraud referral",
+      "summary": "Checking ****6620 received many card-funded P2P transfers from unrelated senders and moved the money out within hours.",
+      "queue": "FIU \u00b7 money mule",
+      "priority": "high"
+     },
+     "deadline": {
+      "detected": "2026-10-03",
+      "due": "2026-11-02",
+      "as_of": "2026-10-09",
+      "day": 6,
+      "of": 30,
+      "days_left": 24
+     },
+     "accounts": [
+      "****6620"
+     ],
+     "handoff": false,
+     "synthetic": true
+    },
+    "mode": "live"
+   }
+  },
+  {
+   "v": 1,
+   "id": "c700f026-c977-4a24-a6af-d4e42b72832a",
+   "at": "2026-10-09T22:54:23.010299+00:00",
+   "ns": 2184491584,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "model.failover",
+   "status": "flagged",
+   "title": "Model fallback \u00b7 next in chain is OpenAI API",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": "Sparky vLLM unreachable (connection refused)",
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "2d43902a-012a-48a2-a4b6-3eb3cf606324",
+   "at": "2026-10-09T22:54:23.010682+00:00",
+   "ns": 2184873542,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "ok",
+   "title": "AI Defense forced to enforce \u00b7 case data bound for OpenAI API (hosted)",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Every prompt and response is inspected in enforce mode before data leaves; an unsafe verdict stops the call.",
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "policy": "require_ai_defense"
+   }
+  },
+  {
+   "v": 1,
+   "id": "c47ca561-ba87-4e0a-8e1c-96364a698669",
+   "at": "2026-10-09T22:54:23.926513+00:00",
+   "ns": 3100719250,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "agent.thinking",
+   "status": "info",
+   "title": "Investigation agent planning",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Deep Agent with write_todos and nine tools; temperature 0.",
+   "data": {
+    "agent": "sar-investigator"
+   }
+  },
+  {
+   "v": 1,
+   "id": "3d70f44b-305f-4187-8e8b-04a751420f4f",
+   "at": "2026-10-09T22:54:25.308249+00:00",
+   "ns": 4482446459,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "93155a71-98e8-4092-b597-775d881a314b",
+   "at": "2026-10-09T22:54:26.404140+00:00",
+   "ns": 5578328584,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans get_alert",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 1095,
+    "input_tokens": 2637,
+    "output_tokens": 13
+   }
+  },
+  {
+   "v": 1,
+   "id": "aa24f10d-d295-466c-8dec-c822c22a6841",
+   "at": "2026-10-09T22:54:26.872569+00:00",
+   "ns": 6046754959,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "d6736255-ad90-45b0-bff9-4c5143926e07",
+   "at": "2026-10-09T22:54:26.875527+00:00",
+   "ns": 6049709959,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_alert()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_alert"
+   }
+  },
+  {
+   "v": 1,
+   "id": "f42ff74f-9e8d-4420-af5d-462f96fb9bae",
+   "at": "2026-10-09T22:54:26.878530+00:00",
+   "ns": 6052712959,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Alert ALR-2026-1003-0412 \u00b7 detected 2026-10-03 \u00b7 due 2026-11-02 (day 6 of 30) \u00b7 1 referral item",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "ALERT-1",
+     "REF-1"
+    ],
+    "count": 2
+   }
+  },
+  {
+   "v": 1,
+   "id": "aea00384-23f2-4535-ae87-15fa519d6e30",
+   "at": "2026-10-09T22:54:27.349042+00:00",
+   "ns": 6523231500,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "d557f08a-3352-4b9c-952e-9817ec329e9d",
+   "at": "2026-10-09T22:54:28.062534+00:00",
+   "ns": 7236716167,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans get_kyc_profile",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 705,
+    "input_tokens": 2874,
+    "output_tokens": 16
+   }
+  },
+  {
+   "v": 1,
+   "id": "49151665-273d-4ef9-b4ee-8e026a6fd93f",
+   "at": "2026-10-09T22:54:28.515435+00:00",
+   "ns": 7689618584,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "9e15672c-4169-45c0-a5f3-a0ba3ed1512c",
+   "at": "2026-10-09T22:54:28.579323+00:00",
+   "ns": 7753507084,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_kyc_profile()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_kyc_profile"
+   }
+  },
+  {
+   "v": 1,
+   "id": "6e974d2b-0996-41d7-b701-d7ec32716238",
+   "at": "2026-10-09T22:54:28.580048+00:00",
+   "ns": 7754228167,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "ok",
+   "title": "Data minimization \u00b7 SSN, date of birth, and street address withheld from the model",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "The case file keeps them; the narrative does not need them. A local rule, not AI Defense.",
+   "data": {
+    "withheld_fields": [
+     "ssn",
+     "date_of_birth",
+     "address.line1",
+     "phone",
+     "email"
+    ],
+    "engine": "local"
+   }
+  },
+  {
+   "v": 1,
+   "id": "6e1ef2f1-877f-4598-8bac-ef6630e75926",
+   "at": "2026-10-09T22:54:28.585592+00:00",
+   "ns": 7759774667,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "KYC \u00b7 Kendall Reyes \u00b7 risk Low (at onboarding) \u00b7 1 account(s)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "KYC-1",
+     "ACCT-1"
+    ],
+    "count": 2
+   }
+  },
+  {
+   "v": 1,
+   "id": "b045088f-42af-4c41-8b8a-f739b9c3deba",
+   "at": "2026-10-09T22:54:29.066382+00:00",
+   "ns": 8240561667,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "2bfbda22-42a7-4899-bc3c-fc59d45bcfbc",
+   "at": "2026-10-09T22:54:29.830185+00:00",
+   "ns": 9004369209,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans get_account_activity",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 754,
+    "input_tokens": 3039,
+    "output_tokens": 14
+   }
+  },
+  {
+   "v": 1,
+   "id": "d898c2e3-8ff5-4eb9-a718-5f424cc003a2",
+   "at": "2026-10-09T22:54:30.311263+00:00",
+   "ns": 9485440584,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "4d3665a4-6618-4e3d-9f8d-80ea292935c6",
+   "at": "2026-10-09T22:54:30.320746+00:00",
+   "ns": 9494919625,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_account_activity()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Posted and declined transactions in the review window, with deterministic aggregates.",
+   "data": {
+    "tool": "get_account_activity"
+   }
+  },
+  {
+   "v": 1,
+   "id": "16d38698-0336-4eff-ae72-e2bd9c853ce9",
+   "at": "2026-10-09T22:54:31.056525+00:00",
+   "ns": 10230707459,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 payment memos \u00b7 11 segments inspected \u00b7 11 clean",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "inspected": 11,
+    "clean": 11,
+    "mode": "enforce"
+   }
+  },
+  {
+   "v": 1,
+   "id": "f70c7336-17a8-4708-b93c-5b7401743ff2",
+   "at": "2026-10-09T22:54:31.057822+00:00",
+   "ns": 10231994042,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Account activity \u00b7 37 transactions \u00b7 2026-09-24 to 2026-10-06",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "AGG-IN",
+     "AGG-OUT",
+     "AGG-IN-P2P",
+     "AGG-OUT-ATM",
+     "AGG-OUT-CRYPTO",
+     "AGG-OUT-P2P",
+     "AGG-FRAUD",
+     "TXN-01",
+     "TXN-02",
+     "TXN-03",
+     "TXN-04",
+     "TXN-05",
+     "TXN-06",
+     "TXN-07",
+     "TXN-08",
+     "TXN-09",
+     "TXN-10",
+     "TXN-11",
+     "TXN-12",
+     "TXN-13",
+     "TXN-14",
+     "TXN-15",
+     "TXN-16",
+     "TXN-17",
+     "TXN-18",
+     "TXN-19",
+     "TXN-20",
+     "TXN-21",
+     "TXN-22",
+     "TXN-23",
+     "TXN-24",
+     "TXN-25",
+     "TXN-26",
+     "TXN-27",
+     "TXN-28",
+     "TXN-29",
+     "TXN-30",
+     "TXN-31",
+     "TXN-32",
+     "TXN-33",
+     "TXN-34",
+     "TXN-35",
+     "TXN-36",
+     "TXN-37"
+    ],
+    "count": 44
+   }
+  },
+  {
+   "v": 1,
+   "id": "b4933e1b-822c-4081-836b-6e8f0fc56893",
+   "at": "2026-10-09T22:54:31.583404+00:00",
+   "ns": 10757596917,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "44f6d1c1-8549-4d72-8ebf-e950dfb7ce26",
+   "at": "2026-10-09T22:54:32.476631+00:00",
+   "ns": 11650811125,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans get_counterparties",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 890,
+    "input_tokens": 5516,
+    "output_tokens": 15
+   }
+  },
+  {
+   "v": 1,
+   "id": "223b7cc3-1b93-4308-bcba-f96929e1585a",
+   "at": "2026-10-09T22:54:32.889835+00:00",
+   "ns": 12064004375,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "260f96d4-ebfd-491f-9dc0-67094eb1b61e",
+   "at": "2026-10-09T22:54:32.899626+00:00",
+   "ns": 12073795584,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_counterparties()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_counterparties"
+   }
+  },
+  {
+   "v": 1,
+   "id": "09118f85-ce37-414b-b9ce-a9ecdea81e2a",
+   "at": "2026-10-09T22:54:32.907390+00:00",
+   "ns": 12081560834,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Counterparties \u00b7 20 \u00b7 10 with fraud-listed funding cards",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "CP-01",
+     "CP-02",
+     "CP-03",
+     "CP-04",
+     "CP-05",
+     "CP-06",
+     "CP-07",
+     "CP-08",
+     "CP-09",
+     "CP-10",
+     "CP-11",
+     "CP-12",
+     "CP-13",
+     "CP-14",
+     "CP-15",
+     "CP-16",
+     "CP-17",
+     "CP-18",
+     "CP-19",
+     "CP-20"
+    ],
+    "count": 20
+   }
+  },
+  {
+   "v": 1,
+   "id": "0d6a9e8f-81bf-4eeb-a930-1f2b6146938f",
+   "at": "2026-10-09T22:54:33.440829+00:00",
+   "ns": 12615003167,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "a087faad-a28d-4520-b846-591ded704f82",
+   "at": "2026-10-09T22:54:34.352228+00:00",
+   "ns": 13526402167,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans get_prior_alerts",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 910,
+    "input_tokens": 6223,
+    "output_tokens": 15
+   }
+  },
+  {
+   "v": 1,
+   "id": "6a84482f-fc95-4630-9ece-7d2eb5a7a330",
+   "at": "2026-10-09T22:54:34.816382+00:00",
+   "ns": 13990547584,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "a5fe7feb-5cac-4c6e-a85a-dbacbba90ace",
+   "at": "2026-10-09T22:54:34.820987+00:00",
+   "ns": 13995153542,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_prior_alerts()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Prior alerts, dispositions, and branch notes.",
+   "data": {
+    "tool": "get_prior_alerts"
+   }
+  },
+  {
+   "v": 1,
+   "id": "67d7192f-e379-4e74-9316-222858867abe",
+   "at": "2026-10-09T22:54:34.829427+00:00",
+   "ns": 14003592292,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Prior alerts \u00b7 1 \u00b7 branch notes \u00b7 0",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "PA-1"
+    ],
+    "count": 1
+   }
+  },
+  {
+   "v": 1,
+   "id": "35715d0f-d597-493a-a2c8-5006ab01b5ed",
+   "at": "2026-10-09T22:54:35.382928+00:00",
+   "ns": 14557093709,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "efec4761-5926-4004-a3ff-1fd9e91f1a57",
+   "at": "2026-10-09T22:54:36.339486+00:00",
+   "ns": 15513650625,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans get_customer_documents",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 943,
+    "input_tokens": 6363,
+    "output_tokens": 14
+   }
+  },
+  {
+   "v": 1,
+   "id": "ee0ce255-9987-45ff-82d6-78bbcf93f985",
+   "at": "2026-10-09T22:54:36.778286+00:00",
+   "ns": 15952449709,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "1cf5400d-ef77-4def-bcfd-95b87346097a",
+   "at": "2026-10-09T22:54:36.790563+00:00",
+   "ns": 15964724209,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_customer_documents()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Customer-supplied text is untrusted: inspected segment by segment before the agent sees it.",
+   "data": {
+    "tool": "get_customer_documents"
+   }
+  },
+  {
+   "v": 1,
+   "id": "aee7885d-28f9-49eb-8fac-499204938e53",
+   "at": "2026-10-09T22:54:37.295931+00:00",
+   "ns": 16470093542,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 customer document \u00b7 2 segments inspected \u00b7 2 clean",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "inspected": 2,
+    "clean": 2,
+    "mode": "enforce"
+   }
+  },
+  {
+   "v": 1,
+   "id": "c3e3fc5b-4881-4743-b21b-44527b258bc2",
+   "at": "2026-10-09T22:54:37.296406+00:00",
+   "ns": 16470565584,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Customer documents \u00b7 2 segments",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "DOC-1.1",
+     "DOC-1.2"
+    ],
+    "count": 2
+   }
+  },
+  {
+   "v": 1,
+   "id": "dcd125c3-21a7-44eb-8b4e-9d07fea2ca37",
+   "at": "2026-10-09T22:54:37.836724+00:00",
+   "ns": 17010883292,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "21c11171-8783-461c-a47c-4ce9935b216b",
+   "at": "2026-10-09T22:54:38.578728+00:00",
+   "ns": 17752885875,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans compute_typology_indicators",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 732,
+    "input_tokens": 6539,
+    "output_tokens": 16
+   }
+  },
+  {
+   "v": 1,
+   "id": "e29c6197-5a21-418b-bd13-c041d9370a8f",
+   "at": "2026-10-09T22:54:38.980517+00:00",
+   "ns": 18154687917,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "94b98c21-e7a2-4d38-9511-93258fcfa41a",
+   "at": "2026-10-09T22:54:38.988006+00:00",
+   "ns": 18162165709,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "compute_typology_indicators()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Deterministic rules from the typology catalogue; no model involved.",
+   "data": {
+    "tool": "compute_typology_indicators"
+   }
+  },
+  {
+   "v": 1,
+   "id": "b0fc588d-bb00-4250-a893-fa96e500d16a",
+   "at": "2026-10-09T22:54:38.996912+00:00",
+   "ns": 18171074917,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "Typologies \u00b7 Money mule matched",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "IND-MM-01",
+     "IND-MM-02",
+     "IND-MM-03",
+     "IND-MM-04",
+     "IND-MM-05",
+     "IND-MM-06",
+     "TYP-MM",
+     "IND-ST-01",
+     "IND-ST-02",
+     "IND-ST-03",
+     "IND-ST-04",
+     "IND-ST-05",
+     "TYP-ST",
+     "IND-FA-01",
+     "IND-FA-02",
+     "IND-FA-03",
+     "TYP-FA"
+    ],
+    "count": 17,
+    "typologies": [
+     {
+      "id": "money_mule",
+      "matched": true,
+      "fired": 6
+     },
+     {
+      "id": "structuring",
+      "matched": false,
+      "fired": 0
+     },
+     {
+      "id": "funnel_account",
+      "matched": false,
+      "fired": 0
+     }
+    ]
+   }
+  },
+  {
+   "v": 1,
+   "id": "98e89b7d-2be6-43d4-9e82-a806f94a04f8",
+   "at": "2026-10-09T22:54:39.547711+00:00",
+   "ns": 18721872917,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "800eb5d3-1263-4860-a632-8b55ba34d4c4",
+   "at": "2026-10-09T22:54:41.246040+00:00",
+   "ns": 20420194000,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans search_adverse_media",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 1671,
+    "input_tokens": 7195,
+    "output_tokens": 140
+   }
+  },
+  {
+   "v": 1,
+   "id": "dc366afb-3879-480e-94b4-744f81ab766f",
+   "at": "2026-10-09T22:54:41.718960+00:00",
+   "ns": 20893785417,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "d4cb0d20-946b-4ebe-86a8-ee5efdd91b87",
+   "at": "2026-10-09T22:54:41.729406+00:00",
+   "ns": 20903556625,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "search_adverse_media(Kendall Reyes, A. Brennan, C. Mwangi, D. Halvorsen, E. Petrakis, F. Lindqvist, G. Osei, H. Tanaka)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Allowlisted source only: FinCrime Wire (fictional newswire). No web search.",
+   "data": {
+    "tool": "search_adverse_media"
+   }
+  },
+  {
+   "v": 1,
+   "id": "c17f7ed5-bee4-422f-a1ec-d35a6c7509c9",
+   "at": "2026-10-09T22:54:41.734559+00:00",
+   "ns": 20908710625,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Adverse media \u00b7 0 hits in FinCrime Wire (fictional newswire)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "AMS-1"
+    ],
+    "count": 1,
+    "source": "allowlist"
+   }
+  },
+  {
+   "v": 1,
+   "id": "7d45fe09-584b-4dae-8026-3e45d704f859",
+   "at": "2026-10-09T22:54:42.359977+00:00",
+   "ns": 21534153417,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "54a42437-f0a2-4544-9996-3e91a0baea20",
+   "at": "2026-10-09T22:54:44.298261+00:00",
+   "ns": 23472416250,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans write_file",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 1934,
+    "input_tokens": 7401,
+    "output_tokens": 80
+   }
+  },
+  {
+   "v": 1,
+   "id": "92296098-5107-44dd-9599-52f29d5781aa",
+   "at": "2026-10-09T22:54:44.757121+00:00",
+   "ns": 23931288459,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "4ecb2314-83cd-4abd-8a10-558422aea931",
+   "at": "2026-10-09T22:54:45.299538+00:00",
+   "ns": 24473685875,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "ac9cb601-b4f5-4c8b-a9ab-4f919fbec0d4",
+   "at": "2026-10-09T22:54:57.019774+00:00",
+   "ns": 36193894000,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 drafts",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 11719,
+    "input_tokens": 7505,
+    "output_tokens": 1246
+   }
+  },
+  {
+   "v": 1,
+   "id": "6f9c0e1b-41a5-49f7-a1d1-86aaf4bb8ec0",
+   "at": "2026-10-09T22:54:57.575672+00:00",
+   "ns": 36749799167,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "b95f909a-8f80-4df0-aed1-d8d4ef0bfb20",
+   "at": "2026-10-09T22:54:58.510542+00:00",
+   "ns": 37684661125,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "claim.verdict",
+   "status": "ok",
+   "title": "Citations \u00b7 14 of 14 sentences verified against the evidence",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "kept": 14,
+    "total": 14,
+    "missing_sections": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "5fd1c099-2f99-45e5-9e20-52a606e63cc3",
+   "at": "2026-10-09T22:54:58.513333+00:00",
+   "ns": 37687446750,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "claim.verdict",
+   "status": "ok",
+   "title": "Recommendation \u00b7 file \u00b7 agrees with the typology indicators",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Matched: Money mule",
+   "data": {
+    "agent": "file",
+    "indicators": "file"
+   }
+  },
+  {
+   "v": 1,
+   "id": "60562edd-22c0-4f45-979b-7f611fe74931",
+   "at": "2026-10-09T22:54:58.762245+00:00",
+   "ns": 37936362250,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "control",
+   "status": "allowed",
+   "title": "Agent Control \u00b7 sar.no_tipping_off \u00b7 allow",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "No step in the draft contacts the subject or reveals the review.",
+   "data": {
+    "policy": "sar-no-tipping-off-v1",
+    "short": "sar.no_tipping_off",
+    "engine": "hosted",
+    "verdict": {
+     "no_subject_contact": true
+    },
+    "failed": [],
+    "step": "sar-customer-contact",
+    "stage": "pre"
+   }
+  },
+  {
+   "v": 1,
+   "id": "97655639-84fe-4a49-b7a9-ffe5e5489410",
+   "at": "2026-10-09T22:54:59.012594+00:00",
+   "ns": 38186711917,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "control",
+   "status": "allowed",
+   "title": "Agent Control \u00b7 sar.narrative_cited \u00b7 allow",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Every kept sentence cites evidence that states its figures and dates.",
+   "data": {
+    "policy": "sar-narrative-cited-v1",
+    "short": "sar.narrative_cited",
+    "engine": "hosted",
+    "verdict": {
+     "every_sentence_cited": true,
+     "every_fact_verified": true
+    },
+    "failed": [],
+    "step": "sar-narrative-release",
+    "stage": "post"
+   }
+  },
+  {
+   "v": 1,
+   "id": "5715a4e1-40bb-407b-9506-2b1b837d8e33",
+   "at": "2026-10-09T22:54:59.016994+00:00",
+   "ns": 38191107875,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "hitl.request",
+   "status": "info",
+   "title": "Investigator review \u00b7 edit, decide file or no SAR, give a rationale",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "request_id": "investigator-1",
+    "stage": "investigator",
+    "round": 1,
+    "qa_note": null,
+    "package": {
+     "case": {
+      "id": "mule-reyes",
+      "label": "Money mule \u00b7 card-funded P2P cash-out",
+      "scenario": "mule-reyes",
+      "kind": "case",
+      "title": "Money mule \u00b7 linked to the card-fraud ring",
+      "subject": {
+       "name": "Kendall Reyes",
+       "kind": "individual",
+       "detail": "Student, part-time barista (fictional employer Bluebird Coffee Co.)",
+       "location": "Oakland, CA",
+       "ssn_masked": "***-**-2207"
+      },
+      "alert": {
+       "id": "ALR-2026-1003-0412",
+       "detected": "2026-10-03",
+       "source": "Transaction monitoring rule TM-P2P-07 (rapid in/out P2P) and a fraud referral",
+       "summary": "Checking ****6620 received many card-funded P2P transfers from unrelated senders and moved the money out within hours.",
+       "queue": "FIU \u00b7 money mule",
+       "priority": "high"
+      },
+      "deadline": {
+       "detected": "2026-10-03",
+       "due": "2026-11-02",
+       "as_of": "2026-10-09",
+       "day": 6,
+       "of": 30,
+       "days_left": 24
+      },
+      "accounts": [
+       "****6620"
+      ],
+      "handoff": false,
+      "synthetic": true
+     },
+     "mode": "live",
+     "typologies": [
+      {
+       "id": "money_mule",
+       "label": "Money mule",
+       "reference": "FinCEN money-mule red flags; FFIEC BSA/AML Manual appendix F (illustrative paraphrase)",
+       "matched": true,
+       "fired": 6,
+       "total": 6,
+       "rule": "4 of 6, including MM-01",
+       "indicators": [
+        {
+         "id": "MM-01",
+         "label": "Pass-through: inbound funds left within 48 hours",
+         "observed": 0.9602960969044414,
+         "observed_text": "96.0%",
+         "threshold_text": "\u2265 80%",
+         "status": "fired"
+        },
+        {
+         "id": "MM-02",
+         "label": "Many-to-one: distinct unrelated P2P senders in 14 days",
+         "observed": 17,
+         "observed_text": "17",
+         "threshold_text": "\u2265 8",
+         "status": "fired"
+        },
+        {
+         "id": "MM-03",
+         "label": "Inflow far above the KYC expected activity",
+         "observed": 9.906666666666666,
+         "observed_text": "9.9 times",
+         "threshold_text": "\u2265 3 times",
+         "status": "fired"
+        },
+        {
+         "id": "MM-04",
+         "label": "Inbound transfers funded by instruments on a fraud list",
+         "observed": 10,
+         "observed_text": "10",
+         "threshold_text": "\u2265 1",
+         "status": "fired"
+        },
+        {
+         "id": "MM-05",
+         "label": "New account: opened within 90 days of the activity",
+         "observed": 27,
+         "observed_text": "27 days",
+         "threshold_text": "\u2264 90 days",
+         "status": "fired"
+        },
+        {
+         "id": "MM-06",
+         "label": "Cash-out channels: ATM cash, crypto exchange, or P2P out",
+         "observed": 1.0,
+         "observed_text": "100.0%",
+         "threshold_text": "\u2265 70%",
+         "status": "fired"
+        }
+       ]
+      },
+      {
+       "id": "structuring",
+       "label": "Structuring",
+       "reference": "31 U.S.C. 5324; FFIEC BSA/AML Manual, structuring red flags (illustrative paraphrase)",
+       "matched": false,
+       "fired": 0,
+       "total": 5,
+       "rule": "3 of 5, including ST-01 and ST-02",
+       "indicators": [
+        {
+         "id": "ST-01",
+         "label": "Cash deposits just under the $10,000 CTR threshold",
+         "observed": null,
+         "observed_text": "not applicable",
+         "threshold_text": "\u2265 3",
+         "status": "not_applicable"
+        },
+        {
+         "id": "ST-02",
+         "label": "Cash above $10,000 in a rolling 7 days with no single deposit at or over it",
+         "observed": null,
+         "observed_text": "not applicable",
+         "threshold_text": "\u2265 $10,000",
+         "status": "not_applicable"
+        },
+        {
+         "id": "ST-03",
+         "label": "Cash deposits spread across branches",
+         "observed": null,
+         "observed_text": "not applicable",
+         "threshold_text": "\u2265 3",
+         "status": "not_applicable"
+        },
+        {
+         "id": "ST-04",
+         "label": "Statement about avoiding the reporting threshold",
+         "observed": 0,
+         "observed_text": "0",
+         "threshold_text": "\u2265 1",
+         "status": "clear"
+        },
+        {
+         "id": "ST-05",
+         "label": "Cash far above the KYC expected cash",
+         "observed": null,
+         "observed_text": "not applicable",
+         "threshold_text": "\u2265 3 times",
+         "status": "not_applicable"
+        }
+       ]
+      },
+      {
+       "id": "funnel_account",
+       "label": "Funnel account",
+       "reference": "FinCEN advisory FIN-2014-A005 on funnel accounts (illustrative paraphrase)",
+       "matched": false,
+       "fired": 0,
+       "total": 3,
+       "rule": "2 of 3, including FA-01",
+       "indicators": [
+        {
+         "id": "FA-01",
+         "label": "Cash deposits in several states by several depositors",
+         "observed": null,
+         "observed_text": "not applicable",
+         "threshold_text": "\u2265 3",
+         "status": "not_applicable"
+        },
+        {
+         "id": "FA-02",
+         "label": "Withdrawals or wires out of area soon after deposits",
+         "observed": null,
+         "observed_text": "not applicable",
+         "threshold_text": "\u2265 50%",
+         "status": "not_applicable"
+        },
+        {
+         "id": "FA-03",
+         "label": "Low retained balance: under 10% of inflow kept",
+         "observed": null,
+         "observed_text": "not applicable",
+         "threshold_text": "\u2264 10%",
+         "status": "not_applicable"
+        }
+       ]
+      }
+     ],
+     "evidence": [
+      {
+       "id": "ALERT-1",
+       "kind": "alert",
+       "title": "Alert ALR-2026-1003-0412",
+       "text": "Alert ALR-2026-1003-0412 detected 2026-10-03 by Transaction monitoring rule TM-P2P-07 (rapid in/out P2P) and a fraud referral: Checking ****6620 received many card-funded P2P transfers from unrelated senders and moved the money out within hours. Filing deadline 2026-11-02 (30 days from detection); case snapshot 2026-10-09 is day 6 of 30.",
+       "source": "Transaction monitoring (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "REF-1",
+       "kind": "referral",
+       "title": "Fraud referral FR-2026-1002-17",
+       "text": "Fraud referral FR-2026-1002-17 from Fraud operations (card fraud triage) on 2026-10-02: Common-point-of-purchase investigation at Orbit Digital Goods: 412 cards bought there in 21 days and 37 later had confirmed fraud. Nine cards on that compromised list funded P2P pushes to this bank's checking account ending 6620. A push funded by this bank's card ending 1188 was declined after fraud blocked the card.",
+       "source": "Fraud operations (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "KYC-1",
+       "kind": "kyc",
+       "title": "KYC profile (minimized)",
+       "text": "Kendall Reyes, age 22, Student, part-time barista (fictional employer Bluebird Coffee Co.), customer since 2026-08-28, located in Oakland, CA. Risk rating Low (at onboarding). Expected activity: Part-time wages and family support, under $1,500 a month. Source of funds: Part-time wages; family support. PEP: no. Sanctions screening: clear.",
+       "source": "KYC system (synthetic); SSN, date of birth, and street address withheld from the model",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "ACCT-1",
+       "kind": "account",
+       "title": "Account ****6620",
+       "text": "checking ****6620 opened 2026-08-28, status restricted 2026-10-07 pending review, balance before the review window $112.40.",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-01",
+       "kind": "transaction",
+       "title": "P2P credit $450.00",
+       "text": "2026-09-24 09:10 \u00b7 P2P credit \u00b7 $450.00 \u00b7 from A. Brennan (CP-01) \u00b7 funding card ****2231 \u00b7 memo \"tickets\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-02",
+       "kind": "transaction",
+       "title": "P2P credit $740.00",
+       "text": "2026-09-24 14:17 \u00b7 P2P credit \u00b7 $740.00 \u00b7 from C. Mwangi (CP-02) \u00b7 funding card ****5806 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"concert tix\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-03",
+       "kind": "transaction",
+       "title": "ATM cash withdrawal $800.00",
+       "text": "2026-09-24 17:17 \u00b7 ATM cash withdrawal \u00b7 $800.00 \u00b7 ATM \u00b7 Oakland Fruitvale",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-04",
+       "kind": "transaction",
+       "title": "P2P credit $380.00",
+       "text": "2026-09-25 07:24 \u00b7 P2P credit \u00b7 $380.00 \u00b7 from D. Halvorsen (CP-03) \u00b7 funding card ****9140 \u00b7 memo \"tickets\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-05",
+       "kind": "transaction",
+       "title": "P2P credit $685.00",
+       "text": "2026-09-25 12:31 \u00b7 P2P credit \u00b7 $685.00 \u00b7 from A. Brennan (CP-01) \u00b7 funding card ****2231 \u00b7 memo \"thanks!\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-06",
+       "kind": "transaction",
+       "title": "ATM cash withdrawal $600.00",
+       "text": "2026-09-25 12:35 \u00b7 ATM cash withdrawal \u00b7 $600.00 \u00b7 ATM \u00b7 San Leandro Bancroft",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-07",
+       "kind": "transaction",
+       "title": "P2P credit $540.00",
+       "text": "2026-09-25 15:38 \u00b7 P2P credit \u00b7 $540.00 \u00b7 from E. Petrakis (CP-04) \u00b7 funding card ****3375 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"tix\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-08",
+       "kind": "transaction",
+       "title": "P2P credit $275.00",
+       "text": "2026-09-26 07:45 \u00b7 P2P credit \u00b7 $275.00 \u00b7 from F. Lindqvist (CP-05) \u00b7 funding card ****6612 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"for the show\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-09",
+       "kind": "transaction",
+       "title": "P2P credit $900.00",
+       "text": "2026-09-26 11:52 \u00b7 P2P credit \u00b7 $900.00 \u00b7 from D. Halvorsen (CP-03) \u00b7 funding card ****9140 \u00b7 memo \"tickets\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-10",
+       "kind": "transaction",
+       "title": "crypto-exchange purchase $2,400.00",
+       "text": "2026-09-26 14:14 \u00b7 crypto-exchange purchase \u00b7 $2,400.00 \u00b7 to Coinvault Exchange (fictional) (CP-19) \u00b7 Coinvault Exchange (fictional)",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-11",
+       "kind": "transaction",
+       "title": "P2P credit $690.00",
+       "text": "2026-09-27 07:59 \u00b7 P2P credit \u00b7 $690.00 \u00b7 from G. Osei (CP-06) \u00b7 funding card ****0487 \u00b7 memo \"tix\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-12",
+       "kind": "transaction",
+       "title": "P2P credit $420.00",
+       "text": "2026-09-27 12:16 \u00b7 P2P credit \u00b7 $420.00 \u00b7 from H. Tanaka (CP-07) \u00b7 funding card ****7759 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"floor seats\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-13",
+       "kind": "transaction",
+       "title": "ATM cash withdrawal $700.00",
+       "text": "2026-09-27 12:32 \u00b7 ATM cash withdrawal \u00b7 $700.00 \u00b7 ATM \u00b7 Oakland Lake Merritt",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-14",
+       "kind": "transaction",
+       "title": "P2P credit $845.00",
+       "text": "2026-09-28 07:23 \u00b7 P2P credit \u00b7 $845.00 \u00b7 from F. Lindqvist (CP-05) \u00b7 funding card ****6612 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"tickets\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-15",
+       "kind": "transaction",
+       "title": "P2P credit $560.00",
+       "text": "2026-09-28 12:30 \u00b7 P2P credit \u00b7 $560.00 \u00b7 from I. Novotny (CP-08) \u00b7 funding card ****1903 \u00b7 memo \"concert\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-16",
+       "kind": "transaction",
+       "title": "P2P debit $1,150.00",
+       "text": "2026-09-28 13:30 \u00b7 P2P debit \u00b7 $1,150.00 \u00b7 to D. Vasquez (CP-18) \u00b7 memo \"ok\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-17",
+       "kind": "transaction",
+       "title": "ATM cash withdrawal $500.00",
+       "text": "2026-09-28 16:48 \u00b7 ATM cash withdrawal \u00b7 $500.00 \u00b7 ATM \u00b7 Oakland Fruitvale",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-18",
+       "kind": "transaction",
+       "title": "P2P credit $940.00",
+       "text": "2026-09-29 07:37 \u00b7 P2P credit \u00b7 $940.00 \u00b7 from J. Castellanos (CP-09) \u00b7 funding card ****4428 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"tix\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-19",
+       "kind": "transaction",
+       "title": "P2P credit $310.00",
+       "text": "2026-09-29 12:44 \u00b7 P2P credit \u00b7 $310.00 \u00b7 from K. Abernathy (CP-10) \u00b7 funding card ****8061 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"tickets\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-20",
+       "kind": "transaction",
+       "title": "P2P credit $945.00",
+       "text": "2026-09-30 07:51 \u00b7 P2P credit \u00b7 $945.00 \u00b7 from L. Duquesne (CP-11) \u00b7 funding card ****2594 \u00b7 memo \"tickets for sat\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-21",
+       "kind": "transaction",
+       "title": "crypto-exchange purchase $2,100.00",
+       "text": "2026-09-30 10:20 \u00b7 crypto-exchange purchase \u00b7 $2,100.00 \u00b7 to Coinvault Exchange (fictional) (CP-19) \u00b7 Coinvault Exchange (fictional)",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-22",
+       "kind": "transaction",
+       "title": "P2P credit $640.00",
+       "text": "2026-09-30 12:58 \u00b7 P2P credit \u00b7 $640.00 \u00b7 from I. Novotny (CP-08) \u00b7 funding card ****1903 \u00b7 memo \"tix\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-23",
+       "kind": "transaction",
+       "title": "ATM cash withdrawal $800.00",
+       "text": "2026-09-30 18:01 \u00b7 ATM cash withdrawal \u00b7 $800.00 \u00b7 ATM \u00b7 San Leandro Bancroft",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-24",
+       "kind": "transaction",
+       "title": "P2P credit $495.00",
+       "text": "2026-10-01 07:15 \u00b7 P2P credit \u00b7 $495.00 \u00b7 from M. Farrow (CP-12) \u00b7 funding card ****6730 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"tickets\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-25",
+       "kind": "transaction",
+       "title": "ATM cash withdrawal $600.00",
+       "text": "2026-10-01 11:29 \u00b7 ATM cash withdrawal \u00b7 $600.00 \u00b7 ATM \u00b7 Oakland Lake Merritt",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-26",
+       "kind": "transaction",
+       "title": "P2P credit $900.00",
+       "text": "2026-10-01 12:22 \u00b7 P2P credit \u00b7 $900.00 \u00b7 from N. Iyer (CP-13) \u00b7 funding card ****3187 \u00b7 memo \"thanks\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-27",
+       "kind": "transaction",
+       "title": "P2P credit $585.00",
+       "text": "2026-10-02 07:29 \u00b7 P2P credit \u00b7 $585.00 \u00b7 from O. Kristiansen (CP-14) \u00b7 funding card ****9952 \u00b7 memo \"tix\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-28",
+       "kind": "transaction",
+       "title": "P2P credit $830.00",
+       "text": "2026-10-02 12:36 \u00b7 P2P credit \u00b7 $830.00 \u00b7 from L. Duquesne (CP-11) \u00b7 funding card ****2594 \u00b7 memo \"tickets\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-29",
+       "kind": "transaction",
+       "title": "crypto-exchange purchase $2,400.00",
+       "text": "2026-10-02 16:01 \u00b7 crypto-exchange purchase \u00b7 $2,400.00 \u00b7 to Coinvault Exchange (fictional) (CP-19) \u00b7 Coinvault Exchange (fictional)",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-30",
+       "kind": "transaction",
+       "title": "P2P credit $480.00",
+       "text": "2026-10-02 21:47 \u00b7 P2P credit \u00b7 $480.00 \u00b7 DECLINED \u00b7 from Unverified QuickSend sender 'dw.sends' (CP-20) \u00b7 funding card ****1188 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 card blocked by fraud operations at 21:12 under case cpp-orbit \u00b7 memo \"tix\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-31",
+       "kind": "transaction",
+       "title": "P2P credit $655.00",
+       "text": "2026-10-03 07:43 \u00b7 P2P credit \u00b7 $655.00 \u00b7 from P. Mbeki (CP-15) \u00b7 funding card ****5046 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"game tix\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-32",
+       "kind": "transaction",
+       "title": "ATM cash withdrawal $700.00",
+       "text": "2026-10-03 15:19 \u00b7 ATM cash withdrawal \u00b7 $700.00 \u00b7 ATM \u00b7 Oakland Fruitvale",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-33",
+       "kind": "transaction",
+       "title": "P2P credit $900.00",
+       "text": "2026-10-04 09:50 \u00b7 P2P credit \u00b7 $900.00 \u00b7 from Q. Lachance (CP-16) \u00b7 funding card ****7318 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"tickets\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-34",
+       "kind": "transaction",
+       "title": "ATM cash withdrawal $500.00",
+       "text": "2026-10-04 12:00 \u00b7 ATM cash withdrawal \u00b7 $500.00 \u00b7 ATM \u00b7 San Leandro Bancroft",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-35",
+       "kind": "transaction",
+       "title": "P2P credit $710.00",
+       "text": "2026-10-05 07:57 \u00b7 P2P credit \u00b7 $710.00 \u00b7 from R. Yilmaz (CP-17) \u00b7 funding card ****0865 \u00b7 memo \"tix\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-36",
+       "kind": "transaction",
+       "title": "P2P debit $1,020.00",
+       "text": "2026-10-05 12:18 \u00b7 P2P debit \u00b7 $1,020.00 \u00b7 to D. Vasquez (CP-18) \u00b7 memo \"ok\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-37",
+       "kind": "transaction",
+       "title": "P2P credit $465.00",
+       "text": "2026-10-06 01:14 \u00b7 P2P credit \u00b7 $465.00 \u00b7 from O. Kristiansen (CP-14) \u00b7 funding card ****9952 \u00b7 memo \"tickets\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-IN",
+       "kind": "aggregate",
+       "title": "Posted credits",
+       "text": "Posted credits: 23 totalling $14,860.00, 2026-09-24 to 2026-10-06 (13 days), 17 distinct counterparties, smallest $275.00, largest $945.00.",
+       "source": "Computed from core-banking transactions (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-OUT",
+       "kind": "aggregate",
+       "title": "Posted debits",
+       "text": "Posted debits: 13 totalling $14,270.00, 2026-09-24 to 2026-10-05 (12 days), 2 distinct counterparties, 3 distinct locations, smallest $500.00, largest $2,400.00; 96.0% of all posted credits.",
+       "source": "Computed from core-banking transactions (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-IN-P2P",
+       "kind": "aggregate",
+       "title": "P2P credits",
+       "text": "P2P credits: 23 totalling $14,860.00, 2026-09-24 to 2026-10-06 (13 days), 17 distinct counterparties, smallest $275.00, largest $945.00.",
+       "source": "Computed from core-banking transactions (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-OUT-ATM",
+       "kind": "aggregate",
+       "title": "ATM cash withdrawals",
+       "text": "ATM cash withdrawals: 8 totalling $5,200.00, 2026-09-24 to 2026-10-04 (11 days), 3 distinct locations, smallest $500.00, largest $800.00; 35.0% of all posted credits.",
+       "source": "Computed from core-banking transactions (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-OUT-CRYPTO",
+       "kind": "aggregate",
+       "title": "Crypto-exchange purchases",
+       "text": "Crypto-exchange purchases: 3 totalling $6,900.00, 2026-09-26 to 2026-10-02 (7 days), 1 distinct counterparty, smallest $2,100.00, largest $2,400.00; 46.4% of all posted credits.",
+       "source": "Computed from core-banking transactions (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-OUT-P2P",
+       "kind": "aggregate",
+       "title": "P2P debits",
+       "text": "P2P debits: 2 totalling $2,170.00, 2026-09-28 to 2026-10-05 (8 days), 1 distinct counterparty, smallest $1,020.00, largest $1,150.00; 14.6% of all posted credits.",
+       "source": "Computed from core-banking transactions (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-FRAUD",
+       "kind": "aggregate",
+       "title": "Fraud-listed funding",
+       "text": "Fraud-listed funding: 10 posted credits totalling $6,120.00 were funded by 9 distinct cards on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit); $480.00 attempted 2026-10-02 with card ****1188 was declined: card blocked by fraud operations at 21:12 under case cpp-orbit.",
+       "source": "Fraud operations list joined to core banking (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-01",
+       "kind": "counterparty",
+       "title": "A. Brennan",
+       "text": "A. Brennan (P2P sender); relationship on file: none; funding card ****2231.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-02",
+       "kind": "counterparty",
+       "title": "C. Mwangi",
+       "text": "C. Mwangi (P2P sender); relationship on file: none; funding card ****5806 is on the fraud team's compromised-card list.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-03",
+       "kind": "counterparty",
+       "title": "D. Halvorsen",
+       "text": "D. Halvorsen (P2P sender); relationship on file: none; funding card ****9140.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-04",
+       "kind": "counterparty",
+       "title": "E. Petrakis",
+       "text": "E. Petrakis (P2P sender); relationship on file: none; funding card ****3375 is on the fraud team's compromised-card list.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-05",
+       "kind": "counterparty",
+       "title": "F. Lindqvist",
+       "text": "F. Lindqvist (P2P sender); relationship on file: none; funding card ****6612 is on the fraud team's compromised-card list.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-06",
+       "kind": "counterparty",
+       "title": "G. Osei",
+       "text": "G. Osei (P2P sender); relationship on file: none; funding card ****0487.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-07",
+       "kind": "counterparty",
+       "title": "H. Tanaka",
+       "text": "H. Tanaka (P2P sender); relationship on file: none; funding card ****7759 is on the fraud team's compromised-card list.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-08",
+       "kind": "counterparty",
+       "title": "I. Novotny",
+       "text": "I. Novotny (P2P sender); relationship on file: none; funding card ****1903.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-09",
+       "kind": "counterparty",
+       "title": "J. Castellanos",
+       "text": "J. Castellanos (P2P sender); relationship on file: none; funding card ****4428 is on the fraud team's compromised-card list.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-10",
+       "kind": "counterparty",
+       "title": "K. Abernathy",
+       "text": "K. Abernathy (P2P sender); relationship on file: none; funding card ****8061 is on the fraud team's compromised-card list.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-11",
+       "kind": "counterparty",
+       "title": "L. Duquesne",
+       "text": "L. Duquesne (P2P sender); relationship on file: none; funding card ****2594.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-12",
+       "kind": "counterparty",
+       "title": "M. Farrow",
+       "text": "M. Farrow (P2P sender); relationship on file: none; funding card ****6730 is on the fraud team's compromised-card list.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-13",
+       "kind": "counterparty",
+       "title": "N. Iyer",
+       "text": "N. Iyer (P2P sender); relationship on file: none; funding card ****3187.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-14",
+       "kind": "counterparty",
+       "title": "O. Kristiansen",
+       "text": "O. Kristiansen (P2P sender); relationship on file: none; funding card ****9952.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-15",
+       "kind": "counterparty",
+       "title": "P. Mbeki",
+       "text": "P. Mbeki (P2P sender); relationship on file: none; funding card ****5046 is on the fraud team's compromised-card list.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-16",
+       "kind": "counterparty",
+       "title": "Q. Lachance",
+       "text": "Q. Lachance (P2P sender); relationship on file: none; funding card ****7318 is on the fraud team's compromised-card list.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-17",
+       "kind": "counterparty",
+       "title": "R. Yilmaz",
+       "text": "R. Yilmaz (P2P sender); relationship on file: none; funding card ****0865.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-18",
+       "kind": "counterparty",
+       "title": "D. Vasquez",
+       "text": "D. Vasquez (P2P recipient); relationship on file: none; Received two P2P transfers from the subject; also a recipient in two other mule alerts at this bank this quarter.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-19",
+       "kind": "counterparty",
+       "title": "Coinvault Exchange (fictional)",
+       "text": "Coinvault Exchange (fictional) (crypto exchange (merchant)); relationship on file: none; Debit card purchases of crypto assets.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-20",
+       "kind": "counterparty",
+       "title": "Unverified QuickSend sender 'dw.sends'",
+       "text": "Unverified QuickSend sender 'dw.sends' (P2P sender); relationship on file: none; funding card ****1188 is on the fraud team's compromised-card list; Attempted push funded by this bank's card ending 1188, which fraud had already blocked.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "PA-1",
+       "kind": "prior_alert",
+       "title": "Prior alert ALR-2026-0915-0388",
+       "text": "Prior alert ALR-2026-0915-0388 on 2026-09-15 (TM-P2P-07 rapid in/out P2P): 9 P2P credits totalling $3,240 from 2026-09-01 to 2026-09-12. Disposition: Closed, no SAR on 2026-09-19. Rationale: Customer said he resells concert tickets (RFI response received 2026-09-18).",
+       "source": "Case management (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AM-1",
+       "kind": "adverse_media",
+       "title": "State regulator warns consumers about Coinvault Exchange (fictional)",
+       "text": "FinCrime Wire (fictional newswire), 2026-07-22: State regulator warns consumers about Coinvault Exchange (fictional). A fictional state regulator says Coinvault Exchange onboarded accounts without identity checks and was used to cash out P2P scam proceeds.",
+       "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AM-2",
+       "kind": "adverse_media",
+       "title": "Free-zone trader Bramblecoast Trading named in trade-based laundering notice (fictional)",
+       "text": "FinCrime Wire (fictional newswire), 2026-06-14: Free-zone trader Bramblecoast Trading named in trade-based laundering notice (fictional). A fictional regulator lists Bramblecoast Trading FZE among companies that received cash-funded wires against over-invoiced auto-parts shipments.",
+       "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AM-3",
+       "kind": "adverse_media",
+       "title": "Card data skimmed at online retailer Orbit Digital Goods (fictional)",
+       "text": "FinCrime Wire (fictional newswire), 2026-09-30: Card data skimmed at online retailer Orbit Digital Goods (fictional). Orbit Digital Goods confirms malicious checkout code captured card details for three weeks in September; issuers report fraud and P2P cash-out attempts.",
+       "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AM-4",
+       "kind": "adverse_media",
+       "title": "Title firms report wire-fraud attempts during closings (fictional)",
+       "text": "FinCrime Wire (fictional newswire), 2026-05-03: Title firms report wire-fraud attempts during closings (fictional). Bayside Title & Escrow (fictional) stopped a spoofed wire-instruction email; the firm itself was the target, and no wrongdoing by the firm is alleged.",
+       "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "DOC-1.1",
+       "kind": "document",
+       "title": "Customer explanation letter (RFI response), segment 1",
+       "text": "Customer explanation letter (RFI response) (received 2026-09-18, customer-supplied, secure-message upload), segment 1: To whom it may concern, I resell concert and sports tickets online and friends pay me back through the app. That is why I get many small transfers.",
+       "source": "Customer-supplied document (untrusted)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "DOC-1.2",
+       "kind": "document",
+       "title": "Customer explanation letter (RFI response), segment 2",
+       "text": "Customer explanation letter (RFI response) (received 2026-09-18, customer-supplied, secure-message upload), segment 2: I move the money out quickly because I pay the ticket sellers in cash or crypto. Thank you, Kendall Reyes",
+       "source": "Customer-supplied document (untrusted)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-MM-01",
+       "kind": "indicator",
+       "title": "MM-01 Pass-through: inbound funds left within 48 hours",
+       "text": "MM-01 Pass-through: inbound funds left within 48 hours: observed 96.0% (threshold \u2265 80%) \u00b7 FIRED.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-MM-02",
+       "kind": "indicator",
+       "title": "MM-02 Many-to-one: distinct unrelated P2P senders in 14 days",
+       "text": "MM-02 Many-to-one: distinct unrelated P2P senders in 14 days: observed 17 (threshold \u2265 8) \u00b7 FIRED.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-MM-03",
+       "kind": "indicator",
+       "title": "MM-03 Inflow far above the KYC expected activity",
+       "text": "MM-03 Inflow far above the KYC expected activity: observed 9.9 times (threshold \u2265 3 times) \u00b7 FIRED.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-MM-04",
+       "kind": "indicator",
+       "title": "MM-04 Inbound transfers funded by instruments on a fraud list",
+       "text": "MM-04 Inbound transfers funded by instruments on a fraud list: observed 10 (threshold \u2265 1) \u00b7 FIRED.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-MM-05",
+       "kind": "indicator",
+       "title": "MM-05 New account: opened within 90 days of the activity",
+       "text": "MM-05 New account: opened within 90 days of the activity: observed 27 days (threshold \u2264 90 days) \u00b7 FIRED.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-MM-06",
+       "kind": "indicator",
+       "title": "MM-06 Cash-out channels: ATM cash, crypto exchange, or P2P out",
+       "text": "MM-06 Cash-out channels: ATM cash, crypto exchange, or P2P out: observed 100.0% (threshold \u2265 70%) \u00b7 FIRED.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TYP-MM",
+       "kind": "typology",
+       "title": "Money mule",
+       "text": "Money mule typology: 6 of 6 indicators fired (MM-01, MM-02, MM-03, MM-04, MM-05, MM-06); a match needs 4 of 6, including MM-01 \u00b7 MATCHED.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-ST-01",
+       "kind": "indicator",
+       "title": "ST-01 Cash deposits just under the $10,000 CTR threshold",
+       "text": "ST-01 Cash deposits just under the $10,000 CTR threshold: observed not applicable (threshold \u2265 3) \u00b7 not applicable.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-ST-02",
+       "kind": "indicator",
+       "title": "ST-02 Cash above $10,000 in a rolling 7 days with no single deposit at or over it",
+       "text": "ST-02 Cash above $10,000 in a rolling 7 days with no single deposit at or over it: observed not applicable (threshold \u2265 $10,000) \u00b7 not applicable.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-ST-03",
+       "kind": "indicator",
+       "title": "ST-03 Cash deposits spread across branches",
+       "text": "ST-03 Cash deposits spread across branches: observed not applicable (threshold \u2265 3) \u00b7 not applicable.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-ST-04",
+       "kind": "indicator",
+       "title": "ST-04 Statement about avoiding the reporting threshold",
+       "text": "ST-04 Statement about avoiding the reporting threshold: observed 0 (threshold \u2265 1) \u00b7 not fired.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-ST-05",
+       "kind": "indicator",
+       "title": "ST-05 Cash far above the KYC expected cash",
+       "text": "ST-05 Cash far above the KYC expected cash: observed not applicable (threshold \u2265 3 times) \u00b7 not applicable.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TYP-ST",
+       "kind": "typology",
+       "title": "Structuring",
+       "text": "Structuring typology: 0 of 5 indicators fired; a match needs 3 of 5, including ST-01 and ST-02 \u00b7 not matched.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-FA-01",
+       "kind": "indicator",
+       "title": "FA-01 Cash deposits in several states by several depositors",
+       "text": "FA-01 Cash deposits in several states by several depositors: observed not applicable (threshold \u2265 3) \u00b7 not applicable.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-FA-02",
+       "kind": "indicator",
+       "title": "FA-02 Withdrawals or wires out of area soon after deposits",
+       "text": "FA-02 Withdrawals or wires out of area soon after deposits: observed not applicable (threshold \u2265 50%) \u00b7 not applicable.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-FA-03",
+       "kind": "indicator",
+       "title": "FA-03 Low retained balance: under 10% of inflow kept",
+       "text": "FA-03 Low retained balance: under 10% of inflow kept: observed not applicable (threshold \u2264 10%) \u00b7 not applicable.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TYP-FA",
+       "kind": "typology",
+       "title": "Funnel account",
+       "text": "Funnel account typology: 0 of 3 indicators fired; a match needs 2 of 3, including FA-01 \u00b7 not matched.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AMS-1",
+       "kind": "adverse_media",
+       "title": "Adverse media search \u00b7 0 articles",
+       "text": "Search of FinCrime Wire (fictional newswire), the only allowlisted source, for Kendall Reyes, A. Brennan, C. Mwangi, D. Halvorsen, E. Petrakis, F. Lindqvist, G. Osei, H. Tanaka: no articles.",
+       "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      }
+     ],
+     "security": {
+      "mode": "enforce",
+      "status": "allowed",
+      "checks": 33,
+      "blocked": 0,
+      "errors": 0,
+      "withheld_segments": 0,
+      "local_flags": 0,
+      "event_ids": [],
+      "fail_open": false,
+      "forced": true
+     },
+     "usage": {
+      "llm_calls": 10,
+      "input_tokens": 55292,
+      "output_tokens": 1569
+     },
+     "telemetry": {
+      "splunk": {
+       "status": "not_configured",
+       "trace_id": "6552e2e3fb2e411f95d1217d0f8d4642"
+      },
+      "galileo": "recorded"
+     },
+     "served_by": {
+      "provider": "openai",
+      "label": "OpenAI API",
+      "model": "gpt-5.6-luna",
+      "kind": "openai",
+      "private": false,
+      "external": true,
+      "fallback": true,
+      "reason": "Sparky vLLM unreachable (connection refused)",
+      "source": "saved",
+      "egress": "require_ai_defense",
+      "ai_defense": "enforce (forced for hosted model)"
+     },
+     "would_serve": {
+      "provider": "openai",
+      "label": "OpenAI API",
+      "model": "gpt-5.6-luna",
+      "kind": "openai",
+      "private": false,
+      "external": true,
+      "fallback": true,
+      "reason": "Sparky vLLM unreachable (connection refused)",
+      "source": "saved",
+      "egress": "require_ai_defense",
+      "ai_defense": "enforce (forced for hosted model)"
+     },
+     "duration_ms": 37676,
+     "tools_used": [
+      "get_alert",
+      "get_kyc_profile",
+      "get_account_activity",
+      "get_counterparties",
+      "get_prior_alerts",
+      "get_customer_documents",
+      "compute_typology_indicators",
+      "search_adverse_media"
+     ],
+     "draft": {
+      "sections": [
+       {
+        "section": "who",
+        "sentences": [
+         {
+          "text": "Kendall Reyes is a 22-year-old student and part-time barista who became a customer on 2026-08-28 and held checking account ending 6620.",
+          "cites": [
+           "KYC-1",
+           "ACCT-1"
+          ],
+          "valid_cites": [
+           "KYC-1",
+           "ACCT-1"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S1",
+          "section": "who"
+         },
+         {
+          "text": "The account received funds from 17 distinct P2P counterparties with no relationship on file, and D. Vasquez received two P2P transfers and was also a recipient in two other mule alerts at this bank this quarter.",
+          "cites": [
+           "AGG-IN",
+           "CP-01",
+           "CP-02",
+           "CP-03",
+           "CP-04",
+           "CP-05",
+           "CP-06",
+           "CP-07",
+           "CP-08",
+           "CP-09",
+           "CP-10",
+           "CP-11",
+           "CP-12",
+           "CP-13",
+           "CP-14",
+           "CP-15",
+           "CP-16",
+           "CP-17",
+           "CP-18"
+          ],
+          "valid_cites": [
+           "AGG-IN",
+           "CP-01",
+           "CP-02",
+           "CP-03",
+           "CP-04",
+           "CP-05",
+           "CP-06",
+           "CP-07",
+           "CP-08",
+           "CP-09",
+           "CP-10",
+           "CP-11",
+           "CP-12",
+           "CP-13",
+           "CP-14",
+           "CP-15",
+           "CP-16",
+           "CP-17",
+           "CP-18"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S2",
+          "section": "who"
+         }
+        ]
+       },
+       {
+        "section": "what",
+        "sentences": [
+         {
+          "text": "The account received 23 P2P credits totaling $14,860.00 from 2026-09-24 through 2026-10-06, including 10 posted credits totaling $6,120.00 funded by 9 distinct cards on the Orbit Digital Goods compromised-card list.",
+          "cites": [
+           "AGG-IN-P2P",
+           "AGG-FRAUD"
+          ],
+          "valid_cites": [
+           "AGG-IN-P2P",
+           "AGG-FRAUD"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S3",
+          "section": "what"
+         },
+         {
+          "text": "The account sent funds through 8 ATM withdrawals totaling $5,200.00, 3 crypto-exchange purchases totaling $6,900.00, and 2 P2P debits totaling $2,170.00.",
+          "cites": [
+           "AGG-OUT-ATM",
+           "AGG-OUT-CRYPTO",
+           "AGG-OUT-P2P"
+          ],
+          "valid_cites": [
+           "AGG-OUT-ATM",
+           "AGG-OUT-CRYPTO",
+           "AGG-OUT-P2P"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S4",
+          "section": "what"
+         },
+         {
+          "text": "A prior rapid-in/out P2P alert covering 2026-09-01 through 2026-09-12 was closed without a SAR on 2026-09-19 after the customer stated that ticket resales explained the transfers.",
+          "cites": [
+           "PA-1"
+          ],
+          "valid_cites": [
+           "PA-1"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S5",
+          "section": "what"
+         },
+         {
+          "text": "The customer-supplied explanation stated that ticket resales and payments to ticket sellers in cash or crypto explained the activity, but it does not explain the compromised-card funding identified in the current review.",
+          "cites": [
+           "DOC-1.1",
+           "DOC-1.2",
+           "AGG-FRAUD",
+           "REF-1"
+          ],
+          "valid_cites": [
+           "DOC-1.1",
+           "DOC-1.2",
+           "AGG-FRAUD",
+           "REF-1"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S6",
+          "section": "what"
+         }
+        ]
+       },
+       {
+        "section": "when",
+        "sentences": [
+         {
+          "text": "The reviewed activity occurred from 2026-09-24 through 2026-10-06, with credits posted over 13 days and debits posted over 12 days.",
+          "cites": [
+           "AGG-IN",
+           "AGG-OUT"
+          ],
+          "valid_cites": [
+           "AGG-IN",
+           "AGG-OUT"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S7",
+          "section": "when"
+         },
+         {
+          "text": "A $480.00 P2P credit funded by card ending 1188 was attempted on 2026-10-02 at 21:47 after fraud operations blocked the card at 21:12, and the transaction was declined.",
+          "cites": [
+           "AGG-FRAUD",
+           "TXN-30"
+          ],
+          "valid_cites": [
+           "AGG-FRAUD",
+           "TXN-30"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S8",
+          "section": "when"
+         }
+        ]
+       },
+       {
+        "section": "where",
+        "sentences": [
+         {
+          "text": "ATM withdrawals occurred at 3 distinct locations, including Oakland Fruitvale, San Leandro Bancroft, and Oakland Lake Merritt.",
+          "cites": [
+           "AGG-OUT-ATM",
+           "TXN-03",
+           "TXN-06",
+           "TXN-13",
+           "TXN-17",
+           "TXN-23",
+           "TXN-25",
+           "TXN-32",
+           "TXN-34"
+          ],
+          "valid_cites": [
+           "AGG-OUT-ATM",
+           "TXN-03",
+           "TXN-06",
+           "TXN-13",
+           "TXN-17",
+           "TXN-23",
+           "TXN-25",
+           "TXN-32",
+           "TXN-34"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S9",
+          "section": "where"
+         },
+         {
+          "text": "Crypto purchases were sent to Coinvault Exchange, and the account was opened and maintained at the bank in Oakland, California.",
+          "cites": [
+           "AGG-OUT-CRYPTO",
+           "CP-19",
+           "KYC-1"
+          ],
+          "valid_cites": [
+           "AGG-OUT-CRYPTO",
+           "CP-19",
+           "KYC-1"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S10",
+          "section": "where"
+         }
+        ]
+       },
+       {
+        "section": "why",
+        "sentences": [
+         {
+          "text": "The activity is inconsistent with expected part-time wages and family support under $1,500 a month because the observed inflow was 9.9 times expected activity.",
+          "cites": [
+           "KYC-1",
+           "IND-MM-03"
+          ],
+          "valid_cites": [
+           "KYC-1",
+           "IND-MM-03"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S11",
+          "section": "why"
+         },
+         {
+          "text": "The fraud referral identified 9 cards on the compromised-card list that funded P2P pushes to account ending 6620, and a related attempted push was declined after fraud blocked the card.",
+          "cites": [
+           "REF-1",
+           "AGG-FRAUD",
+           "TXN-30"
+          ],
+          "valid_cites": [
+           "REF-1",
+           "AGG-FRAUD",
+           "TXN-30"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S12",
+          "section": "why"
+         }
+        ]
+       },
+       {
+        "section": "how",
+        "sentences": [
+         {
+          "text": "Funds entered through many-to-one P2P transfers from 17 distinct counterparties, with observed pass-through of 96.0% within 48 hours.",
+          "cites": [
+           "AGG-IN-P2P",
+           "IND-MM-01",
+           "IND-MM-02"
+          ],
+          "valid_cites": [
+           "AGG-IN-P2P",
+           "IND-MM-01",
+           "IND-MM-02"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S13",
+          "section": "how"
+         },
+         {
+          "text": "Funds were rapidly dispersed through ATM cash withdrawals, crypto-exchange purchases, and P2P transfers, which comprised 100.0% of the observed cash-out channels.",
+          "cites": [
+           "AGG-OUT-ATM",
+           "AGG-OUT-CRYPTO",
+           "AGG-OUT-P2P",
+           "IND-MM-06"
+          ],
+          "valid_cites": [
+           "AGG-OUT-ATM",
+           "AGG-OUT-CRYPTO",
+           "AGG-OUT-P2P",
+           "IND-MM-06"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S14",
+          "section": "how"
+         }
+        ]
+       }
+      ],
+      "dropped": [],
+      "verification": {
+       "total": 14,
+       "kept": 14,
+       "failing": 0,
+       "cited_share": 1.0,
+       "missing_sections": []
+      },
+      "recommendation": "file",
+      "indicator_recommendation": "file",
+      "agrees": true,
+      "rationale": {
+       "text": "The money mule typology is matched because all 6 of 6 indicators fired, including rapid pass-through, many-to-one transfers, inflow materially above expected activity, fraud-listed funding, new-account activity, and cash-out channels; the activity remains unexplained despite the customer\u2019s ticket-resale explanation.",
+       "cites": [
+        "TYP-MM",
+        "IND-MM-01",
+        "IND-MM-02",
+        "IND-MM-03",
+        "IND-MM-04",
+        "IND-MM-05",
+        "IND-MM-06",
+        "DOC-1.1",
+        "DOC-1.2",
+        "AGG-FRAUD"
+       ],
+       "valid_cites": [
+        "TYP-MM",
+        "IND-MM-01",
+        "IND-MM-02",
+        "IND-MM-03",
+        "IND-MM-04",
+        "IND-MM-05",
+        "IND-MM-06",
+        "DOC-1.1",
+        "DOC-1.2",
+        "AGG-FRAUD"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "R",
+       "section": "rationale"
+      },
+      "next_steps": [
+       "Complete supervisory review and file the SAR by 2026-11-02 if approved.",
+       "Preserve transaction, fraud-referral, card-linkage, and counterparty records supporting the suspected money-mule activity.",
+       "Coordinate with Fraud Operations regarding the 9 compromised cards and the declined attempted push funded by card ending 1188.",
+       "Continue monitoring account ending 6620 and linked counterparties for additional fraud-funded inflows or rapid cash-out activity."
+      ],
+      "removed_steps": [],
+      "policies": [
+       {
+        "policy": "sar.no_tipping_off",
+        "name": "sar-no-tipping-off-v1",
+        "label": "No tipping off",
+        "allowed": true,
+        "failed": [],
+        "engine": "hosted",
+        "reason": ""
+       },
+       {
+        "policy": "sar.narrative_cited",
+        "name": "sar-narrative-cited-v1",
+        "label": "Narrative must cite evidence",
+        "allowed": true,
+        "failed": [],
+        "engine": "hosted",
+        "reason": ""
+       }
+      ],
+      "released": true,
+      "contact_attempts": 0
+     },
+     "provenance": "live"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "69fc0712-e101-4ae4-8dd3-e9505302108b",
+   "at": "2026-10-09T22:54:59.071893+00:00",
+   "ns": 38246003834,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "hitl.decision",
+   "status": "info",
+   "title": "Theo Marsh \u00b7 file",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "request_id": "investigator-1",
+    "decision": "file",
+    "by": "Theo Marsh",
+    "rationale": "The money mule typology is matched because all 6 of 6 indicators fired, including rapid pass-through, many-to-one transfers, inflow materially above expected activity, fraud-listed funding, new-account activity, and cash-out channels; the activity remains unexplained despite the customer\u2019s ticket-resale explanation.",
+    "note": "The money mule typology is matched because all 6 of 6 indicators fired, including rapid pass-through, many-to-one transfers, inflow materially above expected activity, fraud-listed funding, new-account activity, and cash-out channels; the activity remains unexplained despite the customer\u2019s ticket-re"
+   }
+  },
+  {
+   "v": 1,
+   "id": "d461c88b-5313-4fba-aa7c-c82090102ae6",
+   "at": "2026-10-09T22:54:59.317593+00:00",
+   "ns": 38491704417,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "control",
+   "status": "denied",
+   "title": "Agent Control \u00b7 sar.file_requires_approval \u00b7 deny \u00b7 awaiting second-line QA",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "second-line QA has not approved; QA must be a different person from the investigator",
+   "data": {
+    "policy": "sar-file-requires-approval-v1",
+    "short": "sar.file_requires_approval",
+    "engine": "hosted",
+    "verdict": {
+     "investigator_decided": true,
+     "rationale_recorded": true,
+     "qa_approved": false,
+     "separate_reviewers": false
+    },
+    "failed": [
+     "qa_approved",
+     "separate_reviewers"
+    ],
+    "step": "sar-file",
+    "stage": "pre"
+   }
+  },
+  {
+   "v": 1,
+   "id": "f9b95aa2-7722-48f0-95ea-cb7922733d2b",
+   "at": "2026-10-09T22:54:59.331023+00:00",
+   "ns": 38505130250,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "hitl.request",
+   "status": "info",
+   "title": "Second-line QA \u00b7 approve filing or return",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "request_id": "qa-1",
+    "stage": "qa",
+    "round": 1,
+    "decision": "file",
+    "investigator": "Theo Marsh",
+    "rationale": "The money mule typology is matched because all 6 of 6 indicators fired, including rapid pass-through, many-to-one transfers, inflow materially above expected activity, fraud-listed funding, new-account activity, and cash-out channels; the activity remains unexplained despite the customer\u2019s ticket-resale explanation.",
+    "sections": null
+   }
+  },
+  {
+   "v": 1,
+   "id": "c13202d4-9d61-4192-946b-13b81fc8772d",
+   "at": "2026-10-09T22:55:00.112441+00:00",
+   "ns": 39286550125,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "hitl.decision",
+   "status": "ok",
+   "title": "Lena Ortiz \u00b7 approve",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "request_id": "qa-1",
+    "decision": "approve",
+    "by": "Lena Ortiz",
+    "note": ""
+   }
+  },
+  {
+   "v": 1,
+   "id": "d6eea5dd-2c0d-4102-9eff-13c0d6272138",
+   "at": "2026-10-09T22:55:00.372356+00:00",
+   "ns": 39546469209,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "control",
+   "status": "allowed",
+   "title": "Agent Control \u00b7 sar.file_requires_approval \u00b7 allow",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Investigator decision with rationale, and approval by a different QA reviewer.",
+   "data": {
+    "policy": "sar-file-requires-approval-v1",
+    "short": "sar.file_requires_approval",
+    "engine": "hosted",
+    "verdict": {
+     "investigator_decided": true,
+     "rationale_recorded": true,
+     "qa_approved": true,
+     "separate_reviewers": true
+    },
+    "failed": [],
+    "step": "sar-file",
+    "stage": "pre"
+   }
+  },
+  {
+   "v": 1,
+   "id": "5c843876-6d35-41cd-a004-43eacfab09e6",
+   "at": "2026-10-09T22:55:00.373256+00:00",
+   "ns": 39547361334,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "efile_sar (simulated)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Simulated BSA E-Filing (nothing is sent to FinCEN)",
+   "data": {
+    "tool": "efile_sar",
+    "simulated": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "199740b0-ef58-41b5-9f10-3aaa2f2aa8ce",
+   "at": "2026-10-09T22:55:00.379429+00:00",
+   "ns": 39553542084,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Simulated BSA E-Filing (nothing is sent to FinCEN) \u00b7 accepted \u00b7 SIM-BSA-F6577F1E95",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "confirmation": "SIM-BSA-F6577F1E95",
+    "simulated": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "d40a637c-adab-4e42-9ba0-79c4c6a4cac7",
+   "at": "2026-10-09T22:55:00.391967+00:00",
+   "ns": 39566076375,
+   "run_id": "sar-golden-mule-reyes-20261009225420",
+   "component": "sar",
+   "kind": "result",
+   "status": "ok",
+   "title": "SAR filed (simulated) \u00b7 SIM-BSA-F6577F1E95",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Approved by Lena Ortiz after Theo Marsh's decision. Nothing left this laptop.",
+   "data": {}
+  }
+ ],
+ "result": {
+  "case": {
+   "id": "mule-reyes",
+   "label": "Money mule \u00b7 card-funded P2P cash-out",
+   "scenario": "mule-reyes",
+   "kind": "case",
+   "title": "Money mule \u00b7 linked to the card-fraud ring",
+   "subject": {
+    "name": "Kendall Reyes",
+    "kind": "individual",
+    "detail": "Student, part-time barista (fictional employer Bluebird Coffee Co.)",
+    "location": "Oakland, CA",
+    "ssn_masked": "***-**-2207"
+   },
+   "alert": {
+    "id": "ALR-2026-1003-0412",
+    "detected": "2026-10-03",
+    "source": "Transaction monitoring rule TM-P2P-07 (rapid in/out P2P) and a fraud referral",
+    "summary": "Checking ****6620 received many card-funded P2P transfers from unrelated senders and moved the money out within hours.",
+    "queue": "FIU \u00b7 money mule",
+    "priority": "high"
+   },
+   "deadline": {
+    "detected": "2026-10-03",
+    "due": "2026-11-02",
+    "as_of": "2026-10-09",
+    "day": 6,
+    "of": 30,
+    "days_left": 24
+   },
+   "accounts": [
+    "****6620"
+   ],
+   "handoff": false,
+   "synthetic": true
+  },
+  "mode": "live",
+  "typologies": [
+   {
+    "id": "money_mule",
+    "label": "Money mule",
+    "reference": "FinCEN money-mule red flags; FFIEC BSA/AML Manual appendix F (illustrative paraphrase)",
+    "matched": true,
+    "fired": 6,
+    "total": 6,
+    "rule": "4 of 6, including MM-01",
+    "indicators": [
+     {
+      "id": "MM-01",
+      "label": "Pass-through: inbound funds left within 48 hours",
+      "observed": 0.9602960969044414,
+      "observed_text": "96.0%",
+      "threshold_text": "\u2265 80%",
+      "status": "fired"
+     },
+     {
+      "id": "MM-02",
+      "label": "Many-to-one: distinct unrelated P2P senders in 14 days",
+      "observed": 17,
+      "observed_text": "17",
+      "threshold_text": "\u2265 8",
+      "status": "fired"
+     },
+     {
+      "id": "MM-03",
+      "label": "Inflow far above the KYC expected activity",
+      "observed": 9.906666666666666,
+      "observed_text": "9.9 times",
+      "threshold_text": "\u2265 3 times",
+      "status": "fired"
+     },
+     {
+      "id": "MM-04",
+      "label": "Inbound transfers funded by instruments on a fraud list",
+      "observed": 10,
+      "observed_text": "10",
+      "threshold_text": "\u2265 1",
+      "status": "fired"
+     },
+     {
+      "id": "MM-05",
+      "label": "New account: opened within 90 days of the activity",
+      "observed": 27,
+      "observed_text": "27 days",
+      "threshold_text": "\u2264 90 days",
+      "status": "fired"
+     },
+     {
+      "id": "MM-06",
+      "label": "Cash-out channels: ATM cash, crypto exchange, or P2P out",
+      "observed": 1.0,
+      "observed_text": "100.0%",
+      "threshold_text": "\u2265 70%",
+      "status": "fired"
+     }
+    ]
+   },
+   {
+    "id": "structuring",
+    "label": "Structuring",
+    "reference": "31 U.S.C. 5324; FFIEC BSA/AML Manual, structuring red flags (illustrative paraphrase)",
+    "matched": false,
+    "fired": 0,
+    "total": 5,
+    "rule": "3 of 5, including ST-01 and ST-02",
+    "indicators": [
+     {
+      "id": "ST-01",
+      "label": "Cash deposits just under the $10,000 CTR threshold",
+      "observed": null,
+      "observed_text": "not applicable",
+      "threshold_text": "\u2265 3",
+      "status": "not_applicable"
+     },
+     {
+      "id": "ST-02",
+      "label": "Cash above $10,000 in a rolling 7 days with no single deposit at or over it",
+      "observed": null,
+      "observed_text": "not applicable",
+      "threshold_text": "\u2265 $10,000",
+      "status": "not_applicable"
+     },
+     {
+      "id": "ST-03",
+      "label": "Cash deposits spread across branches",
+      "observed": null,
+      "observed_text": "not applicable",
+      "threshold_text": "\u2265 3",
+      "status": "not_applicable"
+     },
+     {
+      "id": "ST-04",
+      "label": "Statement about avoiding the reporting threshold",
+      "observed": 0,
+      "observed_text": "0",
+      "threshold_text": "\u2265 1",
+      "status": "clear"
+     },
+     {
+      "id": "ST-05",
+      "label": "Cash far above the KYC expected cash",
+      "observed": null,
+      "observed_text": "not applicable",
+      "threshold_text": "\u2265 3 times",
+      "status": "not_applicable"
+     }
+    ]
+   },
+   {
+    "id": "funnel_account",
+    "label": "Funnel account",
+    "reference": "FinCEN advisory FIN-2014-A005 on funnel accounts (illustrative paraphrase)",
+    "matched": false,
+    "fired": 0,
+    "total": 3,
+    "rule": "2 of 3, including FA-01",
+    "indicators": [
+     {
+      "id": "FA-01",
+      "label": "Cash deposits in several states by several depositors",
+      "observed": null,
+      "observed_text": "not applicable",
+      "threshold_text": "\u2265 3",
+      "status": "not_applicable"
+     },
+     {
+      "id": "FA-02",
+      "label": "Withdrawals or wires out of area soon after deposits",
+      "observed": null,
+      "observed_text": "not applicable",
+      "threshold_text": "\u2265 50%",
+      "status": "not_applicable"
+     },
+     {
+      "id": "FA-03",
+      "label": "Low retained balance: under 10% of inflow kept",
+      "observed": null,
+      "observed_text": "not applicable",
+      "threshold_text": "\u2264 10%",
+      "status": "not_applicable"
+     }
+    ]
+   }
+  ],
+  "evidence": [
+   {
+    "id": "ALERT-1",
+    "kind": "alert",
+    "title": "Alert ALR-2026-1003-0412",
+    "text": "Alert ALR-2026-1003-0412 detected 2026-10-03 by Transaction monitoring rule TM-P2P-07 (rapid in/out P2P) and a fraud referral: Checking ****6620 received many card-funded P2P transfers from unrelated senders and moved the money out within hours. Filing deadline 2026-11-02 (30 days from detection); case snapshot 2026-10-09 is day 6 of 30.",
+    "source": "Transaction monitoring (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "REF-1",
+    "kind": "referral",
+    "title": "Fraud referral FR-2026-1002-17",
+    "text": "Fraud referral FR-2026-1002-17 from Fraud operations (card fraud triage) on 2026-10-02: Common-point-of-purchase investigation at Orbit Digital Goods: 412 cards bought there in 21 days and 37 later had confirmed fraud. Nine cards on that compromised list funded P2P pushes to this bank's checking account ending 6620. A push funded by this bank's card ending 1188 was declined after fraud blocked the card.",
+    "source": "Fraud operations (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "KYC-1",
+    "kind": "kyc",
+    "title": "KYC profile (minimized)",
+    "text": "Kendall Reyes, age 22, Student, part-time barista (fictional employer Bluebird Coffee Co.), customer since 2026-08-28, located in Oakland, CA. Risk rating Low (at onboarding). Expected activity: Part-time wages and family support, under $1,500 a month. Source of funds: Part-time wages; family support. PEP: no. Sanctions screening: clear.",
+    "source": "KYC system (synthetic); SSN, date of birth, and street address withheld from the model",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "ACCT-1",
+    "kind": "account",
+    "title": "Account ****6620",
+    "text": "checking ****6620 opened 2026-08-28, status restricted 2026-10-07 pending review, balance before the review window $112.40.",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-01",
+    "kind": "transaction",
+    "title": "P2P credit $450.00",
+    "text": "2026-09-24 09:10 \u00b7 P2P credit \u00b7 $450.00 \u00b7 from A. Brennan (CP-01) \u00b7 funding card ****2231 \u00b7 memo \"tickets\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-02",
+    "kind": "transaction",
+    "title": "P2P credit $740.00",
+    "text": "2026-09-24 14:17 \u00b7 P2P credit \u00b7 $740.00 \u00b7 from C. Mwangi (CP-02) \u00b7 funding card ****5806 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"concert tix\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-03",
+    "kind": "transaction",
+    "title": "ATM cash withdrawal $800.00",
+    "text": "2026-09-24 17:17 \u00b7 ATM cash withdrawal \u00b7 $800.00 \u00b7 ATM \u00b7 Oakland Fruitvale",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-04",
+    "kind": "transaction",
+    "title": "P2P credit $380.00",
+    "text": "2026-09-25 07:24 \u00b7 P2P credit \u00b7 $380.00 \u00b7 from D. Halvorsen (CP-03) \u00b7 funding card ****9140 \u00b7 memo \"tickets\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-05",
+    "kind": "transaction",
+    "title": "P2P credit $685.00",
+    "text": "2026-09-25 12:31 \u00b7 P2P credit \u00b7 $685.00 \u00b7 from A. Brennan (CP-01) \u00b7 funding card ****2231 \u00b7 memo \"thanks!\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-06",
+    "kind": "transaction",
+    "title": "ATM cash withdrawal $600.00",
+    "text": "2026-09-25 12:35 \u00b7 ATM cash withdrawal \u00b7 $600.00 \u00b7 ATM \u00b7 San Leandro Bancroft",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-07",
+    "kind": "transaction",
+    "title": "P2P credit $540.00",
+    "text": "2026-09-25 15:38 \u00b7 P2P credit \u00b7 $540.00 \u00b7 from E. Petrakis (CP-04) \u00b7 funding card ****3375 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"tix\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-08",
+    "kind": "transaction",
+    "title": "P2P credit $275.00",
+    "text": "2026-09-26 07:45 \u00b7 P2P credit \u00b7 $275.00 \u00b7 from F. Lindqvist (CP-05) \u00b7 funding card ****6612 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"for the show\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-09",
+    "kind": "transaction",
+    "title": "P2P credit $900.00",
+    "text": "2026-09-26 11:52 \u00b7 P2P credit \u00b7 $900.00 \u00b7 from D. Halvorsen (CP-03) \u00b7 funding card ****9140 \u00b7 memo \"tickets\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-10",
+    "kind": "transaction",
+    "title": "crypto-exchange purchase $2,400.00",
+    "text": "2026-09-26 14:14 \u00b7 crypto-exchange purchase \u00b7 $2,400.00 \u00b7 to Coinvault Exchange (fictional) (CP-19) \u00b7 Coinvault Exchange (fictional)",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-11",
+    "kind": "transaction",
+    "title": "P2P credit $690.00",
+    "text": "2026-09-27 07:59 \u00b7 P2P credit \u00b7 $690.00 \u00b7 from G. Osei (CP-06) \u00b7 funding card ****0487 \u00b7 memo \"tix\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-12",
+    "kind": "transaction",
+    "title": "P2P credit $420.00",
+    "text": "2026-09-27 12:16 \u00b7 P2P credit \u00b7 $420.00 \u00b7 from H. Tanaka (CP-07) \u00b7 funding card ****7759 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"floor seats\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-13",
+    "kind": "transaction",
+    "title": "ATM cash withdrawal $700.00",
+    "text": "2026-09-27 12:32 \u00b7 ATM cash withdrawal \u00b7 $700.00 \u00b7 ATM \u00b7 Oakland Lake Merritt",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-14",
+    "kind": "transaction",
+    "title": "P2P credit $845.00",
+    "text": "2026-09-28 07:23 \u00b7 P2P credit \u00b7 $845.00 \u00b7 from F. Lindqvist (CP-05) \u00b7 funding card ****6612 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"tickets\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-15",
+    "kind": "transaction",
+    "title": "P2P credit $560.00",
+    "text": "2026-09-28 12:30 \u00b7 P2P credit \u00b7 $560.00 \u00b7 from I. Novotny (CP-08) \u00b7 funding card ****1903 \u00b7 memo \"concert\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-16",
+    "kind": "transaction",
+    "title": "P2P debit $1,150.00",
+    "text": "2026-09-28 13:30 \u00b7 P2P debit \u00b7 $1,150.00 \u00b7 to D. Vasquez (CP-18) \u00b7 memo \"ok\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-17",
+    "kind": "transaction",
+    "title": "ATM cash withdrawal $500.00",
+    "text": "2026-09-28 16:48 \u00b7 ATM cash withdrawal \u00b7 $500.00 \u00b7 ATM \u00b7 Oakland Fruitvale",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-18",
+    "kind": "transaction",
+    "title": "P2P credit $940.00",
+    "text": "2026-09-29 07:37 \u00b7 P2P credit \u00b7 $940.00 \u00b7 from J. Castellanos (CP-09) \u00b7 funding card ****4428 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"tix\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-19",
+    "kind": "transaction",
+    "title": "P2P credit $310.00",
+    "text": "2026-09-29 12:44 \u00b7 P2P credit \u00b7 $310.00 \u00b7 from K. Abernathy (CP-10) \u00b7 funding card ****8061 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"tickets\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-20",
+    "kind": "transaction",
+    "title": "P2P credit $945.00",
+    "text": "2026-09-30 07:51 \u00b7 P2P credit \u00b7 $945.00 \u00b7 from L. Duquesne (CP-11) \u00b7 funding card ****2594 \u00b7 memo \"tickets for sat\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-21",
+    "kind": "transaction",
+    "title": "crypto-exchange purchase $2,100.00",
+    "text": "2026-09-30 10:20 \u00b7 crypto-exchange purchase \u00b7 $2,100.00 \u00b7 to Coinvault Exchange (fictional) (CP-19) \u00b7 Coinvault Exchange (fictional)",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-22",
+    "kind": "transaction",
+    "title": "P2P credit $640.00",
+    "text": "2026-09-30 12:58 \u00b7 P2P credit \u00b7 $640.00 \u00b7 from I. Novotny (CP-08) \u00b7 funding card ****1903 \u00b7 memo \"tix\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-23",
+    "kind": "transaction",
+    "title": "ATM cash withdrawal $800.00",
+    "text": "2026-09-30 18:01 \u00b7 ATM cash withdrawal \u00b7 $800.00 \u00b7 ATM \u00b7 San Leandro Bancroft",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-24",
+    "kind": "transaction",
+    "title": "P2P credit $495.00",
+    "text": "2026-10-01 07:15 \u00b7 P2P credit \u00b7 $495.00 \u00b7 from M. Farrow (CP-12) \u00b7 funding card ****6730 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"tickets\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-25",
+    "kind": "transaction",
+    "title": "ATM cash withdrawal $600.00",
+    "text": "2026-10-01 11:29 \u00b7 ATM cash withdrawal \u00b7 $600.00 \u00b7 ATM \u00b7 Oakland Lake Merritt",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-26",
+    "kind": "transaction",
+    "title": "P2P credit $900.00",
+    "text": "2026-10-01 12:22 \u00b7 P2P credit \u00b7 $900.00 \u00b7 from N. Iyer (CP-13) \u00b7 funding card ****3187 \u00b7 memo \"thanks\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-27",
+    "kind": "transaction",
+    "title": "P2P credit $585.00",
+    "text": "2026-10-02 07:29 \u00b7 P2P credit \u00b7 $585.00 \u00b7 from O. Kristiansen (CP-14) \u00b7 funding card ****9952 \u00b7 memo \"tix\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-28",
+    "kind": "transaction",
+    "title": "P2P credit $830.00",
+    "text": "2026-10-02 12:36 \u00b7 P2P credit \u00b7 $830.00 \u00b7 from L. Duquesne (CP-11) \u00b7 funding card ****2594 \u00b7 memo \"tickets\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-29",
+    "kind": "transaction",
+    "title": "crypto-exchange purchase $2,400.00",
+    "text": "2026-10-02 16:01 \u00b7 crypto-exchange purchase \u00b7 $2,400.00 \u00b7 to Coinvault Exchange (fictional) (CP-19) \u00b7 Coinvault Exchange (fictional)",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-30",
+    "kind": "transaction",
+    "title": "P2P credit $480.00",
+    "text": "2026-10-02 21:47 \u00b7 P2P credit \u00b7 $480.00 \u00b7 DECLINED \u00b7 from Unverified QuickSend sender 'dw.sends' (CP-20) \u00b7 funding card ****1188 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 card blocked by fraud operations at 21:12 under case cpp-orbit \u00b7 memo \"tix\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-31",
+    "kind": "transaction",
+    "title": "P2P credit $655.00",
+    "text": "2026-10-03 07:43 \u00b7 P2P credit \u00b7 $655.00 \u00b7 from P. Mbeki (CP-15) \u00b7 funding card ****5046 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"game tix\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-32",
+    "kind": "transaction",
+    "title": "ATM cash withdrawal $700.00",
+    "text": "2026-10-03 15:19 \u00b7 ATM cash withdrawal \u00b7 $700.00 \u00b7 ATM \u00b7 Oakland Fruitvale",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-33",
+    "kind": "transaction",
+    "title": "P2P credit $900.00",
+    "text": "2026-10-04 09:50 \u00b7 P2P credit \u00b7 $900.00 \u00b7 from Q. Lachance (CP-16) \u00b7 funding card ****7318 (on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit)) \u00b7 memo \"tickets\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-34",
+    "kind": "transaction",
+    "title": "ATM cash withdrawal $500.00",
+    "text": "2026-10-04 12:00 \u00b7 ATM cash withdrawal \u00b7 $500.00 \u00b7 ATM \u00b7 San Leandro Bancroft",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-35",
+    "kind": "transaction",
+    "title": "P2P credit $710.00",
+    "text": "2026-10-05 07:57 \u00b7 P2P credit \u00b7 $710.00 \u00b7 from R. Yilmaz (CP-17) \u00b7 funding card ****0865 \u00b7 memo \"tix\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-36",
+    "kind": "transaction",
+    "title": "P2P debit $1,020.00",
+    "text": "2026-10-05 12:18 \u00b7 P2P debit \u00b7 $1,020.00 \u00b7 to D. Vasquez (CP-18) \u00b7 memo \"ok\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-37",
+    "kind": "transaction",
+    "title": "P2P credit $465.00",
+    "text": "2026-10-06 01:14 \u00b7 P2P credit \u00b7 $465.00 \u00b7 from O. Kristiansen (CP-14) \u00b7 funding card ****9952 \u00b7 memo \"tickets\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-IN",
+    "kind": "aggregate",
+    "title": "Posted credits",
+    "text": "Posted credits: 23 totalling $14,860.00, 2026-09-24 to 2026-10-06 (13 days), 17 distinct counterparties, smallest $275.00, largest $945.00.",
+    "source": "Computed from core-banking transactions (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-OUT",
+    "kind": "aggregate",
+    "title": "Posted debits",
+    "text": "Posted debits: 13 totalling $14,270.00, 2026-09-24 to 2026-10-05 (12 days), 2 distinct counterparties, 3 distinct locations, smallest $500.00, largest $2,400.00; 96.0% of all posted credits.",
+    "source": "Computed from core-banking transactions (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-IN-P2P",
+    "kind": "aggregate",
+    "title": "P2P credits",
+    "text": "P2P credits: 23 totalling $14,860.00, 2026-09-24 to 2026-10-06 (13 days), 17 distinct counterparties, smallest $275.00, largest $945.00.",
+    "source": "Computed from core-banking transactions (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-OUT-ATM",
+    "kind": "aggregate",
+    "title": "ATM cash withdrawals",
+    "text": "ATM cash withdrawals: 8 totalling $5,200.00, 2026-09-24 to 2026-10-04 (11 days), 3 distinct locations, smallest $500.00, largest $800.00; 35.0% of all posted credits.",
+    "source": "Computed from core-banking transactions (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-OUT-CRYPTO",
+    "kind": "aggregate",
+    "title": "Crypto-exchange purchases",
+    "text": "Crypto-exchange purchases: 3 totalling $6,900.00, 2026-09-26 to 2026-10-02 (7 days), 1 distinct counterparty, smallest $2,100.00, largest $2,400.00; 46.4% of all posted credits.",
+    "source": "Computed from core-banking transactions (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-OUT-P2P",
+    "kind": "aggregate",
+    "title": "P2P debits",
+    "text": "P2P debits: 2 totalling $2,170.00, 2026-09-28 to 2026-10-05 (8 days), 1 distinct counterparty, smallest $1,020.00, largest $1,150.00; 14.6% of all posted credits.",
+    "source": "Computed from core-banking transactions (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-FRAUD",
+    "kind": "aggregate",
+    "title": "Fraud-listed funding",
+    "text": "Fraud-listed funding: 10 posted credits totalling $6,120.00 were funded by 9 distinct cards on the Orbit Digital Goods compromised-card list (fraud case cpp-orbit); $480.00 attempted 2026-10-02 with card ****1188 was declined: card blocked by fraud operations at 21:12 under case cpp-orbit.",
+    "source": "Fraud operations list joined to core banking (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-01",
+    "kind": "counterparty",
+    "title": "A. Brennan",
+    "text": "A. Brennan (P2P sender); relationship on file: none; funding card ****2231.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-02",
+    "kind": "counterparty",
+    "title": "C. Mwangi",
+    "text": "C. Mwangi (P2P sender); relationship on file: none; funding card ****5806 is on the fraud team's compromised-card list.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-03",
+    "kind": "counterparty",
+    "title": "D. Halvorsen",
+    "text": "D. Halvorsen (P2P sender); relationship on file: none; funding card ****9140.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-04",
+    "kind": "counterparty",
+    "title": "E. Petrakis",
+    "text": "E. Petrakis (P2P sender); relationship on file: none; funding card ****3375 is on the fraud team's compromised-card list.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-05",
+    "kind": "counterparty",
+    "title": "F. Lindqvist",
+    "text": "F. Lindqvist (P2P sender); relationship on file: none; funding card ****6612 is on the fraud team's compromised-card list.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-06",
+    "kind": "counterparty",
+    "title": "G. Osei",
+    "text": "G. Osei (P2P sender); relationship on file: none; funding card ****0487.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-07",
+    "kind": "counterparty",
+    "title": "H. Tanaka",
+    "text": "H. Tanaka (P2P sender); relationship on file: none; funding card ****7759 is on the fraud team's compromised-card list.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-08",
+    "kind": "counterparty",
+    "title": "I. Novotny",
+    "text": "I. Novotny (P2P sender); relationship on file: none; funding card ****1903.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-09",
+    "kind": "counterparty",
+    "title": "J. Castellanos",
+    "text": "J. Castellanos (P2P sender); relationship on file: none; funding card ****4428 is on the fraud team's compromised-card list.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-10",
+    "kind": "counterparty",
+    "title": "K. Abernathy",
+    "text": "K. Abernathy (P2P sender); relationship on file: none; funding card ****8061 is on the fraud team's compromised-card list.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-11",
+    "kind": "counterparty",
+    "title": "L. Duquesne",
+    "text": "L. Duquesne (P2P sender); relationship on file: none; funding card ****2594.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-12",
+    "kind": "counterparty",
+    "title": "M. Farrow",
+    "text": "M. Farrow (P2P sender); relationship on file: none; funding card ****6730 is on the fraud team's compromised-card list.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-13",
+    "kind": "counterparty",
+    "title": "N. Iyer",
+    "text": "N. Iyer (P2P sender); relationship on file: none; funding card ****3187.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-14",
+    "kind": "counterparty",
+    "title": "O. Kristiansen",
+    "text": "O. Kristiansen (P2P sender); relationship on file: none; funding card ****9952.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-15",
+    "kind": "counterparty",
+    "title": "P. Mbeki",
+    "text": "P. Mbeki (P2P sender); relationship on file: none; funding card ****5046 is on the fraud team's compromised-card list.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-16",
+    "kind": "counterparty",
+    "title": "Q. Lachance",
+    "text": "Q. Lachance (P2P sender); relationship on file: none; funding card ****7318 is on the fraud team's compromised-card list.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-17",
+    "kind": "counterparty",
+    "title": "R. Yilmaz",
+    "text": "R. Yilmaz (P2P sender); relationship on file: none; funding card ****0865.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-18",
+    "kind": "counterparty",
+    "title": "D. Vasquez",
+    "text": "D. Vasquez (P2P recipient); relationship on file: none; Received two P2P transfers from the subject; also a recipient in two other mule alerts at this bank this quarter.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-19",
+    "kind": "counterparty",
+    "title": "Coinvault Exchange (fictional)",
+    "text": "Coinvault Exchange (fictional) (crypto exchange (merchant)); relationship on file: none; Debit card purchases of crypto assets.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-20",
+    "kind": "counterparty",
+    "title": "Unverified QuickSend sender 'dw.sends'",
+    "text": "Unverified QuickSend sender 'dw.sends' (P2P sender); relationship on file: none; funding card ****1188 is on the fraud team's compromised-card list; Attempted push funded by this bank's card ending 1188, which fraud had already blocked.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "PA-1",
+    "kind": "prior_alert",
+    "title": "Prior alert ALR-2026-0915-0388",
+    "text": "Prior alert ALR-2026-0915-0388 on 2026-09-15 (TM-P2P-07 rapid in/out P2P): 9 P2P credits totalling $3,240 from 2026-09-01 to 2026-09-12. Disposition: Closed, no SAR on 2026-09-19. Rationale: Customer said he resells concert tickets (RFI response received 2026-09-18).",
+    "source": "Case management (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AM-1",
+    "kind": "adverse_media",
+    "title": "State regulator warns consumers about Coinvault Exchange (fictional)",
+    "text": "FinCrime Wire (fictional newswire), 2026-07-22: State regulator warns consumers about Coinvault Exchange (fictional). A fictional state regulator says Coinvault Exchange onboarded accounts without identity checks and was used to cash out P2P scam proceeds.",
+    "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AM-2",
+    "kind": "adverse_media",
+    "title": "Free-zone trader Bramblecoast Trading named in trade-based laundering notice (fictional)",
+    "text": "FinCrime Wire (fictional newswire), 2026-06-14: Free-zone trader Bramblecoast Trading named in trade-based laundering notice (fictional). A fictional regulator lists Bramblecoast Trading FZE among companies that received cash-funded wires against over-invoiced auto-parts shipments.",
+    "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AM-3",
+    "kind": "adverse_media",
+    "title": "Card data skimmed at online retailer Orbit Digital Goods (fictional)",
+    "text": "FinCrime Wire (fictional newswire), 2026-09-30: Card data skimmed at online retailer Orbit Digital Goods (fictional). Orbit Digital Goods confirms malicious checkout code captured card details for three weeks in September; issuers report fraud and P2P cash-out attempts.",
+    "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AM-4",
+    "kind": "adverse_media",
+    "title": "Title firms report wire-fraud attempts during closings (fictional)",
+    "text": "FinCrime Wire (fictional newswire), 2026-05-03: Title firms report wire-fraud attempts during closings (fictional). Bayside Title & Escrow (fictional) stopped a spoofed wire-instruction email; the firm itself was the target, and no wrongdoing by the firm is alleged.",
+    "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "DOC-1.1",
+    "kind": "document",
+    "title": "Customer explanation letter (RFI response), segment 1",
+    "text": "Customer explanation letter (RFI response) (received 2026-09-18, customer-supplied, secure-message upload), segment 1: To whom it may concern, I resell concert and sports tickets online and friends pay me back through the app. That is why I get many small transfers.",
+    "source": "Customer-supplied document (untrusted)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "DOC-1.2",
+    "kind": "document",
+    "title": "Customer explanation letter (RFI response), segment 2",
+    "text": "Customer explanation letter (RFI response) (received 2026-09-18, customer-supplied, secure-message upload), segment 2: I move the money out quickly because I pay the ticket sellers in cash or crypto. Thank you, Kendall Reyes",
+    "source": "Customer-supplied document (untrusted)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-MM-01",
+    "kind": "indicator",
+    "title": "MM-01 Pass-through: inbound funds left within 48 hours",
+    "text": "MM-01 Pass-through: inbound funds left within 48 hours: observed 96.0% (threshold \u2265 80%) \u00b7 FIRED.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-MM-02",
+    "kind": "indicator",
+    "title": "MM-02 Many-to-one: distinct unrelated P2P senders in 14 days",
+    "text": "MM-02 Many-to-one: distinct unrelated P2P senders in 14 days: observed 17 (threshold \u2265 8) \u00b7 FIRED.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-MM-03",
+    "kind": "indicator",
+    "title": "MM-03 Inflow far above the KYC expected activity",
+    "text": "MM-03 Inflow far above the KYC expected activity: observed 9.9 times (threshold \u2265 3 times) \u00b7 FIRED.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-MM-04",
+    "kind": "indicator",
+    "title": "MM-04 Inbound transfers funded by instruments on a fraud list",
+    "text": "MM-04 Inbound transfers funded by instruments on a fraud list: observed 10 (threshold \u2265 1) \u00b7 FIRED.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-MM-05",
+    "kind": "indicator",
+    "title": "MM-05 New account: opened within 90 days of the activity",
+    "text": "MM-05 New account: opened within 90 days of the activity: observed 27 days (threshold \u2264 90 days) \u00b7 FIRED.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-MM-06",
+    "kind": "indicator",
+    "title": "MM-06 Cash-out channels: ATM cash, crypto exchange, or P2P out",
+    "text": "MM-06 Cash-out channels: ATM cash, crypto exchange, or P2P out: observed 100.0% (threshold \u2265 70%) \u00b7 FIRED.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TYP-MM",
+    "kind": "typology",
+    "title": "Money mule",
+    "text": "Money mule typology: 6 of 6 indicators fired (MM-01, MM-02, MM-03, MM-04, MM-05, MM-06); a match needs 4 of 6, including MM-01 \u00b7 MATCHED.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-ST-01",
+    "kind": "indicator",
+    "title": "ST-01 Cash deposits just under the $10,000 CTR threshold",
+    "text": "ST-01 Cash deposits just under the $10,000 CTR threshold: observed not applicable (threshold \u2265 3) \u00b7 not applicable.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-ST-02",
+    "kind": "indicator",
+    "title": "ST-02 Cash above $10,000 in a rolling 7 days with no single deposit at or over it",
+    "text": "ST-02 Cash above $10,000 in a rolling 7 days with no single deposit at or over it: observed not applicable (threshold \u2265 $10,000) \u00b7 not applicable.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-ST-03",
+    "kind": "indicator",
+    "title": "ST-03 Cash deposits spread across branches",
+    "text": "ST-03 Cash deposits spread across branches: observed not applicable (threshold \u2265 3) \u00b7 not applicable.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-ST-04",
+    "kind": "indicator",
+    "title": "ST-04 Statement about avoiding the reporting threshold",
+    "text": "ST-04 Statement about avoiding the reporting threshold: observed 0 (threshold \u2265 1) \u00b7 not fired.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-ST-05",
+    "kind": "indicator",
+    "title": "ST-05 Cash far above the KYC expected cash",
+    "text": "ST-05 Cash far above the KYC expected cash: observed not applicable (threshold \u2265 3 times) \u00b7 not applicable.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TYP-ST",
+    "kind": "typology",
+    "title": "Structuring",
+    "text": "Structuring typology: 0 of 5 indicators fired; a match needs 3 of 5, including ST-01 and ST-02 \u00b7 not matched.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-FA-01",
+    "kind": "indicator",
+    "title": "FA-01 Cash deposits in several states by several depositors",
+    "text": "FA-01 Cash deposits in several states by several depositors: observed not applicable (threshold \u2265 3) \u00b7 not applicable.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-FA-02",
+    "kind": "indicator",
+    "title": "FA-02 Withdrawals or wires out of area soon after deposits",
+    "text": "FA-02 Withdrawals or wires out of area soon after deposits: observed not applicable (threshold \u2265 50%) \u00b7 not applicable.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-FA-03",
+    "kind": "indicator",
+    "title": "FA-03 Low retained balance: under 10% of inflow kept",
+    "text": "FA-03 Low retained balance: under 10% of inflow kept: observed not applicable (threshold \u2264 10%) \u00b7 not applicable.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TYP-FA",
+    "kind": "typology",
+    "title": "Funnel account",
+    "text": "Funnel account typology: 0 of 3 indicators fired; a match needs 2 of 3, including FA-01 \u00b7 not matched.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AMS-1",
+    "kind": "adverse_media",
+    "title": "Adverse media search \u00b7 0 articles",
+    "text": "Search of FinCrime Wire (fictional newswire), the only allowlisted source, for Kendall Reyes, A. Brennan, C. Mwangi, D. Halvorsen, E. Petrakis, F. Lindqvist, G. Osei, H. Tanaka: no articles.",
+    "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   }
+  ],
+  "security": {
+   "mode": "enforce",
+   "status": "allowed",
+   "checks": 33,
+   "blocked": 0,
+   "errors": 0,
+   "withheld_segments": 0,
+   "local_flags": 0,
+   "event_ids": [],
+   "fail_open": false,
+   "forced": true
+  },
+  "usage": {
+   "llm_calls": 10,
+   "input_tokens": 55292,
+   "output_tokens": 1569
+  },
+  "telemetry": {
+   "splunk": {
+    "status": "not_configured",
+    "trace_id": "6552e2e3fb2e411f95d1217d0f8d4642"
+   },
+   "galileo": "recorded"
+  },
+  "served_by": {
+   "provider": "openai",
+   "label": "OpenAI API",
+   "model": "gpt-5.6-luna",
+   "kind": "openai",
+   "private": false,
+   "external": true,
+   "fallback": true,
+   "reason": "Sparky vLLM unreachable (connection refused)",
+   "source": "saved",
+   "egress": "require_ai_defense",
+   "ai_defense": "enforce (forced for hosted model)"
+  },
+  "would_serve": {
+   "provider": "openai",
+   "label": "OpenAI API",
+   "model": "gpt-5.6-luna",
+   "kind": "openai",
+   "private": false,
+   "external": true,
+   "fallback": true,
+   "reason": "Sparky vLLM unreachable (connection refused)",
+   "source": "saved",
+   "egress": "require_ai_defense",
+   "ai_defense": "enforce (forced for hosted model)"
+  },
+  "duration_ms": 37676,
+  "tools_used": [
+   "get_alert",
+   "get_kyc_profile",
+   "get_account_activity",
+   "get_counterparties",
+   "get_prior_alerts",
+   "get_customer_documents",
+   "compute_typology_indicators",
+   "search_adverse_media"
+  ],
+  "draft": {
+   "sections": [
+    {
+     "section": "who",
+     "sentences": [
+      {
+       "text": "Kendall Reyes is a 22-year-old student and part-time barista who became a customer on 2026-08-28 and held checking account ending 6620.",
+       "cites": [
+        "KYC-1",
+        "ACCT-1"
+       ],
+       "valid_cites": [
+        "KYC-1",
+        "ACCT-1"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S1",
+       "section": "who"
+      },
+      {
+       "text": "The account received funds from 17 distinct P2P counterparties with no relationship on file, and D. Vasquez received two P2P transfers and was also a recipient in two other mule alerts at this bank this quarter.",
+       "cites": [
+        "AGG-IN",
+        "CP-01",
+        "CP-02",
+        "CP-03",
+        "CP-04",
+        "CP-05",
+        "CP-06",
+        "CP-07",
+        "CP-08",
+        "CP-09",
+        "CP-10",
+        "CP-11",
+        "CP-12",
+        "CP-13",
+        "CP-14",
+        "CP-15",
+        "CP-16",
+        "CP-17",
+        "CP-18"
+       ],
+       "valid_cites": [
+        "AGG-IN",
+        "CP-01",
+        "CP-02",
+        "CP-03",
+        "CP-04",
+        "CP-05",
+        "CP-06",
+        "CP-07",
+        "CP-08",
+        "CP-09",
+        "CP-10",
+        "CP-11",
+        "CP-12",
+        "CP-13",
+        "CP-14",
+        "CP-15",
+        "CP-16",
+        "CP-17",
+        "CP-18"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S2",
+       "section": "who"
+      }
+     ]
+    },
+    {
+     "section": "what",
+     "sentences": [
+      {
+       "text": "The account received 23 P2P credits totaling $14,860.00 from 2026-09-24 through 2026-10-06, including 10 posted credits totaling $6,120.00 funded by 9 distinct cards on the Orbit Digital Goods compromised-card list.",
+       "cites": [
+        "AGG-IN-P2P",
+        "AGG-FRAUD"
+       ],
+       "valid_cites": [
+        "AGG-IN-P2P",
+        "AGG-FRAUD"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S3",
+       "section": "what"
+      },
+      {
+       "text": "The account sent funds through 8 ATM withdrawals totaling $5,200.00, 3 crypto-exchange purchases totaling $6,900.00, and 2 P2P debits totaling $2,170.00.",
+       "cites": [
+        "AGG-OUT-ATM",
+        "AGG-OUT-CRYPTO",
+        "AGG-OUT-P2P"
+       ],
+       "valid_cites": [
+        "AGG-OUT-ATM",
+        "AGG-OUT-CRYPTO",
+        "AGG-OUT-P2P"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S4",
+       "section": "what"
+      },
+      {
+       "text": "A prior rapid-in/out P2P alert covering 2026-09-01 through 2026-09-12 was closed without a SAR on 2026-09-19 after the customer stated that ticket resales explained the transfers.",
+       "cites": [
+        "PA-1"
+       ],
+       "valid_cites": [
+        "PA-1"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S5",
+       "section": "what"
+      },
+      {
+       "text": "The customer-supplied explanation stated that ticket resales and payments to ticket sellers in cash or crypto explained the activity, but it does not explain the compromised-card funding identified in the current review.",
+       "cites": [
+        "DOC-1.1",
+        "DOC-1.2",
+        "AGG-FRAUD",
+        "REF-1"
+       ],
+       "valid_cites": [
+        "DOC-1.1",
+        "DOC-1.2",
+        "AGG-FRAUD",
+        "REF-1"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S6",
+       "section": "what"
+      }
+     ]
+    },
+    {
+     "section": "when",
+     "sentences": [
+      {
+       "text": "The reviewed activity occurred from 2026-09-24 through 2026-10-06, with credits posted over 13 days and debits posted over 12 days.",
+       "cites": [
+        "AGG-IN",
+        "AGG-OUT"
+       ],
+       "valid_cites": [
+        "AGG-IN",
+        "AGG-OUT"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S7",
+       "section": "when"
+      },
+      {
+       "text": "A $480.00 P2P credit funded by card ending 1188 was attempted on 2026-10-02 at 21:47 after fraud operations blocked the card at 21:12, and the transaction was declined.",
+       "cites": [
+        "AGG-FRAUD",
+        "TXN-30"
+       ],
+       "valid_cites": [
+        "AGG-FRAUD",
+        "TXN-30"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S8",
+       "section": "when"
+      }
+     ]
+    },
+    {
+     "section": "where",
+     "sentences": [
+      {
+       "text": "ATM withdrawals occurred at 3 distinct locations, including Oakland Fruitvale, San Leandro Bancroft, and Oakland Lake Merritt.",
+       "cites": [
+        "AGG-OUT-ATM",
+        "TXN-03",
+        "TXN-06",
+        "TXN-13",
+        "TXN-17",
+        "TXN-23",
+        "TXN-25",
+        "TXN-32",
+        "TXN-34"
+       ],
+       "valid_cites": [
+        "AGG-OUT-ATM",
+        "TXN-03",
+        "TXN-06",
+        "TXN-13",
+        "TXN-17",
+        "TXN-23",
+        "TXN-25",
+        "TXN-32",
+        "TXN-34"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S9",
+       "section": "where"
+      },
+      {
+       "text": "Crypto purchases were sent to Coinvault Exchange, and the account was opened and maintained at the bank in Oakland, California.",
+       "cites": [
+        "AGG-OUT-CRYPTO",
+        "CP-19",
+        "KYC-1"
+       ],
+       "valid_cites": [
+        "AGG-OUT-CRYPTO",
+        "CP-19",
+        "KYC-1"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S10",
+       "section": "where"
+      }
+     ]
+    },
+    {
+     "section": "why",
+     "sentences": [
+      {
+       "text": "The activity is inconsistent with expected part-time wages and family support under $1,500 a month because the observed inflow was 9.9 times expected activity.",
+       "cites": [
+        "KYC-1",
+        "IND-MM-03"
+       ],
+       "valid_cites": [
+        "KYC-1",
+        "IND-MM-03"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S11",
+       "section": "why"
+      },
+      {
+       "text": "The fraud referral identified 9 cards on the compromised-card list that funded P2P pushes to account ending 6620, and a related attempted push was declined after fraud blocked the card.",
+       "cites": [
+        "REF-1",
+        "AGG-FRAUD",
+        "TXN-30"
+       ],
+       "valid_cites": [
+        "REF-1",
+        "AGG-FRAUD",
+        "TXN-30"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S12",
+       "section": "why"
+      }
+     ]
+    },
+    {
+     "section": "how",
+     "sentences": [
+      {
+       "text": "Funds entered through many-to-one P2P transfers from 17 distinct counterparties, with observed pass-through of 96.0% within 48 hours.",
+       "cites": [
+        "AGG-IN-P2P",
+        "IND-MM-01",
+        "IND-MM-02"
+       ],
+       "valid_cites": [
+        "AGG-IN-P2P",
+        "IND-MM-01",
+        "IND-MM-02"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S13",
+       "section": "how"
+      },
+      {
+       "text": "Funds were rapidly dispersed through ATM cash withdrawals, crypto-exchange purchases, and P2P transfers, which comprised 100.0% of the observed cash-out channels.",
+       "cites": [
+        "AGG-OUT-ATM",
+        "AGG-OUT-CRYPTO",
+        "AGG-OUT-P2P",
+        "IND-MM-06"
+       ],
+       "valid_cites": [
+        "AGG-OUT-ATM",
+        "AGG-OUT-CRYPTO",
+        "AGG-OUT-P2P",
+        "IND-MM-06"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S14",
+       "section": "how"
+      }
+     ]
+    }
+   ],
+   "dropped": [],
+   "verification": {
+    "total": 14,
+    "kept": 14,
+    "failing": 0,
+    "cited_share": 1.0,
+    "missing_sections": []
+   },
+   "recommendation": "file",
+   "indicator_recommendation": "file",
+   "agrees": true,
+   "rationale": {
+    "text": "The money mule typology is matched because all 6 of 6 indicators fired, including rapid pass-through, many-to-one transfers, inflow materially above expected activity, fraud-listed funding, new-account activity, and cash-out channels; the activity remains unexplained despite the customer\u2019s ticket-resale explanation.",
+    "cites": [
+     "TYP-MM",
+     "IND-MM-01",
+     "IND-MM-02",
+     "IND-MM-03",
+     "IND-MM-04",
+     "IND-MM-05",
+     "IND-MM-06",
+     "DOC-1.1",
+     "DOC-1.2",
+     "AGG-FRAUD"
+    ],
+    "valid_cites": [
+     "TYP-MM",
+     "IND-MM-01",
+     "IND-MM-02",
+     "IND-MM-03",
+     "IND-MM-04",
+     "IND-MM-05",
+     "IND-MM-06",
+     "DOC-1.1",
+     "DOC-1.2",
+     "AGG-FRAUD"
+    ],
+    "unverified": [],
+    "problems": [],
+    "ok": true,
+    "id": "R",
+    "section": "rationale"
+   },
+   "next_steps": [
+    "Complete supervisory review and file the SAR by 2026-11-02 if approved.",
+    "Preserve transaction, fraud-referral, card-linkage, and counterparty records supporting the suspected money-mule activity.",
+    "Coordinate with Fraud Operations regarding the 9 compromised cards and the declined attempted push funded by card ending 1188.",
+    "Continue monitoring account ending 6620 and linked counterparties for additional fraud-funded inflows or rapid cash-out activity."
+   ],
+   "removed_steps": [],
+   "policies": [
+    {
+     "policy": "sar.no_tipping_off",
+     "name": "sar-no-tipping-off-v1",
+     "label": "No tipping off",
+     "allowed": true,
+     "failed": [],
+     "engine": "hosted",
+     "reason": ""
+    },
+    {
+     "policy": "sar.narrative_cited",
+     "name": "sar-narrative-cited-v1",
+     "label": "Narrative must cite evidence",
+     "allowed": true,
+     "failed": [],
+     "engine": "hosted",
+     "reason": ""
+    }
+   ],
+   "released": true,
+   "contact_attempts": 0
+  },
+  "provenance": "live",
+  "outcome": "filed_simulated",
+  "confirmation": "SIM-BSA-F6577F1E95",
+  "final_sections": [
+   {
+    "section": "who",
+    "sentences": [
+     {
+      "text": "Kendall Reyes is a 22-year-old student and part-time barista who became a customer on 2026-08-28 and held checking account ending 6620.",
+      "cites": [
+       "KYC-1",
+       "ACCT-1"
+      ],
+      "valid_cites": [
+       "KYC-1",
+       "ACCT-1"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S1",
+      "section": "who"
+     },
+     {
+      "text": "The account received funds from 17 distinct P2P counterparties with no relationship on file, and D. Vasquez received two P2P transfers and was also a recipient in two other mule alerts at this bank this quarter.",
+      "cites": [
+       "AGG-IN",
+       "CP-01",
+       "CP-02",
+       "CP-03",
+       "CP-04",
+       "CP-05",
+       "CP-06",
+       "CP-07",
+       "CP-08",
+       "CP-09",
+       "CP-10",
+       "CP-11",
+       "CP-12",
+       "CP-13",
+       "CP-14",
+       "CP-15",
+       "CP-16",
+       "CP-17",
+       "CP-18"
+      ],
+      "valid_cites": [
+       "AGG-IN",
+       "CP-01",
+       "CP-02",
+       "CP-03",
+       "CP-04",
+       "CP-05",
+       "CP-06",
+       "CP-07",
+       "CP-08",
+       "CP-09",
+       "CP-10",
+       "CP-11",
+       "CP-12",
+       "CP-13",
+       "CP-14",
+       "CP-15",
+       "CP-16",
+       "CP-17",
+       "CP-18"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S2",
+      "section": "who"
+     }
+    ]
+   },
+   {
+    "section": "what",
+    "sentences": [
+     {
+      "text": "The account received 23 P2P credits totaling $14,860.00 from 2026-09-24 through 2026-10-06, including 10 posted credits totaling $6,120.00 funded by 9 distinct cards on the Orbit Digital Goods compromised-card list.",
+      "cites": [
+       "AGG-IN-P2P",
+       "AGG-FRAUD"
+      ],
+      "valid_cites": [
+       "AGG-IN-P2P",
+       "AGG-FRAUD"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S3",
+      "section": "what"
+     },
+     {
+      "text": "The account sent funds through 8 ATM withdrawals totaling $5,200.00, 3 crypto-exchange purchases totaling $6,900.00, and 2 P2P debits totaling $2,170.00.",
+      "cites": [
+       "AGG-OUT-ATM",
+       "AGG-OUT-CRYPTO",
+       "AGG-OUT-P2P"
+      ],
+      "valid_cites": [
+       "AGG-OUT-ATM",
+       "AGG-OUT-CRYPTO",
+       "AGG-OUT-P2P"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S4",
+      "section": "what"
+     },
+     {
+      "text": "A prior rapid-in/out P2P alert covering 2026-09-01 through 2026-09-12 was closed without a SAR on 2026-09-19 after the customer stated that ticket resales explained the transfers.",
+      "cites": [
+       "PA-1"
+      ],
+      "valid_cites": [
+       "PA-1"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S5",
+      "section": "what"
+     },
+     {
+      "text": "The customer-supplied explanation stated that ticket resales and payments to ticket sellers in cash or crypto explained the activity, but it does not explain the compromised-card funding identified in the current review.",
+      "cites": [
+       "DOC-1.1",
+       "DOC-1.2",
+       "AGG-FRAUD",
+       "REF-1"
+      ],
+      "valid_cites": [
+       "DOC-1.1",
+       "DOC-1.2",
+       "AGG-FRAUD",
+       "REF-1"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S6",
+      "section": "what"
+     }
+    ]
+   },
+   {
+    "section": "when",
+    "sentences": [
+     {
+      "text": "The reviewed activity occurred from 2026-09-24 through 2026-10-06, with credits posted over 13 days and debits posted over 12 days.",
+      "cites": [
+       "AGG-IN",
+       "AGG-OUT"
+      ],
+      "valid_cites": [
+       "AGG-IN",
+       "AGG-OUT"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S7",
+      "section": "when"
+     },
+     {
+      "text": "A $480.00 P2P credit funded by card ending 1188 was attempted on 2026-10-02 at 21:47 after fraud operations blocked the card at 21:12, and the transaction was declined.",
+      "cites": [
+       "AGG-FRAUD",
+       "TXN-30"
+      ],
+      "valid_cites": [
+       "AGG-FRAUD",
+       "TXN-30"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S8",
+      "section": "when"
+     }
+    ]
+   },
+   {
+    "section": "where",
+    "sentences": [
+     {
+      "text": "ATM withdrawals occurred at 3 distinct locations, including Oakland Fruitvale, San Leandro Bancroft, and Oakland Lake Merritt.",
+      "cites": [
+       "AGG-OUT-ATM",
+       "TXN-03",
+       "TXN-06",
+       "TXN-13",
+       "TXN-17",
+       "TXN-23",
+       "TXN-25",
+       "TXN-32",
+       "TXN-34"
+      ],
+      "valid_cites": [
+       "AGG-OUT-ATM",
+       "TXN-03",
+       "TXN-06",
+       "TXN-13",
+       "TXN-17",
+       "TXN-23",
+       "TXN-25",
+       "TXN-32",
+       "TXN-34"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S9",
+      "section": "where"
+     },
+     {
+      "text": "Crypto purchases were sent to Coinvault Exchange, and the account was opened and maintained at the bank in Oakland, California.",
+      "cites": [
+       "AGG-OUT-CRYPTO",
+       "CP-19",
+       "KYC-1"
+      ],
+      "valid_cites": [
+       "AGG-OUT-CRYPTO",
+       "CP-19",
+       "KYC-1"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S10",
+      "section": "where"
+     }
+    ]
+   },
+   {
+    "section": "why",
+    "sentences": [
+     {
+      "text": "The activity is inconsistent with expected part-time wages and family support under $1,500 a month because the observed inflow was 9.9 times expected activity.",
+      "cites": [
+       "KYC-1",
+       "IND-MM-03"
+      ],
+      "valid_cites": [
+       "KYC-1",
+       "IND-MM-03"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S11",
+      "section": "why"
+     },
+     {
+      "text": "The fraud referral identified 9 cards on the compromised-card list that funded P2P pushes to account ending 6620, and a related attempted push was declined after fraud blocked the card.",
+      "cites": [
+       "REF-1",
+       "AGG-FRAUD",
+       "TXN-30"
+      ],
+      "valid_cites": [
+       "REF-1",
+       "AGG-FRAUD",
+       "TXN-30"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S12",
+      "section": "why"
+     }
+    ]
+   },
+   {
+    "section": "how",
+    "sentences": [
+     {
+      "text": "Funds entered through many-to-one P2P transfers from 17 distinct counterparties, with observed pass-through of 96.0% within 48 hours.",
+      "cites": [
+       "AGG-IN-P2P",
+       "IND-MM-01",
+       "IND-MM-02"
+      ],
+      "valid_cites": [
+       "AGG-IN-P2P",
+       "IND-MM-01",
+       "IND-MM-02"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S13",
+      "section": "how"
+     },
+     {
+      "text": "Funds were rapidly dispersed through ATM cash withdrawals, crypto-exchange purchases, and P2P transfers, which comprised 100.0% of the observed cash-out channels.",
+      "cites": [
+       "AGG-OUT-ATM",
+       "AGG-OUT-CRYPTO",
+       "AGG-OUT-P2P",
+       "IND-MM-06"
+      ],
+      "valid_cites": [
+       "AGG-OUT-ATM",
+       "AGG-OUT-CRYPTO",
+       "AGG-OUT-P2P",
+       "IND-MM-06"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S14",
+      "section": "how"
+     }
+    ]
+   }
+  ],
+  "decision": {
+   "choice": "file",
+   "rationale": "The money mule typology is matched because all 6 of 6 indicators fired, including rapid pass-through, many-to-one transfers, inflow materially above expected activity, fraud-listed funding, new-account activity, and cash-out channels; the activity remains unexplained despite the customer\u2019s ticket-resale explanation.",
+   "investigator": "Theo Marsh",
+   "qa": "Lena Ortiz"
+  },
+  "audit": [
+   {
+    "at": "2026-10-09T18:54:59-04:00",
+    "actor": "Investigation agent",
+    "role": "agent",
+    "action": "Draft released for review",
+    "detail": "14 verified sentences \u00b7 recommends filing"
+   },
+   {
+    "at": "2026-10-09T18:54:59-04:00",
+    "actor": "Theo Marsh",
+    "role": "investigator",
+    "action": "Decided File SAR",
+    "detail": "The money mule typology is matched because all 6 of 6 indicators fired, including rapid pass-through, many-to-one transfers, inflow materially above expected activity, fraud-listed funding, new-account activity, and cash-out channels; the activity remains unexplained despite the customer\u2019s ticket-resale explanation."
+   },
+   {
+    "at": "2026-10-09T18:54:59-04:00",
+    "actor": "Policy",
+    "role": "control",
+    "action": "Filing held for QA",
+    "detail": "No filing on one person's say-so."
+   },
+   {
+    "at": "2026-10-09T18:55:00-04:00",
+    "actor": "Lena Ortiz",
+    "role": "qa",
+    "action": "Approved filing",
+    "detail": ""
+   },
+   {
+    "at": "2026-10-09T18:55:00-04:00",
+    "actor": "System",
+    "role": "system",
+    "action": "SAR e-filed (simulated)",
+    "detail": "SIM-BSA-F6577F1E95"
+   }
+  ]
+ }
+}

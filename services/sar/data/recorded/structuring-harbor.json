@@ -1,0 +1,4026 @@
+{
+ "v": 1,
+ "name": "structuring-harbor",
+ "title": "Structuring \u00b7 cash under the CTR threshold",
+ "scenario": "structuring-harbor",
+ "recorded_at": "2026-10-09T22:54:55.317741+00:00",
+ "served_by": {
+  "provider": "openai",
+  "label": "OpenAI API",
+  "model": "gpt-5.6-luna",
+  "kind": "openai",
+  "private": false,
+  "external": true,
+  "fallback": true,
+  "reason": "Sparky vLLM unreachable (connection refused)",
+  "source": "saved",
+  "egress": "require_ai_defense",
+  "ai_defense": "enforce (forced for hosted model)"
+ },
+ "synthetic": true,
+ "note": "Recorded from a live run of the SAR service. Synthetic case and fake PII; e-filing is simulated.",
+ "run": {
+  "id": "sar-golden-structuring-harbor-20261009225420",
+  "service": "sar",
+  "label": "SAR investigation \u00b7 Harbor Lane Auto Detailing LLC",
+  "scenario": "structuring-harbor",
+  "status": "completed",
+  "started_at": "2026-10-09T22:54:22.591810+00:00",
+  "finished_at": "2026-10-09T22:54:55.317741+00:00",
+  "meta": {
+   "scenario": "structuring-harbor",
+   "mode": "live",
+   "handoff": false
+  }
+ },
+ "events": [
+  {
+   "v": 1,
+   "id": "b61b99a1-4e79-4cea-93cb-4e39c438d4d6",
+   "at": "2026-10-09T22:54:22.592756+00:00",
+   "ns": 941792,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "run",
+   "status": "started",
+   "title": "Investigation \u00b7 Structuring \u00b7 cash under the CTR threshold",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Alert ALR-2026-0926-0291 \u00b7 detected 2026-09-26 \u00b7 due 2026-10-26 (day 13 of 30).",
+   "data": {
+    "case": {
+     "id": "structuring-harbor",
+     "label": "Structuring \u00b7 cash under the CTR threshold",
+     "scenario": "structuring-harbor",
+     "kind": "case",
+     "title": "Structuring \u00b7 cash under the CTR threshold",
+     "subject": {
+      "name": "Harbor Lane Auto Detailing LLC",
+      "kind": "business",
+      "detail": "California LLC (fictional)",
+      "location": "Oakland, CA",
+      "ssn_masked": "***-**-1180"
+     },
+     "alert": {
+      "id": "ALR-2026-0926-0291",
+      "detected": "2026-09-26",
+      "source": "Transaction monitoring rule TM-CASH-03 (cash just under $10,000, multiple locations)",
+      "summary": "Repeated cash deposits just under the currency transaction report threshold at four branches, followed by a large international wire.",
+      "queue": "FIU \u00b7 cash structuring",
+      "priority": "high"
+     },
+     "deadline": {
+      "detected": "2026-09-26",
+      "due": "2026-10-26",
+      "as_of": "2026-10-09",
+      "day": 13,
+      "of": 30,
+      "days_left": 17
+     },
+     "accounts": [
+      "****5108"
+     ],
+     "handoff": false,
+     "synthetic": true
+    },
+    "mode": "live"
+   }
+  },
+  {
+   "v": 1,
+   "id": "433249fc-34c5-466d-9d5d-dc0cad1c1ba6",
+   "at": "2026-10-09T22:54:24.635052+00:00",
+   "ns": 2043235375,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "model.failover",
+   "status": "flagged",
+   "title": "Model fallback \u00b7 next in chain is OpenAI API",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": "Sparky vLLM unreachable (connection refused)",
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "3282eb8f-b185-497c-8d89-ce856d0b4dd6",
+   "at": "2026-10-09T22:54:24.635566+00:00",
+   "ns": 2043746542,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "ok",
+   "title": "AI Defense forced to enforce \u00b7 case data bound for OpenAI API (hosted)",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Every prompt and response is inspected in enforce mode before data leaves; an unsafe verdict stops the call.",
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "policy": "require_ai_defense"
+   }
+  },
+  {
+   "v": 1,
+   "id": "b2ebfba9-28cd-45a4-8953-f1c273e5df37",
+   "at": "2026-10-09T22:54:24.647807+00:00",
+   "ns": 2055991959,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "agent.thinking",
+   "status": "info",
+   "title": "Investigation agent planning",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Deep Agent with write_todos and nine tools; temperature 0.",
+   "data": {
+    "agent": "sar-investigator"
+   }
+  },
+  {
+   "v": 1,
+   "id": "e2404d2c-3b8e-45f0-aee1-55ae76869922",
+   "at": "2026-10-09T22:54:25.266663+00:00",
+   "ns": 2674867584,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "ec03b777-7696-499f-9430-94ac18fa6fcb",
+   "at": "2026-10-09T22:54:26.357074+00:00",
+   "ns": 3765255750,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans get_alert",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 1087,
+    "input_tokens": 2639,
+    "output_tokens": 13
+   }
+  },
+  {
+   "v": 1,
+   "id": "8e4d55a7-1d05-495a-a823-492a578b6e5f",
+   "at": "2026-10-09T22:54:26.830340+00:00",
+   "ns": 4238525125,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "bb063fb5-e47d-4b7d-8823-08771a9b750e",
+   "at": "2026-10-09T22:54:26.844629+00:00",
+   "ns": 4252806375,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_alert()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_alert"
+   }
+  },
+  {
+   "v": 1,
+   "id": "4ce1ebd2-93c4-42a1-8c8f-3eef909a47a7",
+   "at": "2026-10-09T22:54:26.846615+00:00",
+   "ns": 4254790250,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Alert ALR-2026-0926-0291 \u00b7 detected 2026-09-26 \u00b7 due 2026-10-26 (day 13 of 30)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "ALERT-1"
+    ],
+    "count": 1
+   }
+  },
+  {
+   "v": 1,
+   "id": "9f24c9b2-1b3b-4cb5-9f2c-ac454e8a9e5d",
+   "at": "2026-10-09T22:54:27.334107+00:00",
+   "ns": 4743131917,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "a14dfd1a-400c-4cb2-b6bb-451200504c5b",
+   "at": "2026-10-09T22:54:28.033278+00:00",
+   "ns": 5441454167,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans get_kyc_profile",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 694,
+    "input_tokens": 2768,
+    "output_tokens": 16
+   }
+  },
+  {
+   "v": 1,
+   "id": "ae2db944-d4dc-4f56-a107-08e6b104a3b3",
+   "at": "2026-10-09T22:54:28.506166+00:00",
+   "ns": 5914349459,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "d36a4c33-bd48-4ce5-94fa-f7608b7baaeb",
+   "at": "2026-10-09T22:54:28.543647+00:00",
+   "ns": 5951837167,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_kyc_profile()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_kyc_profile"
+   }
+  },
+  {
+   "v": 1,
+   "id": "aad693b8-a985-45f9-b812-09451e54f540",
+   "at": "2026-10-09T22:54:28.544633+00:00",
+   "ns": 5952811542,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "ok",
+   "title": "Data minimization \u00b7 SSN, date of birth, and street address withheld from the model",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "The case file keeps them; the narrative does not need them. A local rule, not AI Defense.",
+   "data": {
+    "withheld_fields": [
+     "ssn",
+     "date_of_birth",
+     "address.line1",
+     "phone",
+     "email"
+    ],
+    "engine": "local"
+   }
+  },
+  {
+   "v": 1,
+   "id": "fef6d778-6ef3-4d41-b64f-045f3cb0dff8",
+   "at": "2026-10-09T22:54:28.553101+00:00",
+   "ns": 5961295125,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "KYC \u00b7 Harbor Lane Auto Detailing LLC \u00b7 risk Medium \u00b7 1 account(s)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "KYC-1",
+     "ACCT-1"
+    ],
+    "count": 2
+   }
+  },
+  {
+   "v": 1,
+   "id": "4a51aeea-d441-4cb9-8d2d-6df22136316b",
+   "at": "2026-10-09T22:54:29.100595+00:00",
+   "ns": 6508769375,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "87c64439-5d31-4379-a0b2-f705ff2d1fc8",
+   "at": "2026-10-09T22:54:29.775589+00:00",
+   "ns": 7183777459,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans get_account_activity",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 669,
+    "input_tokens": 2950,
+    "output_tokens": 14
+   }
+  },
+  {
+   "v": 1,
+   "id": "7dbc54ab-5f5d-4321-bed8-3669273dc732",
+   "at": "2026-10-09T22:54:30.182596+00:00",
+   "ns": 7590792459,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "ca3b9dcd-de63-46f8-89a6-a8de8c06a66a",
+   "at": "2026-10-09T22:54:30.192563+00:00",
+   "ns": 7600738167,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_account_activity()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Posted and declined transactions in the review window, with deterministic aggregates.",
+   "data": {
+    "tool": "get_account_activity"
+   }
+  },
+  {
+   "v": 1,
+   "id": "e5a528cc-a4f3-459b-b3cf-223b1af6a2f6",
+   "at": "2026-10-09T22:54:30.685021+00:00",
+   "ns": 8093190834,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 payment memos \u00b7 2 segments inspected \u00b7 2 clean",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "inspected": 2,
+    "clean": 2,
+    "mode": "enforce"
+   }
+  },
+  {
+   "v": 1,
+   "id": "d91fd73a-0080-404b-a996-4889a748d4d8",
+   "at": "2026-10-09T22:54:30.686114+00:00",
+   "ns": 8094281500,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Account activity \u00b7 16 transactions \u00b7 2026-09-08 to 2026-09-26",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "AGG-IN",
+     "AGG-OUT",
+     "AGG-IN-CARD",
+     "AGG-IN-CASH",
+     "AGG-OUT-ACH",
+     "AGG-OUT-WIRE",
+     "TXN-01",
+     "TXN-02",
+     "TXN-03",
+     "TXN-04",
+     "TXN-05",
+     "TXN-06",
+     "TXN-07",
+     "TXN-08",
+     "TXN-09",
+     "TXN-10",
+     "TXN-11",
+     "TXN-12",
+     "TXN-13",
+     "TXN-14",
+     "TXN-15",
+     "TXN-16"
+    ],
+    "count": 22
+   }
+  },
+  {
+   "v": 1,
+   "id": "563eacce-f217-4b11-9e03-d26600be3f7d",
+   "at": "2026-10-09T22:54:31.196143+00:00",
+   "ns": 8604314709,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "fb73b91c-1a2c-4fa7-9208-7b2df33ead78",
+   "at": "2026-10-09T22:54:32.410063+00:00",
+   "ns": 9818238959,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans get_counterparties",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 1208,
+    "input_tokens": 3956,
+    "output_tokens": 15
+   }
+  },
+  {
+   "v": 1,
+   "id": "8e9be38e-8fb5-4a8b-8e10-63c2f1bf691a",
+   "at": "2026-10-09T22:54:32.869704+00:00",
+   "ns": 10277872792,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "c8e4e1f1-438c-4556-ad89-92166c7e724f",
+   "at": "2026-10-09T22:54:32.873030+00:00",
+   "ns": 10281191750,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_counterparties()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_counterparties"
+   }
+  },
+  {
+   "v": 1,
+   "id": "025b6f0d-cd73-44a2-a058-78ecfbe92212",
+   "at": "2026-10-09T22:54:32.880212+00:00",
+   "ns": 10288377167,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Counterparties \u00b7 3",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "CP-01",
+     "CP-02",
+     "CP-03"
+    ],
+    "count": 3
+   }
+  },
+  {
+   "v": 1,
+   "id": "d4db3e3c-d422-4081-af49-4fd2ca3c73a4",
+   "at": "2026-10-09T22:54:33.416571+00:00",
+   "ns": 10824753500,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "d0a4f9c7-0839-4c3a-9363-947c8516f8a1",
+   "at": "2026-10-09T22:54:34.361326+00:00",
+   "ns": 11769487500,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans get_prior_alerts",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 930,
+    "input_tokens": 4103,
+    "output_tokens": 15
+   }
+  },
+  {
+   "v": 1,
+   "id": "3def6760-f7a6-4674-a806-a8b1f03d90b3",
+   "at": "2026-10-09T22:54:34.775327+00:00",
+   "ns": 12183489750,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "af02571e-1937-41b2-b969-25d066503edb",
+   "at": "2026-10-09T22:54:34.778643+00:00",
+   "ns": 12186802917,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_prior_alerts()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Prior alerts, dispositions, and branch notes.",
+   "data": {
+    "tool": "get_prior_alerts"
+   }
+  },
+  {
+   "v": 1,
+   "id": "72e3b14d-ad2b-4fac-9140-9075a8d35ef7",
+   "at": "2026-10-09T22:54:34.788904+00:00",
+   "ns": 12197061125,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Prior alerts \u00b7 0 \u00b7 branch notes \u00b7 1",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "TN-1"
+    ],
+    "count": 1
+   }
+  },
+  {
+   "v": 1,
+   "id": "82807e5b-d547-4b11-9736-0f2b1e6003fc",
+   "at": "2026-10-09T22:54:35.303828+00:00",
+   "ns": 12712009042,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "a7ec89d7-3a08-47b1-9e1e-1b1a617c3c96",
+   "at": "2026-10-09T22:54:36.331400+00:00",
+   "ns": 13739563459,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans get_customer_documents",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 958,
+    "input_tokens": 4177,
+    "output_tokens": 14
+   }
+  },
+  {
+   "v": 1,
+   "id": "2e8b8a87-5425-4e4b-996e-46eeff621eea",
+   "at": "2026-10-09T22:54:36.746654+00:00",
+   "ns": 14154814042,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "5d8f9578-7107-4606-aea4-d3cb1aa239dc",
+   "at": "2026-10-09T22:54:36.751291+00:00",
+   "ns": 14159443625,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_customer_documents()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Customer-supplied text is untrusted: inspected segment by segment before the agent sees it.",
+   "data": {
+    "tool": "get_customer_documents"
+   }
+  },
+  {
+   "v": 1,
+   "id": "a822002c-afdb-42eb-b153-cf3a6e006d84",
+   "at": "2026-10-09T22:54:36.760895+00:00",
+   "ns": 14169050250,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Customer documents \u00b7 0 segments",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [],
+    "count": 0
+   }
+  },
+  {
+   "v": 1,
+   "id": "51384389-92d2-4f2a-b0ff-9f0093ff0187",
+   "at": "2026-10-09T22:54:37.271592+00:00",
+   "ns": 14679749584,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "8ee49ee5-9d83-43ba-83c4-839f591f0e6d",
+   "at": "2026-10-09T22:54:37.889334+00:00",
+   "ns": 15297487834,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans compute_typology_indicators",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 615,
+    "input_tokens": 4216,
+    "output_tokens": 16
+   }
+  },
+  {
+   "v": 1,
+   "id": "d088e5e6-cf5e-4eb8-8ef6-855016d4e63f",
+   "at": "2026-10-09T22:54:38.518948+00:00",
+   "ns": 15927101834,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "9e4eda23-00bd-4a80-9a9f-c7b3b9e3747c",
+   "at": "2026-10-09T22:54:38.522741+00:00",
+   "ns": 15930889542,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "compute_typology_indicators()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Deterministic rules from the typology catalogue; no model involved.",
+   "data": {
+    "tool": "compute_typology_indicators"
+   }
+  },
+  {
+   "v": 1,
+   "id": "c67ce67f-1b7e-4d85-bb91-96c2530244dc",
+   "at": "2026-10-09T22:54:38.533270+00:00",
+   "ns": 15941421375,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "Typologies \u00b7 Structuring matched",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "IND-MM-01",
+     "IND-MM-02",
+     "IND-MM-03",
+     "IND-MM-04",
+     "IND-MM-05",
+     "IND-MM-06",
+     "TYP-MM",
+     "IND-ST-01",
+     "IND-ST-02",
+     "IND-ST-03",
+     "IND-ST-04",
+     "IND-ST-05",
+     "TYP-ST",
+     "IND-FA-01",
+     "IND-FA-02",
+     "IND-FA-03",
+     "TYP-FA"
+    ],
+    "count": 17,
+    "typologies": [
+     {
+      "id": "money_mule",
+      "matched": false,
+      "fired": 1
+     },
+     {
+      "id": "structuring",
+      "matched": true,
+      "fired": 5
+     },
+     {
+      "id": "funnel_account",
+      "matched": false,
+      "fired": 1
+     }
+    ]
+   }
+  },
+  {
+   "v": 1,
+   "id": "650ac694-6173-4973-bacc-2fc96ba404e7",
+   "at": "2026-10-09T22:54:39.055116+00:00",
+   "ns": 16463270667,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "881f9e9f-7181-4975-91c1-291f76080fd5",
+   "at": "2026-10-09T22:54:40.155567+00:00",
+   "ns": 17563716709,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 plans search_adverse_media",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 1089,
+    "input_tokens": 4889,
+    "output_tokens": 51
+   }
+  },
+  {
+   "v": 1,
+   "id": "c05c89f9-3291-4a30-828c-29457497550c",
+   "at": "2026-10-09T22:54:40.616759+00:00",
+   "ns": 18024909667,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "1bb697f4-8e25-4af9-b9d9-f073fcc44047",
+   "at": "2026-10-09T22:54:40.622373+00:00",
+   "ns": 18030519084,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "search_adverse_media(Harbor Lane Auto Detailing LLC, Marisol Vance, Bramblecoast Trading FZE, Tidepool Payments, Wharfside Properties LLC)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Allowlisted source only: FinCrime Wire (fictional newswire). No web search.",
+   "data": {
+    "tool": "search_adverse_media"
+   }
+  },
+  {
+   "v": 1,
+   "id": "9661a0d8-e6e7-426c-8ade-43b7332a4d47",
+   "at": "2026-10-09T22:54:40.631842+00:00",
+   "ns": 18039987667,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Adverse media \u00b7 1 hit in FinCrime Wire (fictional newswire)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "evidence": [
+     "AMS-1",
+     "AM-2"
+    ],
+    "count": 2,
+    "source": "allowlist"
+   }
+  },
+  {
+   "v": 1,
+   "id": "64eb1857-0464-4a91-b7e9-9c9d093c9389",
+   "at": "2026-10-09T22:54:41.148514+00:00",
+   "ns": 18556665750,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 prompt \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_input",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "43742cf1-29b6-48b6-b24b-9c53f0b4cd9c",
+   "at": "2026-10-09T22:54:51.442907+00:00",
+   "ns": 28851040792,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API \u00b7 drafts",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "require_ai_defense",
+     "ai_defense": "enforce (forced for hosted model)"
+    },
+    "latency_ms": 10276,
+    "input_tokens": 5085,
+    "output_tokens": 1130
+   }
+  },
+  {
+   "v": 1,
+   "id": "f0032f48-b8a4-4354-91c8-888aa18cee75",
+   "at": "2026-10-09T22:54:51.930104+00:00",
+   "ns": 29338241750,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "guardrail",
+   "status": "allowed",
+   "title": "AI Defense \u00b7 model response \u00b7 allowed",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "stage": "model_output",
+    "mode": "enforce",
+    "forced": false,
+    "event_id": "",
+    "rules": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "a0bdd98a-0b53-4540-aec2-20e6fa891610",
+   "at": "2026-10-09T22:54:52.665533+00:00",
+   "ns": 30073663959,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "claim.verdict",
+   "status": "flagged",
+   "title": "Sentence dropped \u00b7 where \u00b7 unknown evidence ST-03",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Cash deposits were made at four branches: Oakland Downtown, Emeryville, Berkeley Shattuck, and San Leandro.",
+   "data": {
+    "cites": [
+     "AGG-IN-CASH",
+     "IND-ST-03",
+     "TXN-01",
+     "TXN-02",
+     "TXN-03",
+     "TXN-04",
+     "ST-03"
+    ],
+    "problems": [
+     "unknown evidence ST-03"
+    ]
+   }
+  },
+  {
+   "v": 1,
+   "id": "93a5feca-1384-4913-94e0-60e7b7b2b620",
+   "at": "2026-10-09T22:54:52.667044+00:00",
+   "ns": 30075166334,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "claim.verdict",
+   "status": "flagged",
+   "title": "Citations \u00b7 12 of 13 sentences verified against the evidence \u00b7 1 dropped",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "kept": 12,
+    "total": 13,
+    "missing_sections": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "d995372b-7317-4a10-8449-a2f1cf29100c",
+   "at": "2026-10-09T22:54:52.680909+00:00",
+   "ns": 30089025542,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "claim.verdict",
+   "status": "ok",
+   "title": "Recommendation \u00b7 file \u00b7 agrees with the typology indicators",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Matched: Structuring",
+   "data": {
+    "agent": "file",
+    "indicators": "file"
+   }
+  },
+  {
+   "v": 1,
+   "id": "12ca5cfc-b5eb-4494-a230-072ce8264e68",
+   "at": "2026-10-09T22:54:52.986779+00:00",
+   "ns": 30394895209,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "control",
+   "status": "allowed",
+   "title": "Agent Control \u00b7 sar.no_tipping_off \u00b7 allow",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "No step in the draft contacts the subject or reveals the review.",
+   "data": {
+    "policy": "sar-no-tipping-off-v1",
+    "short": "sar.no_tipping_off",
+    "engine": "hosted",
+    "verdict": {
+     "no_subject_contact": true
+    },
+    "failed": [],
+    "step": "sar-customer-contact",
+    "stage": "pre"
+   }
+  },
+  {
+   "v": 1,
+   "id": "8475627a-6d52-463d-a052-dd7ff6dc5f6e",
+   "at": "2026-10-09T22:54:53.253345+00:00",
+   "ns": 30661471292,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "control",
+   "status": "allowed",
+   "title": "Agent Control \u00b7 sar.narrative_cited \u00b7 allow",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Every kept sentence cites evidence that states its figures and dates.",
+   "data": {
+    "policy": "sar-narrative-cited-v1",
+    "short": "sar.narrative_cited",
+    "engine": "hosted",
+    "verdict": {
+     "every_sentence_cited": true,
+     "every_fact_verified": true
+    },
+    "failed": [],
+    "step": "sar-narrative-release",
+    "stage": "post"
+   }
+  },
+  {
+   "v": 1,
+   "id": "0718f06f-13c9-403e-b28d-f0ddb1296cd3",
+   "at": "2026-10-09T22:54:53.277619+00:00",
+   "ns": 30685735375,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "hitl.request",
+   "status": "info",
+   "title": "Investigator review \u00b7 edit, decide file or no SAR, give a rationale",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "request_id": "investigator-1",
+    "stage": "investigator",
+    "round": 1,
+    "qa_note": null,
+    "package": {
+     "case": {
+      "id": "structuring-harbor",
+      "label": "Structuring \u00b7 cash under the CTR threshold",
+      "scenario": "structuring-harbor",
+      "kind": "case",
+      "title": "Structuring \u00b7 cash under the CTR threshold",
+      "subject": {
+       "name": "Harbor Lane Auto Detailing LLC",
+       "kind": "business",
+       "detail": "California LLC (fictional)",
+       "location": "Oakland, CA",
+       "ssn_masked": "***-**-1180"
+      },
+      "alert": {
+       "id": "ALR-2026-0926-0291",
+       "detected": "2026-09-26",
+       "source": "Transaction monitoring rule TM-CASH-03 (cash just under $10,000, multiple locations)",
+       "summary": "Repeated cash deposits just under the currency transaction report threshold at four branches, followed by a large international wire.",
+       "queue": "FIU \u00b7 cash structuring",
+       "priority": "high"
+      },
+      "deadline": {
+       "detected": "2026-09-26",
+       "due": "2026-10-26",
+       "as_of": "2026-10-09",
+       "day": 13,
+       "of": 30,
+       "days_left": 17
+      },
+      "accounts": [
+       "****5108"
+      ],
+      "handoff": false,
+      "synthetic": true
+     },
+     "mode": "live",
+     "typologies": [
+      {
+       "id": "money_mule",
+       "label": "Money mule",
+       "reference": "FinCEN money-mule red flags; FFIEC BSA/AML Manual appendix F (illustrative paraphrase)",
+       "matched": false,
+       "fired": 1,
+       "total": 6,
+       "rule": "4 of 6, including MM-01",
+       "indicators": [
+        {
+         "id": "MM-01",
+         "label": "Pass-through: inbound funds left within 48 hours",
+         "observed": 0.0,
+         "observed_text": "0.0%",
+         "threshold_text": "\u2265 80%",
+         "status": "clear"
+        },
+        {
+         "id": "MM-02",
+         "label": "Many-to-one: distinct unrelated P2P senders in 14 days",
+         "observed": 0,
+         "observed_text": "0",
+         "threshold_text": "\u2265 8",
+         "status": "clear"
+        },
+        {
+         "id": "MM-03",
+         "label": "Inflow far above the KYC expected activity",
+         "observed": 17.469315384615385,
+         "observed_text": "17.5 times",
+         "threshold_text": "\u2265 3 times",
+         "status": "fired"
+        },
+        {
+         "id": "MM-04",
+         "label": "Inbound transfers funded by instruments on a fraud list",
+         "observed": 0,
+         "observed_text": "0",
+         "threshold_text": "\u2265 1",
+         "status": "clear"
+        },
+        {
+         "id": "MM-05",
+         "label": "New account: opened within 90 days of the activity",
+         "observed": 300,
+         "observed_text": "300 days",
+         "threshold_text": "\u2264 90 days",
+         "status": "clear"
+        },
+        {
+         "id": "MM-06",
+         "label": "Cash-out channels: ATM cash, crypto exchange, or P2P out",
+         "observed": 0.0,
+         "observed_text": "0.0%",
+         "threshold_text": "\u2265 70%",
+         "status": "clear"
+        }
+       ]
+      },
+      {
+       "id": "structuring",
+       "label": "Structuring",
+       "reference": "31 U.S.C. 5324; FFIEC BSA/AML Manual, structuring red flags (illustrative paraphrase)",
+       "matched": true,
+       "fired": 5,
+       "total": 5,
+       "rule": "3 of 5, including ST-01 and ST-02",
+       "indicators": [
+        {
+         "id": "ST-01",
+         "label": "Cash deposits just under the $10,000 CTR threshold",
+         "observed": 12,
+         "observed_text": "12",
+         "threshold_text": "\u2265 3",
+         "status": "fired"
+        },
+        {
+         "id": "ST-02",
+         "label": "Cash above $10,000 in a rolling 7 days with no single deposit at or over it",
+         "observed": 56300.0,
+         "observed_text": "$56,300.00",
+         "threshold_text": "\u2265 $10,000",
+         "status": "fired"
+        },
+        {
+         "id": "ST-03",
+         "label": "Cash deposits spread across branches",
+         "observed": 4,
+         "observed_text": "4",
+         "threshold_text": "\u2265 3",
+         "status": "fired"
+        },
+        {
+         "id": "ST-04",
+         "label": "Statement about avoiding the reporting threshold",
+         "observed": 1,
+         "observed_text": "1",
+         "threshold_text": "\u2265 1",
+         "status": "fired"
+        },
+        {
+         "id": "ST-05",
+         "label": "Cash far above the KYC expected cash",
+         "observed": 37.45,
+         "observed_text": "37.5 times",
+         "threshold_text": "\u2265 3 times",
+         "status": "fired"
+        }
+       ]
+      },
+      {
+       "id": "funnel_account",
+       "label": "Funnel account",
+       "reference": "FinCEN advisory FIN-2014-A005 on funnel accounts (illustrative paraphrase)",
+       "matched": false,
+       "fired": 1,
+       "total": 3,
+       "rule": "2 of 3, including FA-01",
+       "indicators": [
+        {
+         "id": "FA-01",
+         "label": "Cash deposits in several states by several depositors",
+         "observed": 1,
+         "observed_text": "1",
+         "threshold_text": "\u2265 3",
+         "status": "clear"
+        },
+        {
+         "id": "FA-02",
+         "label": "Withdrawals or wires out of area soon after deposits",
+         "observed": 0.9786299181146395,
+         "observed_text": "97.9%",
+         "threshold_text": "\u2265 50%",
+         "status": "fired"
+        },
+        {
+         "id": "FA-03",
+         "label": "Low retained balance: under 10% of inflow kept",
+         "observed": 0.11810202592589822,
+         "observed_text": "11.8%",
+         "threshold_text": "\u2264 10%",
+         "status": "clear"
+        }
+       ]
+      }
+     ],
+     "evidence": [
+      {
+       "id": "ALERT-1",
+       "kind": "alert",
+       "title": "Alert ALR-2026-0926-0291",
+       "text": "Alert ALR-2026-0926-0291 detected 2026-09-26 by Transaction monitoring rule TM-CASH-03 (cash just under $10,000, multiple locations): Repeated cash deposits just under the currency transaction report threshold at four branches, followed by a large international wire. Filing deadline 2026-10-26 (30 days from detection); case snapshot 2026-10-09 is day 13 of 30.",
+       "source": "Transaction monitoring (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "KYC-1",
+       "kind": "kyc",
+       "title": "KYC profile (minimized)",
+       "text": "Harbor Lane Auto Detailing LLC, a California LLC (fictional), customer since 2025-11-12, located in Oakland, CA; beneficial owner Marisol Vance (owner, 100%). Risk rating Medium. Expected activity: Card-processor settlements of about $2,500 a month; cash deposits of $2,000\u2013$4,000 a month. Source of funds: Detailing revenue. PEP: no. Sanctions screening: clear. Mobile auto detailing; two vans; card and invoice payments.",
+       "source": "KYC system (synthetic); SSN, date of birth, and street address withheld from the model",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "ACCT-1",
+       "kind": "account",
+       "title": "Account ****5108",
+       "text": "business checking ****5108 opened 2025-11-12, status open, balance before the review window $4,310.22.",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-01",
+       "kind": "transaction",
+       "title": "cash deposit $9,450.00",
+       "text": "2026-09-08 10:12 \u00b7 cash deposit \u00b7 $9,450.00 \u00b7 Oakland Downtown branch",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-02",
+       "kind": "transaction",
+       "title": "cash deposit $9,800.00",
+       "text": "2026-09-09 15:40 \u00b7 cash deposit \u00b7 $9,800.00 \u00b7 Emeryville branch",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-03",
+       "kind": "transaction",
+       "title": "cash deposit $8,900.00",
+       "text": "2026-09-10 11:05 \u00b7 cash deposit \u00b7 $8,900.00 \u00b7 Berkeley Shattuck branch",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-04",
+       "kind": "transaction",
+       "title": "cash deposit $9,650.00",
+       "text": "2026-09-11 16:22 \u00b7 cash deposit \u00b7 $9,650.00 \u00b7 San Leandro branch",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-05",
+       "kind": "transaction",
+       "title": "card-processor settlement $612.40",
+       "text": "2026-09-12 02:00 \u00b7 card-processor settlement \u00b7 $612.40 \u00b7 from Tidepool Payments (fictional card processor) (CP-02)",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-06",
+       "kind": "transaction",
+       "title": "cash deposit $9,200.00",
+       "text": "2026-09-14 09:48 \u00b7 cash deposit \u00b7 $9,200.00 \u00b7 Oakland Downtown branch",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-07",
+       "kind": "transaction",
+       "title": "cash deposit $9,850.00",
+       "text": "2026-09-15 13:30 \u00b7 cash deposit \u00b7 $9,850.00 \u00b7 Emeryville branch",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-08",
+       "kind": "transaction",
+       "title": "cash deposit $8,800.00",
+       "text": "2026-09-16 10:55 \u00b7 cash deposit \u00b7 $8,800.00 \u00b7 Berkeley Shattuck branch",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-09",
+       "kind": "transaction",
+       "title": "cash deposit $9,500.00",
+       "text": "2026-09-17 14:10 \u00b7 cash deposit \u00b7 $9,500.00 \u00b7 San Leandro branch",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-10",
+       "kind": "transaction",
+       "title": "cash deposit $9,300.00",
+       "text": "2026-09-18 11:35 \u00b7 cash deposit \u00b7 $9,300.00 \u00b7 Oakland Downtown branch",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-11",
+       "kind": "transaction",
+       "title": "card-processor settlement $588.15",
+       "text": "2026-09-19 02:00 \u00b7 card-processor settlement \u00b7 $588.15 \u00b7 from Tidepool Payments (fictional card processor) (CP-02)",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-12",
+       "kind": "transaction",
+       "title": "cash deposit $9,700.00",
+       "text": "2026-09-21 15:02 \u00b7 cash deposit \u00b7 $9,700.00 \u00b7 Emeryville branch",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-13",
+       "kind": "transaction",
+       "title": "cash deposit $9,100.00",
+       "text": "2026-09-22 10:18 \u00b7 cash deposit \u00b7 $9,100.00 \u00b7 Berkeley Shattuck branch",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-14",
+       "kind": "transaction",
+       "title": "cash deposit $9,100.00",
+       "text": "2026-09-23 12:44 \u00b7 cash deposit \u00b7 $9,100.00 \u00b7 San Leandro branch",
+       "source": "Core banking (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-15",
+       "kind": "transaction",
+       "title": "outbound wire $98,000.00",
+       "text": "2026-09-25 09:31 \u00b7 outbound wire \u00b7 $98,000.00 \u00b7 to Bramblecoast Trading FZE (fictional) (CP-01) \u00b7 beneficiary country AE \u00b7 memo \"auto parts invoice 7781\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TXN-16",
+       "kind": "transaction",
+       "title": "ACH debit $2,140.00",
+       "text": "2026-09-26 08:00 \u00b7 ACH debit \u00b7 $2,140.00 \u00b7 to Wharfside Properties LLC (fictional) (CP-03) \u00b7 memo \"shop lease Sept\"",
+       "source": "Core banking (synthetic)",
+       "untrusted": true,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-IN",
+       "kind": "aggregate",
+       "title": "Posted credits",
+       "text": "Posted credits: 14 totalling $113,550.55, 2026-09-08 to 2026-09-23 (16 days), 1 distinct counterparty, 4 distinct locations, smallest $588.15, largest $9,850.00.",
+       "source": "Computed from core-banking transactions (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-OUT",
+       "kind": "aggregate",
+       "title": "Posted debits",
+       "text": "Posted debits: 2 totalling $100,140.00, 2026-09-25 to 2026-09-26 (2 days), 2 distinct counterparties, smallest $2,140.00, largest $98,000.00; 88.2% of all posted credits.",
+       "source": "Computed from core-banking transactions (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-IN-CARD",
+       "kind": "aggregate",
+       "title": "Card-processor settlements",
+       "text": "Card-processor settlements: 2 totalling $1,200.55, 2026-09-12 to 2026-09-19 (8 days), 1 distinct counterparty, smallest $588.15, largest $612.40.",
+       "source": "Computed from core-banking transactions (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-IN-CASH",
+       "kind": "aggregate",
+       "title": "Cash deposits",
+       "text": "Cash deposits: 12 totalling $112,350.00, 2026-09-08 to 2026-09-23 (16 days), 4 distinct locations, smallest $8,800.00, largest $9,850.00.",
+       "source": "Computed from core-banking transactions (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-OUT-ACH",
+       "kind": "aggregate",
+       "title": "ACH debits",
+       "text": "ACH debits: 1 totalling $2,140.00, 2026-09-26 to 2026-09-26 (1 day), 1 distinct counterparty; 1.9% of all posted credits.",
+       "source": "Computed from core-banking transactions (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AGG-OUT-WIRE",
+       "kind": "aggregate",
+       "title": "Outbound wires",
+       "text": "Outbound wires: 1 totalling $98,000.00, 2026-09-25 to 2026-09-25 (1 day), 1 distinct counterparty; 86.3% of all posted credits.",
+       "source": "Computed from core-banking transactions (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-01",
+       "kind": "counterparty",
+       "title": "Bramblecoast Trading FZE (fictional)",
+       "text": "Bramblecoast Trading FZE (fictional) (wire beneficiary); relationship on file: none; first wire to this beneficiary; country AE; Free-zone trading company; the invoice on the wire is for auto parts.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-02",
+       "kind": "counterparty",
+       "title": "Tidepool Payments (fictional card processor)",
+       "text": "Tidepool Payments (fictional card processor) (card-processor settlement); relationship on file: merchant services since 2025-11.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "CP-03",
+       "kind": "counterparty",
+       "title": "Wharfside Properties LLC (fictional)",
+       "text": "Wharfside Properties LLC (fictional) (landlord (ACH)); relationship on file: monthly lease since 2025-12.",
+       "source": "Counterparty records (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TN-1",
+       "kind": "teller_note",
+       "title": "Teller note 2026-09-15",
+       "text": "Teller note 2026-09-15 at Emeryville branch: Customer asked how much she could deposit before the bank fills out the form, then split the deposit across two days.",
+       "source": "Branch notes (synthetic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AM-1",
+       "kind": "adverse_media",
+       "title": "State regulator warns consumers about Coinvault Exchange (fictional)",
+       "text": "FinCrime Wire (fictional newswire), 2026-07-22: State regulator warns consumers about Coinvault Exchange (fictional). A fictional state regulator says Coinvault Exchange onboarded accounts without identity checks and was used to cash out P2P scam proceeds.",
+       "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AM-2",
+       "kind": "adverse_media",
+       "title": "Free-zone trader Bramblecoast Trading named in trade-based laundering notice (fictional)",
+       "text": "FinCrime Wire (fictional newswire), 2026-06-14: Free-zone trader Bramblecoast Trading named in trade-based laundering notice (fictional). A fictional regulator lists Bramblecoast Trading FZE among companies that received cash-funded wires against over-invoiced auto-parts shipments.",
+       "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AM-3",
+       "kind": "adverse_media",
+       "title": "Card data skimmed at online retailer Orbit Digital Goods (fictional)",
+       "text": "FinCrime Wire (fictional newswire), 2026-09-30: Card data skimmed at online retailer Orbit Digital Goods (fictional). Orbit Digital Goods confirms malicious checkout code captured card details for three weeks in September; issuers report fraud and P2P cash-out attempts.",
+       "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AM-4",
+       "kind": "adverse_media",
+       "title": "Title firms report wire-fraud attempts during closings (fictional)",
+       "text": "FinCrime Wire (fictional newswire), 2026-05-03: Title firms report wire-fraud attempts during closings (fictional). Bayside Title & Escrow (fictional) stopped a spoofed wire-instruction email; the firm itself was the target, and no wrongdoing by the firm is alleged.",
+       "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-MM-01",
+       "kind": "indicator",
+       "title": "MM-01 Pass-through: inbound funds left within 48 hours",
+       "text": "MM-01 Pass-through: inbound funds left within 48 hours: observed 0.0% (threshold \u2265 80%) \u00b7 not fired.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-MM-02",
+       "kind": "indicator",
+       "title": "MM-02 Many-to-one: distinct unrelated P2P senders in 14 days",
+       "text": "MM-02 Many-to-one: distinct unrelated P2P senders in 14 days: observed 0 (threshold \u2265 8) \u00b7 not fired.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-MM-03",
+       "kind": "indicator",
+       "title": "MM-03 Inflow far above the KYC expected activity",
+       "text": "MM-03 Inflow far above the KYC expected activity: observed 17.5 times (threshold \u2265 3 times) \u00b7 FIRED.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-MM-04",
+       "kind": "indicator",
+       "title": "MM-04 Inbound transfers funded by instruments on a fraud list",
+       "text": "MM-04 Inbound transfers funded by instruments on a fraud list: observed 0 (threshold \u2265 1) \u00b7 not fired.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-MM-05",
+       "kind": "indicator",
+       "title": "MM-05 New account: opened within 90 days of the activity",
+       "text": "MM-05 New account: opened within 90 days of the activity: observed 300 days (threshold \u2264 90 days) \u00b7 not fired.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-MM-06",
+       "kind": "indicator",
+       "title": "MM-06 Cash-out channels: ATM cash, crypto exchange, or P2P out",
+       "text": "MM-06 Cash-out channels: ATM cash, crypto exchange, or P2P out: observed 0.0% (threshold \u2265 70%) \u00b7 not fired.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TYP-MM",
+       "kind": "typology",
+       "title": "Money mule",
+       "text": "Money mule typology: 1 of 6 indicators fired (MM-03); a match needs 4 of 6, including MM-01 \u00b7 not matched.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-ST-01",
+       "kind": "indicator",
+       "title": "ST-01 Cash deposits just under the $10,000 CTR threshold",
+       "text": "ST-01 Cash deposits just under the $10,000 CTR threshold: observed 12 (threshold \u2265 3) \u00b7 FIRED.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-ST-02",
+       "kind": "indicator",
+       "title": "ST-02 Cash above $10,000 in a rolling 7 days with no single deposit at or over it",
+       "text": "ST-02 Cash above $10,000 in a rolling 7 days with no single deposit at or over it: observed $56,300.00 (threshold \u2265 $10,000) \u00b7 FIRED.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-ST-03",
+       "kind": "indicator",
+       "title": "ST-03 Cash deposits spread across branches",
+       "text": "ST-03 Cash deposits spread across branches: observed 4 (threshold \u2265 3) \u00b7 FIRED.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-ST-04",
+       "kind": "indicator",
+       "title": "ST-04 Statement about avoiding the reporting threshold",
+       "text": "ST-04 Statement about avoiding the reporting threshold: observed 1 (threshold \u2265 1) \u00b7 FIRED.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-ST-05",
+       "kind": "indicator",
+       "title": "ST-05 Cash far above the KYC expected cash",
+       "text": "ST-05 Cash far above the KYC expected cash: observed 37.5 times (threshold \u2265 3 times) \u00b7 FIRED.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TYP-ST",
+       "kind": "typology",
+       "title": "Structuring",
+       "text": "Structuring typology: 5 of 5 indicators fired (ST-01, ST-02, ST-03, ST-04, ST-05); a match needs 3 of 5, including ST-01 and ST-02 \u00b7 MATCHED.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-FA-01",
+       "kind": "indicator",
+       "title": "FA-01 Cash deposits in several states by several depositors",
+       "text": "FA-01 Cash deposits in several states by several depositors: observed 1 (threshold \u2265 3) \u00b7 not fired.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-FA-02",
+       "kind": "indicator",
+       "title": "FA-02 Withdrawals or wires out of area soon after deposits",
+       "text": "FA-02 Withdrawals or wires out of area soon after deposits: observed 97.9% (threshold \u2265 50%) \u00b7 FIRED.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "IND-FA-03",
+       "kind": "indicator",
+       "title": "FA-03 Low retained balance: under 10% of inflow kept",
+       "text": "FA-03 Low retained balance: under 10% of inflow kept: observed 11.8% (threshold \u2264 10%) \u00b7 not fired.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "TYP-FA",
+       "kind": "typology",
+       "title": "Funnel account",
+       "text": "Funnel account typology: 1 of 3 indicators fired (FA-02); a match needs 2 of 3, including FA-01 \u00b7 not matched.",
+       "source": "Typology rules (deterministic)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      },
+      {
+       "id": "AMS-1",
+       "kind": "adverse_media",
+       "title": "Adverse media search \u00b7 1 article",
+       "text": "Search of FinCrime Wire (fictional newswire), the only allowlisted source, for Harbor Lane Auto Detailing LLC, Marisol Vance, Bramblecoast Trading FZE, Tidepool Payments, Wharfside Properties LLC: 1 article (AM-2).",
+       "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+       "untrusted": false,
+       "withheld": false,
+       "flagged_by": []
+      }
+     ],
+     "security": {
+      "mode": "enforce",
+      "status": "allowed",
+      "checks": 20,
+      "blocked": 0,
+      "errors": 0,
+      "withheld_segments": 0,
+      "local_flags": 0,
+      "event_ids": [],
+      "fail_open": false,
+      "forced": true
+     },
+     "usage": {
+      "llm_calls": 9,
+      "input_tokens": 34783,
+      "output_tokens": 1284
+     },
+     "telemetry": {
+      "splunk": {
+       "status": "not_configured",
+       "trace_id": "9614f22c5ad97b6310e5c863afcfbe4a"
+      },
+      "galileo": "recorded"
+     },
+     "served_by": {
+      "provider": "openai",
+      "label": "OpenAI API",
+      "model": "gpt-5.6-luna",
+      "kind": "openai",
+      "private": false,
+      "external": true,
+      "fallback": true,
+      "reason": "Sparky vLLM unreachable (connection refused)",
+      "source": "saved",
+      "egress": "require_ai_defense",
+      "ai_defense": "enforce (forced for hosted model)"
+     },
+     "would_serve": {
+      "provider": "openai",
+      "label": "OpenAI API",
+      "model": "gpt-5.6-luna",
+      "kind": "openai",
+      "private": false,
+      "external": true,
+      "fallback": true,
+      "reason": "Sparky vLLM unreachable (connection refused)",
+      "source": "saved",
+      "egress": "require_ai_defense",
+      "ai_defense": "enforce (forced for hosted model)"
+     },
+     "duration_ms": 30065,
+     "tools_used": [
+      "get_alert",
+      "get_kyc_profile",
+      "get_account_activity",
+      "get_counterparties",
+      "get_prior_alerts",
+      "get_customer_documents",
+      "compute_typology_indicators",
+      "search_adverse_media"
+     ],
+     "draft": {
+      "sections": [
+       {
+        "section": "who",
+        "sentences": [
+         {
+          "text": "Harbor Lane Auto Detailing LLC is a California mobile auto-detailing business whose beneficial owner is Marisol Vance; its business checking account ends in 5108.",
+          "cites": [
+           "KYC-1",
+           "ACCT-1"
+          ],
+          "valid_cites": [
+           "KYC-1",
+           "ACCT-1"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S1",
+          "section": "who"
+         },
+         {
+          "text": "The account sent a first-time international wire to Bramblecoast Trading FZE, a free-zone trading company with no relationship on file.",
+          "cites": [
+           "CP-01"
+          ],
+          "valid_cites": [
+           "CP-01"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S2",
+          "section": "who"
+         }
+        ]
+       },
+       {
+        "section": "what",
+        "sentences": [
+         {
+          "text": "The account received 14 posted credits totaling $113,550.55, including 12 cash deposits totaling $112,350.00.",
+          "cites": [
+           "AGG-IN",
+           "AGG-IN-CASH"
+          ],
+          "valid_cites": [
+           "AGG-IN",
+           "AGG-IN-CASH"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S3",
+          "section": "what"
+         },
+         {
+          "text": "It sent an outbound wire of $98,000.00 to Bramblecoast Trading FZE and an ACH debit of $2,140.00 to its landlord.",
+          "cites": [
+           "AGG-OUT-WIRE",
+           "AGG-OUT-ACH",
+           "TXN-15",
+           "TXN-16"
+          ],
+          "valid_cites": [
+           "AGG-OUT-WIRE",
+           "AGG-OUT-ACH",
+           "TXN-15",
+           "TXN-16"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S4",
+          "section": "what"
+         }
+        ]
+       },
+       {
+        "section": "when",
+        "sentences": [
+         {
+          "text": "The cash deposits occurred from 2026-09-08 through 2026-09-23, and the outbound wire posted on 2026-09-25.",
+          "cites": [
+           "AGG-IN-CASH",
+           "AGG-OUT-WIRE"
+          ],
+          "valid_cites": [
+           "AGG-IN-CASH",
+           "AGG-OUT-WIRE"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S5",
+          "section": "when"
+         },
+         {
+          "text": "The alert was detected on 2026-09-26, with a filing deadline of 2026-10-26.",
+          "cites": [
+           "ALERT-1"
+          ],
+          "valid_cites": [
+           "ALERT-1"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S6",
+          "section": "when"
+         }
+        ]
+       },
+       {
+        "section": "where",
+        "sentences": [
+         {
+          "text": "The wire beneficiary country was AE.",
+          "cites": [
+           "TXN-15",
+           "CP-01"
+          ],
+          "valid_cites": [
+           "TXN-15",
+           "CP-01"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S8",
+          "section": "where"
+         }
+        ]
+       },
+       {
+        "section": "why",
+        "sentences": [
+         {
+          "text": "The activity is inconsistent with expected cash deposits of $2,000\u2013$4,000 a month and card-processor settlements of about $2,500 a month; inflow was 17.5 times expected activity and cash was 37.5 times expected cash activity.",
+          "cites": [
+           "KYC-1",
+           "IND-MM-03",
+           "IND-ST-05"
+          ],
+          "valid_cites": [
+           "KYC-1",
+           "IND-MM-03",
+           "IND-ST-05"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S9",
+          "section": "why"
+         },
+         {
+          "text": "The beneficiary was named in a fictional regulatory notice concerning cash-funded wires against over-invoiced auto-parts shipments.",
+          "cites": [
+           "AM-2"
+          ],
+          "valid_cites": [
+           "AM-2"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S10",
+          "section": "why"
+         }
+        ]
+       },
+       {
+        "section": "how",
+        "sentences": [
+         {
+          "text": "The customer made 12 cash deposits ranging from $8,800.00 to $9,850.00, including $56,300.00 in cash over a rolling 7-day period without a single deposit at or above $10,000.",
+          "cites": [
+           "AGG-IN-CASH",
+           "IND-ST-01",
+           "IND-ST-02"
+          ],
+          "valid_cites": [
+           "AGG-IN-CASH",
+           "IND-ST-01",
+           "IND-ST-02"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S11",
+          "section": "how"
+         },
+         {
+          "text": "A teller recorded that the customer asked how much could be deposited before the bank completed the form and then split the deposit across two days.",
+          "cites": [
+           "TN-1",
+           "IND-ST-04"
+          ],
+          "valid_cites": [
+           "TN-1",
+           "IND-ST-04"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S12",
+          "section": "how"
+         },
+         {
+          "text": "The $98,000.00 wire represented 86.3% of all posted credits and was described as an auto-parts invoice payment.",
+          "cites": [
+           "AGG-OUT-WIRE",
+           "TXN-15"
+          ],
+          "valid_cites": [
+           "AGG-OUT-WIRE",
+           "TXN-15"
+          ],
+          "unverified": [],
+          "problems": [],
+          "ok": true,
+          "id": "S13",
+          "section": "how"
+         }
+        ]
+       }
+      ],
+      "dropped": [
+       {
+        "text": "Cash deposits were made at four branches: Oakland Downtown, Emeryville, Berkeley Shattuck, and San Leandro.",
+        "cites": [
+         "AGG-IN-CASH",
+         "IND-ST-03",
+         "TXN-01",
+         "TXN-02",
+         "TXN-03",
+         "TXN-04",
+         "ST-03"
+        ],
+        "valid_cites": [
+         "AGG-IN-CASH",
+         "IND-ST-03",
+         "TXN-01",
+         "TXN-02",
+         "TXN-03",
+         "TXN-04"
+        ],
+        "unverified": [],
+        "problems": [
+         "unknown evidence ST-03"
+        ],
+        "ok": false,
+        "id": "S7",
+        "section": "where"
+       }
+      ],
+      "verification": {
+       "total": 13,
+       "kept": 12,
+       "failing": 0,
+       "cited_share": 0.923,
+       "missing_sections": []
+      },
+      "recommendation": "file",
+      "indicator_recommendation": "file",
+      "agrees": true,
+      "rationale": {
+       "text": "The activity matches the structuring typology, with 5 of 5 indicators fired, including repeated cash deposits just under the CTR threshold and cash accumulated above $10,000 in a rolling 7-day period. The activity is also materially inconsistent with the customer's expected profile and includes a large first-time international wire to a beneficiary associated with a trade-based laundering notice.",
+       "cites": [
+        "TYP-ST",
+        "IND-ST-01",
+        "IND-ST-02",
+        "IND-MM-03",
+        "AM-2"
+       ],
+       "valid_cites": [
+        "TYP-ST",
+        "IND-ST-01",
+        "IND-ST-02",
+        "IND-MM-03",
+        "AM-2"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "R",
+       "section": "rationale"
+      },
+      "next_steps": [
+       "Validate the business purpose and supporting documentation for the $98,000.00 wire without disclosing the review or any SAR consideration.",
+       "Review account history and related entities for additional cash deposits, threshold avoidance, or payments involving Bramblecoast Trading FZE.",
+       "Assess whether enhanced due diligence or account-risk escalation is warranted under applicable bank procedures.",
+       "Preserve the alert, transaction, teller-note, counterparty, and adverse-media evidence for SAR review and filing decision."
+      ],
+      "removed_steps": [],
+      "policies": [
+       {
+        "policy": "sar.no_tipping_off",
+        "name": "sar-no-tipping-off-v1",
+        "label": "No tipping off",
+        "allowed": true,
+        "failed": [],
+        "engine": "hosted",
+        "reason": ""
+       },
+       {
+        "policy": "sar.narrative_cited",
+        "name": "sar-narrative-cited-v1",
+        "label": "Narrative must cite evidence",
+        "allowed": true,
+        "failed": [],
+        "engine": "hosted",
+        "reason": ""
+       }
+      ],
+      "released": true,
+      "contact_attempts": 0
+     },
+     "provenance": "live"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "a77ea411-9554-49e0-932a-d126b295f8a4",
+   "at": "2026-10-09T22:54:53.994915+00:00",
+   "ns": 31403032875,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "hitl.decision",
+   "status": "info",
+   "title": "Theo Marsh \u00b7 file",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "request_id": "investigator-1",
+    "decision": "file",
+    "by": "Theo Marsh",
+    "rationale": "The activity matches the structuring typology, with 5 of 5 indicators fired, including repeated cash deposits just under the CTR threshold and cash accumulated above $10,000 in a rolling 7-day period. The activity is also materially inconsistent with the customer's expected profile and includes a large first-time international wire to a beneficiary associated with a trade-based laundering notice.",
+    "note": "The activity matches the structuring typology, with 5 of 5 indicators fired, including repeated cash deposits just under the CTR threshold and cash accumulated above $10,000 in a rolling 7-day period. The activity is also materially inconsistent with the customer's expected profile and includes a la"
+   }
+  },
+  {
+   "v": 1,
+   "id": "5e372c09-66e2-4d8e-8b04-ac0bcd721cc9",
+   "at": "2026-10-09T22:54:54.255529+00:00",
+   "ns": 31663647875,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "control",
+   "status": "denied",
+   "title": "Agent Control \u00b7 sar.file_requires_approval \u00b7 deny \u00b7 awaiting second-line QA",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "second-line QA has not approved; QA must be a different person from the investigator",
+   "data": {
+    "policy": "sar-file-requires-approval-v1",
+    "short": "sar.file_requires_approval",
+    "engine": "hosted",
+    "verdict": {
+     "investigator_decided": true,
+     "rationale_recorded": true,
+     "qa_approved": false,
+     "separate_reviewers": false
+    },
+    "failed": [
+     "qa_approved",
+     "separate_reviewers"
+    ],
+    "step": "sar-file",
+    "stage": "pre"
+   }
+  },
+  {
+   "v": 1,
+   "id": "59fd32d1-a84a-4332-8f08-c86afca88c7c",
+   "at": "2026-10-09T22:54:54.257534+00:00",
+   "ns": 31665647292,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "hitl.request",
+   "status": "info",
+   "title": "Second-line QA \u00b7 approve filing or return",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "request_id": "qa-1",
+    "stage": "qa",
+    "round": 1,
+    "decision": "file",
+    "investigator": "Theo Marsh",
+    "rationale": "The activity matches the structuring typology, with 5 of 5 indicators fired, including repeated cash deposits just under the CTR threshold and cash accumulated above $10,000 in a rolling 7-day period. The activity is also materially inconsistent with the customer's expected profile and includes a large first-time international wire to a beneficiary associated with a trade-based laundering notice.",
+    "sections": null
+   }
+  },
+  {
+   "v": 1,
+   "id": "052fab9a-86b8-4b47-9c75-d8a17fcd1bdd",
+   "at": "2026-10-09T22:54:55.043739+00:00",
+   "ns": 32451860542,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "hitl.decision",
+   "status": "ok",
+   "title": "Lena Ortiz \u00b7 approve",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "request_id": "qa-1",
+    "decision": "approve",
+    "by": "Lena Ortiz",
+    "note": ""
+   }
+  },
+  {
+   "v": 1,
+   "id": "6acc343d-7adf-448e-8fb7-75b99914a8c1",
+   "at": "2026-10-09T22:54:55.288703+00:00",
+   "ns": 32696817834,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "control",
+   "status": "allowed",
+   "title": "Agent Control \u00b7 sar.file_requires_approval \u00b7 allow",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Investigator decision with rationale, and approval by a different QA reviewer.",
+   "data": {
+    "policy": "sar-file-requires-approval-v1",
+    "short": "sar.file_requires_approval",
+    "engine": "hosted",
+    "verdict": {
+     "investigator_decided": true,
+     "rationale_recorded": true,
+     "qa_approved": true,
+     "separate_reviewers": true
+    },
+    "failed": [],
+    "step": "sar-file",
+    "stage": "pre"
+   }
+  },
+  {
+   "v": 1,
+   "id": "e9e2c0b4-a367-4246-ad6a-c88aa9940c32",
+   "at": "2026-10-09T22:54:55.289545+00:00",
+   "ns": 32697653959,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "efile_sar (simulated)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Simulated BSA E-Filing (nothing is sent to FinCEN)",
+   "data": {
+    "tool": "efile_sar",
+    "simulated": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "e577578c-e2c1-4a82-8edd-18bee964e73b",
+   "at": "2026-10-09T22:54:55.300654+00:00",
+   "ns": 32708765834,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Simulated BSA E-Filing (nothing is sent to FinCEN) \u00b7 accepted \u00b7 SIM-BSA-3DE3B20BB9",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "confirmation": "SIM-BSA-3DE3B20BB9",
+    "simulated": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "2e239b71-52c3-47cb-80ab-5ab8b6427fe4",
+   "at": "2026-10-09T22:54:55.310223+00:00",
+   "ns": 32718333417,
+   "run_id": "sar-golden-structuring-harbor-20261009225420",
+   "component": "sar",
+   "kind": "result",
+   "status": "ok",
+   "title": "SAR filed (simulated) \u00b7 SIM-BSA-3DE3B20BB9",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Approved by Lena Ortiz after Theo Marsh's decision. Nothing left this laptop.",
+   "data": {}
+  }
+ ],
+ "result": {
+  "case": {
+   "id": "structuring-harbor",
+   "label": "Structuring \u00b7 cash under the CTR threshold",
+   "scenario": "structuring-harbor",
+   "kind": "case",
+   "title": "Structuring \u00b7 cash under the CTR threshold",
+   "subject": {
+    "name": "Harbor Lane Auto Detailing LLC",
+    "kind": "business",
+    "detail": "California LLC (fictional)",
+    "location": "Oakland, CA",
+    "ssn_masked": "***-**-1180"
+   },
+   "alert": {
+    "id": "ALR-2026-0926-0291",
+    "detected": "2026-09-26",
+    "source": "Transaction monitoring rule TM-CASH-03 (cash just under $10,000, multiple locations)",
+    "summary": "Repeated cash deposits just under the currency transaction report threshold at four branches, followed by a large international wire.",
+    "queue": "FIU \u00b7 cash structuring",
+    "priority": "high"
+   },
+   "deadline": {
+    "detected": "2026-09-26",
+    "due": "2026-10-26",
+    "as_of": "2026-10-09",
+    "day": 13,
+    "of": 30,
+    "days_left": 17
+   },
+   "accounts": [
+    "****5108"
+   ],
+   "handoff": false,
+   "synthetic": true
+  },
+  "mode": "live",
+  "typologies": [
+   {
+    "id": "money_mule",
+    "label": "Money mule",
+    "reference": "FinCEN money-mule red flags; FFIEC BSA/AML Manual appendix F (illustrative paraphrase)",
+    "matched": false,
+    "fired": 1,
+    "total": 6,
+    "rule": "4 of 6, including MM-01",
+    "indicators": [
+     {
+      "id": "MM-01",
+      "label": "Pass-through: inbound funds left within 48 hours",
+      "observed": 0.0,
+      "observed_text": "0.0%",
+      "threshold_text": "\u2265 80%",
+      "status": "clear"
+     },
+     {
+      "id": "MM-02",
+      "label": "Many-to-one: distinct unrelated P2P senders in 14 days",
+      "observed": 0,
+      "observed_text": "0",
+      "threshold_text": "\u2265 8",
+      "status": "clear"
+     },
+     {
+      "id": "MM-03",
+      "label": "Inflow far above the KYC expected activity",
+      "observed": 17.469315384615385,
+      "observed_text": "17.5 times",
+      "threshold_text": "\u2265 3 times",
+      "status": "fired"
+     },
+     {
+      "id": "MM-04",
+      "label": "Inbound transfers funded by instruments on a fraud list",
+      "observed": 0,
+      "observed_text": "0",
+      "threshold_text": "\u2265 1",
+      "status": "clear"
+     },
+     {
+      "id": "MM-05",
+      "label": "New account: opened within 90 days of the activity",
+      "observed": 300,
+      "observed_text": "300 days",
+      "threshold_text": "\u2264 90 days",
+      "status": "clear"
+     },
+     {
+      "id": "MM-06",
+      "label": "Cash-out channels: ATM cash, crypto exchange, or P2P out",
+      "observed": 0.0,
+      "observed_text": "0.0%",
+      "threshold_text": "\u2265 70%",
+      "status": "clear"
+     }
+    ]
+   },
+   {
+    "id": "structuring",
+    "label": "Structuring",
+    "reference": "31 U.S.C. 5324; FFIEC BSA/AML Manual, structuring red flags (illustrative paraphrase)",
+    "matched": true,
+    "fired": 5,
+    "total": 5,
+    "rule": "3 of 5, including ST-01 and ST-02",
+    "indicators": [
+     {
+      "id": "ST-01",
+      "label": "Cash deposits just under the $10,000 CTR threshold",
+      "observed": 12,
+      "observed_text": "12",
+      "threshold_text": "\u2265 3",
+      "status": "fired"
+     },
+     {
+      "id": "ST-02",
+      "label": "Cash above $10,000 in a rolling 7 days with no single deposit at or over it",
+      "observed": 56300.0,
+      "observed_text": "$56,300.00",
+      "threshold_text": "\u2265 $10,000",
+      "status": "fired"
+     },
+     {
+      "id": "ST-03",
+      "label": "Cash deposits spread across branches",
+      "observed": 4,
+      "observed_text": "4",
+      "threshold_text": "\u2265 3",
+      "status": "fired"
+     },
+     {
+      "id": "ST-04",
+      "label": "Statement about avoiding the reporting threshold",
+      "observed": 1,
+      "observed_text": "1",
+      "threshold_text": "\u2265 1",
+      "status": "fired"
+     },
+     {
+      "id": "ST-05",
+      "label": "Cash far above the KYC expected cash",
+      "observed": 37.45,
+      "observed_text": "37.5 times",
+      "threshold_text": "\u2265 3 times",
+      "status": "fired"
+     }
+    ]
+   },
+   {
+    "id": "funnel_account",
+    "label": "Funnel account",
+    "reference": "FinCEN advisory FIN-2014-A005 on funnel accounts (illustrative paraphrase)",
+    "matched": false,
+    "fired": 1,
+    "total": 3,
+    "rule": "2 of 3, including FA-01",
+    "indicators": [
+     {
+      "id": "FA-01",
+      "label": "Cash deposits in several states by several depositors",
+      "observed": 1,
+      "observed_text": "1",
+      "threshold_text": "\u2265 3",
+      "status": "clear"
+     },
+     {
+      "id": "FA-02",
+      "label": "Withdrawals or wires out of area soon after deposits",
+      "observed": 0.9786299181146395,
+      "observed_text": "97.9%",
+      "threshold_text": "\u2265 50%",
+      "status": "fired"
+     },
+     {
+      "id": "FA-03",
+      "label": "Low retained balance: under 10% of inflow kept",
+      "observed": 0.11810202592589822,
+      "observed_text": "11.8%",
+      "threshold_text": "\u2264 10%",
+      "status": "clear"
+     }
+    ]
+   }
+  ],
+  "evidence": [
+   {
+    "id": "ALERT-1",
+    "kind": "alert",
+    "title": "Alert ALR-2026-0926-0291",
+    "text": "Alert ALR-2026-0926-0291 detected 2026-09-26 by Transaction monitoring rule TM-CASH-03 (cash just under $10,000, multiple locations): Repeated cash deposits just under the currency transaction report threshold at four branches, followed by a large international wire. Filing deadline 2026-10-26 (30 days from detection); case snapshot 2026-10-09 is day 13 of 30.",
+    "source": "Transaction monitoring (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "KYC-1",
+    "kind": "kyc",
+    "title": "KYC profile (minimized)",
+    "text": "Harbor Lane Auto Detailing LLC, a California LLC (fictional), customer since 2025-11-12, located in Oakland, CA; beneficial owner Marisol Vance (owner, 100%). Risk rating Medium. Expected activity: Card-processor settlements of about $2,500 a month; cash deposits of $2,000\u2013$4,000 a month. Source of funds: Detailing revenue. PEP: no. Sanctions screening: clear. Mobile auto detailing; two vans; card and invoice payments.",
+    "source": "KYC system (synthetic); SSN, date of birth, and street address withheld from the model",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "ACCT-1",
+    "kind": "account",
+    "title": "Account ****5108",
+    "text": "business checking ****5108 opened 2025-11-12, status open, balance before the review window $4,310.22.",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-01",
+    "kind": "transaction",
+    "title": "cash deposit $9,450.00",
+    "text": "2026-09-08 10:12 \u00b7 cash deposit \u00b7 $9,450.00 \u00b7 Oakland Downtown branch",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-02",
+    "kind": "transaction",
+    "title": "cash deposit $9,800.00",
+    "text": "2026-09-09 15:40 \u00b7 cash deposit \u00b7 $9,800.00 \u00b7 Emeryville branch",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-03",
+    "kind": "transaction",
+    "title": "cash deposit $8,900.00",
+    "text": "2026-09-10 11:05 \u00b7 cash deposit \u00b7 $8,900.00 \u00b7 Berkeley Shattuck branch",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-04",
+    "kind": "transaction",
+    "title": "cash deposit $9,650.00",
+    "text": "2026-09-11 16:22 \u00b7 cash deposit \u00b7 $9,650.00 \u00b7 San Leandro branch",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-05",
+    "kind": "transaction",
+    "title": "card-processor settlement $612.40",
+    "text": "2026-09-12 02:00 \u00b7 card-processor settlement \u00b7 $612.40 \u00b7 from Tidepool Payments (fictional card processor) (CP-02)",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-06",
+    "kind": "transaction",
+    "title": "cash deposit $9,200.00",
+    "text": "2026-09-14 09:48 \u00b7 cash deposit \u00b7 $9,200.00 \u00b7 Oakland Downtown branch",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-07",
+    "kind": "transaction",
+    "title": "cash deposit $9,850.00",
+    "text": "2026-09-15 13:30 \u00b7 cash deposit \u00b7 $9,850.00 \u00b7 Emeryville branch",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-08",
+    "kind": "transaction",
+    "title": "cash deposit $8,800.00",
+    "text": "2026-09-16 10:55 \u00b7 cash deposit \u00b7 $8,800.00 \u00b7 Berkeley Shattuck branch",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-09",
+    "kind": "transaction",
+    "title": "cash deposit $9,500.00",
+    "text": "2026-09-17 14:10 \u00b7 cash deposit \u00b7 $9,500.00 \u00b7 San Leandro branch",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-10",
+    "kind": "transaction",
+    "title": "cash deposit $9,300.00",
+    "text": "2026-09-18 11:35 \u00b7 cash deposit \u00b7 $9,300.00 \u00b7 Oakland Downtown branch",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-11",
+    "kind": "transaction",
+    "title": "card-processor settlement $588.15",
+    "text": "2026-09-19 02:00 \u00b7 card-processor settlement \u00b7 $588.15 \u00b7 from Tidepool Payments (fictional card processor) (CP-02)",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-12",
+    "kind": "transaction",
+    "title": "cash deposit $9,700.00",
+    "text": "2026-09-21 15:02 \u00b7 cash deposit \u00b7 $9,700.00 \u00b7 Emeryville branch",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-13",
+    "kind": "transaction",
+    "title": "cash deposit $9,100.00",
+    "text": "2026-09-22 10:18 \u00b7 cash deposit \u00b7 $9,100.00 \u00b7 Berkeley Shattuck branch",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-14",
+    "kind": "transaction",
+    "title": "cash deposit $9,100.00",
+    "text": "2026-09-23 12:44 \u00b7 cash deposit \u00b7 $9,100.00 \u00b7 San Leandro branch",
+    "source": "Core banking (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-15",
+    "kind": "transaction",
+    "title": "outbound wire $98,000.00",
+    "text": "2026-09-25 09:31 \u00b7 outbound wire \u00b7 $98,000.00 \u00b7 to Bramblecoast Trading FZE (fictional) (CP-01) \u00b7 beneficiary country AE \u00b7 memo \"auto parts invoice 7781\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TXN-16",
+    "kind": "transaction",
+    "title": "ACH debit $2,140.00",
+    "text": "2026-09-26 08:00 \u00b7 ACH debit \u00b7 $2,140.00 \u00b7 to Wharfside Properties LLC (fictional) (CP-03) \u00b7 memo \"shop lease Sept\"",
+    "source": "Core banking (synthetic)",
+    "untrusted": true,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-IN",
+    "kind": "aggregate",
+    "title": "Posted credits",
+    "text": "Posted credits: 14 totalling $113,550.55, 2026-09-08 to 2026-09-23 (16 days), 1 distinct counterparty, 4 distinct locations, smallest $588.15, largest $9,850.00.",
+    "source": "Computed from core-banking transactions (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-OUT",
+    "kind": "aggregate",
+    "title": "Posted debits",
+    "text": "Posted debits: 2 totalling $100,140.00, 2026-09-25 to 2026-09-26 (2 days), 2 distinct counterparties, smallest $2,140.00, largest $98,000.00; 88.2% of all posted credits.",
+    "source": "Computed from core-banking transactions (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-IN-CARD",
+    "kind": "aggregate",
+    "title": "Card-processor settlements",
+    "text": "Card-processor settlements: 2 totalling $1,200.55, 2026-09-12 to 2026-09-19 (8 days), 1 distinct counterparty, smallest $588.15, largest $612.40.",
+    "source": "Computed from core-banking transactions (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-IN-CASH",
+    "kind": "aggregate",
+    "title": "Cash deposits",
+    "text": "Cash deposits: 12 totalling $112,350.00, 2026-09-08 to 2026-09-23 (16 days), 4 distinct locations, smallest $8,800.00, largest $9,850.00.",
+    "source": "Computed from core-banking transactions (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-OUT-ACH",
+    "kind": "aggregate",
+    "title": "ACH debits",
+    "text": "ACH debits: 1 totalling $2,140.00, 2026-09-26 to 2026-09-26 (1 day), 1 distinct counterparty; 1.9% of all posted credits.",
+    "source": "Computed from core-banking transactions (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AGG-OUT-WIRE",
+    "kind": "aggregate",
+    "title": "Outbound wires",
+    "text": "Outbound wires: 1 totalling $98,000.00, 2026-09-25 to 2026-09-25 (1 day), 1 distinct counterparty; 86.3% of all posted credits.",
+    "source": "Computed from core-banking transactions (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-01",
+    "kind": "counterparty",
+    "title": "Bramblecoast Trading FZE (fictional)",
+    "text": "Bramblecoast Trading FZE (fictional) (wire beneficiary); relationship on file: none; first wire to this beneficiary; country AE; Free-zone trading company; the invoice on the wire is for auto parts.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-02",
+    "kind": "counterparty",
+    "title": "Tidepool Payments (fictional card processor)",
+    "text": "Tidepool Payments (fictional card processor) (card-processor settlement); relationship on file: merchant services since 2025-11.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "CP-03",
+    "kind": "counterparty",
+    "title": "Wharfside Properties LLC (fictional)",
+    "text": "Wharfside Properties LLC (fictional) (landlord (ACH)); relationship on file: monthly lease since 2025-12.",
+    "source": "Counterparty records (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TN-1",
+    "kind": "teller_note",
+    "title": "Teller note 2026-09-15",
+    "text": "Teller note 2026-09-15 at Emeryville branch: Customer asked how much she could deposit before the bank fills out the form, then split the deposit across two days.",
+    "source": "Branch notes (synthetic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AM-1",
+    "kind": "adverse_media",
+    "title": "State regulator warns consumers about Coinvault Exchange (fictional)",
+    "text": "FinCrime Wire (fictional newswire), 2026-07-22: State regulator warns consumers about Coinvault Exchange (fictional). A fictional state regulator says Coinvault Exchange onboarded accounts without identity checks and was used to cash out P2P scam proceeds.",
+    "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AM-2",
+    "kind": "adverse_media",
+    "title": "Free-zone trader Bramblecoast Trading named in trade-based laundering notice (fictional)",
+    "text": "FinCrime Wire (fictional newswire), 2026-06-14: Free-zone trader Bramblecoast Trading named in trade-based laundering notice (fictional). A fictional regulator lists Bramblecoast Trading FZE among companies that received cash-funded wires against over-invoiced auto-parts shipments.",
+    "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AM-3",
+    "kind": "adverse_media",
+    "title": "Card data skimmed at online retailer Orbit Digital Goods (fictional)",
+    "text": "FinCrime Wire (fictional newswire), 2026-09-30: Card data skimmed at online retailer Orbit Digital Goods (fictional). Orbit Digital Goods confirms malicious checkout code captured card details for three weeks in September; issuers report fraud and P2P cash-out attempts.",
+    "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AM-4",
+    "kind": "adverse_media",
+    "title": "Title firms report wire-fraud attempts during closings (fictional)",
+    "text": "FinCrime Wire (fictional newswire), 2026-05-03: Title firms report wire-fraud attempts during closings (fictional). Bayside Title & Escrow (fictional) stopped a spoofed wire-instruction email; the firm itself was the target, and no wrongdoing by the firm is alleged.",
+    "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-MM-01",
+    "kind": "indicator",
+    "title": "MM-01 Pass-through: inbound funds left within 48 hours",
+    "text": "MM-01 Pass-through: inbound funds left within 48 hours: observed 0.0% (threshold \u2265 80%) \u00b7 not fired.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-MM-02",
+    "kind": "indicator",
+    "title": "MM-02 Many-to-one: distinct unrelated P2P senders in 14 days",
+    "text": "MM-02 Many-to-one: distinct unrelated P2P senders in 14 days: observed 0 (threshold \u2265 8) \u00b7 not fired.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-MM-03",
+    "kind": "indicator",
+    "title": "MM-03 Inflow far above the KYC expected activity",
+    "text": "MM-03 Inflow far above the KYC expected activity: observed 17.5 times (threshold \u2265 3 times) \u00b7 FIRED.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-MM-04",
+    "kind": "indicator",
+    "title": "MM-04 Inbound transfers funded by instruments on a fraud list",
+    "text": "MM-04 Inbound transfers funded by instruments on a fraud list: observed 0 (threshold \u2265 1) \u00b7 not fired.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-MM-05",
+    "kind": "indicator",
+    "title": "MM-05 New account: opened within 90 days of the activity",
+    "text": "MM-05 New account: opened within 90 days of the activity: observed 300 days (threshold \u2264 90 days) \u00b7 not fired.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-MM-06",
+    "kind": "indicator",
+    "title": "MM-06 Cash-out channels: ATM cash, crypto exchange, or P2P out",
+    "text": "MM-06 Cash-out channels: ATM cash, crypto exchange, or P2P out: observed 0.0% (threshold \u2265 70%) \u00b7 not fired.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TYP-MM",
+    "kind": "typology",
+    "title": "Money mule",
+    "text": "Money mule typology: 1 of 6 indicators fired (MM-03); a match needs 4 of 6, including MM-01 \u00b7 not matched.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-ST-01",
+    "kind": "indicator",
+    "title": "ST-01 Cash deposits just under the $10,000 CTR threshold",
+    "text": "ST-01 Cash deposits just under the $10,000 CTR threshold: observed 12 (threshold \u2265 3) \u00b7 FIRED.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-ST-02",
+    "kind": "indicator",
+    "title": "ST-02 Cash above $10,000 in a rolling 7 days with no single deposit at or over it",
+    "text": "ST-02 Cash above $10,000 in a rolling 7 days with no single deposit at or over it: observed $56,300.00 (threshold \u2265 $10,000) \u00b7 FIRED.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-ST-03",
+    "kind": "indicator",
+    "title": "ST-03 Cash deposits spread across branches",
+    "text": "ST-03 Cash deposits spread across branches: observed 4 (threshold \u2265 3) \u00b7 FIRED.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-ST-04",
+    "kind": "indicator",
+    "title": "ST-04 Statement about avoiding the reporting threshold",
+    "text": "ST-04 Statement about avoiding the reporting threshold: observed 1 (threshold \u2265 1) \u00b7 FIRED.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-ST-05",
+    "kind": "indicator",
+    "title": "ST-05 Cash far above the KYC expected cash",
+    "text": "ST-05 Cash far above the KYC expected cash: observed 37.5 times (threshold \u2265 3 times) \u00b7 FIRED.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TYP-ST",
+    "kind": "typology",
+    "title": "Structuring",
+    "text": "Structuring typology: 5 of 5 indicators fired (ST-01, ST-02, ST-03, ST-04, ST-05); a match needs 3 of 5, including ST-01 and ST-02 \u00b7 MATCHED.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-FA-01",
+    "kind": "indicator",
+    "title": "FA-01 Cash deposits in several states by several depositors",
+    "text": "FA-01 Cash deposits in several states by several depositors: observed 1 (threshold \u2265 3) \u00b7 not fired.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-FA-02",
+    "kind": "indicator",
+    "title": "FA-02 Withdrawals or wires out of area soon after deposits",
+    "text": "FA-02 Withdrawals or wires out of area soon after deposits: observed 97.9% (threshold \u2265 50%) \u00b7 FIRED.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "IND-FA-03",
+    "kind": "indicator",
+    "title": "FA-03 Low retained balance: under 10% of inflow kept",
+    "text": "FA-03 Low retained balance: under 10% of inflow kept: observed 11.8% (threshold \u2264 10%) \u00b7 not fired.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "TYP-FA",
+    "kind": "typology",
+    "title": "Funnel account",
+    "text": "Funnel account typology: 1 of 3 indicators fired (FA-02); a match needs 2 of 3, including FA-01 \u00b7 not matched.",
+    "source": "Typology rules (deterministic)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   },
+   {
+    "id": "AMS-1",
+    "kind": "adverse_media",
+    "title": "Adverse media search \u00b7 1 article",
+    "text": "Search of FinCrime Wire (fictional newswire), the only allowlisted source, for Harbor Lane Auto Detailing LLC, Marisol Vance, Bramblecoast Trading FZE, Tidepool Payments, Wharfside Properties LLC: 1 article (AM-2).",
+    "source": "FinCrime Wire (fictional newswire) (allowlisted)",
+    "untrusted": false,
+    "withheld": false,
+    "flagged_by": []
+   }
+  ],
+  "security": {
+   "mode": "enforce",
+   "status": "allowed",
+   "checks": 20,
+   "blocked": 0,
+   "errors": 0,
+   "withheld_segments": 0,
+   "local_flags": 0,
+   "event_ids": [],
+   "fail_open": false,
+   "forced": true
+  },
+  "usage": {
+   "llm_calls": 9,
+   "input_tokens": 34783,
+   "output_tokens": 1284
+  },
+  "telemetry": {
+   "splunk": {
+    "status": "not_configured",
+    "trace_id": "9614f22c5ad97b6310e5c863afcfbe4a"
+   },
+   "galileo": "recorded"
+  },
+  "served_by": {
+   "provider": "openai",
+   "label": "OpenAI API",
+   "model": "gpt-5.6-luna",
+   "kind": "openai",
+   "private": false,
+   "external": true,
+   "fallback": true,
+   "reason": "Sparky vLLM unreachable (connection refused)",
+   "source": "saved",
+   "egress": "require_ai_defense",
+   "ai_defense": "enforce (forced for hosted model)"
+  },
+  "would_serve": {
+   "provider": "openai",
+   "label": "OpenAI API",
+   "model": "gpt-5.6-luna",
+   "kind": "openai",
+   "private": false,
+   "external": true,
+   "fallback": true,
+   "reason": "Sparky vLLM unreachable (connection refused)",
+   "source": "saved",
+   "egress": "require_ai_defense",
+   "ai_defense": "enforce (forced for hosted model)"
+  },
+  "duration_ms": 30065,
+  "tools_used": [
+   "get_alert",
+   "get_kyc_profile",
+   "get_account_activity",
+   "get_counterparties",
+   "get_prior_alerts",
+   "get_customer_documents",
+   "compute_typology_indicators",
+   "search_adverse_media"
+  ],
+  "draft": {
+   "sections": [
+    {
+     "section": "who",
+     "sentences": [
+      {
+       "text": "Harbor Lane Auto Detailing LLC is a California mobile auto-detailing business whose beneficial owner is Marisol Vance; its business checking account ends in 5108.",
+       "cites": [
+        "KYC-1",
+        "ACCT-1"
+       ],
+       "valid_cites": [
+        "KYC-1",
+        "ACCT-1"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S1",
+       "section": "who"
+      },
+      {
+       "text": "The account sent a first-time international wire to Bramblecoast Trading FZE, a free-zone trading company with no relationship on file.",
+       "cites": [
+        "CP-01"
+       ],
+       "valid_cites": [
+        "CP-01"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S2",
+       "section": "who"
+      }
+     ]
+    },
+    {
+     "section": "what",
+     "sentences": [
+      {
+       "text": "The account received 14 posted credits totaling $113,550.55, including 12 cash deposits totaling $112,350.00.",
+       "cites": [
+        "AGG-IN",
+        "AGG-IN-CASH"
+       ],
+       "valid_cites": [
+        "AGG-IN",
+        "AGG-IN-CASH"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S3",
+       "section": "what"
+      },
+      {
+       "text": "It sent an outbound wire of $98,000.00 to Bramblecoast Trading FZE and an ACH debit of $2,140.00 to its landlord.",
+       "cites": [
+        "AGG-OUT-WIRE",
+        "AGG-OUT-ACH",
+        "TXN-15",
+        "TXN-16"
+       ],
+       "valid_cites": [
+        "AGG-OUT-WIRE",
+        "AGG-OUT-ACH",
+        "TXN-15",
+        "TXN-16"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S4",
+       "section": "what"
+      }
+     ]
+    },
+    {
+     "section": "when",
+     "sentences": [
+      {
+       "text": "The cash deposits occurred from 2026-09-08 through 2026-09-23, and the outbound wire posted on 2026-09-25.",
+       "cites": [
+        "AGG-IN-CASH",
+        "AGG-OUT-WIRE"
+       ],
+       "valid_cites": [
+        "AGG-IN-CASH",
+        "AGG-OUT-WIRE"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S5",
+       "section": "when"
+      },
+      {
+       "text": "The alert was detected on 2026-09-26, with a filing deadline of 2026-10-26.",
+       "cites": [
+        "ALERT-1"
+       ],
+       "valid_cites": [
+        "ALERT-1"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S6",
+       "section": "when"
+      }
+     ]
+    },
+    {
+     "section": "where",
+     "sentences": [
+      {
+       "text": "The wire beneficiary country was AE.",
+       "cites": [
+        "TXN-15",
+        "CP-01"
+       ],
+       "valid_cites": [
+        "TXN-15",
+        "CP-01"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S8",
+       "section": "where"
+      }
+     ]
+    },
+    {
+     "section": "why",
+     "sentences": [
+      {
+       "text": "The activity is inconsistent with expected cash deposits of $2,000\u2013$4,000 a month and card-processor settlements of about $2,500 a month; inflow was 17.5 times expected activity and cash was 37.5 times expected cash activity.",
+       "cites": [
+        "KYC-1",
+        "IND-MM-03",
+        "IND-ST-05"
+       ],
+       "valid_cites": [
+        "KYC-1",
+        "IND-MM-03",
+        "IND-ST-05"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S9",
+       "section": "why"
+      },
+      {
+       "text": "The beneficiary was named in a fictional regulatory notice concerning cash-funded wires against over-invoiced auto-parts shipments.",
+       "cites": [
+        "AM-2"
+       ],
+       "valid_cites": [
+        "AM-2"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S10",
+       "section": "why"
+      }
+     ]
+    },
+    {
+     "section": "how",
+     "sentences": [
+      {
+       "text": "The customer made 12 cash deposits ranging from $8,800.00 to $9,850.00, including $56,300.00 in cash over a rolling 7-day period without a single deposit at or above $10,000.",
+       "cites": [
+        "AGG-IN-CASH",
+        "IND-ST-01",
+        "IND-ST-02"
+       ],
+       "valid_cites": [
+        "AGG-IN-CASH",
+        "IND-ST-01",
+        "IND-ST-02"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S11",
+       "section": "how"
+      },
+      {
+       "text": "A teller recorded that the customer asked how much could be deposited before the bank completed the form and then split the deposit across two days.",
+       "cites": [
+        "TN-1",
+        "IND-ST-04"
+       ],
+       "valid_cites": [
+        "TN-1",
+        "IND-ST-04"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S12",
+       "section": "how"
+      },
+      {
+       "text": "The $98,000.00 wire represented 86.3% of all posted credits and was described as an auto-parts invoice payment.",
+       "cites": [
+        "AGG-OUT-WIRE",
+        "TXN-15"
+       ],
+       "valid_cites": [
+        "AGG-OUT-WIRE",
+        "TXN-15"
+       ],
+       "unverified": [],
+       "problems": [],
+       "ok": true,
+       "id": "S13",
+       "section": "how"
+      }
+     ]
+    }
+   ],
+   "dropped": [
+    {
+     "text": "Cash deposits were made at four branches: Oakland Downtown, Emeryville, Berkeley Shattuck, and San Leandro.",
+     "cites": [
+      "AGG-IN-CASH",
+      "IND-ST-03",
+      "TXN-01",
+      "TXN-02",
+      "TXN-03",
+      "TXN-04",
+      "ST-03"
+     ],
+     "valid_cites": [
+      "AGG-IN-CASH",
+      "IND-ST-03",
+      "TXN-01",
+      "TXN-02",
+      "TXN-03",
+      "TXN-04"
+     ],
+     "unverified": [],
+     "problems": [
+      "unknown evidence ST-03"
+     ],
+     "ok": false,
+     "id": "S7",
+     "section": "where"
+    }
+   ],
+   "verification": {
+    "total": 13,
+    "kept": 12,
+    "failing": 0,
+    "cited_share": 0.923,
+    "missing_sections": []
+   },
+   "recommendation": "file",
+   "indicator_recommendation": "file",
+   "agrees": true,
+   "rationale": {
+    "text": "The activity matches the structuring typology, with 5 of 5 indicators fired, including repeated cash deposits just under the CTR threshold and cash accumulated above $10,000 in a rolling 7-day period. The activity is also materially inconsistent with the customer's expected profile and includes a large first-time international wire to a beneficiary associated with a trade-based laundering notice.",
+    "cites": [
+     "TYP-ST",
+     "IND-ST-01",
+     "IND-ST-02",
+     "IND-MM-03",
+     "AM-2"
+    ],
+    "valid_cites": [
+     "TYP-ST",
+     "IND-ST-01",
+     "IND-ST-02",
+     "IND-MM-03",
+     "AM-2"
+    ],
+    "unverified": [],
+    "problems": [],
+    "ok": true,
+    "id": "R",
+    "section": "rationale"
+   },
+   "next_steps": [
+    "Validate the business purpose and supporting documentation for the $98,000.00 wire without disclosing the review or any SAR consideration.",
+    "Review account history and related entities for additional cash deposits, threshold avoidance, or payments involving Bramblecoast Trading FZE.",
+    "Assess whether enhanced due diligence or account-risk escalation is warranted under applicable bank procedures.",
+    "Preserve the alert, transaction, teller-note, counterparty, and adverse-media evidence for SAR review and filing decision."
+   ],
+   "removed_steps": [],
+   "policies": [
+    {
+     "policy": "sar.no_tipping_off",
+     "name": "sar-no-tipping-off-v1",
+     "label": "No tipping off",
+     "allowed": true,
+     "failed": [],
+     "engine": "hosted",
+     "reason": ""
+    },
+    {
+     "policy": "sar.narrative_cited",
+     "name": "sar-narrative-cited-v1",
+     "label": "Narrative must cite evidence",
+     "allowed": true,
+     "failed": [],
+     "engine": "hosted",
+     "reason": ""
+    }
+   ],
+   "released": true,
+   "contact_attempts": 0
+  },
+  "provenance": "live",
+  "outcome": "filed_simulated",
+  "confirmation": "SIM-BSA-3DE3B20BB9",
+  "final_sections": [
+   {
+    "section": "who",
+    "sentences": [
+     {
+      "text": "Harbor Lane Auto Detailing LLC is a California mobile auto-detailing business whose beneficial owner is Marisol Vance; its business checking account ends in 5108.",
+      "cites": [
+       "KYC-1",
+       "ACCT-1"
+      ],
+      "valid_cites": [
+       "KYC-1",
+       "ACCT-1"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S1",
+      "section": "who"
+     },
+     {
+      "text": "The account sent a first-time international wire to Bramblecoast Trading FZE, a free-zone trading company with no relationship on file.",
+      "cites": [
+       "CP-01"
+      ],
+      "valid_cites": [
+       "CP-01"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S2",
+      "section": "who"
+     }
+    ]
+   },
+   {
+    "section": "what",
+    "sentences": [
+     {
+      "text": "The account received 14 posted credits totaling $113,550.55, including 12 cash deposits totaling $112,350.00.",
+      "cites": [
+       "AGG-IN",
+       "AGG-IN-CASH"
+      ],
+      "valid_cites": [
+       "AGG-IN",
+       "AGG-IN-CASH"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S3",
+      "section": "what"
+     },
+     {
+      "text": "It sent an outbound wire of $98,000.00 to Bramblecoast Trading FZE and an ACH debit of $2,140.00 to its landlord.",
+      "cites": [
+       "AGG-OUT-WIRE",
+       "AGG-OUT-ACH",
+       "TXN-15",
+       "TXN-16"
+      ],
+      "valid_cites": [
+       "AGG-OUT-WIRE",
+       "AGG-OUT-ACH",
+       "TXN-15",
+       "TXN-16"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S4",
+      "section": "what"
+     }
+    ]
+   },
+   {
+    "section": "when",
+    "sentences": [
+     {
+      "text": "The cash deposits occurred from 2026-09-08 through 2026-09-23, and the outbound wire posted on 2026-09-25.",
+      "cites": [
+       "AGG-IN-CASH",
+       "AGG-OUT-WIRE"
+      ],
+      "valid_cites": [
+       "AGG-IN-CASH",
+       "AGG-OUT-WIRE"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S5",
+      "section": "when"
+     },
+     {
+      "text": "The alert was detected on 2026-09-26, with a filing deadline of 2026-10-26.",
+      "cites": [
+       "ALERT-1"
+      ],
+      "valid_cites": [
+       "ALERT-1"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S6",
+      "section": "when"
+     }
+    ]
+   },
+   {
+    "section": "where",
+    "sentences": [
+     {
+      "text": "The wire beneficiary country was AE.",
+      "cites": [
+       "TXN-15",
+       "CP-01"
+      ],
+      "valid_cites": [
+       "TXN-15",
+       "CP-01"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S8",
+      "section": "where"
+     }
+    ]
+   },
+   {
+    "section": "why",
+    "sentences": [
+     {
+      "text": "The activity is inconsistent with expected cash deposits of $2,000\u2013$4,000 a month and card-processor settlements of about $2,500 a month; inflow was 17.5 times expected activity and cash was 37.5 times expected cash activity.",
+      "cites": [
+       "KYC-1",
+       "IND-MM-03",
+       "IND-ST-05"
+      ],
+      "valid_cites": [
+       "KYC-1",
+       "IND-MM-03",
+       "IND-ST-05"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S9",
+      "section": "why"
+     },
+     {
+      "text": "The beneficiary was named in a fictional regulatory notice concerning cash-funded wires against over-invoiced auto-parts shipments.",
+      "cites": [
+       "AM-2"
+      ],
+      "valid_cites": [
+       "AM-2"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S10",
+      "section": "why"
+     }
+    ]
+   },
+   {
+    "section": "how",
+    "sentences": [
+     {
+      "text": "The customer made 12 cash deposits ranging from $8,800.00 to $9,850.00, including $56,300.00 in cash over a rolling 7-day period without a single deposit at or above $10,000.",
+      "cites": [
+       "AGG-IN-CASH",
+       "IND-ST-01",
+       "IND-ST-02"
+      ],
+      "valid_cites": [
+       "AGG-IN-CASH",
+       "IND-ST-01",
+       "IND-ST-02"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S11",
+      "section": "how"
+     },
+     {
+      "text": "A teller recorded that the customer asked how much could be deposited before the bank completed the form and then split the deposit across two days.",
+      "cites": [
+       "TN-1",
+       "IND-ST-04"
+      ],
+      "valid_cites": [
+       "TN-1",
+       "IND-ST-04"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S12",
+      "section": "how"
+     },
+     {
+      "text": "The $98,000.00 wire represented 86.3% of all posted credits and was described as an auto-parts invoice payment.",
+      "cites": [
+       "AGG-OUT-WIRE",
+       "TXN-15"
+      ],
+      "valid_cites": [
+       "AGG-OUT-WIRE",
+       "TXN-15"
+      ],
+      "unverified": [],
+      "problems": [],
+      "ok": true,
+      "id": "S13",
+      "section": "how"
+     }
+    ]
+   }
+  ],
+  "decision": {
+   "choice": "file",
+   "rationale": "The activity matches the structuring typology, with 5 of 5 indicators fired, including repeated cash deposits just under the CTR threshold and cash accumulated above $10,000 in a rolling 7-day period. The activity is also materially inconsistent with the customer's expected profile and includes a large first-time international wire to a beneficiary associated with a trade-based laundering notice.",
+   "investigator": "Theo Marsh",
+   "qa": "Lena Ortiz"
+  },
+  "audit": [
+   {
+    "at": "2026-10-09T18:54:53-04:00",
+    "actor": "Investigation agent",
+    "role": "agent",
+    "action": "Draft released for review",
+    "detail": "12 verified sentences \u00b7 recommends filing"
+   },
+   {
+    "at": "2026-10-09T18:54:54-04:00",
+    "actor": "Theo Marsh",
+    "role": "investigator",
+    "action": "Decided File SAR",
+    "detail": "The activity matches the structuring typology, with 5 of 5 indicators fired, including repeated cash deposits just under the CTR threshold and cash accumulated above $10,000 in a rolling 7-day period. The activity is also materially inconsistent with the customer's expected profile and includes a large first-time international wire to a beneficiary associated with a trade-based laundering notice."
+   },
+   {
+    "at": "2026-10-09T18:54:54-04:00",
+    "actor": "Policy",
+    "role": "control",
+    "action": "Filing held for QA",
+    "detail": "No filing on one person's say-so."
+   },
+   {
+    "at": "2026-10-09T18:54:55-04:00",
+    "actor": "Lena Ortiz",
+    "role": "qa",
+    "action": "Approved filing",
+    "detail": ""
+   },
+   {
+    "at": "2026-10-09T18:54:55-04:00",
+    "actor": "System",
+    "role": "system",
+    "action": "SAR e-filed (simulated)",
+    "detail": "SIM-BSA-3DE3B20BB9"
+   }
+  ]
+ }
+}

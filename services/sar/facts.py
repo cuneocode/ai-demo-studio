@@ -19,7 +19,7 @@ _ISO = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})(?:T[\d:.]+(?:[+-]\d{2}:\d{2}|Z)?)?
 _MONTH_DAY = re.compile(r"\b(" + "|".join(sorted(MONTHS, key=len, reverse=True)) + r")\.?\s+(\d{1,2})(?:st|nd|rd|th)?(?:,?\s+(\d{4}))?\b", re.IGNORECASE)
 _DAY_MONTH = re.compile(r"\b(\d{1,2})\s+(" + "|".join(sorted(MONTHS, key=len, reverse=True)) + r")\.?(?:,?\s+(\d{4}))?\b", re.IGNORECASE)
 _TIME = re.compile(r"\b\d{1,2}:\d{2}(?::\d{2})?\b")
-_MASKED = re.compile(r"(?:\*{2,}|\bending(?: in)?\s+|\bx{2,})(\d{4})\b", re.IGNORECASE)
+_MASKED = re.compile(r"(?:\*{2,}|\b(?:ending|ends)(?: in| with)?\s+|\bx{2,})(\d{4})\b", re.IGNORECASE)
 _MONEY = re.compile(r"\$\s?(\d[\d,]*(?:\.\d+)?)(?:\s?(k|K|thousand|million|m|M)\b)?")
 _PERCENT = re.compile(r"(\d+(?:\.\d+)?)\s?(?:%|percent\b)")
 _NUMBER = re.compile(r"(?<![\w.])(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?![\w%])")
