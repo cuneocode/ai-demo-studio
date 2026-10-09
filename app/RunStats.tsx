@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Activity, ArrowUpRight, Loader2, RotateCcw, Settings2, ShieldCheck } from "lucide-react";
 import { useStudioNav } from "./studio-nav";
+import type { ServedBy } from "./run/events";
+import ProvenanceBadge, { type Provenance } from "./run/ProvenanceBadge";
 import "./run-stats.css";
 
 export type RunStatus = "running" | "completed" | "blocked" | "failed" | "cached";
@@ -31,6 +33,11 @@ export type ObservedRun = {
   counts?: Record<string, number | undefined>;
   defense?: DefenseCounts;
   note?: string;
+  /** The model that answered, from the response's served_by. */
+  servedBy?: ServedBy | null;
+  /** A recorded run or sample data rather than a live call; recordedAt dates a recording. */
+  provenance?: "live" | "recorded" | "sample";
+  recordedAt?: string;
 };
 
 export type Integration = {
@@ -103,6 +110,19 @@ export function defenseFrom(raw: unknown): DefenseCounts | undefined {
     checks: number(value.checks), blocked: number(value.blocked), errors: number(value.errors),
     eventIds: Array.isArray(value.event_ids) ? value.event_ids.filter((id): id is string => typeof id === "string") : undefined,
   };
+}
+
+/** A response's `served_by` object (services/llm/studio_models.py), or undefined. */
+export function servedByFrom(raw: unknown): ServedBy | undefined {
+  const value = record(raw);
+  return typeof value.label === "string" ? value as ServedBy : undefined;
+}
+
+/** The badge for a run: recorded, sample, or the model that answered. */
+export function runProvenance(run: ObservedRun): Provenance | null {
+  if (run.provenance === "recorded") return { kind: "recorded", recordedAt: run.recordedAt ?? "", servedBy: run.servedBy };
+  if (run.provenance === "sample") return { kind: "sample" };
+  return run.servedBy ? { kind: "live", servedBy: run.servedBy } : null;
 }
 
 /** A service's per-request `usage` object: model calls and provider-reported tokens. */
@@ -295,6 +315,7 @@ export default function RunStats({ ledger, observability, defense, empty = "Stat
   const last = runs.at(-1);
   const elapsed = useElapsed(last);
   const duration = elapsed ?? last?.durationMs;
+  const provenance = last ? runProvenance(last) : null;
   return (
     <section className="run-stats" aria-label="Live run stats" data-runs={runs.length}>
       <header className="run-stats-head">
@@ -303,6 +324,7 @@ export default function RunStats({ ledger, observability, defense, empty = "Stat
           {last ? <>
             <span className={`run-stats-status status-${last.status}`}>{last.status === "running" && <Loader2 size={12} className="run-stats-spin" />}{last.replay && last.status === "running" ? "Replaying" : RUN_LABEL[last.status]}</span>
             <strong>{last.label}</strong>
+            {provenance && <ProvenanceBadge provenance={provenance} className="run-stats-model" />}
             {duration !== undefined && <span className="run-stats-time">{format(duration, "ms")}{elapsed !== undefined ? " elapsed" : ""}</span>}
             {last.note && <span className="run-stats-note">{last.note}</span>}
           </> : <span className="run-stats-empty">{empty}</span>}

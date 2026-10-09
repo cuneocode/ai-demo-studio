@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CircleAlert,
   CodeXml,
@@ -15,17 +15,17 @@ import {
 import { SourceInspector } from "./map/inspector.tsx";
 import { interbankEvidence } from "./map/interbank-evidence.ts";
 import RunStats, { defenseFacts, useRunLedger, type Integration, type ObservedRun, type StatsCard } from "./RunStats";
+import { servedByFromEvents, type RunEvent } from "./run/events";
+import { useRun, useStickToBottom } from "./run/useRun";
+import { RichText, TimelineItem, defaultLine, useExpanded, type TimelineLine } from "./run/RunTimeline";
+import ProvenanceBadge from "./run/ProvenanceBadge";
 import "./banking.css";
 import "./interbank.css";
 
-type LabEvent = {
-  id: string; at: string; run_id: string; organization: string; component: string; kind: string;
-  status: string; title: string; source?: string | null; target?: string | null; body?: string | null;
-  data?: Record<string, unknown>; trace_id?: string; span_id?: string;
-};
+type LabEvent = RunEvent & { organization: string };
 type Run = { id: string; prompt: string; status: "running" | "completed" | "blocked" | "failed"; started_at: string; finished_at?: string; report?: string; trace_id?: string };
 type Runtime = {
-  model: { name: string; api: string; label?: string; reasoning_effort: string; reasoning_summary: string };
+  model: { name: string; api: string; label?: string; reasoning_effort: string; reasoning_summary: string; private?: boolean; fallback?: boolean; reason?: string; chain?: string[] };
   agents: { framework: string; protocol: string; bank_a: string[]; bank_b: string[] };
   gateway: { product: string; transport: string; admission: string };
   ai_defense: { mode: string; region: string; hops: Record<string, string[]> };
@@ -33,8 +33,7 @@ type Runtime = {
   observability: { project: string; agent_stream: string; console_url: string; exporters: string[] };
 };
 type Lane = "a" | "wire" | "b";
-/** body: always shown (clamped when long) · code: always shown · hidden: revealed on demand. */
-type Line = { event: LabEvent; tag: string; tone: string; title: string; body?: string; code?: string; hidden?: string; sources: string[] };
+type Line = TimelineLine & { event: LabEvent; sources: string[] };
 type InterbankDemoProps = { onBack: () => void; onAdd: () => void; inStory: boolean; embedded?: boolean };
 
 const BANKS = {
@@ -147,13 +146,18 @@ function rowsLabel(body: string) {
 
 /** One event → one terminal line, or null when another line already shows the same thing. */
 function toLine(event: LabEvent): Line | null {
+  if (event.kind === "model.failover") {
+    const shared = defaultLine(event);
+    return shared && { ...shared, event, sources: ["deep-agent-builder"] };
+  }
   const lane = laneOf(event);
   const bank = lane === "wire" ? (event.organization === "bank-b" ? BANKS.b : BANKS.a) : BANKS[lane];
   const data = event.data ?? {};
   const body = event.body ?? "";
   const tool = typeof data.tool === "string" ? data.tool : "";
   const args = (data.arguments ?? {}) as Record<string, unknown>;
-  const line = (tag: string, tone: string, title: string, sources: string[], extra: Partial<Line> = {}): Line => ({ event, tag, tone, title, sources, ...extra });
+  const rich = event.kind === "agent.message" || event.kind === "a2a.reply" || event.kind === "a2a.receive";
+  const line = (tag: string, tone: string, title: string, sources: string[], extra: Partial<Line> = {}): Line => ({ event, tag, tone, title, sources, rich, ...extra });
   switch (event.kind) {
     case "agent.thinking":
       return line("THINK", "think", event.title, ["deep-agent-builder", bank.agent], { body: body.replace(/^\*\*[^*\n]+\*\*\s*/, "") });
@@ -214,28 +218,6 @@ function agentStatus(lines: Line[], running: boolean): string {
   return ({ THINK: "Thinking", PLAN: "Planning", SQL: "Querying own records", ROWS: "Reading rows", TOOL: "Checking Agent Control", CONTROL: "Sending over A2A", "A2A →": last.event.kind === "a2a.respond" ? "Replied · idle" : "Waiting for the other bank", "A2A ←": "Working on a message", ANSWER: "Replying", DENIED: "Message not delivered" } as Record<string, string>)[last.tag] ?? "Working";
 }
 
-function inline(text: string): ReactNode[] {
-  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) => part.length > 4 && part.startsWith("**") && part.endsWith("**") ? <strong key={i}>{part.slice(2, -2)}</strong> : <Fragment key={i}>{part}</Fragment>);
-}
-
-/** Headings, bullets, and bold: enough for the agents' reports without a Markdown dependency. */
-function Rich({ text }: { text: string }) {
-  const blocks: ReactNode[] = [];
-  let bullets: string[] = [];
-  const flush = () => { if (bullets.length) blocks.push(<ul key={blocks.length}>{bullets.map((b, i) => <li key={i}>{inline(b)}</li>)}</ul>); bullets = []; };
-  for (const raw of text.split("\n")) {
-    const lineText = raw.trimEnd();
-    const bullet = /^\s*[-*]\s+(.*)$/.exec(lineText);
-    if (bullet) { bullets.push(bullet[1]); continue; }
-    flush();
-    const heading = /^#{1,4}\s+(.*)$/.exec(lineText);
-    if (heading) blocks.push(<h4 key={blocks.length}>{inline(heading[1])}</h4>);
-    else if (lineText.trim()) blocks.push(<p key={blocks.length}>{inline(lineText)}</p>);
-  }
-  flush();
-  return <div className="ib-rich">{blocks}</div>;
-}
-
 type Denial = { error?: string; gateway?: string; hop?: string; stage?: string; classifications?: string[]; rules?: { rule?: string }[]; event_id?: string };
 
 function parseDenial(report?: string): Denial | null {
@@ -250,8 +232,8 @@ function parseDenial(report?: string): Denial | null {
 /** A blocked kickoff's report is the gateway's JSON refusal; show it as facts rather than raw JSON. */
 function Report({ run }: { run: Run }) {
   const denial = run.status === "blocked" ? parseDenial(run.report) : null;
-  if (!denial) return <Rich text={run.report ?? ""} />;
-  return <div className="ib-rich">
+  if (!denial) return <RichText text={run.report ?? ""} />;
+  return <div className="rt-rich">
     <p>{denial.error}</p>
     <dl className="fact-grid">
       <div><dt>Gateway · hop</dt><dd>{pretty(denial.gateway ?? "")} · {HOPS[denial.hop ?? ""] ?? denial.hop}</dd></div>
@@ -262,40 +244,6 @@ function Report({ run }: { run: Run }) {
     </dl>
     <p>Neither bank&apos;s agent received the message, so nothing was investigated or sent to Bank B.</p>
   </div>;
-}
-
-function seconds(event: LabEvent, start?: string) {
-  if (!start) return "";
-  const delta = (Date.parse(event.at) - Date.parse(start)) / 1000;
-  return Number.isFinite(delta) ? `+${Math.max(0, delta).toFixed(1)}s` : "";
-}
-
-function TerminalLine({ line, start, expanded, onToggle, onSource }: { line: Line; start?: string; expanded: boolean; onToggle: () => void; onSource: (ids: string[]) => void }) {
-  const long = (line.body?.length ?? 0) > 520;
-  const rich = line.tone === "answer" || line.event.kind === "a2a.reply" || line.event.kind === "a2a.receive";
-  return (
-    <li className={`ib-line tone-${line.tone}`} title={line.event.span_id ? `span ${line.event.span_id}` : undefined}>
-      <div className="ib-line-head">
-        <span className="ib-time">{seconds(line.event, start)}</span>
-        <span className="ib-tag">{line.tag}</span>
-        <span className="ib-title">{line.title}</span>
-        {line.hidden && <button className="ib-mini" onClick={onToggle} aria-expanded={expanded}>{expanded ? "Hide" : "Show"}</button>}
-        {line.sources.length > 0 && <button className="ib-mini ib-source" onClick={() => onSource(line.sources)} aria-label={`Source for: ${line.title}`}><CodeXml size={13} /></button>}
-      </div>
-      {line.body && <div className={`ib-body ${long && !expanded ? "clamped" : ""}`}>{rich ? <Rich text={line.body} /> : line.body}</div>}
-      {long && !line.hidden && <button className="ib-more" onClick={onToggle}>{expanded ? "Show less" : "Show all"}</button>}
-      {line.code && <pre className="ib-code">{line.code}</pre>}
-      {line.hidden && expanded && <pre className="ib-code">{line.hidden.length > 6000 ? `${line.hidden.slice(0, 6000)}\n…` : line.hidden}</pre>}
-    </li>
-  );
-}
-
-function useStickToBottom(dep: number) {
-  const ref = useRef<HTMLOListElement>(null);
-  const stick = useRef(true);
-  useEffect(() => { const el = ref.current; if (el && stick.current) el.scrollTop = el.scrollHeight; }, [dep]);
-  const onScroll = () => { const el = ref.current; if (el) stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; };
-  return { ref, onScroll };
 }
 
 function Terminal({ lane, lines, run, active, expanded, toggle, onSource }: { lane: "a" | "b"; lines: Line[]; run: Run | null; active: boolean; expanded: Set<string>; toggle: (id: string) => void; onSource: (ids: string[]) => void }) {
@@ -310,7 +258,7 @@ function Terminal({ lane, lines, run, active, expanded, toggle, onSource }: { la
         <button className="ib-mini ib-source" onClick={() => onSource([bank.agent, "deep-agent-builder", "telemetry"])} aria-label={`${bank.name} agent source`}><CodeXml size={14} /> Agent</button>
       </header>
       <ol ref={ref} onScroll={onScroll} aria-live="polite">
-        {lines.length ? lines.map((line) => <TerminalLine key={line.event.id} line={line} start={run?.started_at} expanded={expanded.has(line.event.id)} onToggle={() => toggle(line.event.id)} onSource={onSource} />)
+        {lines.length ? lines.map((line) => <TimelineItem key={line.event.id} line={line} start={run?.started_at} expanded={expanded.has(line.event.id)} onToggle={() => toggle(line.event.id)} onSource={onSource} />)
           : <li className="ib-empty">{!run ? `${bank.name}'s Deep Agent is idle. Start an investigation.`
             : running ? (lane === "b" ? "Waiting for Bank A to reach out over A2A…" : "Waiting for the kickoff to pass Bank A's gateway…")
             : lane === "a" ? "Nothing reached Bank A's agent: the kickoff stopped at Bank A's gateway." : "Bank A's agent never contacted Bank B."}</li>}
@@ -329,7 +277,7 @@ function Wire({ lines, run, expanded, toggle, onSource }: { lines: Line[]; run: 
         <button className="ib-mini ib-source" onClick={() => onSource(["bank-a-gateway", "bank-b-gateway", "ai-defense-extproc", "ai-defense-api"])} aria-label="Gateway configuration"><CodeXml size={14} /> Config</button>
       </header>
       <ol ref={ref} onScroll={onScroll} aria-live="polite">
-        {lines.length ? lines.map((line) => <TerminalLine key={line.event.id} line={line} start={run?.started_at} expanded={expanded.has(line.event.id)} onToggle={() => toggle(line.event.id)} onSource={onSource} />)
+        {lines.length ? lines.map((line) => <TimelineItem key={line.event.id} line={line} start={run?.started_at} expanded={expanded.has(line.event.id)} onToggle={() => toggle(line.event.id)} onSource={onSource} />)
           : <li className="ib-empty">Gateway inspections appear here as each message crosses a listener.</li>}
       </ol>
     </section>
@@ -365,6 +313,7 @@ function observeRun(run: Run, visible: LabEvent[], replaying: boolean, traceId: 
     label: run.prompt,
     status: running ? "running" : run.status,
     replay: replaying,
+    servedBy: servedByFromEvents(visible),
     startedAt: started,
     durationMs: !running && Number.isFinite(finished) ? finished - started : undefined,
     traceId,
@@ -442,13 +391,8 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
   const [scenario, setScenario] = useState("allowed");
   const [prompt, setPrompt] = useState("");
   const [history, setHistory] = useState<Run[]>([]);
-  const [runId, setRunId] = useState<string | null>(null);
-  const [run, setRun] = useState<Run | null>(null);
-  const [events, setEvents] = useState<LabEvent[]>([]);
-  const [shown, setShown] = useState<number | null>(null);
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const { expanded, toggle, reset: resetExpanded } = useExpanded();
   const [starting, setStarting] = useState(false);
-  const [error, setError] = useState("");
   const [viewer, setViewer] = useState<Viewer | null>(null);
   const openSources = useCallback((keys: string[]) => setViewer(viewerFor(keys)), []);
   const closeSources = useCallback(() => setViewer(null), []);
@@ -469,46 +413,13 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
       .catch(() => setLabUp(false));
   }, [loadHistory]);
 
-  useEffect(() => {
-    if (!runId) return;
-    let live = true, total = 0, finishedAt = 0;
-    let timer: ReturnType<typeof setTimeout>;
-    const poll = async () => {
-      try {
-        const response = await fetch(`/api/interbank/runs/${runId}?after=${total}`, { signal: AbortSignal.timeout(10000) });
-        if (!response.ok) throw new Error(String(response.status));
-        const body = await response.json() as { run: Run; events: LabEvent[]; total: number };
-        if (!live) return;
-        total = body.total;
-        setRun(body.run);
-        if (body.events.length) setEvents((previous) => {
-          const seen = new Set(previous.map((e) => e.id));
-          return [...previous, ...body.events.filter((e) => !seen.has(e.id))];
-        });
-        if (body.run.status !== "running") {
-          finishedAt ||= Date.now();
-          if (Date.now() - finishedAt > 3000) { loadHistory(); return; }
-        }
-      } catch {
-        if (live) setError("Lost contact with the interbank lab. Check npm run interbank:status.");
-      }
-      if (live) timer = setTimeout(poll, 1000);
-    };
-    poll();
-    return () => { live = false; clearTimeout(timer); };
-  }, [runId, loadHistory]);
-
-  useEffect(() => {
-    if (shown === null || shown >= events.length) return;
-    const timer = setTimeout(() => setShown((value) => (value === null ? null : value + 1)), 160);
-    return () => clearTimeout(timer);
-  }, [shown, events.length]);
-
-  function open(id: string, replay: boolean) {
-    setEvents([]); setRun(null); setExpanded(new Set()); setError("");
-    setShown(replay ? 0 : null);
-    setRunId(id);
-  }
+  const { run, effectiveRun, visible, replaying, error, setError, open: follow, skip } = useRun<Run, LabEvent>({
+    pageUrl: (id, after) => `/api/interbank/runs/${id}?after=${after}`,
+    pace: 160,
+    onSettled: loadHistory,
+    lostContact: "Lost contact with the interbank lab. Check npm run interbank:status.",
+  });
+  const open = (id: string, replay: boolean) => { resetExpanded(); follow(id, replay); };
 
   async function start() {
     if (!prompt.trim() || starting) return;
@@ -526,15 +437,12 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
     }
   }
 
-  const toggle = (id: string) => setExpanded((previous) => { const next = new Set(previous); if (next.has(id)) next.delete(id); else next.add(id); return next; });
-  const visible = useMemo(() => (shown === null ? events : events.slice(0, shown)), [events, shown]);
   const lanes = useMemo(() => {
     const out: Record<Lane, Line[]> = { a: [], wire: [], b: [] };
     for (const event of visible) { const line = toLine(event); if (line) out[laneOf(event)].push(line); }
     return out;
   }, [visible]);
-  const replaying = shown !== null && shown < events.length;
-  const effectiveRun = run && replaying ? { ...run, status: "running" as const } : run;
+  const servedBy = useMemo(() => servedByFromEvents(visible), [visible]);
   const lastAgentLane = [...visible].reverse().map(laneOf).find((lane) => lane !== "wire");
   const traceId = run?.trace_id ?? visible.find((e) => e.trace_id)?.trace_id;
   const done = effectiveRun && effectiveRun.status !== "running";
@@ -576,7 +484,7 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
               {history.slice(0, 12).map((item) => <option key={item.id} value={item.id}>{item.id} · {item.status}</option>)}
             </select>
           </label>}
-          {replaying && <button className="ib-mini" onClick={() => setShown(null)}><RotateCcw size={13} /> Skip replay</button>}
+          {replaying && <button className="ib-mini" onClick={skip}><RotateCcw size={13} /> Skip replay</button>}
         </div>
         {error && <div className="banking-error"><CircleAlert size={14} /><div>{error}</div><button onClick={() => setError("")} aria-label="Dismiss"><X size={14} /></button></div>}
       </section>
@@ -591,6 +499,7 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
         <div className={`proof-card ib-report status-${done ? effectiveRun.status : "pending"}`}>
           <span className="review-kicker">JOINT REPORT · FOR HUMAN APPROVAL</span>
           {done && run?.report ? <>
+            {servedBy && <ProvenanceBadge provenance={{ kind: "live", servedBy }} />}
             <span className={`ib-status ${run.status}`}>{run.status === "completed" ? "Completed" : run.status === "blocked" ? "Blocked at Bank A's gateway" : "Failed"}</span>
             <Report run={run} />
           </> : <p>{effectiveRun ? "The report appears when Bank A's agent replies to the Ops desk." : "Start or replay an investigation to see the joint report."}</p>}
@@ -599,7 +508,8 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
           {runtime && <div className="proof-card ib-runtime">
             <span className="review-kicker">RUNTIME</span>
             <dl className="fact-grid">
-              <div><dt>Model</dt><dd>{runtime.model.label ? `${runtime.model.label} · ` : ""}{runtime.model.name} · {runtime.model.api}</dd></div>
+              <div><dt>Model</dt><dd>{runtime.model.label ? `${runtime.model.label} · ` : ""}{runtime.model.name} · {runtime.model.api}{runtime.model.fallback ? " (fallback)" : ""}</dd></div>
+              {runtime.model.chain && runtime.model.chain.length > 1 && <div><dt>Model chain</dt><dd>{runtime.model.chain.join(" → ")}</dd></div>}
               <div><dt>Reasoning</dt><dd>{runtime.model.reasoning_summary === "none" ? "No reasoning summaries on Chat Completions" : `${runtime.model.reasoning_effort} effort · ${runtime.model.reasoning_summary} summaries`}</dd></div>
               <div><dt>Agents</dt><dd>{runtime.agents.framework} · {runtime.agents.protocol}</dd></div>
               <div><dt>Gateway</dt><dd>{runtime.gateway.product} · {runtime.gateway.transport}</dd></div>

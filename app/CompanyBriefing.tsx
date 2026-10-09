@@ -34,7 +34,9 @@ import {
   type IssuerCandidate,
   type StoredCompanyProfile,
 } from "./company-profile";
-import RunStats, { defenseFacts, defenseFrom, defenseIntegration, DEFENSE_TILES, traceFacts, usageFrom, startRun, useRunLedger, type ObservedRun, type StatsCard } from "./RunStats";
+import ProvenanceBadge from "./run/ProvenanceBadge";
+import type { ServedBy } from "./run/events";
+import RunStats, { defenseFacts, defenseFrom, defenseIntegration, DEFENSE_TILES, servedByFrom, traceFacts, usageFrom, startRun, useRunLedger, type ObservedRun, type StatsCard } from "./RunStats";
 import "./briefing.css";
 
 type CompanyBriefingProps = {
@@ -100,6 +102,7 @@ export default function CompanyBriefing({
   const [error, setError] = useState("");
   const [candidates, setCandidates] = useState<IssuerCandidate[] | null>(null);
   const [draft, setDraft] = useState<CompanyBriefingRecord | null>(null);
+  const [servedBy, setServedBy] = useState<ServedBy | null>(null);
   const [service, setService] = useState<ServiceHealth | null>(null);
   const ledger = useRunLedger();
   const stats = useMemo(() => briefingStats(service), [service]);
@@ -197,6 +200,8 @@ export default function CompanyBriefing({
       settled = true;
       const briefing = normalizeAnalyzeResponse(payload, { query: options.query, filename: options.file?.name });
       if (!briefing) throw new Error("The briefing service returned an empty extract.");
+      const answered = payload as { cached?: boolean; served_by?: unknown };
+      setServedBy(answered.cached ? null : servedByFrom(answered.served_by) ?? null);
       setDraft(briefing);
     } catch (cause) {
       if (!settled) ledger.record({ ...run, status: "failed" });
@@ -417,6 +422,7 @@ export default function CompanyBriefing({
                   {displayed.period ? `Period ${displayed.period}` : "Period not reported"}
                   {displayed.company.cik ? ` · CIK ${formatCik(displayed.company.cik)}` : ""}
                 </p>
+                {draft && servedBy && <ProvenanceBadge provenance={{ kind: "live", servedBy }} />}
                 <span className="briefing-source-chip">
                   {displayed.source.url
                     ? <a href={displayed.source.url} target="_blank" rel="noreferrer">{displayed.source.label}</a>
@@ -528,6 +534,7 @@ function observeBriefing(run: ObservedRun, status: number, payload: unknown): Ob
     status: cached ? "cached" : status < 300 ? "completed" : status === 403 ? "blocked" : "failed",
     durationMs: typeof body.duration_ms === "number" ? body.duration_ms : undefined,
     ...usageFrom(body.usage),
+    servedBy: cached ? undefined : servedByFrom(body.served_by),
     // A replay's trail belongs to the original run; nothing was called or read this time.
     toolCalls: cached ? 0 : list(trail.tools),
     counts: { nodes: cached ? 0 : list(trail.nodes_read) },
