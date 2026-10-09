@@ -44,7 +44,7 @@ export const POLICY_LABEL: Record<ExternalPolicy, string> = {
 export const MODEL_USE_CASES: { id: string; experience: string; title: string; calls: string; applies: string; clientData?: boolean }[] = [
   { id: "brahe-bank", experience: "banking", title: "Brahe Bank assistant", calls: "Supervisor, both specialists, and the quality judge", applies: "Next message; open conversations restart" },
   { id: "company-briefing", experience: "briefing", title: "Company briefing", calls: "Deep Agent supervisor and theme subagents", applies: "Next briefing" },
-  { id: "fraud-modeling", experience: "fraud", title: "Transaction fraud scoring", calls: "Optional analyst narrative (the score never uses an LLM)", applies: "Next score" },
+  { id: "fraud-modeling", experience: "fraud", title: "Card fraud triage", calls: "Triage Deep Agent and analyst summary (the score never uses an LLM)", applies: "Next triage run" },
   { id: "market-research", experience: "research", title: "Wealth market research", calls: "Cited research note", applies: "Next note" },
   { id: "client-advisory", experience: "advisory", title: "Client advisory", calls: "Meeting brief draft", applies: "Next brief", clientData: true },
   { id: "sar-support", experience: "sar", title: "SAR investigation", calls: "Investigation Deep Agent and narrative draft", applies: "Next investigation", clientData: true },

@@ -29,7 +29,7 @@ from security import security_run, SecurityRun, defense
 from telemetry import telemetry
 
 ROOT = Path(__file__).resolve().parent
-MODEL_CARDS = (ROOT / ".cache" / "model_card.json", ROOT / "data" / "recorded" / "model_card.json")
+MODEL_CARDS = (ROOT / ".cache" / "model_card.json", ROOT / "data" / "model_card.json")
 
 app = FastAPI(docs_url=None, redoc_url=None)
 app.include_router(runs_router(store, "/api/fraud", start=triage.start))

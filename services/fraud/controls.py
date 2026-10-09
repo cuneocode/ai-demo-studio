@@ -156,6 +156,7 @@ class FraudControls:
             if self._tried:
                 return self.ready
             self._tried = True
+            self.reason = "connecting to Agent Control"
             if os.getenv("FRAUD_AGENT_CONTROL", "auto").lower() == "off":
                 self.reason = "Agent Control is off (FRAUD_AGENT_CONTROL=off)"
                 return False

@@ -241,7 +241,7 @@ test("platform focus is geometry-invariant at deep expansion and no-op focus is 
 test("every other use case follows the continuous-system projection contract", async ({ page }) => {
   test.setTimeout(180_000);
   const cases = [
-    { id: "fraud-modeling", title: "Transaction fraud scoring", mode: "implemented" },
+    { id: "fraud-modeling", title: "Card fraud triage", mode: "implemented" },
     { id: "company-briefing", title: "Company briefing", mode: "implemented" },
     { id: "market-research", title: "Wealth market research", mode: "implemented" },
     { id: "client-advisory", title: "Client advisory", mode: "implemented" },
@@ -312,7 +312,7 @@ test("every other use case follows the continuous-system projection contract", a
 
 test("fraud evidence opens from its owning occurrence without changing projection", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  const explorer = await openCase(page, "fraud-modeling", "Transaction fraud scoring");
+  const explorer = await openCase(page, "fraud-modeling", "Card fraud triage");
   await explorer.locator('.react-flow__node:has([data-action="expand"])').first().locator('[data-action="expand"]').click();
   await page.waitForTimeout(450);
   await explorer.locator('.react-flow__node[data-id="fraud-modeling.core.score"] [data-action="expand"]').click();

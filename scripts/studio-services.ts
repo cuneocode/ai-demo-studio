@@ -16,7 +16,7 @@ const GALILEO = ["GALILEO_API_KEY", "GALILEO_CONSOLE_URL", "GALILEO_PROJECT", "G
 
 export const SERVICES: ServiceSpec[] = [
   { id: "banking", label: "Brahe Bank", port: 8011, health: "/api/banking/health", directory: "banking", reads: [...GALILEO, "AGENT_CONTROL_URL", ...AIDEFENSE, "AIDEFENSE_MODE", ...OTEL, ...MODEL_KEYS, "PINECONE_API_KEY"] },
-  { id: "fraud", label: "Fraud scoring", port: 8012, health: "/api/fraud/health", directory: "fraud", reads: [...AIDEFENSE, "AIDEFENSE_MODE", ...OTEL, ...MODEL_KEYS] },
+  { id: "fraud", label: "Card fraud triage", port: 8012, health: "/api/fraud/health", directory: "fraud", reads: [...GALILEO, "AGENT_CONTROL_URL", ...AIDEFENSE, "AIDEFENSE_MODE", ...OTEL, ...MODEL_KEYS] },
   { id: "briefing", label: "Company briefing", port: 8013, health: "/api/briefing/health", directory: "briefing", reads: [...AIDEFENSE, "BRIEFING_AIDEFENSE_MODE", ...OTEL, ...MODEL_KEYS, "SEC_USER_AGENT"] },
   { id: "wealth", label: "Wealth research and advisory", port: 8014, health: "/api/wealth/health", directory: "wealth", reads: [...GALILEO, ...AIDEFENSE, "WEALTH_AIDEFENSE_MODE", ...OTEL, ...MODEL_KEYS, "FRED_API_KEY"] },
   { id: "sar", label: "SAR investigation", port: 8015, health: "/api/sar/health", directory: "sar", reads: [...GALILEO, "AGENT_CONTROL_URL", ...AIDEFENSE, "AIDEFENSE_MODE", "SAR_AIDEFENSE_MODE", ...OTEL, ...MODEL_KEYS] },

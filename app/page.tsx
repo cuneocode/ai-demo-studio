@@ -116,14 +116,14 @@ const useCases: UseCase[] = [
   },
   {
     id: "fraud-modeling",
-    title: "Transaction fraud scoring",
+    title: "Card fraud triage",
     category: "Risk & compliance",
-    description: "Score a payment on a graph neighborhood and inspect Shapley evidence.",
-    outcome: "Explainable fraud scores without a notebook.",
+    description: "Triage a post-authorization alert queue with a graph model that sees merchant compromise, then decide and hand off.",
+    outcome: "Rules vs graph model, plain-English reasons, and an analyst-approved disposition.",
     icon: CircleGauge,
     accent: "mint",
     solutions: ["AI Infrastructure", "Splunk Observability", "AI Defense"],
-    signal: "Graph scoring",
+    signal: "Graph model + triage agent",
     stage: "Interactive",
   },
   {
@@ -304,27 +304,27 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
     liveExperience: "fraud",
     transformation: {
       friction: "Each payment is scored in isolation, so a clean customer at a compromised merchant looks safe.",
-      aiShift: "GraphSAGE + XGBoost scores the payment from the account–merchant neighborhood; Captum Shapley explains the risk. The score path does not enter Cisco AI Defense.",
-      humanControl: "The score is not a fraud flag. An analyst reviews the evidence and decides what happens to the payment.",
+      aiShift: "GraphSAGE + XGBoost scores each payment from the account–merchant neighborhood and exact XGBoost TreeSHAP explains it; a triage agent gathers the evidence and drafts the disposition. The score path never enters an LLM or Cisco AI Defense.",
+      humanControl: "The score is not a fraud flag. The agent can only propose card actions; the analyst decides, and fraud.take_action denies irreversible actions without that approval.",
     },
     architecture: {
       process: [
-        { title: "Select a payment", detail: "Held-out TabFormer card events" },
-        { title: "Score the graph edge", detail: "Neighborhood + transaction features" },
-        { title: "Inspect evidence", detail: "Probability + Shapley groups" },
-        { title: "Decide disposition", detail: "Analyst-owned hold / review / clear" },
+        { title: "Score the queue", detail: "Rules engine and graph model side by side" },
+        { title: "Investigate the alert", detail: "Neighborhood, TreeSHAP reasons, playbook" },
+        { title: "Draft and check", detail: "Cited summary · AI Defense on untrusted text" },
+        { title: "Decide disposition", detail: "Contact · block and reissue · false positive · escalate" },
       ],
       ai: [
-        { point: "01 → 02", label: "GraphSAGE + XGBoost + Shapley", detail: "The live HTTP sidecar embeds the TabFormer neighborhood, classifies with XGBoost, and returns Captum Shapley groups. This hop never calls an LLM or AI Defense." },
-        { point: "02 → 03", label: "Risk band", detail: "High ≥ 0.50, elevated ≥ 0.35, otherwise low, each with a suggested action. The probability is evidence, not a fraud flag." },
-        { point: "03 → 04", label: "Optional narrative", detail: "Off unless FRAUD_ENABLE_NARRATIVE=true. AI Defense inspects only this draft. Deny or LLM failure omits the text; the score still releases." },
+        { point: "01 → 02", label: "GraphSAGE + XGBoost + TreeSHAP", detail: "The live HTTP sidecar embeds the point-in-time TabFormer neighborhood, classifies with XGBoost, and returns exact TreeSHAP contributions in log-odds. This hop never calls an LLM or AI Defense." },
+        { point: "02 → 03", label: "Fraud triage agent", detail: "A Deep Agent on the Studio model chain calls score, rules, neighborhood, explain, similar cases, and playbook tools, then drafts a summary where every point cites tool evidence. Scripted (no model) when no model is reachable." },
+        { point: "03 → 04", label: "Policy-gated decision", detail: "AI Defense inspects the dispute note, the agent's prompt and summary, and case notes. Agent Control fraud.take_action and fraud.note_pii gate card actions and notes; the analyst approves." },
       ],
     },
     metrics: [], rows: [], evidence: [],
-    workbenchLabel: "Fraud scoring",
-    workbenchTitle: "Graph payment scorer",
-    workbenchSummary: "Score TabFormer payments with GraphSAGE + XGBoost and review Shapley evidence.",
-    primaryAction: "Score selected payment",
+    workbenchLabel: "Card fraud triage",
+    workbenchTitle: "Alert queue triage",
+    workbenchSummary: "Score the alert queue with rules and a graph model, investigate with a triage agent, and decide under policy.",
+    primaryAction: "Triage queue",
   },
   "client-advisory": {
     liveExperience: "advisory",
@@ -498,7 +498,7 @@ type LiveExperience = NonNullable<UseCaseFrame["liveExperience"]>;
 
 const LIVE_SUBJECT: Record<LiveExperience, string> = {
   banking: "fictional bank",
-  fraud: "TabFormer GNN+XGB",
+  fraud: "graph model + triage agent",
   briefing: "EDGAR + upload",
   research: "Yahoo + FRED · committed snapshots",
   advisory: "synthetic households + shared context",
@@ -522,7 +522,7 @@ function liveExperienceStatus(useCaseId: string, experience: UseCaseFrame["liveE
 /** Each demo's section and the control its header CTA should focus. */
 const FOCUS_TARGETS: Record<LiveExperience, { section: string; control: string }> = {
   banking: { section: "banking-experience", control: ".chat-composer input" },
-  fraud: { section: "fraud-experience", control: "#score-payment" },
+  fraud: { section: "fraud-experience", control: "#triage-queue" },
   briefing: { section: "briefing-experience", control: "#company-briefing-query" },
   research: { section: "research-experience", control: "#research-ticker" },
   advisory: { section: "advisory-experience", control: "input" },
@@ -842,7 +842,7 @@ function UseCaseWorkspace({
         <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Banking assistant</h2></div><span>Fictional products · mock score 550</span></div>
         <BankingDemo embedded inStory={inStory} onBack={onBack} onAdd={onAdd} />
       </section> : frame.liveExperience === "fraud" ? <section id="fraud-experience">
-        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Fraud scoring</h2></div><span>TabFormer GNN+XGB · the score is evidence, not a decision</span></div>
+        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Card fraud triage</h2></div><span>Graph model + triage agent · the analyst decides</span></div>
         <FraudDemo embedded inStory={inStory} onBack={onBack} onAdd={onAdd} />
       </section> : frame.liveExperience === "briefing" ? <section id="briefing-experience">
         <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Company briefing</h2></div><span>EDGAR + upload only · accept before store</span></div>
@@ -1063,7 +1063,10 @@ export default function HomePage() {
   }, [launcherQuery, switchView, openUseCase]);
   const closeLauncher = () => { setLauncherOpen(false); setLauncherQuery(""); };
   const links = status?.links ?? null;
-  const studioNav = useMemo(() => ({ openSettings, links }), [openSettings, links]);
+  const openCaseRef = useRef(openCaseById);
+  useLayoutEffect(() => { openCaseRef.current = openCaseById; });
+  const openUseCaseById = useCallback((id: string) => openCaseRef.current(id), []);
+  const studioNav = useMemo(() => ({ openSettings, links, openUseCase: openUseCaseById }), [openSettings, links, openUseCaseById]);
 
   return (
     <StudioNavContext.Provider value={studioNav}>

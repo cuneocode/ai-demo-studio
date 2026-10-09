@@ -169,45 +169,48 @@ export const zoomMaps: Record<string, ZoomMap> = {
   },
   "fraud-modeling": {
     implemented: true,
-    note: "The score path is GraphSAGE, XGBoost, and Captum Shapley. It does not enter AI Defense and it does not call an LLM. Defense inspects only the optional narrative.",
+    note: "The score path is GraphSAGE, XGBoost, and exact TreeSHAP. It does not enter AI Defense and it does not call an LLM. Defense inspects the dispute note, the triage agent's prompt and summary, and case notes; Agent Control gates card actions.",
     cores: [
-      box("score", "Scoring service", "FastAPI /score", "Selects a TabFormer case, chooses a backend, and releases a probability plus Shapley groups."),
-      box("graph", "Graph model", "Live sidecar, else Triton", "auto uses the HTTP sidecar when it is up, otherwise a ready Triton endpoint. Fixture and cache run only when forced. A down stack returns HTTP 503.", "ai"),
-      box("defense", "Cisco AI Defense", "Narrative only", "Optional and off unless FRAUD_ENABLE_NARRATIVE is true. The score path does not arrow here.", "cisco", { optional: true }),
-      box("observe", "Splunk Agent Observability", "Optional export", "Spans export only when configured. No control models and no eval models.", "cisco", { optional: true }),
+      box("score", "Triage service", "FastAPI /runs", "Scores the alert queue, runs the triage agent with tools, and waits for the analyst disposition."),
+      box("graph", "Graph model", "Live → recorded → sample", "auto uses the HTTP sidecar when it is up, otherwise recorded Sparky scores, otherwise sample scores. Each score is labelled with its source.", "ai"),
+      box("defense", "Cisco AI Defense", "Untrusted text and summary", "Inspects the cardholder dispute note, the agent prompt and summary, and case notes. The score path does not arrow here.", "cisco"),
+      box("observe", "Splunk Agent Observability", "Agent trace", "One trace per triage run with tool spans. OTLP export only when configured.", "cisco", { optional: true }),
     ],
     coreEdges: [
-      { from: "score", to: "graph", label: "score the edge" },
-      { from: "score", to: "defense", label: "optional narrative", kind: "control" },
-      { from: "score", to: "observe", label: "optional spans", kind: "telemetry" },
+      { from: "score", to: "graph", label: "score the queue" },
+      { from: "score", to: "defense", label: "inspect agent text", kind: "control" },
+      { from: "score", to: "observe", label: "agent trace", kind: "telemetry" },
     ],
     interiors: {
       score: {
-        title: "Scoring service",
-        note: "Score this payment never starts training. Auto does not silently swap in fixtures.",
+        title: "Triage service",
+        note: "A triage run never starts training. Every score carries its source: live, recorded, or sample.",
         entities: [
-          box("api", "FastAPI /score", "Case in, score out", "The workbench posts a case_id. Unknown cases do not score.", "service"),
-          box("route", "Backend choice", "auto, else 503", "Live sidecar, else Triton, else HTTP 503. Fixture and cache only when FRAUD_BACKEND forces them.", "service"),
-          box("band", "Threshold band", "Not a fraud flag", "hold at or above 0.50, review at or above 0.35, otherwise clear.", "human", {
-            chips: [chip("narrative", "Optional narrative", "Off by default", "FRAUD_ENABLE_NARRATIVE drafts two sentences. Deny or model failure omits the text. The score still releases.", "ai")],
+          box("api", "FastAPI /runs", "Scenario in, case file out", "The workbench starts a run for a scenario. Events stream to the timeline.", "service"),
+          box("route", "Scorer chain", "live → recorded → sample", "Live sidecar, else recorded Sparky scores, else sample scores, labelled.", "service"),
+          box("band", "Rules vs graph", "Evidence, not a verdict", "The rules engine and the graph risk band side by side. A person owns the outcome.", "human", {
+            chips: [
+              chip("narrative", "Fraud triage agent", "Deep Agent · tools", "Investigates with score, rules, neighborhood, explain, and playbook tools; drafts a cited summary. Scripted when no model is reachable.", "ai"),
+              chip("policy", "Agent Control", "fraud.take_action", "Irreversible card actions are denied until the analyst approves. fraud.note_pii blocks a full card number or SSN in notes.", "cisco"),
+            ],
           }),
         ],
         edges: [
-          { from: "api", to: "route", label: "case" },
-          { from: "route", to: "band", label: "probability" },
+          { from: "api", to: "route", label: "queue" },
+          { from: "route", to: "band", label: "probability + reasons" },
         ],
         stubs: [
           box("graph", "Graph model", "Score", "No LLM on this hop.", "ai", { from: "route" }),
-          box("defense", "Cisco AI Defense", "Narrative only", "Not on the score path.", "cisco", { from: "band" }),
+          box("defense", "Cisco AI Defense", "Agent text only", "Not on the score path.", "cisco", { from: "band" }),
         ],
       },
       graph: {
         title: "Graph model",
-        note: "Training is offline. Score this payment never starts the NVIDIA training container.",
+        note: "Training is offline on Sparky. A triage run never starts training.",
         entities: [
           box("client", "Score client", "POST :8000/score", "Sends src, dst, and the edge feature vector.", "service"),
-          box("gnn", "GraphSAGE + XGBoost", "No LLM", "Neighborhood embedding, then the classifier. This hop does not call an LLM.", "ai"),
-          box("shap", "Captum Shapley", "Seven groups", "Attributes the probability. The score releases with no LLM.", "ai"),
+          box("gnn", "GraphSAGE + XGBoost", "No LLM", "Point-in-time neighborhood embedding, then the classifier. This hop does not call an LLM.", "ai"),
+          box("shap", "XGBoost TreeSHAP", "Exact · log-odds", "Contributions grouped into plain-English reasons. The score releases with no LLM.", "ai"),
         ],
         edges: [
           { from: "client", to: "gnn", label: "features" },
@@ -215,8 +218,8 @@ export const zoomMaps: Record<string, ZoomMap> = {
         ],
         stubs: [],
       },
-      defense: defenseInterior("the optional narrative draft", "The GNN and XGBoost score never enter Inspection."),
-      observe: observeInterior("Optional score and narrative spans. Configuration only.", false),
+      defense: defenseInterior("the dispute note, the agent prompt and summary, and case notes", "The GNN and XGBoost score never enter Inspection."),
+      observe: observeInterior("The triage agent trace with tool spans. OTLP export only when configured.", false),
     },
   },
   "company-briefing": {

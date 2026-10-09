@@ -38,7 +38,7 @@ const focused = (page: Page, section: string) => page.evaluate((id) => {
 
 const LIVE_CASES = [
   { title: "Brahe Bank assistant", section: "banking-experience", cta: "Open assistant" },
-  { title: "Transaction fraud scoring", section: "fraud-experience", cta: "Score selected payment" },
+  { title: "Card fraud triage", section: "fraud-experience", cta: "Triage queue" },
   { title: "Company briefing", section: "briefing-experience", cta: "Extract briefing" },
   { title: "Wealth market research", section: "research-experience", cta: "Analyze ticker" },
   { title: "Client advisory", section: "advisory-experience", cta: "Prepare meeting brief" },
@@ -54,7 +54,7 @@ for (const { title, section, cta } of LIVE_CASES) {
 }
 
 test("the fraud header CTA reads 'Score selected payment'", async ({ page }) => {
-  await openCase(page, "Transaction fraud scoring");
+  await openCase(page, "Card fraud triage");
   await expect(heading(page).locator(".primary-button")).toHaveText(/^Score selected payment/);
   await expect(heading(page).getByRole("button", { name: "Review next alert" })).toHaveCount(0);
 });
@@ -93,7 +93,7 @@ test("a downed service never shows Live in the header", async ({ page }) => {
   await expect(chip(page)).toHaveAttribute("title", /not running/);
 
   await page.getByRole("button", { name: "Back to library" }).click();
-  await page.getByRole("button", { name: "Open Transaction fraud scoring experience" }).first().click();
+  await page.getByRole("button", { name: "Open Card fraud triage experience" }).first().click();
   await expect(chip(page)).not.toHaveText(/^\s*Live/);
   await expect(chip(page)).toHaveAttribute("title", /not answering/);
 

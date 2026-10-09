@@ -1,0 +1,2667 @@
+{
+ "v": 1,
+ "name": "cpp-orbit-scripted",
+ "title": "Compromised merchant \u00b7 scripted investigation",
+ "scenario": "cpp-orbit",
+ "recorded_at": "2026-10-09T22:40:42.411597+00:00",
+ "served_by": null,
+ "synthetic": true,
+ "run": {
+  "id": "fraud-20261009-224034-59b99b",
+  "service": "fraud",
+  "label": "Triage \u00b7 cpp-orbit",
+  "scenario": "cpp-orbit",
+  "status": "completed",
+  "started_at": "2026-10-09T22:40:34.534363+00:00",
+  "finished_at": "2026-10-09T22:40:42.411597+00:00",
+  "meta": {
+   "case_id": "cpp-orbit",
+   "scenario": "cpp-orbit",
+   "synthetic": true
+  },
+  "result": {
+   "case_id": "cpp-orbit",
+   "scenario": "cpp-orbit",
+   "disposition": "block_and_reissue",
+   "decided_by": "Maya (analyst)",
+   "note": null,
+   "actions": [
+    {
+     "action": "contact_customer",
+     "status": "done",
+     "effect": "Customer outreach queued for ****1188 with the drafted script (simulated)",
+     "approved_by": "Maya (analyst)"
+    },
+    {
+     "action": "block_and_reissue",
+     "status": "done",
+     "effect": "Card ****1188 blocked; replacement ordered with a new number (simulated)",
+     "approved_by": "Maya (analyst)"
+    },
+    {
+     "action": "flag_merchant",
+     "status": "done",
+     "effect": "Orbit Digital Goods flagged for CPP review (simulated)",
+     "approved_by": "Maya (analyst)"
+    },
+    {
+     "action": "bulk_reissue",
+     "status": "done",
+     "effect": "212 exposed cards queued for proactive reissue (simulated)",
+     "approved_by": "Maya (analyst)"
+    }
+   ],
+   "handoff": null,
+   "label_reveal": null,
+   "summary": "- Rules engine says **approve** (120/999); the graph model says **High risk** (0.74). [score]\n- Orbit Digital Goods: 37 of 412 cards seen before this payment had confirmed fraud. [neighborhood]\n- Strongest reason: Merchant linked to 37 cards with confirmed fraud in the last 21 days (+2.70). [reasons]\n- 3 similar earlier alerts; latest outcome: Confirmed fraud \u00b7 card reissued. [similar]\n- Suggested: Block and reissue. High graph risk from the merchant's network; contact the customer, then block and reissue. [draft]",
+   "mode": "scripted",
+   "served_by": null,
+   "usage": {
+    "llm_calls": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "tool_calls": 14
+   },
+   "security": {
+    "mode": "enforce",
+    "status": "not_checked",
+    "checks": 0,
+    "blocked": 0,
+    "errors": 0,
+    "event_ids": []
+   },
+   "agent_trace": "recorded",
+   "backend": "fixture",
+   "backend_label": "Sample scores",
+   "recorded_at": null,
+   "duration_ms": 7877,
+   "investigated_ms": 6230
+  }
+ },
+ "events": [
+  {
+   "v": 1,
+   "id": "80fc0642-e240-44a1-b979-31039fae4542",
+   "at": "2026-10-09T22:40:38.058941+00:00",
+   "ns": 3524576791,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "run",
+   "status": "started",
+   "title": "Triage \u00b7 Compromised merchant",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Maya \u00b7 card-fraud operations analyst \u00b7 post-authorization queue (synthetic data)",
+   "data": {
+    "scenario": {
+     "id": "cpp-orbit",
+     "case_id": "cpp-orbit",
+     "title": "Compromised merchant",
+     "situation": "$286.40 online at Orbit Digital Goods by a clean, long-tenured card.",
+     "expected": "Rules approve \u00b7 graph model high \u00b7 contact customer, block and reissue",
+     "kind": "story",
+     "model_scope": "Scored by the graph model"
+    },
+    "case": {
+     "id": "cpp-orbit",
+     "label": "Online purchase at Orbit Digital Goods",
+     "account": "****1188",
+     "merchant": "Orbit Digital Goods",
+     "amount": 286.4,
+     "channel": "cnp",
+     "neighborhood": "In the last 21 days, 412 cards bought here and 37 later had confirmed fraud \u00b7 this card's history is clean",
+     "scenario": "cpp",
+     "history": {
+      "card_prior_payments": 1840,
+      "card_prior_fraud": 0,
+      "card_prior_visits_here": 0,
+      "merchant_prior_payments": 1187,
+      "merchant_prior_cards": 412,
+      "merchant_prior_fraud_cards": 37,
+      "card_small_payments_24h": 0
+     },
+     "at": "2026-10-02T21:14:00Z",
+     "mcc": "5816",
+     "mcc_label": "Digital goods: games",
+     "currency": "USD",
+     "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
+     "scoreable_by_model": true,
+     "customer": "Dana Whitfield (fictional)",
+     "customer_id": "dana-whitfield"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "f155c2aa-7bce-4934-9b42-0fa77dcd075f",
+   "at": "2026-10-09T22:40:38.059738+00:00",
+   "ns": 3525372291,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Score the alert queue \u00b7 5 payments",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "score_payment",
+    "arguments": {
+     "cases": 5
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "d2f9dd4c-67de-4e50-a2a9-bbeacef3972c",
+   "at": "2026-10-09T22:40:38.072889+00:00",
+   "ns": 3538524666,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "****1188 \u00b7 Orbit Digital Goods \u00b7 rules approve \u00b7 graph 0.74 high risk",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "score_payment",
+    "queue_row": {
+     "case": {
+      "id": "cpp-orbit",
+      "label": "Online purchase at Orbit Digital Goods",
+      "account": "****1188",
+      "merchant": "Orbit Digital Goods",
+      "amount": 286.4,
+      "channel": "cnp",
+      "neighborhood": "In the last 21 days, 412 cards bought here and 37 later had confirmed fraud \u00b7 this card's history is clean",
+      "scenario": "cpp",
+      "history": {
+       "card_prior_payments": 1840,
+       "card_prior_fraud": 0,
+       "card_prior_visits_here": 0,
+       "merchant_prior_payments": 1187,
+       "merchant_prior_cards": 412,
+       "merchant_prior_fraud_cards": 37,
+       "card_small_payments_24h": 0
+      },
+      "at": "2026-10-02T21:14:00Z",
+      "mcc": "5816",
+      "mcc_label": "Digital goods: games",
+      "currency": "USD",
+      "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
+      "scoreable_by_model": true,
+      "customer": "Dana Whitfield (fictional)",
+      "customer_id": "dana-whitfield"
+     },
+     "probability": 0.74,
+     "risk_band": "high",
+     "risk_label": "High risk",
+     "rules": {
+      "score": 120,
+      "decision": "approve"
+     },
+     "suggested_action": "Block and reissue",
+     "backend": "fixture",
+     "label": "Sample scores",
+     "latency_ms": 0.3,
+     "model_ms": null,
+     "device": null
+    },
+    "latency_ms": 0.3,
+    "backend": "fixture"
+   }
+  },
+  {
+   "v": 1,
+   "id": "240b714a-6a7f-455a-b5a3-f7eb630b30f2",
+   "at": "2026-10-09T22:40:38.194829+00:00",
+   "ns": 3660464916,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "****5207 \u00b7 Northgate Electronics Online \u00b7 rules review \u00b7 graph 0.91 high risk",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "score_payment",
+    "queue_row": {
+     "case": {
+      "id": "card-testing",
+      "label": "Electronics purchase after a burst of tiny charges",
+      "account": "****5207",
+      "merchant": "Northgate Electronics Online",
+      "amount": 894.0,
+      "channel": "cnp",
+      "neighborhood": "11 authorizations of $1\u2013$3 at QuickTip Donations in 40 minutes \u00b7 58 other cards did the same there this week, 14 later confirmed fraud",
+      "scenario": "card_testing",
+      "history": {
+       "card_prior_payments": 312,
+       "card_prior_fraud": 0,
+       "card_prior_visits_here": 0,
+       "merchant_prior_payments": 9120,
+       "merchant_prior_cards": 2240,
+       "merchant_prior_fraud_cards": 31,
+       "card_small_payments_24h": 11
+      },
+      "at": "2026-10-03T02:41:00Z",
+      "mcc": "5732",
+      "mcc_label": "Electronics stores",
+      "currency": "USD",
+      "situation": "Eleven $1\u2013$3 online authorizations in 40 minutes, then an $894 electronics order.",
+      "scoreable_by_model": true,
+      "customer": "Synthetic cardholder",
+      "customer_id": "synthetic-cardholder-5207"
+     },
+     "probability": 0.91,
+     "risk_band": "high",
+     "risk_label": "High risk",
+     "rules": {
+      "score": 540,
+      "decision": "review"
+     },
+     "suggested_action": "Block and reissue",
+     "backend": "fixture",
+     "label": "Sample scores",
+     "latency_ms": 0.5,
+     "model_ms": null,
+     "device": null
+    },
+    "latency_ms": 0.5,
+    "backend": "fixture"
+   }
+  },
+  {
+   "v": 1,
+   "id": "d9067f77-e381-4b3e-a164-16360c8bcaf3",
+   "at": "2026-10-09T22:40:38.317621+00:00",
+   "ns": 3783254333,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "****3390 \u00b7 Lumen Travel Co. \u00b7 rules decline \u00b7 graph 0.18 low risk",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "score_payment",
+    "queue_row": {
+     "case": {
+      "id": "ato-illustrative",
+      "label": "Travel booking right after an address change",
+      "account": "****3390",
+      "merchant": "Lumen Travel Co.",
+      "amount": 1450.0,
+      "channel": "cnp",
+      "neighborhood": "Merchant network is unremarkable \u00b7 the risk is in the account events, which the graph model cannot see",
+      "scenario": "ato",
+      "history": {
+       "card_prior_payments": 905,
+       "card_prior_fraud": 0,
+       "card_prior_visits_here": 0,
+       "merchant_prior_payments": 3310,
+       "merchant_prior_cards": 1406,
+       "merchant_prior_fraud_cards": 3,
+       "card_small_payments_24h": 0
+      },
+      "at": "2026-10-03T15:05:00Z",
+      "mcc": "4722",
+      "mcc_label": "Travel agencies",
+      "currency": "USD",
+      "situation": "New device, mailing address changed 2 hours ago, card reissue requested, then a $1,450 online booking.",
+      "scoreable_by_model": false,
+      "illustrative": true,
+      "customer": "Synthetic cardholder",
+      "customer_id": "synthetic-cardholder-3390"
+     },
+     "probability": 0.18,
+     "risk_band": "low",
+     "risk_label": "Low risk",
+     "rules": {
+      "score": 740,
+      "decision": "decline"
+     },
+     "suggested_action": "Escalate to investigations",
+     "backend": "fixture",
+     "label": "Sample scores",
+     "latency_ms": 0.5,
+     "model_ms": null,
+     "device": null
+    },
+    "latency_ms": 0.5,
+    "backend": "fixture"
+   }
+  },
+  {
+   "v": 1,
+   "id": "d2fd20c6-c1fb-4946-bb3c-a8550ff2d421",
+   "at": "2026-10-09T22:40:38.441126+00:00",
+   "ns": 3906765250,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "****4421 \u00b7 Harbor Market #18 \u00b7 rules approve \u00b7 graph 0.06 low risk",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "score_payment",
+    "queue_row": {
+     "case": {
+      "id": "clean-grocery",
+      "label": "Neighborhood grocery \u00b7 card present",
+      "account": "****4421",
+      "merchant": "Harbor Market #18",
+      "amount": 42.18,
+      "channel": "pos",
+      "neighborhood": "Merchant dispute rate 0.1% \u00b7 this card has 14 earlier clean purchases here",
+      "scenario": "clean_control",
+      "history": {
+       "card_prior_payments": 2210,
+       "card_prior_fraud": 0,
+       "card_prior_visits_here": 14,
+       "merchant_prior_payments": 18400,
+       "merchant_prior_cards": 3120,
+       "merchant_prior_fraud_cards": 2,
+       "card_small_payments_24h": 0
+      },
+      "at": "2026-10-03T17:22:00Z",
+      "mcc": "5411",
+      "mcc_label": "Grocery stores",
+      "currency": "USD",
+      "situation": "A card-present grocery purchase at a store this card has used 14 times.",
+      "scoreable_by_model": true,
+      "customer": "Synthetic cardholder",
+      "customer_id": "synthetic-cardholder-4421"
+     },
+     "probability": 0.06,
+     "risk_band": "low",
+     "risk_label": "Low risk",
+     "rules": {
+      "score": 10,
+      "decision": "approve"
+     },
+     "suggested_action": "Mark false positive",
+     "backend": "fixture",
+     "label": "Sample scores",
+     "latency_ms": 0.6,
+     "model_ms": null,
+     "device": null
+    },
+    "latency_ms": 0.6,
+    "backend": "fixture"
+   }
+  },
+  {
+   "v": 1,
+   "id": "53f79291-41ec-4e58-93cf-73c8cfc137ae",
+   "at": "2026-10-09T22:40:38.563285+00:00",
+   "ns": 4028920541,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "****6612 \u00b7 Northwind Outdoor Co. \u00b7 rules approve \u00b7 graph 0.41 elevated risk",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "score_payment",
+    "queue_row": {
+     "case": {
+      "id": "cnp-verify",
+      "label": "First order at an outdoor retailer",
+      "account": "****6612",
+      "merchant": "Northwind Outdoor Co.",
+      "amount": 612.9,
+      "channel": "cnp",
+      "neighborhood": "Merchant network mostly clean \u00b7 amount well above this card's typical spend",
+      "scenario": "queue",
+      "history": {
+       "card_prior_payments": 640,
+       "card_prior_fraud": 0,
+       "card_prior_visits_here": 0,
+       "merchant_prior_payments": 5210,
+       "merchant_prior_cards": 1980,
+       "merchant_prior_fraud_cards": 9,
+       "card_small_payments_24h": 0
+      },
+      "at": "2026-10-03T19:48:00Z",
+      "mcc": "5941",
+      "mcc_label": "Sporting goods",
+      "currency": "USD",
+      "situation": "An online order about three times this card's usual spend, at a merchant it has not used before.",
+      "scoreable_by_model": true,
+      "customer": "Synthetic cardholder",
+      "customer_id": "synthetic-cardholder-6612"
+     },
+     "probability": 0.41,
+     "risk_band": "elevated",
+     "risk_label": "Elevated risk",
+     "rules": {
+      "score": 120,
+      "decision": "approve"
+     },
+     "suggested_action": "Contact customer",
+     "backend": "fixture",
+     "label": "Sample scores",
+     "latency_ms": 0.4,
+     "model_ms": null,
+     "device": null
+    },
+    "latency_ms": 0.4,
+    "backend": "fixture"
+   }
+  },
+  {
+   "v": 1,
+   "id": "17e28e7f-ad80-4ba6-82a2-aab2b4da289f",
+   "at": "2026-10-09T22:40:38.685827+00:00",
+   "ns": 4151480500,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "run",
+   "status": "info",
+   "title": "Open alert \u00b7 ****1188 at Orbit Digital Goods \u00b7 $286.40",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
+   "data": {
+    "case": {
+     "id": "cpp-orbit",
+     "label": "Online purchase at Orbit Digital Goods",
+     "account": "****1188",
+     "merchant": "Orbit Digital Goods",
+     "amount": 286.4,
+     "channel": "cnp",
+     "neighborhood": "In the last 21 days, 412 cards bought here and 37 later had confirmed fraud \u00b7 this card's history is clean",
+     "scenario": "cpp",
+     "history": {
+      "card_prior_payments": 1840,
+      "card_prior_fraud": 0,
+      "card_prior_visits_here": 0,
+      "merchant_prior_payments": 1187,
+      "merchant_prior_cards": 412,
+      "merchant_prior_fraud_cards": 37,
+      "card_small_payments_24h": 0
+     },
+     "at": "2026-10-02T21:14:00Z",
+     "mcc": "5816",
+     "mcc_label": "Digital goods: games",
+     "currency": "USD",
+     "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
+     "scoreable_by_model": true,
+     "customer": "Dana Whitfield (fictional)",
+     "customer_id": "dana-whitfield"
+    },
+    "opened": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "ec9b15c1-8c47-46a8-b103-965af8ebde71",
+   "at": "2026-10-09T22:40:38.685961+00:00",
+   "ns": 4151592666,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "agent.thinking",
+   "status": "info",
+   "title": "Scripted investigation \u00b7 same tools, no model",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "The summary is a template filled from tool outputs, labelled Scripted.",
+   "data": {}
+  },
+  {
+   "v": 1,
+   "id": "e2da5f4d-cde4-40bf-8c52-4841a8bc3d70",
+   "at": "2026-10-09T22:40:38.686015+00:00",
+   "ns": 4151644125,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Calls score_payment",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "score_payment",
+    "arguments": {
+     "case_id": "cpp-orbit"
+    },
+    "scripted": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "9fe1cbdd-2de9-42de-abf8-0ea27ea1cebf",
+   "at": "2026-10-09T22:40:38.686724+00:00",
+   "ns": 4152356083,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "Graph model \u00b7 0.74 \u00b7 High risk \u00b7 Sample scores",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "score_payment",
+    "evidence": "score",
+    "case_id": "cpp-orbit",
+    "probability": 0.74,
+    "risk_band": "high",
+    "backend": "fixture",
+    "label": "Sample scores",
+    "latency_ms": 0.6,
+    "model_ms": null,
+    "device": null,
+    "recorded_at": null,
+    "synthetic": true,
+    "summary": "High risk (0.74)"
+   }
+  },
+  {
+   "v": 1,
+   "id": "f1d0e28e-b50e-4e87-8505-c31ee5ed671a",
+   "at": "2026-10-09T22:40:38.839563+00:00",
+   "ns": 4305206000,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Calls rules_score",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "rules_score",
+    "arguments": {
+     "case_id": "cpp-orbit"
+    },
+    "scripted": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "68a091fd-0634-4535-bc32-9496ef669bed",
+   "at": "2026-10-09T22:40:38.839653+00:00",
+   "ns": 4305279666,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Rules engine \u00b7 120/999 \u00b7 approve",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Card not present (+60); Amount 3.1\u00d7 this card's typical spend (+20)",
+   "data": {
+    "tool": "rules_score",
+    "evidence": "rules",
+    "score": 120,
+    "max": 999,
+    "decision": "approve",
+    "fired": [
+     {
+      "rule": "BASE",
+      "text": "Baseline for any authorization",
+      "points": 40
+     },
+     {
+      "rule": "CNP",
+      "text": "Card not present",
+      "points": 60
+     },
+     {
+      "rule": "AMT_2X",
+      "text": "Amount 3.1\u00d7 this card's typical spend",
+      "points": 20
+     }
+    ],
+    "thresholds": {
+     "review": 400,
+     "decline": 650
+    },
+    "sees_network": false,
+    "engine": "Baseline rules (synthetic, deterministic)"
+   }
+  },
+  {
+   "v": 1,
+   "id": "7038fa9c-de78-4e33-bbe8-67bba42ab86e",
+   "at": "2026-10-09T22:40:38.991887+00:00",
+   "ns": 4457521250,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Calls get_neighborhood",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_neighborhood",
+    "arguments": {
+     "case_id": "cpp-orbit"
+    },
+    "scripted": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "55875462-d381-40f0-9b8e-77157c307868",
+   "at": "2026-10-09T22:40:38.992165+00:00",
+   "ns": 4457789250,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "Neighborhood \u00b7 412 cards at Orbit Digital Goods \u00b7 37 confirmed fraud (9.0% of cards)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "As of the payment time (synthetic neighborhood). Only payments before this one count.",
+   "data": {
+    "tool": "get_neighborhood",
+    "evidence": "neighborhood",
+    "graph": {
+     "as_of": "2026-10-02T21:14:00+00:00",
+     "window_days": 21,
+     "merchant": "Orbit Digital Goods",
+     "cards_seen": 412,
+     "cards_confirmed_fraud": 37,
+     "fraud_share": 0.0898,
+     "dispute_ratio": 0.018,
+     "card_prior_payments": 1840,
+     "card_prior_fraud": 0,
+     "card_prior_visits_here": 0,
+     "small_auths": null,
+     "other_cards_to_reissue": 212,
+     "shown": {
+      "fraud": 37,
+      "clean": 14,
+      "clean_total": 375
+     },
+     "nodes": [
+      {
+       "id": "merchant",
+       "kind": "merchant",
+       "label": "Orbit Digital Goods",
+       "detail": "412 cards in 21 days before this payment"
+      },
+      {
+       "id": "card",
+       "kind": "scored",
+       "label": "****1188",
+       "detail": "Scored payment \u00b7 $286.40"
+      },
+      {
+       "id": "f0",
+       "kind": "fraud",
+       "label": "****7661",
+       "bought_at": "2026-09-29T10:42:50.174008+00:00",
+       "confirmed_at": "2026-10-01T16:23:39.431609+00:00",
+       "detail": "Confirmed fraud 2 days after buying here"
+      },
+      {
+       "id": "f1",
+       "kind": "fraud",
+       "label": "****5573",
+       "bought_at": "2026-09-19T22:34:37.087190+00:00",
+       "confirmed_at": "2026-10-02T12:56:36.535973+00:00",
+       "detail": "Confirmed fraud 13 days after buying here"
+      },
+      {
+       "id": "f2",
+       "kind": "fraud",
+       "label": "****6372",
+       "bought_at": "2026-09-20T09:51:37.893141+00:00",
+       "confirmed_at": "2026-09-23T17:55:12.807808+00:00",
+       "detail": "Confirmed fraud 3 days after buying here"
+      },
+      {
+       "id": "f3",
+       "kind": "fraud",
+       "label": "****0575",
+       "bought_at": "2026-09-13T10:11:24.612477+00:00",
+       "confirmed_at": "2026-09-28T05:32:30.566654+00:00",
+       "detail": "Confirmed fraud 15 days after buying here"
+      },
+      {
+       "id": "f4",
+       "kind": "fraud",
+       "label": "****2870",
+       "bought_at": "2026-09-29T21:38:59.832614+00:00",
+       "confirmed_at": "2026-10-02T11:42:32.437650+00:00",
+       "detail": "Confirmed fraud 3 days after buying here"
+      },
+      {
+       "id": "f5",
+       "kind": "fraud",
+       "label": "****8986",
+       "bought_at": "2026-09-17T19:35:56.337333+00:00",
+       "confirmed_at": "2026-10-02T04:32:17.386605+00:00",
+       "detail": "Confirmed fraud 14 days after buying here"
+      },
+      {
+       "id": "f6",
+       "kind": "fraud",
+       "label": "****0504",
+       "bought_at": "2026-09-18T18:00:59.725157+00:00",
+       "confirmed_at": "2026-09-26T03:23:24.261428+00:00",
+       "detail": "Confirmed fraud 7 days after buying here"
+      },
+      {
+       "id": "f7",
+       "kind": "fraud",
+       "label": "****8878",
+       "bought_at": "2026-09-24T21:36:02.569019+00:00",
+       "confirmed_at": "2026-10-02T02:53:00.645905+00:00",
+       "detail": "Confirmed fraud 7 days after buying here"
+      },
+      {
+       "id": "f8",
+       "kind": "fraud",
+       "label": "****6251",
+       "bought_at": "2026-09-28T18:27:30.326146+00:00",
+       "confirmed_at": "2026-10-01T23:38:33.513755+00:00",
+       "detail": "Confirmed fraud 3 days after buying here"
+      },
+      {
+       "id": "f9",
+       "kind": "fraud",
+       "label": "****0087",
+       "bought_at": "2026-09-14T14:47:47.470107+00:00",
+       "confirmed_at": "2026-09-26T16:17:22.270330+00:00",
+       "detail": "Confirmed fraud 12 days after buying here"
+      },
+      {
+       "id": "f10",
+       "kind": "fraud",
+       "label": "****1178",
+       "bought_at": "2026-09-15T10:11:04.920727+00:00",
+       "confirmed_at": "2026-10-01T19:34:52.511944+00:00",
+       "detail": "Confirmed fraud 16 days after buying here"
+      },
+      {
+       "id": "f11",
+       "kind": "fraud",
+       "label": "****2872",
+       "bought_at": "2026-09-27T12:55:17.371567+00:00",
+       "confirmed_at": "2026-10-02T06:41:55.914933+00:00",
+       "detail": "Confirmed fraud 5 days after buying here"
+      },
+      {
+       "id": "f12",
+       "kind": "fraud",
+       "label": "****0595",
+       "bought_at": "2026-09-17T19:23:50.483377+00:00",
+       "confirmed_at": "2026-10-02T04:36:59.678788+00:00",
+       "detail": "Confirmed fraud 14 days after buying here"
+      },
+      {
+       "id": "f13",
+       "kind": "fraud",
+       "label": "****3355",
+       "bought_at": "2026-09-17T19:17:49.087045+00:00",
+       "confirmed_at": "2026-10-01T16:37:39.719267+00:00",
+       "detail": "Confirmed fraud 14 days after buying here"
+      },
+      {
+       "id": "f14",
+       "kind": "fraud",
+       "label": "****6845",
+       "bought_at": "2026-09-28T10:24:31.869491+00:00",
+       "confirmed_at": "2026-09-30T21:41:35.719772+00:00",
+       "detail": "Confirmed fraud 2 days after buying here"
+      },
+      {
+       "id": "f15",
+       "kind": "fraud",
+       "label": "****0983",
+       "bought_at": "2026-09-22T14:28:37.972344+00:00",
+       "confirmed_at": "2026-09-29T11:58:45.115113+00:00",
+       "detail": "Confirmed fraud 7 days after buying here"
+      },
+      {
+       "id": "f16",
+       "kind": "fraud",
+       "label": "****5730",
+       "bought_at": "2026-09-24T00:13:21.020135+00:00",
+       "confirmed_at": "2026-10-02T14:31:30.079739+00:00",
+       "detail": "Confirmed fraud 9 days after buying here"
+      },
+      {
+       "id": "f17",
+       "kind": "fraud",
+       "label": "****9839",
+       "bought_at": "2026-09-29T03:57:55.913746+00:00",
+       "confirmed_at": "2026-10-01T21:21:44.789863+00:00",
+       "detail": "Confirmed fraud 3 days after buying here"
+      },
+      {
+       "id": "f18",
+       "kind": "fraud",
+       "label": "****3926",
+       "bought_at": "2026-09-21T21:58:04.211086+00:00",
+       "confirmed_at": "2026-10-01T20:01:10.612907+00:00",
+       "detail": "Confirmed fraud 10 days after buying here"
+      },
+      {
+       "id": "f19",
+       "kind": "fraud",
+       "label": "****4348",
+       "bought_at": "2026-09-14T17:09:01.315850+00:00",
+       "confirmed_at": "2026-09-24T17:11:12.647375+00:00",
+       "detail": "Confirmed fraud 10 days after buying here"
+      },
+      {
+       "id": "f20",
+       "kind": "fraud",
+       "label": "****3378",
+       "bought_at": "2026-09-28T11:15:36.015524+00:00",
+       "confirmed_at": "2026-10-02T14:37:46.611449+00:00",
+       "detail": "Confirmed fraud 4 days after buying here"
+      },
+      {
+       "id": "f21",
+       "kind": "fraud",
+       "label": "****3533",
+       "bought_at": "2026-09-12T19:41:04.418379+00:00",
+       "confirmed_at": "2026-09-18T16:54:42.621531+00:00",
+       "detail": "Confirmed fraud 6 days after buying here"
+      },
+      {
+       "id": "f22",
+       "kind": "fraud",
+       "label": "****6891",
+       "bought_at": "2026-09-25T19:24:05.431512+00:00",
+       "confirmed_at": "2026-10-01T06:23:45.483686+00:00",
+       "detail": "Confirmed fraud 5 days after buying here"
+      },
+      {
+       "id": "f23",
+       "kind": "fraud",
+       "label": "****1337",
+       "bought_at": "2026-09-30T07:35:43.027108+00:00",
+       "confirmed_at": "2026-10-02T04:06:01.164991+00:00",
+       "detail": "Confirmed fraud 2 days after buying here"
+      },
+      {
+       "id": "f24",
+       "kind": "fraud",
+       "label": "****9642",
+       "bought_at": "2026-09-16T07:28:13.957026+00:00",
+       "confirmed_at": "2026-09-23T07:48:32.605730+00:00",
+       "detail": "Confirmed fraud 7 days after buying here"
+      },
+      {
+       "id": "f25",
+       "kind": "fraud",
+       "label": "****0084",
+       "bought_at": "2026-09-28T10:20:03.259130+00:00",
+       "confirmed_at": "2026-09-30T14:41:15.594597+00:00",
+       "detail": "Confirmed fraud 2 days after buying here"
+      },
+      {
+       "id": "f26",
+       "kind": "fraud",
+       "label": "****9362",
+       "bought_at": "2026-09-15T03:11:16.286808+00:00",
+       "confirmed_at": "2026-09-24T22:32:13.902904+00:00",
+       "detail": "Confirmed fraud 10 days after buying here"
+      },
+      {
+       "id": "f27",
+       "kind": "fraud",
+       "label": "****9383",
+       "bought_at": "2026-09-27T07:55:22.762095+00:00",
+       "confirmed_at": "2026-09-30T03:29:42.072260+00:00",
+       "detail": "Confirmed fraud 3 days after buying here"
+      },
+      {
+       "id": "f28",
+       "kind": "fraud",
+       "label": "****3955",
+       "bought_at": "2026-09-20T08:54:47.396931+00:00",
+       "confirmed_at": "2026-09-24T23:32:46.539759+00:00",
+       "detail": "Confirmed fraud 5 days after buying here"
+      },
+      {
+       "id": "f29",
+       "kind": "fraud",
+       "label": "****6959",
+       "bought_at": "2026-09-14T15:12:25.170631+00:00",
+       "confirmed_at": "2026-09-20T21:11:15.633349+00:00",
+       "detail": "Confirmed fraud 6 days after buying here"
+      },
+      {
+       "id": "f30",
+       "kind": "fraud",
+       "label": "****0231",
+       "bought_at": "2026-09-30T20:19:09.986047+00:00",
+       "confirmed_at": "2026-10-01T20:59:53.829959+00:00",
+       "detail": "Confirmed fraud 1 day after buying here"
+      },
+      {
+       "id": "f31",
+       "kind": "fraud",
+       "label": "****5328",
+       "bought_at": "2026-09-16T05:48:41.246476+00:00",
+       "confirmed_at": "2026-09-28T11:17:27.145434+00:00",
+       "detail": "Confirmed fraud 12 days after buying here"
+      },
+      {
+       "id": "f32",
+       "kind": "fraud",
+       "label": "****4098",
+       "bought_at": "2026-09-29T14:10:44.545936+00:00",
+       "confirmed_at": "2026-10-01T10:00:51.243862+00:00",
+       "detail": "Confirmed fraud 2 days after buying here"
+      },
+      {
+       "id": "f33",
+       "kind": "fraud",
+       "label": "****0990",
+       "bought_at": "2026-09-11T23:25:43.799723+00:00",
+       "confirmed_at": "2026-09-29T18:08:09.546610+00:00",
+       "detail": "Confirmed fraud 18 days after buying here"
+      },
+      {
+       "id": "f34",
+       "kind": "fraud",
+       "label": "****3206",
+       "bought_at": "2026-09-13T23:24:26.225219+00:00",
+       "confirmed_at": "2026-09-22T09:22:48.918900+00:00",
+       "detail": "Confirmed fraud 8 days after buying here"
+      },
+      {
+       "id": "f35",
+       "kind": "fraud",
+       "label": "****6850",
+       "bought_at": "2026-09-15T05:48:11.209315+00:00",
+       "confirmed_at": "2026-10-01T14:18:52.648815+00:00",
+       "detail": "Confirmed fraud 16 days after buying here"
+      },
+      {
+       "id": "f36",
+       "kind": "fraud",
+       "label": "****8824",
+       "bought_at": "2026-09-29T17:28:09.033626+00:00",
+       "confirmed_at": "2026-10-01T20:16:08.777566+00:00",
+       "detail": "Confirmed fraud 2 days after buying here"
+      },
+      {
+       "id": "c0",
+       "kind": "clean",
+       "label": "****1920",
+       "bought_at": "2026-09-11T14:19:26.302092+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c1",
+       "kind": "clean",
+       "label": "****4782",
+       "bought_at": "2026-09-23T08:59:32.615447+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c2",
+       "kind": "clean",
+       "label": "****4041",
+       "bought_at": "2026-09-18T08:12:16.132152+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c3",
+       "kind": "clean",
+       "label": "****6675",
+       "bought_at": "2026-09-21T22:34:34.558377+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c4",
+       "kind": "clean",
+       "label": "****2335",
+       "bought_at": "2026-09-16T10:05:57.449121+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c5",
+       "kind": "clean",
+       "label": "****0832",
+       "bought_at": "2026-09-27T11:29:05.939467+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c6",
+       "kind": "clean",
+       "label": "****7940",
+       "bought_at": "2026-09-30T06:51:58.352855+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c7",
+       "kind": "clean",
+       "label": "****0951",
+       "bought_at": "2026-09-20T01:27:23.131819+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c8",
+       "kind": "clean",
+       "label": "****8857",
+       "bought_at": "2026-09-24T15:23:49.817619+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c9",
+       "kind": "clean",
+       "label": "****3079",
+       "bought_at": "2026-09-24T08:52:57.750052+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c10",
+       "kind": "clean",
+       "label": "****4177",
+       "bought_at": "2026-09-12T22:35:24.406655+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c11",
+       "kind": "clean",
+       "label": "****4389",
+       "bought_at": "2026-10-01T01:53:46.895821+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c12",
+       "kind": "clean",
+       "label": "****8438",
+       "bought_at": "2026-09-24T01:37:04.292012+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c13",
+       "kind": "clean",
+       "label": "****6887",
+       "bought_at": "2026-09-19T02:03:19.469481+00:00",
+       "detail": "No fraud reported"
+      }
+     ],
+     "edges": [
+      {
+       "source": "card",
+       "target": "merchant",
+       "kind": "scored"
+      },
+      {
+       "source": "f0",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f1",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f2",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f3",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f4",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f5",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f6",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f7",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f8",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f9",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f10",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f11",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f12",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f13",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f14",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f15",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f16",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f17",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f18",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f19",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f20",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f21",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f22",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f23",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f24",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f25",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f26",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f27",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f28",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f29",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f30",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f31",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f32",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f33",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f34",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f35",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f36",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "c0",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c1",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c2",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c3",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c4",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c5",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c6",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c7",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c8",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c9",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c10",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c11",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c12",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c13",
+       "target": "merchant",
+       "kind": "clean"
+      }
+     ],
+     "temporal_filter": true,
+     "source": "Synthetic neighborhood"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "60975918-5e57-4986-a1c7-9d3f3ac71ef7",
+   "at": "2026-10-09T22:40:39.142894+00:00",
+   "ns": 4608550833,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Calls explain",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "explain",
+    "arguments": {
+     "case_id": "cpp-orbit"
+    },
+    "scripted": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "65239576-a4c3-4a2c-9a5f-c5d37a36e470",
+   "at": "2026-10-09T22:40:39.143143+00:00",
+   "ns": 4608775541,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Reasons \u00b7 Merchant linked to 37 cards with confirmed fraud in the last 21 days",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "- Merchant linked to 37 cards with confirmed fraud in the last 21 days (+2.70)\n- Card not present (+0.48)\n- Amount 3.1\u00d7 this card's typical spend (+0.43)\n- Card's clean history since 2016 (-0.36)",
+   "data": {
+    "tool": "explain",
+    "evidence": "reasons",
+    "reasons": [
+     {
+      "code": "NET_CONFIRMED_FRAUD_LINKS",
+      "text": "Merchant linked to 37 cards with confirmed fraud in the last 21 days",
+      "value": 2.7,
+      "feature": "merchant_neighborhood",
+      "label": "Merchant's network of linked cards",
+      "direction": "risk",
+      "network": true
+     },
+     {
+      "code": "CNP",
+      "text": "Card not present",
+      "value": 0.48,
+      "feature": "payment_channel",
+      "label": "Payment channel",
+      "direction": "risk",
+      "network": false
+     },
+     {
+      "code": "AMOUNT_VS_PROFILE",
+      "text": "Amount 3.1\u00d7 this card's typical spend",
+      "value": 0.43,
+      "feature": "transaction_amount",
+      "label": "Amount",
+      "direction": "risk",
+      "network": false
+     },
+     {
+      "code": "CLEAN_HISTORY",
+      "text": "Card's clean history since 2016",
+      "value": -0.36,
+      "feature": "account_gnn_embedding",
+      "label": "Card's own graph history",
+      "direction": "protective",
+      "network": true
+     }
+    ],
+    "method": "sample",
+    "units": "log_odds",
+    "how": "Sample contributions (illustrative log-odds)"
+   }
+  },
+  {
+   "v": 1,
+   "id": "f04dd3c2-8f1e-4781-8f86-b9ed6003474e",
+   "at": "2026-10-09T22:40:39.295386+00:00",
+   "ns": 4761028166,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Calls similar_cases",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "similar_cases",
+    "arguments": {
+     "case_id": "cpp-orbit"
+    },
+    "scripted": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "a1fd0ef4-34e0-426e-9e5f-bf704eab707d",
+   "at": "2026-10-09T22:40:39.295471+00:00",
+   "ns": 4761099916,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Similar cases \u00b7 3 earlier alerts",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "- FRD-20419: Card ****6031 at Orbit Digital Goods, Sep 24 \u2192 Confirmed fraud \u00b7 card reissued\n- FRD-20388: Card ****2217 at Orbit Digital Goods, Sep 21 \u2192 Confirmed fraud \u00b7 card reissued\n- FRD-20301: Card ****9914 at Orbit Digital Goods, Sep 15 \u2192 False positive \u00b7 customer recognised it",
+   "data": {
+    "tool": "similar_cases",
+    "evidence": "similar",
+    "cases": [
+     {
+      "id": "FRD-20419",
+      "summary": "Card ****6031 at Orbit Digital Goods, Sep 24",
+      "outcome": "Confirmed fraud \u00b7 card reissued"
+     },
+     {
+      "id": "FRD-20388",
+      "summary": "Card ****2217 at Orbit Digital Goods, Sep 21",
+      "outcome": "Confirmed fraud \u00b7 card reissued"
+     },
+     {
+      "id": "FRD-20301",
+      "summary": "Card ****9914 at Orbit Digital Goods, Sep 15",
+      "outcome": "False positive \u00b7 customer recognised it"
+     }
+    ]
+   }
+  },
+  {
+   "v": 1,
+   "id": "c0230af9-b304-4fbc-8dcd-3a6f2e3ba70d",
+   "at": "2026-10-09T22:40:39.447243+00:00",
+   "ns": 4912884833,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Calls fraud_playbook",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "fraud_playbook",
+    "arguments": {
+     "case_id": "cpp-orbit"
+    },
+    "scripted": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "48948d62-bc86-4425-9c25-00f1a64b3a14",
+   "at": "2026-10-09T22:40:39.450485+00:00",
+   "ns": 4916122666,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Playbook \u00b7 Common point of purchase (CPP) \u00b7 response",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "- Contact the customer to confirm the purchase before the payment settles.\n- If the customer does not recognise it: block the card and reissue with a new number.\n- Flag the merchant for CPP review so the fraud strategy team can assess the other cards seen there.\n- Proactive reissue of other exposed cards needs an analyst decision; it affects customers who have not reported anything.",
+   "data": {
+    "tool": "fraud_playbook",
+    "evidence": "playbook#response",
+    "pattern": "cpp"
+   }
+  },
+  {
+   "v": 1,
+   "id": "ff78de8b-1d89-442e-93a4-2e68c993e382",
+   "at": "2026-10-09T22:40:39.602776+00:00",
+   "ns": 5068453416,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Calls draft_disposition",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "draft_disposition",
+    "arguments": {
+     "case_id": "cpp-orbit"
+    },
+    "scripted": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "b0c0c1a0-bdaa-408b-96b6-53ebc3d679f5",
+   "at": "2026-10-09T22:40:39.602951+00:00",
+   "ns": 5068585666,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Draft disposition \u00b7 Block and reissue",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "High graph risk from the merchant's network; contact the customer, then block and reissue.",
+   "data": {
+    "tool": "draft_disposition",
+    "evidence": "draft",
+    "recommended": "block_and_reissue",
+    "also": [
+     "contact_customer",
+     "flag_merchant"
+    ],
+    "outreach_script": "Hello, this is the card fraud team calling about a Orbit Digital Goods charge of $286.40 on your card ending 1188. Did you make this purchase? We will never ask for your full card number or SSN."
+   }
+  },
+  {
+   "v": 1,
+   "id": "2ad9cbe5-47e0-4ad4-818b-19fcba45e1f1",
+   "at": "2026-10-09T22:40:39.755343+00:00",
+   "ns": 5221006375,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Calls propose_action",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "propose_action",
+    "arguments": {
+     "action": "block_and_reissue"
+    },
+    "scripted": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "d4053f76-2119-47f2-a6a2-37197d53da8c",
+   "at": "2026-10-09T22:40:40.167835+00:00",
+   "ns": 5633463125,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "control",
+   "status": "denied",
+   "title": "Agent Control \u00b7 fraud.take_action \u00b7 Block and reissue \u00b7 deny \u00b7 requires analyst approval",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Requires analyst approval. The agent may propose it; only an analyst can approve it.",
+   "data": {
+    "policy": "fraud.take_action",
+    "decision": "deny",
+    "reason": "Requires analyst approval. The agent may propose it; only an analyst can approve it.",
+    "source": "agent_control",
+    "engine_label": "Agent Control",
+    "action": "block_and_reissue",
+    "scope": "this card",
+    "control": "fsi-fraud-take-action-approval-v1",
+    "control_execution_id": "c345c5e8-aacf-4397-9616-a865dd3d5a16",
+    "requested_by": "fraud triage agent"
+   }
+  },
+  {
+   "v": 1,
+   "id": "b2ece9f4-9340-4fd4-b444-6373dcd5478f",
+   "at": "2026-10-09T22:40:40.168022+00:00",
+   "ns": 5633645250,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "claim.verdict",
+   "status": "ok",
+   "title": "Citation check \u00b7 5/5 points cite tool evidence",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Each point must end on an evidence id this run produced. A format check, not a fact check.",
+   "data": {
+    "citations": {
+     "total": 5,
+     "cited": 5,
+     "items": [
+      {
+       "text": "Rules engine says **approve** (120/999); the graph model says **High risk** (0.74). [score]",
+       "ids": [
+        "score"
+       ],
+       "ok": true
+      },
+      {
+       "text": "Orbit Digital Goods: 37 of 412 cards seen before this payment had confirmed fraud. [neighborhood]",
+       "ids": [
+        "neighborhood"
+       ],
+       "ok": true
+      },
+      {
+       "text": "Strongest reason: Merchant linked to 37 cards with confirmed fraud in the last 21 days (+2.70). [reasons]",
+       "ids": [
+        "reasons"
+       ],
+       "ok": true
+      },
+      {
+       "text": "3 similar earlier alerts; latest outcome: Confirmed fraud \u00b7 card reissued. [similar]",
+       "ids": [
+        "similar"
+       ],
+       "ok": true
+      },
+      {
+       "text": "Suggested: Block and reissue. High graph risk from the merchant's network; contact the customer, then block and reissue. [draft]",
+       "ids": [
+        "draft"
+       ],
+       "ok": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "bff72432-bb7c-416e-8536-d1bdc8066964",
+   "at": "2026-10-09T22:40:40.168046+00:00",
+   "ns": 5633667625,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "agent.message",
+   "status": "info",
+   "title": "Analyst summary \u00b7 scripted (no model)",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "- Rules engine says **approve** (120/999); the graph model says **High risk** (0.74). [score]\n- Orbit Digital Goods: 37 of 412 cards seen before this payment had confirmed fraud. [neighborhood]\n- Strongest reason: Merchant linked to 37 cards with confirmed fraud in the last 21 days (+2.70). [reasons]\n- 3 similar earlier alerts; latest outcome: Confirmed fraud \u00b7 card reissued. [similar]\n- Suggested: Block and reissue. High graph risk from the merchant's network; contact the customer, then block and reissue. [draft]",
+   "data": {
+    "served_by": null,
+    "mode": "scripted"
+   }
+  },
+  {
+   "v": 1,
+   "id": "9ae59178-f9f9-4ab1-b97c-ab611d3ff785",
+   "at": "2026-10-09T22:40:40.764911+00:00",
+   "ns": 6230536083,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "hitl.request",
+   "status": "info",
+   "title": "Analyst decision required",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": "Suggested: Block and reissue. The agent's proposals are waiting on policy; only the analyst can approve card actions.",
+   "data": {
+    "request_id": "disposition",
+    "options": [
+     {
+      "id": "contact_customer",
+      "label": "Contact customer",
+      "policy": "reversible"
+     },
+     {
+      "id": "block_and_reissue",
+      "label": "Block and reissue",
+      "policy": "requires analyst approval"
+     },
+     {
+      "id": "false_positive",
+      "label": "Mark false positive",
+      "policy": "requires analyst approval"
+     },
+     {
+      "id": "escalate",
+      "label": "Escalate to investigations",
+      "policy": "reversible"
+     }
+    ],
+    "recommended": "block_and_reissue",
+    "case_file": {
+     "case": {
+      "id": "cpp-orbit",
+      "label": "Online purchase at Orbit Digital Goods",
+      "account": "****1188",
+      "merchant": "Orbit Digital Goods",
+      "amount": 286.4,
+      "channel": "cnp",
+      "neighborhood": "In the last 21 days, 412 cards bought here and 37 later had confirmed fraud \u00b7 this card's history is clean",
+      "scenario": "cpp",
+      "history": {
+       "card_prior_payments": 1840,
+       "card_prior_fraud": 0,
+       "card_prior_visits_here": 0,
+       "merchant_prior_payments": 1187,
+       "merchant_prior_cards": 412,
+       "merchant_prior_fraud_cards": 37,
+       "card_small_payments_24h": 0
+      },
+      "at": "2026-10-02T21:14:00Z",
+      "mcc": "5816",
+      "mcc_label": "Digital goods: games",
+      "currency": "USD",
+      "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
+      "scoreable_by_model": true,
+      "customer": "Dana Whitfield (fictional)",
+      "customer_id": "dana-whitfield"
+     },
+     "scenario": {
+      "id": "cpp-orbit",
+      "case_id": "cpp-orbit",
+      "title": "Compromised merchant",
+      "situation": "$286.40 online at Orbit Digital Goods by a clean, long-tenured card.",
+      "expected": "Rules approve \u00b7 graph model high \u00b7 contact customer, block and reissue",
+      "kind": "story",
+      "model_scope": "Scored by the graph model"
+     },
+     "evidence": {
+      "score": {
+       "case_id": "cpp-orbit",
+       "probability": 0.74,
+       "threshold": 0.5,
+       "risk_band": "high",
+       "risk_label": "High risk",
+       "suggested_action": "Contact customer, then block and reissue",
+       "backend": "fixture",
+       "backend_label": "Sample scores",
+       "engine": null,
+       "latency_ms": 0.6,
+       "recorded_at": null,
+       "explain": {
+        "method": "sample",
+        "units": "log_odds",
+        "base_value": -2.2
+       },
+       "timing_ms": null,
+       "device": null,
+       "shap": [
+        {
+         "feature": "merchant_neighborhood",
+         "label": "Merchant's network of linked cards",
+         "value": 2.7,
+         "direction": "risk"
+        },
+        {
+         "feature": "payment_channel",
+         "label": "Payment channel",
+         "value": 0.48,
+         "direction": "risk"
+        },
+        {
+         "feature": "transaction_amount",
+         "label": "Amount",
+         "value": 0.43,
+         "direction": "risk"
+        },
+        {
+         "feature": "account_gnn_embedding",
+         "label": "Card's own graph history",
+         "value": -0.36,
+         "direction": "protective"
+        }
+       ],
+       "synthetic": true,
+       "scoreable_by_model": true
+      },
+      "rules": {
+       "score": 120,
+       "max": 999,
+       "decision": "approve",
+       "fired": [
+        {
+         "rule": "BASE",
+         "text": "Baseline for any authorization",
+         "points": 40
+        },
+        {
+         "rule": "CNP",
+         "text": "Card not present",
+         "points": 60
+        },
+        {
+         "rule": "AMT_2X",
+         "text": "Amount 3.1\u00d7 this card's typical spend",
+         "points": 20
+        }
+       ],
+       "thresholds": {
+        "review": 400,
+        "decline": 650
+       },
+       "sees_network": false,
+       "engine": "Baseline rules (synthetic, deterministic)"
+      },
+      "neighborhood": {
+       "as_of": "2026-10-02T21:14:00+00:00",
+       "window_days": 21,
+       "merchant": "Orbit Digital Goods",
+       "cards_seen": 412,
+       "cards_confirmed_fraud": 37,
+       "fraud_share": 0.0898,
+       "dispute_ratio": 0.018,
+       "card_prior_payments": 1840,
+       "card_prior_fraud": 0,
+       "card_prior_visits_here": 0,
+       "small_auths": null,
+       "other_cards_to_reissue": 212,
+       "shown": {
+        "fraud": 37,
+        "clean": 14,
+        "clean_total": 375
+       },
+       "temporal_filter": true,
+       "source": "Synthetic neighborhood"
+      },
+      "reasons": {
+       "reasons": [
+        {
+         "code": "NET_CONFIRMED_FRAUD_LINKS",
+         "text": "Merchant linked to 37 cards with confirmed fraud in the last 21 days",
+         "value": 2.7,
+         "feature": "merchant_neighborhood",
+         "label": "Merchant's network of linked cards",
+         "direction": "risk",
+         "network": true
+        },
+        {
+         "code": "CNP",
+         "text": "Card not present",
+         "value": 0.48,
+         "feature": "payment_channel",
+         "label": "Payment channel",
+         "direction": "risk",
+         "network": false
+        },
+        {
+         "code": "AMOUNT_VS_PROFILE",
+         "text": "Amount 3.1\u00d7 this card's typical spend",
+         "value": 0.43,
+         "feature": "transaction_amount",
+         "label": "Amount",
+         "direction": "risk",
+         "network": false
+        },
+        {
+         "code": "CLEAN_HISTORY",
+         "text": "Card's clean history since 2016",
+         "value": -0.36,
+         "feature": "account_gnn_embedding",
+         "label": "Card's own graph history",
+         "direction": "protective",
+         "network": true
+        }
+       ],
+       "method": "sample",
+       "units": "log_odds",
+       "how": "Sample contributions (illustrative log-odds)"
+      },
+      "similar": {
+       "cases": [
+        {
+         "id": "FRD-20419",
+         "summary": "Card ****6031 at Orbit Digital Goods, Sep 24",
+         "outcome": "Confirmed fraud \u00b7 card reissued"
+        },
+        {
+         "id": "FRD-20388",
+         "summary": "Card ****2217 at Orbit Digital Goods, Sep 21",
+         "outcome": "Confirmed fraud \u00b7 card reissued"
+        },
+        {
+         "id": "FRD-20301",
+         "summary": "Card ****9914 at Orbit Digital Goods, Sep 15",
+         "outcome": "False positive \u00b7 customer recognised it"
+        }
+       ]
+      },
+      "playbook#response": {
+       "pattern": "cpp",
+       "title": "Common point of purchase (CPP)",
+       "section": "response",
+       "text": "- Contact the customer to confirm the purchase before the payment settles.\n- If the customer does not recognise it: block the card and reissue with a new number.\n- Flag the merchant for CPP review so the fraud strategy team can assess the other cards seen there.\n- Proactive reissue of other exposed cards needs an analyst decision; it affects customers who have not reported anything."
+      },
+      "draft": {
+       "action": "block_and_reissue",
+       "also": [
+        "contact_customer",
+        "flag_merchant"
+       ],
+       "why": "High graph risk from the merchant's network; contact the customer, then block and reissue.",
+       "outreach_script": "Hello, this is the card fraud team calling about a Orbit Digital Goods charge of $286.40 on your card ending 1188. Did you make this purchase? We will never ask for your full card number or SSN."
+      }
+     },
+     "summary": "- Rules engine says **approve** (120/999); the graph model says **High risk** (0.74). [score]\n- Orbit Digital Goods: 37 of 412 cards seen before this payment had confirmed fraud. [neighborhood]\n- Strongest reason: Merchant linked to 37 cards with confirmed fraud in the last 21 days (+2.70). [reasons]\n- 3 similar earlier alerts; latest outcome: Confirmed fraud \u00b7 card reissued. [similar]\n- Suggested: Block and reissue. High graph risk from the merchant's network; contact the customer, then block and reissue. [draft]",
+     "mode": "scripted",
+     "served_by": null,
+     "proposals": [
+      {
+       "action": "block_and_reissue",
+       "scope": "this card",
+       "label": "Block and reissue",
+       "policy": "deny"
+      }
+     ],
+     "recommended": "block_and_reissue",
+     "dispute": null,
+     "analyst_note": null,
+     "queue": [
+      {
+       "case": {
+        "id": "cpp-orbit",
+        "label": "Online purchase at Orbit Digital Goods",
+        "account": "****1188",
+        "merchant": "Orbit Digital Goods",
+        "amount": 286.4,
+        "channel": "cnp",
+        "neighborhood": "In the last 21 days, 412 cards bought here and 37 later had confirmed fraud \u00b7 this card's history is clean",
+        "scenario": "cpp",
+        "history": {
+         "card_prior_payments": 1840,
+         "card_prior_fraud": 0,
+         "card_prior_visits_here": 0,
+         "merchant_prior_payments": 1187,
+         "merchant_prior_cards": 412,
+         "merchant_prior_fraud_cards": 37,
+         "card_small_payments_24h": 0
+        },
+        "at": "2026-10-02T21:14:00Z",
+        "mcc": "5816",
+        "mcc_label": "Digital goods: games",
+        "currency": "USD",
+        "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
+        "scoreable_by_model": true,
+        "customer": "Dana Whitfield (fictional)",
+        "customer_id": "dana-whitfield"
+       },
+       "probability": 0.74,
+       "risk_band": "high",
+       "risk_label": "High risk",
+       "rules": {
+        "score": 120,
+        "decision": "approve"
+       },
+       "suggested_action": "Block and reissue",
+       "backend": "fixture",
+       "label": "Sample scores",
+       "latency_ms": 0.3,
+       "model_ms": null,
+       "device": null
+      },
+      {
+       "case": {
+        "id": "card-testing",
+        "label": "Electronics purchase after a burst of tiny charges",
+        "account": "****5207",
+        "merchant": "Northgate Electronics Online",
+        "amount": 894.0,
+        "channel": "cnp",
+        "neighborhood": "11 authorizations of $1\u2013$3 at QuickTip Donations in 40 minutes \u00b7 58 other cards did the same there this week, 14 later confirmed fraud",
+        "scenario": "card_testing",
+        "history": {
+         "card_prior_payments": 312,
+         "card_prior_fraud": 0,
+         "card_prior_visits_here": 0,
+         "merchant_prior_payments": 9120,
+         "merchant_prior_cards": 2240,
+         "merchant_prior_fraud_cards": 31,
+         "card_small_payments_24h": 11
+        },
+        "at": "2026-10-03T02:41:00Z",
+        "mcc": "5732",
+        "mcc_label": "Electronics stores",
+        "currency": "USD",
+        "situation": "Eleven $1\u2013$3 online authorizations in 40 minutes, then an $894 electronics order.",
+        "scoreable_by_model": true,
+        "customer": "Synthetic cardholder",
+        "customer_id": "synthetic-cardholder-5207"
+       },
+       "probability": 0.91,
+       "risk_band": "high",
+       "risk_label": "High risk",
+       "rules": {
+        "score": 540,
+        "decision": "review"
+       },
+       "suggested_action": "Block and reissue",
+       "backend": "fixture",
+       "label": "Sample scores",
+       "latency_ms": 0.5,
+       "model_ms": null,
+       "device": null
+      },
+      {
+       "case": {
+        "id": "ato-illustrative",
+        "label": "Travel booking right after an address change",
+        "account": "****3390",
+        "merchant": "Lumen Travel Co.",
+        "amount": 1450.0,
+        "channel": "cnp",
+        "neighborhood": "Merchant network is unremarkable \u00b7 the risk is in the account events, which the graph model cannot see",
+        "scenario": "ato",
+        "history": {
+         "card_prior_payments": 905,
+         "card_prior_fraud": 0,
+         "card_prior_visits_here": 0,
+         "merchant_prior_payments": 3310,
+         "merchant_prior_cards": 1406,
+         "merchant_prior_fraud_cards": 3,
+         "card_small_payments_24h": 0
+        },
+        "at": "2026-10-03T15:05:00Z",
+        "mcc": "4722",
+        "mcc_label": "Travel agencies",
+        "currency": "USD",
+        "situation": "New device, mailing address changed 2 hours ago, card reissue requested, then a $1,450 online booking.",
+        "scoreable_by_model": false,
+        "illustrative": true,
+        "customer": "Synthetic cardholder",
+        "customer_id": "synthetic-cardholder-3390"
+       },
+       "probability": 0.18,
+       "risk_band": "low",
+       "risk_label": "Low risk",
+       "rules": {
+        "score": 740,
+        "decision": "decline"
+       },
+       "suggested_action": "Escalate to investigations",
+       "backend": "fixture",
+       "label": "Sample scores",
+       "latency_ms": 0.5,
+       "model_ms": null,
+       "device": null
+      },
+      {
+       "case": {
+        "id": "clean-grocery",
+        "label": "Neighborhood grocery \u00b7 card present",
+        "account": "****4421",
+        "merchant": "Harbor Market #18",
+        "amount": 42.18,
+        "channel": "pos",
+        "neighborhood": "Merchant dispute rate 0.1% \u00b7 this card has 14 earlier clean purchases here",
+        "scenario": "clean_control",
+        "history": {
+         "card_prior_payments": 2210,
+         "card_prior_fraud": 0,
+         "card_prior_visits_here": 14,
+         "merchant_prior_payments": 18400,
+         "merchant_prior_cards": 3120,
+         "merchant_prior_fraud_cards": 2,
+         "card_small_payments_24h": 0
+        },
+        "at": "2026-10-03T17:22:00Z",
+        "mcc": "5411",
+        "mcc_label": "Grocery stores",
+        "currency": "USD",
+        "situation": "A card-present grocery purchase at a store this card has used 14 times.",
+        "scoreable_by_model": true,
+        "customer": "Synthetic cardholder",
+        "customer_id": "synthetic-cardholder-4421"
+       },
+       "probability": 0.06,
+       "risk_band": "low",
+       "risk_label": "Low risk",
+       "rules": {
+        "score": 10,
+        "decision": "approve"
+       },
+       "suggested_action": "Mark false positive",
+       "backend": "fixture",
+       "label": "Sample scores",
+       "latency_ms": 0.6,
+       "model_ms": null,
+       "device": null
+      },
+      {
+       "case": {
+        "id": "cnp-verify",
+        "label": "First order at an outdoor retailer",
+        "account": "****6612",
+        "merchant": "Northwind Outdoor Co.",
+        "amount": 612.9,
+        "channel": "cnp",
+        "neighborhood": "Merchant network mostly clean \u00b7 amount well above this card's typical spend",
+        "scenario": "queue",
+        "history": {
+         "card_prior_payments": 640,
+         "card_prior_fraud": 0,
+         "card_prior_visits_here": 0,
+         "merchant_prior_payments": 5210,
+         "merchant_prior_cards": 1980,
+         "merchant_prior_fraud_cards": 9,
+         "card_small_payments_24h": 0
+        },
+        "at": "2026-10-03T19:48:00Z",
+        "mcc": "5941",
+        "mcc_label": "Sporting goods",
+        "currency": "USD",
+        "situation": "An online order about three times this card's usual spend, at a merchant it has not used before.",
+        "scoreable_by_model": true,
+        "customer": "Synthetic cardholder",
+        "customer_id": "synthetic-cardholder-6612"
+       },
+       "probability": 0.41,
+       "risk_band": "elevated",
+       "risk_label": "Elevated risk",
+       "rules": {
+        "score": 120,
+        "decision": "approve"
+       },
+       "suggested_action": "Contact customer",
+       "backend": "fixture",
+       "label": "Sample scores",
+       "latency_ms": 0.4,
+       "model_ms": null,
+       "device": null
+      }
+     ]
+    },
+    "usage": {
+     "llm_calls": 0,
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "tool_calls": 13
+    },
+    "security": {
+     "mode": "enforce",
+     "status": "not_checked",
+     "checks": 0,
+     "blocked": 0,
+     "errors": 0,
+     "event_ids": []
+    },
+    "agent_trace": "recorded",
+    "investigated_ms": 6230
+   }
+  },
+  {
+   "v": 1,
+   "id": "b98f881a-cf95-45b7-9eee-abf9cae80865",
+   "at": "2026-10-09T22:40:41.155656+00:00",
+   "ns": 6621281000,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "hitl.decision",
+   "status": "info",
+   "title": "Maya (analyst) \u00b7 block_and_reissue",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "request_id": "disposition",
+    "decision": "block_and_reissue",
+    "by": "Maya (analyst)"
+   }
+  },
+  {
+   "v": 1,
+   "id": "f94417d2-f546-4e85-8539-9d90dac27e73",
+   "at": "2026-10-09T22:40:41.381751+00:00",
+   "ns": 6847376250,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "control",
+   "status": "allowed",
+   "title": "Agent Control \u00b7 fraud.take_action \u00b7 Contact customer \u00b7 allow \u00b7 approved by Maya (analyst)",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Reversible action; no approval needed.",
+   "data": {
+    "policy": "fraud.take_action",
+    "decision": "allow",
+    "reason": "Reversible action; no approval needed.",
+    "source": "agent_control",
+    "engine_label": "Agent Control",
+    "action": "contact_customer",
+    "control": "fsi-fraud-take-action-approval-v1",
+    "control_execution_id": "53f25f2b-6a77-452a-bb3b-487b3309e773",
+    "approved_by": "Maya (analyst)"
+   }
+  },
+  {
+   "v": 1,
+   "id": "00074dfb-ad0d-48eb-a6da-5e2db4376d7b",
+   "at": "2026-10-09T22:40:41.381775+00:00",
+   "ns": 6847393708,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Customer outreach queued for ****1188 with the drafted script (simulated)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "take_action",
+    "action": "contact_customer",
+    "simulated": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "eb3c3518-05f7-45a5-81fe-5b23908d8ee8",
+   "at": "2026-10-09T22:40:41.602656+00:00",
+   "ns": 7068278791,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "control",
+   "status": "allowed",
+   "title": "Agent Control \u00b7 fraud.take_action \u00b7 Block and reissue \u00b7 allow \u00b7 approved by Maya (analyst)",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Approved by Maya (analyst).",
+   "data": {
+    "policy": "fraud.take_action",
+    "decision": "allow",
+    "reason": "Approved by Maya (analyst).",
+    "source": "agent_control",
+    "engine_label": "Agent Control",
+    "action": "block_and_reissue",
+    "approved_by": "Maya (analyst)",
+    "scope": null,
+    "control": "fsi-fraud-take-action-approval-v1",
+    "control_execution_id": "34916542-9b4a-4da6-a540-96bccf50c42a"
+   }
+  },
+  {
+   "v": 1,
+   "id": "b9ee7f86-fe7d-4bb8-9395-0f8c7f05bfa9",
+   "at": "2026-10-09T22:40:41.602677+00:00",
+   "ns": 7068294833,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Card ****1188 blocked; replacement ordered with a new number (simulated)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "take_action",
+    "action": "block_and_reissue",
+    "simulated": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "a02322ea-b6c3-4be2-8ff8-ba72c9751290",
+   "at": "2026-10-09T22:40:41.817646+00:00",
+   "ns": 7283268125,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "control",
+   "status": "allowed",
+   "title": "Agent Control \u00b7 fraud.take_action \u00b7 Flag merchant for CPP review \u00b7 allow \u00b7 approved by Maya (analyst)",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Reversible action; no approval needed.",
+   "data": {
+    "policy": "fraud.take_action",
+    "decision": "allow",
+    "reason": "Reversible action; no approval needed.",
+    "source": "agent_control",
+    "engine_label": "Agent Control",
+    "action": "flag_merchant",
+    "control": "fsi-fraud-take-action-approval-v1",
+    "control_execution_id": "42e93269-325e-417d-b81c-87407ecbb7d2",
+    "approved_by": "Maya (analyst)"
+   }
+  },
+  {
+   "v": 1,
+   "id": "c17b62d2-f7b0-4ce0-a9e9-e320319d0d46",
+   "at": "2026-10-09T22:40:41.817666+00:00",
+   "ns": 7283284291,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Orbit Digital Goods flagged for CPP review (simulated)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "take_action",
+    "action": "flag_merchant",
+    "simulated": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "dde0afba-38be-4a70-bf93-a6fac28fb0c0",
+   "at": "2026-10-09T22:40:41.817676+00:00",
+   "ns": 7283293250,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Calls propose_action",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "propose_action",
+    "arguments": {
+     "action": "bulk_reissue",
+     "scope": "212 cards"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "7de17671-c21a-4ab9-b203-52c8263ea318",
+   "at": "2026-10-09T22:40:42.036110+00:00",
+   "ns": 7501731875,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "control",
+   "status": "denied",
+   "title": "Agent Control \u00b7 fraud.take_action \u00b7 Proactively reissue exposed cards \u00b7 deny \u00b7 requires analyst approval",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Requires analyst approval. The agent may propose it; only an analyst can approve it.",
+   "data": {
+    "policy": "fraud.take_action",
+    "decision": "deny",
+    "reason": "Requires analyst approval. The agent may propose it; only an analyst can approve it.",
+    "source": "agent_control",
+    "engine_label": "Agent Control",
+    "action": "bulk_reissue",
+    "scope": "212 other cards seen at Orbit Digital Goods",
+    "control": "fsi-fraud-take-action-approval-v1",
+    "control_execution_id": "57d3ca6a-d283-4a32-a30b-a5a6a1e87a66",
+    "requested_by": "fraud triage agent"
+   }
+  },
+  {
+   "v": 1,
+   "id": "5ce95884-bfca-4e6d-99e5-a826ecb74dfc",
+   "at": "2026-10-09T22:40:42.036134+00:00",
+   "ns": 7501751625,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "hitl.request",
+   "status": "info",
+   "title": "Approve proactive reissue of 212 exposed cards?",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": "These customers have not reported anything. Reissuing protects them and costs a new card each.",
+   "data": {
+    "request_id": "bulk_reissue",
+    "options": [
+     {
+      "id": "approve",
+      "label": "Reissue 212 cards"
+     },
+     {
+      "id": "skip",
+      "label": "Not now"
+     }
+    ]
+   }
+  },
+  {
+   "v": 1,
+   "id": "d30ffc30-f888-49cc-9965-e9f5a6dbcc98",
+   "at": "2026-10-09T22:40:42.180351+00:00",
+   "ns": 7645977791,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "hitl.decision",
+   "status": "ok",
+   "title": "Maya (analyst) \u00b7 approve",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "request_id": "bulk_reissue",
+    "decision": "approve",
+    "by": "Maya (analyst)"
+   }
+  },
+  {
+   "v": 1,
+   "id": "a7dcb1b2-94e1-41a8-a7a9-58dead4a9af9",
+   "at": "2026-10-09T22:40:42.411540+00:00",
+   "ns": 7877162833,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "control",
+   "status": "allowed",
+   "title": "Agent Control \u00b7 fraud.take_action \u00b7 Proactively reissue exposed cards \u00b7 allow \u00b7 approved by Maya (analyst)",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Approved by Maya (analyst).",
+   "data": {
+    "policy": "fraud.take_action",
+    "decision": "allow",
+    "reason": "Approved by Maya (analyst).",
+    "source": "agent_control",
+    "engine_label": "Agent Control",
+    "action": "bulk_reissue",
+    "approved_by": "Maya (analyst)",
+    "scope": null,
+    "control": "fsi-fraud-take-action-approval-v1",
+    "control_execution_id": "b3252f3f-c9d6-4a2f-9c3a-cf8044630a3e"
+   }
+  },
+  {
+   "v": 1,
+   "id": "418714a0-42d2-4621-b7eb-1137ac6fd18e",
+   "at": "2026-10-09T22:40:42.411564+00:00",
+   "ns": 7877180791,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "212 exposed cards queued for proactive reissue (simulated)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "take_action",
+    "action": "bulk_reissue",
+    "simulated": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "7f9e5a91-37c8-4ce7-a87b-0b0825038524",
+   "at": "2026-10-09T22:40:42.411583+00:00",
+   "ns": 7877199208,
+   "run_id": "fraud-20261009-224034-59b99b",
+   "component": "fraud-triage",
+   "kind": "result",
+   "status": "ok",
+   "title": "Block and reissue \u00b7 decided by Maya (analyst)",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Audit trail recorded. Card actions in this demo are simulated.",
+   "data": {
+    "case_id": "cpp-orbit",
+    "scenario": "cpp-orbit",
+    "disposition": "block_and_reissue",
+    "decided_by": "Maya (analyst)",
+    "note": null,
+    "actions": [
+     {
+      "action": "contact_customer",
+      "status": "done",
+      "effect": "Customer outreach queued for ****1188 with the drafted script (simulated)",
+      "approved_by": "Maya (analyst)"
+     },
+     {
+      "action": "block_and_reissue",
+      "status": "done",
+      "effect": "Card ****1188 blocked; replacement ordered with a new number (simulated)",
+      "approved_by": "Maya (analyst)"
+     },
+     {
+      "action": "flag_merchant",
+      "status": "done",
+      "effect": "Orbit Digital Goods flagged for CPP review (simulated)",
+      "approved_by": "Maya (analyst)"
+     },
+     {
+      "action": "bulk_reissue",
+      "status": "done",
+      "effect": "212 exposed cards queued for proactive reissue (simulated)",
+      "approved_by": "Maya (analyst)"
+     }
+    ],
+    "handoff": null,
+    "label_reveal": null,
+    "summary": "- Rules engine says **approve** (120/999); the graph model says **High risk** (0.74). [score]\n- Orbit Digital Goods: 37 of 412 cards seen before this payment had confirmed fraud. [neighborhood]\n- Strongest reason: Merchant linked to 37 cards with confirmed fraud in the last 21 days (+2.70). [reasons]\n- 3 similar earlier alerts; latest outcome: Confirmed fraud \u00b7 card reissued. [similar]\n- Suggested: Block and reissue. High graph risk from the merchant's network; contact the customer, then block and reissue. [draft]",
+    "mode": "scripted",
+    "served_by": null,
+    "usage": {
+     "llm_calls": 0,
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "tool_calls": 14
+    },
+    "security": {
+     "mode": "enforce",
+     "status": "not_checked",
+     "checks": 0,
+     "blocked": 0,
+     "errors": 0,
+     "event_ids": []
+    },
+    "agent_trace": "recorded",
+    "backend": "fixture",
+    "backend_label": "Sample scores",
+    "recorded_at": null,
+    "duration_ms": 7877,
+    "investigated_ms": 6230
+   }
+  }
+ ],
+ "result": {
+  "case_id": "cpp-orbit",
+  "scenario": "cpp-orbit",
+  "disposition": "block_and_reissue",
+  "decided_by": "Maya (analyst)",
+  "note": null,
+  "actions": [
+   {
+    "action": "contact_customer",
+    "status": "done",
+    "effect": "Customer outreach queued for ****1188 with the drafted script (simulated)",
+    "approved_by": "Maya (analyst)"
+   },
+   {
+    "action": "block_and_reissue",
+    "status": "done",
+    "effect": "Card ****1188 blocked; replacement ordered with a new number (simulated)",
+    "approved_by": "Maya (analyst)"
+   },
+   {
+    "action": "flag_merchant",
+    "status": "done",
+    "effect": "Orbit Digital Goods flagged for CPP review (simulated)",
+    "approved_by": "Maya (analyst)"
+   },
+   {
+    "action": "bulk_reissue",
+    "status": "done",
+    "effect": "212 exposed cards queued for proactive reissue (simulated)",
+    "approved_by": "Maya (analyst)"
+   }
+  ],
+  "handoff": null,
+  "label_reveal": null,
+  "summary": "- Rules engine says **approve** (120/999); the graph model says **High risk** (0.74). [score]\n- Orbit Digital Goods: 37 of 412 cards seen before this payment had confirmed fraud. [neighborhood]\n- Strongest reason: Merchant linked to 37 cards with confirmed fraud in the last 21 days (+2.70). [reasons]\n- 3 similar earlier alerts; latest outcome: Confirmed fraud \u00b7 card reissued. [similar]\n- Suggested: Block and reissue. High graph risk from the merchant's network; contact the customer, then block and reissue. [draft]",
+  "mode": "scripted",
+  "served_by": null,
+  "usage": {
+   "llm_calls": 0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "tool_calls": 14
+  },
+  "security": {
+   "mode": "enforce",
+   "status": "not_checked",
+   "checks": 0,
+   "blocked": 0,
+   "errors": 0,
+   "event_ids": []
+  },
+  "agent_trace": "recorded",
+  "backend": "fixture",
+  "backend_label": "Sample scores",
+  "recorded_at": null,
+  "duration_ms": 7877,
+  "investigated_ms": 6230
+ }
+}

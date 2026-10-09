@@ -146,9 +146,9 @@ export function readiness(settings: Record<string, SettingState>, model: (useCas
       notes: [`AI Defense: ${defenseMode("BRIEFING_AIDEFENSE_MODE", "off")}`, has("SEC_USER_AGENT") ? "EDGAR contact: Studio settings" : "EDGAR contact: your git identity"],
     },
     {
-      id: "fraud-modeling", title: "Transaction fraud scoring",
+      id: "fraud-modeling", title: "Card fraud triage",
       missing: [],
-      notes: ["Scoring needs no credentials", "The optional narrative uses the fraud model backend"],
+      notes: ["Scoring needs no credentials", "The triage agent uses the fraud-modeling model chain; scripted without one"],
     },
     {
       id: "market-research", title: "Wealth market research",

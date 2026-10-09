@@ -7,6 +7,8 @@ import type { StudioStatus } from "./studio-status";
 export type StudioNav = {
   openSettings?: (section?: string) => void;
   links?: StudioStatus["links"] | null;
+  /** Opens another use case by id, e.g. the fraud demo handing a case to "sar-support". */
+  openUseCase?: (id: string) => void;
 };
 
 export const StudioNavContext = createContext<StudioNav>({});

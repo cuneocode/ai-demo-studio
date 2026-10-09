@@ -1,0 +1,1867 @@
+{
+ "v": 1,
+ "name": "clean-grocery-scripted",
+ "title": "Clean control \u00b7 scripted investigation",
+ "scenario": "clean-grocery",
+ "recorded_at": "2026-10-09T22:40:53.576474+00:00",
+ "served_by": null,
+ "synthetic": true,
+ "run": {
+  "id": "fraud-20261009-224050-72342e",
+  "service": "fraud",
+  "label": "Triage \u00b7 clean-grocery",
+  "scenario": "clean-grocery",
+  "status": "completed",
+  "started_at": "2026-10-09T22:40:50.268640+00:00",
+  "finished_at": "2026-10-09T22:40:53.576474+00:00",
+  "meta": {
+   "case_id": "clean-grocery",
+   "scenario": "clean-grocery",
+   "synthetic": true
+  },
+  "result": {
+   "case_id": "clean-grocery",
+   "scenario": "clean-grocery",
+   "disposition": "false_positive",
+   "decided_by": "Maya (analyst)",
+   "note": null,
+   "actions": [
+    {
+     "action": "false_positive",
+     "status": "done",
+     "effect": "Alert released as a false positive; payment stands (simulated)",
+     "approved_by": "Maya (analyst)"
+    }
+   ],
+   "handoff": null,
+   "label_reveal": null,
+   "summary": "- Rules engine says **approve** (10/999); the graph model says **Low risk** (0.06). [score]\n- Harbor Market #18: 2 of 3,120 cards seen before this payment had confirmed fraud. [neighborhood]\n- Strongest reason: Merchant's other cards are overwhelmingly clean (-0.25). [reasons]\n- Suggested: Mark false positive. Low risk on every signal: release the alert. [draft]",
+   "mode": "scripted",
+   "served_by": null,
+   "usage": {
+    "llm_calls": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "tool_calls": 13
+   },
+   "security": {
+    "mode": "enforce",
+    "status": "not_checked",
+    "checks": 0,
+    "blocked": 0,
+    "errors": 0,
+    "event_ids": []
+   },
+   "agent_trace": "recorded",
+   "backend": "fixture",
+   "backend_label": "Sample scores",
+   "recorded_at": null,
+   "duration_ms": 3308,
+   "investigated_ms": 2764
+  }
+ },
+ "events": [
+  {
+   "v": 1,
+   "id": "c624d381-d0ef-4fd6-b8b2-3032bec50981",
+   "at": "2026-10-09T22:40:50.808836+00:00",
+   "ns": 540198750,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "run",
+   "status": "started",
+   "title": "Triage \u00b7 Clean control",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Maya \u00b7 card-fraud operations analyst \u00b7 post-authorization queue (synthetic data)",
+   "data": {
+    "scenario": {
+     "id": "clean-grocery",
+     "case_id": "clean-grocery",
+     "title": "Clean control",
+     "situation": "$42.18 card-present grocery purchase at a store used 14 times.",
+     "expected": "Rules approve \u00b7 graph model low \u00b7 no action",
+     "kind": "story",
+     "model_scope": "Scored by the graph model"
+    },
+    "case": {
+     "id": "clean-grocery",
+     "label": "Neighborhood grocery \u00b7 card present",
+     "account": "****4421",
+     "merchant": "Harbor Market #18",
+     "amount": 42.18,
+     "channel": "pos",
+     "neighborhood": "Merchant dispute rate 0.1% \u00b7 this card has 14 earlier clean purchases here",
+     "scenario": "clean_control",
+     "history": {
+      "card_prior_payments": 2210,
+      "card_prior_fraud": 0,
+      "card_prior_visits_here": 14,
+      "merchant_prior_payments": 18400,
+      "merchant_prior_cards": 3120,
+      "merchant_prior_fraud_cards": 2,
+      "card_small_payments_24h": 0
+     },
+     "at": "2026-10-03T17:22:00Z",
+     "mcc": "5411",
+     "mcc_label": "Grocery stores",
+     "currency": "USD",
+     "situation": "A card-present grocery purchase at a store this card has used 14 times.",
+     "scoreable_by_model": true,
+     "customer": "Synthetic cardholder",
+     "customer_id": "synthetic-cardholder-4421"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "e5b5d709-0557-4cd5-89ec-cb25b38aa7c0",
+   "at": "2026-10-09T22:40:50.809257+00:00",
+   "ns": 540617083,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Score the alert queue \u00b7 5 payments",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "score_payment",
+    "arguments": {
+     "cases": 5
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "78de5aa3-adc6-4f96-b2ad-f6abdc9146ad",
+   "at": "2026-10-09T22:40:50.809602+00:00",
+   "ns": 540961250,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "****1188 \u00b7 Orbit Digital Goods \u00b7 rules approve \u00b7 graph 0.74 high risk",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "score_payment",
+    "queue_row": {
+     "case": {
+      "id": "cpp-orbit",
+      "label": "Online purchase at Orbit Digital Goods",
+      "account": "****1188",
+      "merchant": "Orbit Digital Goods",
+      "amount": 286.4,
+      "channel": "cnp",
+      "neighborhood": "In the last 21 days, 412 cards bought here and 37 later had confirmed fraud \u00b7 this card's history is clean",
+      "scenario": "cpp",
+      "history": {
+       "card_prior_payments": 1840,
+       "card_prior_fraud": 0,
+       "card_prior_visits_here": 0,
+       "merchant_prior_payments": 1187,
+       "merchant_prior_cards": 412,
+       "merchant_prior_fraud_cards": 37,
+       "card_small_payments_24h": 0
+      },
+      "at": "2026-10-02T21:14:00Z",
+      "mcc": "5816",
+      "mcc_label": "Digital goods: games",
+      "currency": "USD",
+      "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
+      "scoreable_by_model": true,
+      "customer": "Dana Whitfield (fictional)",
+      "customer_id": "dana-whitfield"
+     },
+     "probability": 0.74,
+     "risk_band": "high",
+     "risk_label": "High risk",
+     "rules": {
+      "score": 120,
+      "decision": "approve"
+     },
+     "suggested_action": "Block and reissue",
+     "backend": "fixture",
+     "label": "Sample scores",
+     "latency_ms": 0.1,
+     "model_ms": null,
+     "device": null
+    },
+    "latency_ms": 0.1,
+    "backend": "fixture"
+   }
+  },
+  {
+   "v": 1,
+   "id": "978e1235-eafb-408c-9c1d-08a038bc0a3f",
+   "at": "2026-10-09T22:40:50.931867+00:00",
+   "ns": 663230000,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "****5207 \u00b7 Northgate Electronics Online \u00b7 rules review \u00b7 graph 0.91 high risk",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "score_payment",
+    "queue_row": {
+     "case": {
+      "id": "card-testing",
+      "label": "Electronics purchase after a burst of tiny charges",
+      "account": "****5207",
+      "merchant": "Northgate Electronics Online",
+      "amount": 894.0,
+      "channel": "cnp",
+      "neighborhood": "11 authorizations of $1\u2013$3 at QuickTip Donations in 40 minutes \u00b7 58 other cards did the same there this week, 14 later confirmed fraud",
+      "scenario": "card_testing",
+      "history": {
+       "card_prior_payments": 312,
+       "card_prior_fraud": 0,
+       "card_prior_visits_here": 0,
+       "merchant_prior_payments": 9120,
+       "merchant_prior_cards": 2240,
+       "merchant_prior_fraud_cards": 31,
+       "card_small_payments_24h": 11
+      },
+      "at": "2026-10-03T02:41:00Z",
+      "mcc": "5732",
+      "mcc_label": "Electronics stores",
+      "currency": "USD",
+      "situation": "Eleven $1\u2013$3 online authorizations in 40 minutes, then an $894 electronics order.",
+      "scoreable_by_model": true,
+      "customer": "Synthetic cardholder",
+      "customer_id": "synthetic-cardholder-5207"
+     },
+     "probability": 0.91,
+     "risk_band": "high",
+     "risk_label": "High risk",
+     "rules": {
+      "score": 540,
+      "decision": "review"
+     },
+     "suggested_action": "Block and reissue",
+     "backend": "fixture",
+     "label": "Sample scores",
+     "latency_ms": 0.3,
+     "model_ms": null,
+     "device": null
+    },
+    "latency_ms": 0.3,
+    "backend": "fixture"
+   }
+  },
+  {
+   "v": 1,
+   "id": "1f19ad57-779a-45a8-a214-20328735b16a",
+   "at": "2026-10-09T22:40:51.052931+00:00",
+   "ns": 784289500,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "****3390 \u00b7 Lumen Travel Co. \u00b7 rules decline \u00b7 graph 0.18 low risk",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "score_payment",
+    "queue_row": {
+     "case": {
+      "id": "ato-illustrative",
+      "label": "Travel booking right after an address change",
+      "account": "****3390",
+      "merchant": "Lumen Travel Co.",
+      "amount": 1450.0,
+      "channel": "cnp",
+      "neighborhood": "Merchant network is unremarkable \u00b7 the risk is in the account events, which the graph model cannot see",
+      "scenario": "ato",
+      "history": {
+       "card_prior_payments": 905,
+       "card_prior_fraud": 0,
+       "card_prior_visits_here": 0,
+       "merchant_prior_payments": 3310,
+       "merchant_prior_cards": 1406,
+       "merchant_prior_fraud_cards": 3,
+       "card_small_payments_24h": 0
+      },
+      "at": "2026-10-03T15:05:00Z",
+      "mcc": "4722",
+      "mcc_label": "Travel agencies",
+      "currency": "USD",
+      "situation": "New device, mailing address changed 2 hours ago, card reissue requested, then a $1,450 online booking.",
+      "scoreable_by_model": false,
+      "illustrative": true,
+      "customer": "Synthetic cardholder",
+      "customer_id": "synthetic-cardholder-3390"
+     },
+     "probability": 0.18,
+     "risk_band": "low",
+     "risk_label": "Low risk",
+     "rules": {
+      "score": 740,
+      "decision": "decline"
+     },
+     "suggested_action": "Escalate to investigations",
+     "backend": "fixture",
+     "label": "Sample scores",
+     "latency_ms": 0.2,
+     "model_ms": null,
+     "device": null
+    },
+    "latency_ms": 0.2,
+    "backend": "fixture"
+   }
+  },
+  {
+   "v": 1,
+   "id": "ae684f76-a24b-43aa-82dd-8cabfb81b426",
+   "at": "2026-10-09T22:40:51.175333+00:00",
+   "ns": 906691250,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "****4421 \u00b7 Harbor Market #18 \u00b7 rules approve \u00b7 graph 0.06 low risk",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "score_payment",
+    "queue_row": {
+     "case": {
+      "id": "clean-grocery",
+      "label": "Neighborhood grocery \u00b7 card present",
+      "account": "****4421",
+      "merchant": "Harbor Market #18",
+      "amount": 42.18,
+      "channel": "pos",
+      "neighborhood": "Merchant dispute rate 0.1% \u00b7 this card has 14 earlier clean purchases here",
+      "scenario": "clean_control",
+      "history": {
+       "card_prior_payments": 2210,
+       "card_prior_fraud": 0,
+       "card_prior_visits_here": 14,
+       "merchant_prior_payments": 18400,
+       "merchant_prior_cards": 3120,
+       "merchant_prior_fraud_cards": 2,
+       "card_small_payments_24h": 0
+      },
+      "at": "2026-10-03T17:22:00Z",
+      "mcc": "5411",
+      "mcc_label": "Grocery stores",
+      "currency": "USD",
+      "situation": "A card-present grocery purchase at a store this card has used 14 times.",
+      "scoreable_by_model": true,
+      "customer": "Synthetic cardholder",
+      "customer_id": "synthetic-cardholder-4421"
+     },
+     "probability": 0.06,
+     "risk_band": "low",
+     "risk_label": "Low risk",
+     "rules": {
+      "score": 10,
+      "decision": "approve"
+     },
+     "suggested_action": "Mark false positive",
+     "backend": "fixture",
+     "label": "Sample scores",
+     "latency_ms": 0.1,
+     "model_ms": null,
+     "device": null
+    },
+    "latency_ms": 0.1,
+    "backend": "fixture"
+   }
+  },
+  {
+   "v": 1,
+   "id": "4c1ae792-8f47-4b60-93c3-ed6c02da592c",
+   "at": "2026-10-09T22:40:51.297731+00:00",
+   "ns": 1029088875,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "****6612 \u00b7 Northwind Outdoor Co. \u00b7 rules approve \u00b7 graph 0.41 elevated risk",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "score_payment",
+    "queue_row": {
+     "case": {
+      "id": "cnp-verify",
+      "label": "First order at an outdoor retailer",
+      "account": "****6612",
+      "merchant": "Northwind Outdoor Co.",
+      "amount": 612.9,
+      "channel": "cnp",
+      "neighborhood": "Merchant network mostly clean \u00b7 amount well above this card's typical spend",
+      "scenario": "queue",
+      "history": {
+       "card_prior_payments": 640,
+       "card_prior_fraud": 0,
+       "card_prior_visits_here": 0,
+       "merchant_prior_payments": 5210,
+       "merchant_prior_cards": 1980,
+       "merchant_prior_fraud_cards": 9,
+       "card_small_payments_24h": 0
+      },
+      "at": "2026-10-03T19:48:00Z",
+      "mcc": "5941",
+      "mcc_label": "Sporting goods",
+      "currency": "USD",
+      "situation": "An online order about three times this card's usual spend, at a merchant it has not used before.",
+      "scoreable_by_model": true,
+      "customer": "Synthetic cardholder",
+      "customer_id": "synthetic-cardholder-6612"
+     },
+     "probability": 0.41,
+     "risk_band": "elevated",
+     "risk_label": "Elevated risk",
+     "rules": {
+      "score": 120,
+      "decision": "approve"
+     },
+     "suggested_action": "Contact customer",
+     "backend": "fixture",
+     "label": "Sample scores",
+     "latency_ms": 0.1,
+     "model_ms": null,
+     "device": null
+    },
+    "latency_ms": 0.1,
+    "backend": "fixture"
+   }
+  },
+  {
+   "v": 1,
+   "id": "e4e5824d-52a8-45dd-8643-407b19f31419",
+   "at": "2026-10-09T22:40:51.419509+00:00",
+   "ns": 1150870083,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "run",
+   "status": "info",
+   "title": "Open alert \u00b7 ****4421 at Harbor Market #18 \u00b7 $42.18",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "A card-present grocery purchase at a store this card has used 14 times.",
+   "data": {
+    "case": {
+     "id": "clean-grocery",
+     "label": "Neighborhood grocery \u00b7 card present",
+     "account": "****4421",
+     "merchant": "Harbor Market #18",
+     "amount": 42.18,
+     "channel": "pos",
+     "neighborhood": "Merchant dispute rate 0.1% \u00b7 this card has 14 earlier clean purchases here",
+     "scenario": "clean_control",
+     "history": {
+      "card_prior_payments": 2210,
+      "card_prior_fraud": 0,
+      "card_prior_visits_here": 14,
+      "merchant_prior_payments": 18400,
+      "merchant_prior_cards": 3120,
+      "merchant_prior_fraud_cards": 2,
+      "card_small_payments_24h": 0
+     },
+     "at": "2026-10-03T17:22:00Z",
+     "mcc": "5411",
+     "mcc_label": "Grocery stores",
+     "currency": "USD",
+     "situation": "A card-present grocery purchase at a store this card has used 14 times.",
+     "scoreable_by_model": true,
+     "customer": "Synthetic cardholder",
+     "customer_id": "synthetic-cardholder-4421"
+    },
+    "opened": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "1fd1e896-3ab2-4180-bca1-dba873ae3e87",
+   "at": "2026-10-09T22:40:51.419541+00:00",
+   "ns": 1150896375,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "agent.thinking",
+   "status": "info",
+   "title": "Scripted investigation \u00b7 same tools, no model",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "The summary is a template filled from tool outputs, labelled Scripted.",
+   "data": {}
+  },
+  {
+   "v": 1,
+   "id": "701f6806-206c-43e7-87e5-19bfbb4e8d05",
+   "at": "2026-10-09T22:40:51.419551+00:00",
+   "ns": 1150906125,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Calls score_payment",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "score_payment",
+    "arguments": {
+     "case_id": "clean-grocery"
+    },
+    "scripted": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "3f76098a-d4c3-45cf-9cc5-06e418dad7a8",
+   "at": "2026-10-09T22:40:51.419674+00:00",
+   "ns": 1151029458,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Graph model \u00b7 0.06 \u00b7 Low risk \u00b7 Sample scores",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "score_payment",
+    "evidence": "score",
+    "case_id": "clean-grocery",
+    "probability": 0.06,
+    "risk_band": "low",
+    "backend": "fixture",
+    "label": "Sample scores",
+    "latency_ms": 0.1,
+    "model_ms": null,
+    "device": null,
+    "recorded_at": null,
+    "synthetic": true,
+    "summary": "Low risk (0.06)"
+   }
+  },
+  {
+   "v": 1,
+   "id": "bcaf8b36-399f-4102-8eb6-2d2552927be8",
+   "at": "2026-10-09T22:40:51.571882+00:00",
+   "ns": 1303243250,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Calls rules_score",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "rules_score",
+    "arguments": {
+     "case_id": "clean-grocery"
+    },
+    "scripted": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "b88d3730-c9eb-4e42-9b8f-05d7a3c7e893",
+   "at": "2026-10-09T22:40:51.571922+00:00",
+   "ns": 1303277375,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Rules engine \u00b7 10/999 \u00b7 approve",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Card used here 14 times before (-30)",
+   "data": {
+    "tool": "rules_score",
+    "evidence": "rules",
+    "score": 10,
+    "max": 999,
+    "decision": "approve",
+    "fired": [
+     {
+      "rule": "BASE",
+      "text": "Baseline for any authorization",
+      "points": 40
+     },
+     {
+      "rule": "KNOWN_MERCHANT",
+      "text": "Card used here 14 times before",
+      "points": -30
+     }
+    ],
+    "thresholds": {
+     "review": 400,
+     "decline": 650
+    },
+    "sees_network": false,
+    "engine": "Baseline rules (synthetic, deterministic)"
+   }
+  },
+  {
+   "v": 1,
+   "id": "b0b32817-c8db-47b2-9e26-acc66791af54",
+   "at": "2026-10-09T22:40:51.724138+00:00",
+   "ns": 1455499917,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Calls get_neighborhood",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_neighborhood",
+    "arguments": {
+     "case_id": "clean-grocery"
+    },
+    "scripted": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "27509b34-e34a-4120-9b82-7c94d5bf4f25",
+   "at": "2026-10-09T22:40:51.724261+00:00",
+   "ns": 1455615458,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Neighborhood \u00b7 3,120 cards at Harbor Market #18 \u00b7 2 confirmed fraud (0.1% of cards)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "As of the payment time (synthetic neighborhood). Only payments before this one count.",
+   "data": {
+    "tool": "get_neighborhood",
+    "evidence": "neighborhood",
+    "graph": {
+     "as_of": "2026-10-03T17:22:00+00:00",
+     "window_days": 21,
+     "merchant": "Harbor Market #18",
+     "cards_seen": 3120,
+     "cards_confirmed_fraud": 2,
+     "fraud_share": 0.0006,
+     "dispute_ratio": 0.001,
+     "card_prior_payments": 2210,
+     "card_prior_fraud": 0,
+     "card_prior_visits_here": 14,
+     "small_auths": null,
+     "other_cards_to_reissue": null,
+     "shown": {
+      "fraud": 2,
+      "clean": 14,
+      "clean_total": 3118
+     },
+     "nodes": [
+      {
+       "id": "merchant",
+       "kind": "merchant",
+       "label": "Harbor Market #18",
+       "detail": "3,120 cards in 21 days before this payment"
+      },
+      {
+       "id": "card",
+       "kind": "scored",
+       "label": "****4421",
+       "detail": "Scored payment \u00b7 $42.18"
+      },
+      {
+       "id": "f0",
+       "kind": "fraud",
+       "label": "****6142",
+       "bought_at": "2026-09-18T17:35:32.085005+00:00",
+       "confirmed_at": "2026-10-02T02:57:58.173308+00:00",
+       "detail": "Confirmed fraud 13 days after buying here"
+      },
+      {
+       "id": "f1",
+       "kind": "fraud",
+       "label": "****4305",
+       "bought_at": "2026-09-26T23:11:28.904809+00:00",
+       "confirmed_at": "2026-10-02T08:29:47.148354+00:00",
+       "detail": "Confirmed fraud 5 days after buying here"
+      },
+      {
+       "id": "c0",
+       "kind": "clean",
+       "label": "****2983",
+       "bought_at": "2026-09-29T06:56:14.380012+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c1",
+       "kind": "clean",
+       "label": "****2521",
+       "bought_at": "2026-09-27T13:34:39.846277+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c2",
+       "kind": "clean",
+       "label": "****5483",
+       "bought_at": "2026-09-14T18:47:12.419556+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c3",
+       "kind": "clean",
+       "label": "****1395",
+       "bought_at": "2026-09-30T16:54:56.492371+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c4",
+       "kind": "clean",
+       "label": "****8269",
+       "bought_at": "2026-09-14T11:58:54.227309+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c5",
+       "kind": "clean",
+       "label": "****7622",
+       "bought_at": "2026-09-15T15:03:06.988246+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c6",
+       "kind": "clean",
+       "label": "****0633",
+       "bought_at": "2026-09-15T14:39:51.050239+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c7",
+       "kind": "clean",
+       "label": "****2240",
+       "bought_at": "2026-09-27T17:12:05.835308+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c8",
+       "kind": "clean",
+       "label": "****1354",
+       "bought_at": "2026-09-24T14:22:47.653186+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c9",
+       "kind": "clean",
+       "label": "****2197",
+       "bought_at": "2026-09-21T23:25:07.366662+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c10",
+       "kind": "clean",
+       "label": "****8918",
+       "bought_at": "2026-09-20T12:31:04.610347+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c11",
+       "kind": "clean",
+       "label": "****3086",
+       "bought_at": "2026-09-30T18:00:03.325936+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c12",
+       "kind": "clean",
+       "label": "****7779",
+       "bought_at": "2026-09-28T19:32:59.496022+00:00",
+       "detail": "No fraud reported"
+      },
+      {
+       "id": "c13",
+       "kind": "clean",
+       "label": "****5409",
+       "bought_at": "2026-09-20T08:48:22.662342+00:00",
+       "detail": "No fraud reported"
+      }
+     ],
+     "edges": [
+      {
+       "source": "card",
+       "target": "merchant",
+       "kind": "scored"
+      },
+      {
+       "source": "f0",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "f1",
+       "target": "merchant",
+       "kind": "fraud"
+      },
+      {
+       "source": "c0",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c1",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c2",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c3",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c4",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c5",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c6",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c7",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c8",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c9",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c10",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c11",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c12",
+       "target": "merchant",
+       "kind": "clean"
+      },
+      {
+       "source": "c13",
+       "target": "merchant",
+       "kind": "clean"
+      }
+     ],
+     "temporal_filter": true,
+     "source": "Synthetic neighborhood"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "471dbffb-dafd-4ff0-a007-c0e731bf9f97",
+   "at": "2026-10-09T22:40:51.875690+00:00",
+   "ns": 1607051250,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Calls explain",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "explain",
+    "arguments": {
+     "case_id": "clean-grocery"
+    },
+    "scripted": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "56d83d0b-ebda-4486-a00d-8c372b77833d",
+   "at": "2026-10-09T22:40:51.875750+00:00",
+   "ns": 1607104458,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Reasons \u00b7 Merchant's other cards are overwhelmingly clean",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "- Merchant's other cards are overwhelmingly clean (-0.25)\n- Card's clean history since 2012 (-0.22)\n- Card present (chip or swipe) (-0.12)\n- Amount 0.8\u00d7 this card's typical spend (+0.04)",
+   "data": {
+    "tool": "explain",
+    "evidence": "reasons",
+    "reasons": [
+     {
+      "code": "NET_PROTECTIVE",
+      "text": "Merchant's other cards are overwhelmingly clean",
+      "value": -0.25,
+      "feature": "merchant_neighborhood",
+      "label": "Merchant's network of linked cards",
+      "direction": "protective",
+      "network": true
+     },
+     {
+      "code": "CLEAN_HISTORY",
+      "text": "Card's clean history since 2012",
+      "value": -0.22,
+      "feature": "account_history",
+      "label": "Card's payment history",
+      "direction": "protective",
+      "network": false
+     },
+     {
+      "code": "CARD_PRESENT",
+      "text": "Card present (chip or swipe)",
+      "value": -0.12,
+      "feature": "payment_channel",
+      "label": "Payment channel",
+      "direction": "protective",
+      "network": false
+     },
+     {
+      "code": "AMOUNT_VS_PROFILE",
+      "text": "Amount 0.8\u00d7 this card's typical spend",
+      "value": 0.04,
+      "feature": "transaction_amount",
+      "label": "Amount",
+      "direction": "risk",
+      "network": false
+     }
+    ],
+    "method": "sample",
+    "units": "log_odds",
+    "how": "Sample contributions (illustrative log-odds)"
+   }
+  },
+  {
+   "v": 1,
+   "id": "6034c5e1-6908-43f9-85e7-d7ebe3e41f53",
+   "at": "2026-10-09T22:40:52.028006+00:00",
+   "ns": 1759370250,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Calls similar_cases",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "similar_cases",
+    "arguments": {
+     "case_id": "clean-grocery"
+    },
+    "scripted": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "39288126-a448-4090-8abc-cc94f7e64022",
+   "at": "2026-10-09T22:40:52.028044+00:00",
+   "ns": 1759398458,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Similar cases \u00b7 none on file",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "similar_cases",
+    "evidence": "similar",
+    "cases": []
+   }
+  },
+  {
+   "v": 1,
+   "id": "028b7731-5549-49b7-b5b4-5dec166d053d",
+   "at": "2026-10-09T22:40:52.180460+00:00",
+   "ns": 1911820042,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Calls fraud_playbook",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "fraud_playbook",
+    "arguments": {
+     "case_id": "clean-grocery"
+    },
+    "scripted": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "1962ac56-6b30-4124-9517-06e471cdd735",
+   "at": "2026-10-09T22:40:52.181789+00:00",
+   "ns": 1913146417,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Playbook \u00b7 General alert handling \u00b7 response",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "- Low risk: no action; keep monitoring.\n- Elevated risk: verify with the customer before the payment settles.\n- High risk: contact the customer, then block and reissue if they do not recognise the purchase.",
+   "data": {
+    "tool": "fraud_playbook",
+    "evidence": "playbook#response",
+    "pattern": "general"
+   }
+  },
+  {
+   "v": 1,
+   "id": "9f8bd2cf-749b-4841-aaca-ca4e3b48cc42",
+   "at": "2026-10-09T22:40:52.332639+00:00",
+   "ns": 2063997833,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Calls draft_disposition",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "draft_disposition",
+    "arguments": {
+     "case_id": "clean-grocery"
+    },
+    "scripted": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "24a3b805-0d6b-470e-b268-53c87846e612",
+   "at": "2026-10-09T22:40:52.332666+00:00",
+   "ns": 2064019625,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Draft disposition \u00b7 Mark false positive",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Low risk on every signal: release the alert.",
+   "data": {
+    "tool": "draft_disposition",
+    "evidence": "draft",
+    "recommended": "false_positive",
+    "also": [],
+    "outreach_script": "Hello, this is the card fraud team calling about a Harbor Market #18 charge of $42.18 on your card ending 4421. Did you make this purchase? We will never ask for your full card number or SSN."
+   }
+  },
+  {
+   "v": 1,
+   "id": "b1c25425-7777-488a-8b83-cf4729d7fa04",
+   "at": "2026-10-09T22:40:52.483453+00:00",
+   "ns": 2214813625,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "Calls propose_action",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "propose_action",
+    "arguments": {
+     "action": "false_positive"
+    },
+    "scripted": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "56ad5d6c-f807-470a-9bb9-87e17d5fc4df",
+   "at": "2026-10-09T22:40:52.703783+00:00",
+   "ns": 2435138875,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "control",
+   "status": "denied",
+   "title": "Agent Control \u00b7 fraud.take_action \u00b7 Mark false positive \u00b7 deny \u00b7 requires analyst approval",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Requires analyst approval. The agent may propose it; only an analyst can approve it.",
+   "data": {
+    "policy": "fraud.take_action",
+    "decision": "deny",
+    "reason": "Requires analyst approval. The agent may propose it; only an analyst can approve it.",
+    "source": "agent_control",
+    "engine_label": "Agent Control",
+    "action": "false_positive",
+    "scope": "this card",
+    "control": "fsi-fraud-take-action-approval-v1",
+    "control_execution_id": "01a5c05b-52a4-4097-b107-8da7866fc6a3",
+    "requested_by": "fraud triage agent"
+   }
+  },
+  {
+   "v": 1,
+   "id": "2db1cbee-4372-4d51-ba73-b167b8d15023",
+   "at": "2026-10-09T22:40:52.703873+00:00",
+   "ns": 2435226583,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "claim.verdict",
+   "status": "ok",
+   "title": "Citation check \u00b7 4/4 points cite tool evidence",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Each point must end on an evidence id this run produced. A format check, not a fact check.",
+   "data": {
+    "citations": {
+     "total": 4,
+     "cited": 4,
+     "items": [
+      {
+       "text": "Rules engine says **approve** (10/999); the graph model says **Low risk** (0.06). [score]",
+       "ids": [
+        "score"
+       ],
+       "ok": true
+      },
+      {
+       "text": "Harbor Market #18: 2 of 3,120 cards seen before this payment had confirmed fraud. [neighborhood]",
+       "ids": [
+        "neighborhood"
+       ],
+       "ok": true
+      },
+      {
+       "text": "Strongest reason: Merchant's other cards are overwhelmingly clean (-0.25). [reasons]",
+       "ids": [
+        "reasons"
+       ],
+       "ok": true
+      },
+      {
+       "text": "Suggested: Mark false positive. Low risk on every signal: release the alert. [draft]",
+       "ids": [
+        "draft"
+       ],
+       "ok": true
+      }
+     ]
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "300b25da-50c3-4938-87b7-9f74473027b6",
+   "at": "2026-10-09T22:40:52.703885+00:00",
+   "ns": 2435237250,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "agent.message",
+   "status": "info",
+   "title": "Analyst summary \u00b7 scripted (no model)",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "- Rules engine says **approve** (10/999); the graph model says **Low risk** (0.06). [score]\n- Harbor Market #18: 2 of 3,120 cards seen before this payment had confirmed fraud. [neighborhood]\n- Strongest reason: Merchant's other cards are overwhelmingly clean (-0.25). [reasons]\n- Suggested: Mark false positive. Low risk on every signal: release the alert. [draft]",
+   "data": {
+    "served_by": null,
+    "mode": "scripted"
+   }
+  },
+  {
+   "v": 1,
+   "id": "6c1cee48-2873-48ff-a1e5-37e7e0191504",
+   "at": "2026-10-09T22:40:53.033258+00:00",
+   "ns": 2764614375,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "hitl.request",
+   "status": "info",
+   "title": "Analyst decision required",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": "Suggested: Mark false positive. The agent's proposals are waiting on policy; only the analyst can approve card actions.",
+   "data": {
+    "request_id": "disposition",
+    "options": [
+     {
+      "id": "contact_customer",
+      "label": "Contact customer",
+      "policy": "reversible"
+     },
+     {
+      "id": "block_and_reissue",
+      "label": "Block and reissue",
+      "policy": "requires analyst approval"
+     },
+     {
+      "id": "false_positive",
+      "label": "Mark false positive",
+      "policy": "requires analyst approval"
+     },
+     {
+      "id": "escalate",
+      "label": "Escalate to investigations",
+      "policy": "reversible"
+     }
+    ],
+    "recommended": "false_positive",
+    "case_file": {
+     "case": {
+      "id": "clean-grocery",
+      "label": "Neighborhood grocery \u00b7 card present",
+      "account": "****4421",
+      "merchant": "Harbor Market #18",
+      "amount": 42.18,
+      "channel": "pos",
+      "neighborhood": "Merchant dispute rate 0.1% \u00b7 this card has 14 earlier clean purchases here",
+      "scenario": "clean_control",
+      "history": {
+       "card_prior_payments": 2210,
+       "card_prior_fraud": 0,
+       "card_prior_visits_here": 14,
+       "merchant_prior_payments": 18400,
+       "merchant_prior_cards": 3120,
+       "merchant_prior_fraud_cards": 2,
+       "card_small_payments_24h": 0
+      },
+      "at": "2026-10-03T17:22:00Z",
+      "mcc": "5411",
+      "mcc_label": "Grocery stores",
+      "currency": "USD",
+      "situation": "A card-present grocery purchase at a store this card has used 14 times.",
+      "scoreable_by_model": true,
+      "customer": "Synthetic cardholder",
+      "customer_id": "synthetic-cardholder-4421"
+     },
+     "scenario": {
+      "id": "clean-grocery",
+      "case_id": "clean-grocery",
+      "title": "Clean control",
+      "situation": "$42.18 card-present grocery purchase at a store used 14 times.",
+      "expected": "Rules approve \u00b7 graph model low \u00b7 no action",
+      "kind": "story",
+      "model_scope": "Scored by the graph model"
+     },
+     "evidence": {
+      "score": {
+       "case_id": "clean-grocery",
+       "probability": 0.06,
+       "threshold": 0.5,
+       "risk_band": "low",
+       "risk_label": "Low risk",
+       "suggested_action": "No action needed; keep monitoring",
+       "backend": "fixture",
+       "backend_label": "Sample scores",
+       "engine": null,
+       "latency_ms": 0.1,
+       "recorded_at": null,
+       "explain": {
+        "method": "sample",
+        "units": "log_odds",
+        "base_value": -2.2
+       },
+       "timing_ms": null,
+       "device": null,
+       "shap": [
+        {
+         "feature": "merchant_neighborhood",
+         "label": "Merchant's network of linked cards",
+         "value": -0.25,
+         "direction": "protective"
+        },
+        {
+         "feature": "account_history",
+         "label": "Card's payment history",
+         "value": -0.22,
+         "direction": "protective"
+        },
+        {
+         "feature": "payment_channel",
+         "label": "Payment channel",
+         "value": -0.12,
+         "direction": "protective"
+        },
+        {
+         "feature": "transaction_amount",
+         "label": "Amount",
+         "value": 0.04,
+         "direction": "risk"
+        }
+       ],
+       "synthetic": true,
+       "scoreable_by_model": true
+      },
+      "rules": {
+       "score": 10,
+       "max": 999,
+       "decision": "approve",
+       "fired": [
+        {
+         "rule": "BASE",
+         "text": "Baseline for any authorization",
+         "points": 40
+        },
+        {
+         "rule": "KNOWN_MERCHANT",
+         "text": "Card used here 14 times before",
+         "points": -30
+        }
+       ],
+       "thresholds": {
+        "review": 400,
+        "decline": 650
+       },
+       "sees_network": false,
+       "engine": "Baseline rules (synthetic, deterministic)"
+      },
+      "neighborhood": {
+       "as_of": "2026-10-03T17:22:00+00:00",
+       "window_days": 21,
+       "merchant": "Harbor Market #18",
+       "cards_seen": 3120,
+       "cards_confirmed_fraud": 2,
+       "fraud_share": 0.0006,
+       "dispute_ratio": 0.001,
+       "card_prior_payments": 2210,
+       "card_prior_fraud": 0,
+       "card_prior_visits_here": 14,
+       "small_auths": null,
+       "other_cards_to_reissue": null,
+       "shown": {
+        "fraud": 2,
+        "clean": 14,
+        "clean_total": 3118
+       },
+       "temporal_filter": true,
+       "source": "Synthetic neighborhood"
+      },
+      "reasons": {
+       "reasons": [
+        {
+         "code": "NET_PROTECTIVE",
+         "text": "Merchant's other cards are overwhelmingly clean",
+         "value": -0.25,
+         "feature": "merchant_neighborhood",
+         "label": "Merchant's network of linked cards",
+         "direction": "protective",
+         "network": true
+        },
+        {
+         "code": "CLEAN_HISTORY",
+         "text": "Card's clean history since 2012",
+         "value": -0.22,
+         "feature": "account_history",
+         "label": "Card's payment history",
+         "direction": "protective",
+         "network": false
+        },
+        {
+         "code": "CARD_PRESENT",
+         "text": "Card present (chip or swipe)",
+         "value": -0.12,
+         "feature": "payment_channel",
+         "label": "Payment channel",
+         "direction": "protective",
+         "network": false
+        },
+        {
+         "code": "AMOUNT_VS_PROFILE",
+         "text": "Amount 0.8\u00d7 this card's typical spend",
+         "value": 0.04,
+         "feature": "transaction_amount",
+         "label": "Amount",
+         "direction": "risk",
+         "network": false
+        }
+       ],
+       "method": "sample",
+       "units": "log_odds",
+       "how": "Sample contributions (illustrative log-odds)"
+      },
+      "similar": {
+       "cases": []
+      },
+      "playbook#response": {
+       "pattern": "general",
+       "title": "General alert handling",
+       "section": "response",
+       "text": "- Low risk: no action; keep monitoring.\n- Elevated risk: verify with the customer before the payment settles.\n- High risk: contact the customer, then block and reissue if they do not recognise the purchase."
+      },
+      "draft": {
+       "action": "false_positive",
+       "also": [],
+       "why": "Low risk on every signal: release the alert.",
+       "outreach_script": "Hello, this is the card fraud team calling about a Harbor Market #18 charge of $42.18 on your card ending 4421. Did you make this purchase? We will never ask for your full card number or SSN."
+      }
+     },
+     "summary": "- Rules engine says **approve** (10/999); the graph model says **Low risk** (0.06). [score]\n- Harbor Market #18: 2 of 3,120 cards seen before this payment had confirmed fraud. [neighborhood]\n- Strongest reason: Merchant's other cards are overwhelmingly clean (-0.25). [reasons]\n- Suggested: Mark false positive. Low risk on every signal: release the alert. [draft]",
+     "mode": "scripted",
+     "served_by": null,
+     "proposals": [
+      {
+       "action": "false_positive",
+       "scope": "this card",
+       "label": "Mark false positive",
+       "policy": "deny"
+      }
+     ],
+     "recommended": "false_positive",
+     "dispute": null,
+     "analyst_note": null,
+     "queue": [
+      {
+       "case": {
+        "id": "cpp-orbit",
+        "label": "Online purchase at Orbit Digital Goods",
+        "account": "****1188",
+        "merchant": "Orbit Digital Goods",
+        "amount": 286.4,
+        "channel": "cnp",
+        "neighborhood": "In the last 21 days, 412 cards bought here and 37 later had confirmed fraud \u00b7 this card's history is clean",
+        "scenario": "cpp",
+        "history": {
+         "card_prior_payments": 1840,
+         "card_prior_fraud": 0,
+         "card_prior_visits_here": 0,
+         "merchant_prior_payments": 1187,
+         "merchant_prior_cards": 412,
+         "merchant_prior_fraud_cards": 37,
+         "card_small_payments_24h": 0
+        },
+        "at": "2026-10-02T21:14:00Z",
+        "mcc": "5816",
+        "mcc_label": "Digital goods: games",
+        "currency": "USD",
+        "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
+        "scoreable_by_model": true,
+        "customer": "Dana Whitfield (fictional)",
+        "customer_id": "dana-whitfield"
+       },
+       "probability": 0.74,
+       "risk_band": "high",
+       "risk_label": "High risk",
+       "rules": {
+        "score": 120,
+        "decision": "approve"
+       },
+       "suggested_action": "Block and reissue",
+       "backend": "fixture",
+       "label": "Sample scores",
+       "latency_ms": 0.1,
+       "model_ms": null,
+       "device": null
+      },
+      {
+       "case": {
+        "id": "card-testing",
+        "label": "Electronics purchase after a burst of tiny charges",
+        "account": "****5207",
+        "merchant": "Northgate Electronics Online",
+        "amount": 894.0,
+        "channel": "cnp",
+        "neighborhood": "11 authorizations of $1\u2013$3 at QuickTip Donations in 40 minutes \u00b7 58 other cards did the same there this week, 14 later confirmed fraud",
+        "scenario": "card_testing",
+        "history": {
+         "card_prior_payments": 312,
+         "card_prior_fraud": 0,
+         "card_prior_visits_here": 0,
+         "merchant_prior_payments": 9120,
+         "merchant_prior_cards": 2240,
+         "merchant_prior_fraud_cards": 31,
+         "card_small_payments_24h": 11
+        },
+        "at": "2026-10-03T02:41:00Z",
+        "mcc": "5732",
+        "mcc_label": "Electronics stores",
+        "currency": "USD",
+        "situation": "Eleven $1\u2013$3 online authorizations in 40 minutes, then an $894 electronics order.",
+        "scoreable_by_model": true,
+        "customer": "Synthetic cardholder",
+        "customer_id": "synthetic-cardholder-5207"
+       },
+       "probability": 0.91,
+       "risk_band": "high",
+       "risk_label": "High risk",
+       "rules": {
+        "score": 540,
+        "decision": "review"
+       },
+       "suggested_action": "Block and reissue",
+       "backend": "fixture",
+       "label": "Sample scores",
+       "latency_ms": 0.3,
+       "model_ms": null,
+       "device": null
+      },
+      {
+       "case": {
+        "id": "ato-illustrative",
+        "label": "Travel booking right after an address change",
+        "account": "****3390",
+        "merchant": "Lumen Travel Co.",
+        "amount": 1450.0,
+        "channel": "cnp",
+        "neighborhood": "Merchant network is unremarkable \u00b7 the risk is in the account events, which the graph model cannot see",
+        "scenario": "ato",
+        "history": {
+         "card_prior_payments": 905,
+         "card_prior_fraud": 0,
+         "card_prior_visits_here": 0,
+         "merchant_prior_payments": 3310,
+         "merchant_prior_cards": 1406,
+         "merchant_prior_fraud_cards": 3,
+         "card_small_payments_24h": 0
+        },
+        "at": "2026-10-03T15:05:00Z",
+        "mcc": "4722",
+        "mcc_label": "Travel agencies",
+        "currency": "USD",
+        "situation": "New device, mailing address changed 2 hours ago, card reissue requested, then a $1,450 online booking.",
+        "scoreable_by_model": false,
+        "illustrative": true,
+        "customer": "Synthetic cardholder",
+        "customer_id": "synthetic-cardholder-3390"
+       },
+       "probability": 0.18,
+       "risk_band": "low",
+       "risk_label": "Low risk",
+       "rules": {
+        "score": 740,
+        "decision": "decline"
+       },
+       "suggested_action": "Escalate to investigations",
+       "backend": "fixture",
+       "label": "Sample scores",
+       "latency_ms": 0.2,
+       "model_ms": null,
+       "device": null
+      },
+      {
+       "case": {
+        "id": "clean-grocery",
+        "label": "Neighborhood grocery \u00b7 card present",
+        "account": "****4421",
+        "merchant": "Harbor Market #18",
+        "amount": 42.18,
+        "channel": "pos",
+        "neighborhood": "Merchant dispute rate 0.1% \u00b7 this card has 14 earlier clean purchases here",
+        "scenario": "clean_control",
+        "history": {
+         "card_prior_payments": 2210,
+         "card_prior_fraud": 0,
+         "card_prior_visits_here": 14,
+         "merchant_prior_payments": 18400,
+         "merchant_prior_cards": 3120,
+         "merchant_prior_fraud_cards": 2,
+         "card_small_payments_24h": 0
+        },
+        "at": "2026-10-03T17:22:00Z",
+        "mcc": "5411",
+        "mcc_label": "Grocery stores",
+        "currency": "USD",
+        "situation": "A card-present grocery purchase at a store this card has used 14 times.",
+        "scoreable_by_model": true,
+        "customer": "Synthetic cardholder",
+        "customer_id": "synthetic-cardholder-4421"
+       },
+       "probability": 0.06,
+       "risk_band": "low",
+       "risk_label": "Low risk",
+       "rules": {
+        "score": 10,
+        "decision": "approve"
+       },
+       "suggested_action": "Mark false positive",
+       "backend": "fixture",
+       "label": "Sample scores",
+       "latency_ms": 0.1,
+       "model_ms": null,
+       "device": null
+      },
+      {
+       "case": {
+        "id": "cnp-verify",
+        "label": "First order at an outdoor retailer",
+        "account": "****6612",
+        "merchant": "Northwind Outdoor Co.",
+        "amount": 612.9,
+        "channel": "cnp",
+        "neighborhood": "Merchant network mostly clean \u00b7 amount well above this card's typical spend",
+        "scenario": "queue",
+        "history": {
+         "card_prior_payments": 640,
+         "card_prior_fraud": 0,
+         "card_prior_visits_here": 0,
+         "merchant_prior_payments": 5210,
+         "merchant_prior_cards": 1980,
+         "merchant_prior_fraud_cards": 9,
+         "card_small_payments_24h": 0
+        },
+        "at": "2026-10-03T19:48:00Z",
+        "mcc": "5941",
+        "mcc_label": "Sporting goods",
+        "currency": "USD",
+        "situation": "An online order about three times this card's usual spend, at a merchant it has not used before.",
+        "scoreable_by_model": true,
+        "customer": "Synthetic cardholder",
+        "customer_id": "synthetic-cardholder-6612"
+       },
+       "probability": 0.41,
+       "risk_band": "elevated",
+       "risk_label": "Elevated risk",
+       "rules": {
+        "score": 120,
+        "decision": "approve"
+       },
+       "suggested_action": "Contact customer",
+       "backend": "fixture",
+       "label": "Sample scores",
+       "latency_ms": 0.1,
+       "model_ms": null,
+       "device": null
+      }
+     ]
+    },
+    "usage": {
+     "llm_calls": 0,
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "tool_calls": 13
+    },
+    "security": {
+     "mode": "enforce",
+     "status": "not_checked",
+     "checks": 0,
+     "blocked": 0,
+     "errors": 0,
+     "event_ids": []
+    },
+    "agent_trace": "recorded",
+    "investigated_ms": 2764
+   }
+  },
+  {
+   "v": 1,
+   "id": "f42393d7-b08f-4772-bfa5-0978d77d4050",
+   "at": "2026-10-09T22:40:53.352085+00:00",
+   "ns": 3083443625,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "hitl.decision",
+   "status": "info",
+   "title": "Maya (analyst) \u00b7 false_positive",
+   "lane": "human",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "request_id": "disposition",
+    "decision": "false_positive",
+    "by": "Maya (analyst)"
+   }
+  },
+  {
+   "v": 1,
+   "id": "f74548c2-c3e5-4d1f-9b36-805161e5a7c1",
+   "at": "2026-10-09T22:40:53.576426+00:00",
+   "ns": 3307782208,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "control",
+   "status": "allowed",
+   "title": "Agent Control \u00b7 fraud.take_action \u00b7 Mark false positive \u00b7 allow \u00b7 approved by Maya (analyst)",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Approved by Maya (analyst).",
+   "data": {
+    "policy": "fraud.take_action",
+    "decision": "allow",
+    "reason": "Approved by Maya (analyst).",
+    "source": "agent_control",
+    "engine_label": "Agent Control",
+    "action": "false_positive",
+    "approved_by": "Maya (analyst)",
+    "scope": null,
+    "control": "fsi-fraud-take-action-approval-v1",
+    "control_execution_id": "c0837a9f-df66-4ec8-91dc-d521aa7f5c53"
+   }
+  },
+  {
+   "v": 1,
+   "id": "0b0ff440-9d98-453b-87d5-8e060e6b511f",
+   "at": "2026-10-09T22:40:53.576448+00:00",
+   "ns": 3307798792,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Alert released as a false positive; payment stands (simulated)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "take_action",
+    "action": "false_positive",
+    "simulated": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "bab14870-d2cd-4690-9b70-f767bc5a3fcb",
+   "at": "2026-10-09T22:40:53.576464+00:00",
+   "ns": 3307814000,
+   "run_id": "fraud-20261009-224050-72342e",
+   "component": "fraud-triage",
+   "kind": "result",
+   "status": "ok",
+   "title": "Mark false positive \u00b7 decided by Maya (analyst)",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Audit trail recorded. Card actions in this demo are simulated.",
+   "data": {
+    "case_id": "clean-grocery",
+    "scenario": "clean-grocery",
+    "disposition": "false_positive",
+    "decided_by": "Maya (analyst)",
+    "note": null,
+    "actions": [
+     {
+      "action": "false_positive",
+      "status": "done",
+      "effect": "Alert released as a false positive; payment stands (simulated)",
+      "approved_by": "Maya (analyst)"
+     }
+    ],
+    "handoff": null,
+    "label_reveal": null,
+    "summary": "- Rules engine says **approve** (10/999); the graph model says **Low risk** (0.06). [score]\n- Harbor Market #18: 2 of 3,120 cards seen before this payment had confirmed fraud. [neighborhood]\n- Strongest reason: Merchant's other cards are overwhelmingly clean (-0.25). [reasons]\n- Suggested: Mark false positive. Low risk on every signal: release the alert. [draft]",
+    "mode": "scripted",
+    "served_by": null,
+    "usage": {
+     "llm_calls": 0,
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "tool_calls": 13
+    },
+    "security": {
+     "mode": "enforce",
+     "status": "not_checked",
+     "checks": 0,
+     "blocked": 0,
+     "errors": 0,
+     "event_ids": []
+    },
+    "agent_trace": "recorded",
+    "backend": "fixture",
+    "backend_label": "Sample scores",
+    "recorded_at": null,
+    "duration_ms": 3308,
+    "investigated_ms": 2764
+   }
+  }
+ ],
+ "result": {
+  "case_id": "clean-grocery",
+  "scenario": "clean-grocery",
+  "disposition": "false_positive",
+  "decided_by": "Maya (analyst)",
+  "note": null,
+  "actions": [
+   {
+    "action": "false_positive",
+    "status": "done",
+    "effect": "Alert released as a false positive; payment stands (simulated)",
+    "approved_by": "Maya (analyst)"
+   }
+  ],
+  "handoff": null,
+  "label_reveal": null,
+  "summary": "- Rules engine says **approve** (10/999); the graph model says **Low risk** (0.06). [score]\n- Harbor Market #18: 2 of 3,120 cards seen before this payment had confirmed fraud. [neighborhood]\n- Strongest reason: Merchant's other cards are overwhelmingly clean (-0.25). [reasons]\n- Suggested: Mark false positive. Low risk on every signal: release the alert. [draft]",
+  "mode": "scripted",
+  "served_by": null,
+  "usage": {
+   "llm_calls": 0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "tool_calls": 13
+  },
+  "security": {
+   "mode": "enforce",
+   "status": "not_checked",
+   "checks": 0,
+   "blocked": 0,
+   "errors": 0,
+   "event_ids": []
+  },
+  "agent_trace": "recorded",
+  "backend": "fixture",
+  "backend_label": "Sample scores",
+  "recorded_at": null,
+  "duration_ms": 3308,
+  "investigated_ms": 2764
+ }
+}

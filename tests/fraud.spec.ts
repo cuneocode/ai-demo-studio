@@ -1,4 +1,15 @@
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
+
+/* Card fraud triage, served from the committed golden recordings so every run is deterministic and needs no model. */
+
+const DATA = join(process.cwd(), "services/fraud/data");
+const SCENARIOS = JSON.parse(readFileSync(join(DATA, "scenarios.json"), "utf8"));
+type Recording = { name: string; title: string; scenario: string; recorded_at: string; served_by: unknown; synthetic: boolean; run: Record<string, unknown>; events: { kind: string; data?: Record<string, unknown> }[] };
+const RECORDINGS: Recording[] = readdirSync(join(DATA, "recorded")).filter((file) => file.endsWith(".json"))
+  .map((file) => JSON.parse(readFileSync(join(DATA, "recorded", file), "utf8")));
+const golden = (name: string) => RECORDINGS.find((item) => item.name === name)!;
 
 const STATUS = {
   checkedAt: "2026-10-09T12:00:00.000Z",
@@ -9,150 +20,214 @@ const STATUS = {
   readiness: [],
 };
 
-const HINT = "This is the GNN story: presenter-only wording.";
-const CASES = [
-  { id: "txn-compromised-merchant", label: "First purchase at a compromised merchant", account: "****1188", merchant: "Orbit Digital Goods", amount: 286.4, channel: "cnp", neighborhood: "412 cards bought here; 37 later had confirmed fraud.", hint: HINT },
-  { id: "txn-clean-pos", label: "Neighborhood grocery · card present", account: "****4421", merchant: "Harbor Market #18", amount: 42.18, channel: "pos", neighborhood: "Merchant dispute rate 0.4%.", hint: HINT },
-];
+const HEALTH = {
+  ready: true, backend: "fixture", backend_label: "Sample scores", engine: null, model: "Sample scores (synthetic)",
+  detail: "The live GNN sidecar is offline and no recorded scores exist. Showing sample scores.", threshold: 0.5, cases: 5,
+  sidecar: { status: "down" }, recorded_at: null,
+  agent: { status: "ready", label: "Deep Agent · OpenAI API", served_by: { provider: "openai", label: "OpenAI API", model: "gpt", external: true, fallback: true } },
+  controls: { status: "enforcing", source: "agent_control", reason: null, policies: ["fraud.note_pii", "fraud.take_action"] },
+  security: { status: "configured", mode: "enforce", fail_open: false },
+  splunk: { status: "missing_configuration", galileo: "configured" },
+  model_card: "not_measured",
+};
 
-type Backend = "live" | "cache" | "fixture";
-const LABEL: Record<Backend, string> = { live: "GNN on Sparky (live)", cache: "Recorded scores", fixture: "Sample scores" };
-const RECORDED_AT = "2026-10-02T21:00:00+00:00";
+type Mock = { decisions: { request_id: string; decision: string; by?: string; note?: string }[]; notes: { note: string }[] };
 
-function health(backend: Backend) {
-  return {
-    ready: true, backend, backend_label: LABEL[backend], engine: backend === "live" ? "sidecar" : null,
-    model: backend === "fixture" ? "Sample scores (synthetic)" : "gnn-xgb-tabformer", detail: "mocked", threshold: 0.5, cases: CASES.length,
-    sidecar: { status: backend === "live" ? "up" : "down", url: "http://127.0.0.1:8000" },
-    recorded_at: backend === "cache" ? RECORDED_AT : null,
-    narrative: { status: "disabled", model: null, ready: false },
-    security: { status: "configured", mode: "enforce", fail_open: false },
-    splunk: { status: "missing_configuration" },
-  };
-}
-
-function events(runId: string, backend: Backend) {
-  const at = (ms: number) => new Date(Date.parse("2026-10-09T12:00:00.000Z") + ms).toISOString();
-  const base = { v: 1, run_id: runId, component: "fraud-triage" };
-  return [
-    { ...base, id: "e1", at: at(0), kind: "run", status: "started", lane: "agent", title: "Scoring First purchase at a compromised merchant", body: "Synthetic payment" },
-    { ...base, id: "e2", at: at(5), kind: "agent.tool_call", status: "info", lane: "tools", title: "Look up the payment", data: { tool: "get_case" } },
-    { ...base, id: "e3", at: at(9), kind: "tool.result", status: "ok", lane: "tools", title: "Payment found · ****1188 at Orbit Digital Goods" },
-    { ...base, id: "e4", at: at(12), kind: "agent.tool_call", status: "info", lane: "tools", title: "Score the payment's graph neighborhood", data: { tool: "score_payment" } },
-    { ...base, id: "e5", at: at(20), kind: "tool.result", status: "flagged", lane: "tools", title: `${LABEL[backend]} · probability 0.74 · High risk`, data: { backend } },
-    { ...base, id: "e6", at: at(25), kind: "result", status: "flagged", lane: "agent", title: "High risk · Contact customer, then block and reissue" },
-  ];
-}
-
-async function openFraud(page: Page, backend: Backend, { sidecarDown = backend !== "live" } = {}) {
-  const runs = new Map<string, Backend>();
+/** Plays a golden recording as a live run: events stop at each analyst request until the page posts the decision. */
+async function mockFraud(page: Page, { healthDown = false } = {}): Promise<Mock> {
+  const mock: Mock = { decisions: [], notes: [] };
+  const runs = new Map<string, Recording>();
   await page.route("**/api/studio/status", (route) => route.fulfill({ json: STATUS }));
-  await page.route("**/api/fraud/health", (route) => route.fulfill({ json: { ...health(backend), sidecar: { status: sidecarDown ? "down" : "up" } } }));
-  await page.route("**/api/fraud/cases", (route) => route.fulfill({ json: { cases: CASES, threshold: 0.5 } }));
-  await page.route("**/api/fraud/recordings", (route) => route.fulfill({ json: { recordings: [] } }));
-  await page.route("**/api/fraud/score", async (route) => {
-    const body = route.request().postDataJSON() as { case_id: string; run_id?: string };
-    const runId = body.run_id ?? "fraud-mock-run-001";
-    runs.set(runId, backend);
-    await new Promise((resolve) => setTimeout(resolve, 300));
+  await page.route("**/api/fraud/health", (route) => healthDown ? route.fulfill({ status: 502, body: "down" }) : route.fulfill({ json: HEALTH }));
+  await page.route("**/api/fraud/scenarios", (route) => route.fulfill({ json: SCENARIOS }));
+  await page.route("**/api/fraud/cases", (route) => route.fulfill({ json: { cases: [], threshold: 0.5 } }));
+  await page.route("**/api/fraud/model-card", (route) => route.fulfill({ json: { status: "not_measured", source: null, tag: "Not measured yet — run on Sparky", headline: {}, missing: [] } }));
+  await page.route("**/api/fraud/recordings", (route) => route.fulfill({ json: { recordings: RECORDINGS.map(({ name, title, scenario, recorded_at, served_by, synthetic, events }) => ({ name, title, scenario, recorded_at, served_by, synthetic, events: events.length })) } }));
+  await page.route("**/api/fraud/recordings/*", (route) => {
+    const name = decodeURIComponent(new URL(route.request().url()).pathname.split("/").pop()!);
+    return route.fulfill({ json: golden(name) });
+  });
+  await page.route("**/api/fraud/notes", async (route) => {
+    const body = route.request().postDataJSON() as { note: string };
+    mock.notes.push(body);
+    const pan = /\b(?:\d[ -]?){13,19}\b/.test(body.note);
+    const ssn = /\b\d{3}-\d{2}-\d{4}\b/.test(body.note);
+    const masked = body.note.replace(/\b(?:\d[ -]?){9,15}(\d{4})\b/g, "card ending $1").replace(/\b\d{3}-\d{2}-(\d{4})\b/g, "SSN ending $1");
     await route.fulfill({ json: {
-      case: CASES[0], probability: 0.74, threshold: 0.5, risk_band: "high", risk_label: "High risk",
-      suggested_action: "Contact customer, then block and reissue", decision: "hold",
-      shap: [
-        { feature: "merchant_neighborhood", label: "Merchant's network of linked cards", value: 0.41, direction: "risk" },
-        { feature: "account_gnn_embedding", label: "Card's own graph history", value: -0.06, direction: "protective" },
-      ],
-      backend, backend_label: LABEL[backend], engine: backend === "live" ? "sidecar" : null,
-      recorded_at: backend === "cache" ? RECORDED_AT : null, fallback: [], synthetic: true,
-      narrative: { status: "disabled", text: null, security: { mode: "enforce", status: "not_checked", checks: 0, blocked: 0, errors: 0, event_ids: [] } },
-      security: { mode: "enforce", status: "not_checked", checks: 0, blocked: 0, errors: 0, event_ids: [] },
-      duration_ms: 18, run_id: runId,
+      saved: !pan && !ssn, run_id: null,
+      ai_defense: pan ? { status: "blocked", rules: ["PCI"] } : { status: "allowed", rules: [] },
+      policy: { engine_label: "Agent Control", decision: pan || ssn ? "deny" : "allow", entities: [...(pan ? ["card number"] : []), ...(ssn ? ["SSN"] : [])] },
+      masked: pan || ssn ? masked : null,
     } });
   });
-  await page.route("**/api/fraud/runs/*", (route) => {
-    const runId = decodeURIComponent(new URL(route.request().url()).pathname.split("/").pop()!);
-    const kind = runs.get(runId);
-    if (!kind) return route.fulfill({ status: 404, json: { detail: "Unknown run." } });
-    const after = Number(new URL(route.request().url()).searchParams.get("after") ?? 0);
-    const all = events(runId, kind);
+  await page.route((url) => /\/api\/fraud\/runs\/[^/]+\/decision$/.test(url.pathname), async (route) => {
+    mock.decisions.push(route.request().postDataJSON());
+    await route.fulfill({ json: { ok: true } });
+  });
+  await page.route((url) => url.pathname === "/api/fraud/runs", async (route) => {
+    const body = route.request().postDataJSON() as { scenario: string };
+    const recording = RECORDINGS.find((item) => item.scenario === body.scenario && item.name.endsWith("-scripted"))!;
+    const runId = `fraud-mock-${body.scenario}`;
+    runs.set(runId, recording);
+    await route.fulfill({ json: { run_id: runId } });
+  });
+  await page.route((url) => /\/api\/fraud\/runs\/[^/]+$/.test(url.pathname), (route) => {
+    const url = new URL(route.request().url());
+    const runId = decodeURIComponent(url.pathname.split("/").pop()!);
+    const recording = runs.get(runId);
+    if (!recording) return route.fulfill({ status: 404, json: { detail: "Unknown run." } });
+    const stops = recording.events.flatMap((event, index) => event.kind === "hitl.request" ? [index] : []);
+    const decided = mock.decisions.length;
+    const done = decided >= stops.length;
+    const visible = done ? recording.events : recording.events.slice(0, stops[decided] + 1);
+    const after = Number(url.searchParams.get("after") ?? 0);
     return route.fulfill({ json: {
-      run: { id: runId, service: "fraud", status: "completed", started_at: "2026-10-09T12:00:00.000Z", finished_at: "2026-10-09T12:00:00.030Z" },
-      events: all.slice(after), total: all.length,
+      run: { ...recording.run, id: runId, status: done ? "completed" : "running", finished_at: done ? recording.run.finished_at : null, result: undefined },
+      events: visible.slice(after).map((event) => ({ ...event, run_id: runId })), total: visible.length,
     } });
   });
+  return mock;
+}
+
+async function openFraud(page: Page) {
   await page.goto("/", { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: /^Open (Transaction fraud scoring|Card fraud triage) experience$/ }).first().click();
+  await page.getByRole("button", { name: "Open Card fraud triage experience" }).first().click();
   const panel = page.locator("#case-panel-demo");
-  await expect(panel.getByRole("button", { name: /First purchase at a compromised merchant/ })).toBeVisible();
+  await expect(panel.getByRole("region", { name: "Business problem" })).toBeVisible();
   return panel;
 }
 
-test("with the sidecar down, sample scores still score, say so, and focus the result", async ({ page }) => {
-  const panel = await openFraud(page, "fixture");
-  const banner = panel.locator(".fraud-status");
-  await expect(banner).toContainText("The live GNN scoring sidecar on Sparky is offline");
-  await expect(banner).toContainText("Sample scores for the synthetic payments");
-  await expect(banner.getByRole("button", { name: "Studio settings" })).toBeVisible();
-  await expect(panel).not.toContainText(HINT);
-
-  const scoreButton = panel.locator("#score-payment");
-  await expect(scoreButton).toBeEnabled();
-  await expect(panel.getByRole("button", { name: "On", exact: true })).toBeDisabled();
-  await expect(panel.locator("#fraud-narrative-hint")).toContainText("no summary model is configured");
-  await scoreButton.click();
-
-  const heading = panel.getByRole("heading", { name: "High risk" });
-  await expect(heading).toBeFocused();
-  await expect(heading).toBeInViewport();
-  await expect(panel.locator('.score-result [data-provenance="sample"]')).toContainText("Sample data");
-  await expect(panel.locator(".suggested-action")).toContainText("Contact customer, then block and reissue");
-  await expect(panel.locator(".score-source")).toContainText("Scored by Sample scores");
-  await expect(panel.getByRole("list", { name: "What moved the score" })).toContainText("Merchant's network of linked cards");
-  await expect(panel.getByRole("list", { name: "Scoring steps" })).toContainText("Sample scores · probability 0.74 · High risk");
-  await expect(panel.locator(".score-result")).toHaveAttribute("aria-live", "polite");
-
-  await expect(panel).not.toContainText(/\bhold\b/i);
-  await expect(panel.locator(".decision-pill")).toHaveCount(0);
-  await expect(panel).not.toContainText("merchant_neighborhood");
-  await expect(panel).not.toContainText(HINT);
-  await expect(page.getByRole("region", { name: "Live run stats" }).locator(".run-stats-model")).toContainText("Sample data");
-
-  const badChildren = await panel.locator('ul, ol, [role="list"]').evaluateAll((lists) => lists.flatMap((list) =>
-    [...list.children].filter((child) => child.tagName !== "LI" && child.getAttribute("role") !== "listitem").map((child) => child.outerHTML.slice(0, 80))));
-  expect(badChildren).toEqual([]);
-});
-
-test("recorded scores are labelled as recorded, with their date", async ({ page }) => {
-  const panel = await openFraud(page, "cache");
-  await expect(panel.locator(".fraud-status")).toContainText("Recorded scores from the GNN");
-  await panel.locator("#score-payment").click();
-  await expect(panel.getByRole("heading", { name: "High risk" })).toBeFocused();
-  await expect(panel.locator(".score-source")).toContainText("Scored by Recorded scores · recorded");
-  const badge = panel.locator('.score-result [data-provenance="recorded"]');
-  await expect(badge).toContainText("Recorded run");
-  await expect(badge).toContainText("2026");
-  await expect(page.getByRole("region", { name: "Live run stats" }).locator(".run-stats-model")).toContainText("Recorded run");
-  await expect(panel).not.toContainText(/\bhold\b/i);
-});
-
-test("the live model shows no offline banner and names the GNN that answered", async ({ page }) => {
-  const panel = await openFraud(page, "live");
-  await panel.locator("#score-payment").click();
-  await expect(panel.getByRole("heading", { name: "High risk" })).toBeFocused();
-  await expect(panel.locator(".fraud-status")).toHaveCount(0);
-  await expect(panel.locator('.score-result [data-provenance="live"]')).toContainText("GNN on Sparky");
-  await expect(panel.locator(".score-source")).toContainText("Scored by GNN on Sparky (live)");
-});
-
-test("an unreachable service gets a banner, and scoring errors are announced next to the button", async ({ page }) => {
-  await page.route("**/api/studio/status", (route) => route.fulfill({ json: STATUS }));
-  await page.route("**/api/fraud/health", (route) => route.fulfill({ status: 502, body: "down" }));
-  await page.route("**/api/fraud/cases", (route) => route.fulfill({ json: { cases: CASES, threshold: 0.5 } }));
-  await page.route("**/api/fraud/score", (route) => route.fulfill({ status: 503, json: { detail: "No scoring backend is available." } }));
-  await page.goto("/", { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: /^Open (Transaction fraud scoring|Card fraud triage) experience$/ }).first().click();
+async function triage(page: Page, scenarioTitle: RegExp) {
   const panel = page.locator("#case-panel-demo");
-  await expect(panel.locator(".fraud-status")).toContainText("The fraud scoring service is not answering");
-  await panel.locator("#score-payment").click();
-  await expect(panel.locator(".review-card").getByRole("alert")).toContainText("No scoring backend is available.");
+  await panel.getByRole("region", { name: "Scenarios" }).getByRole("button", { name: scenarioTitle }).click();
+  await panel.locator("#triage-queue").click();
+  await expect(panel.getByRole("group", { name: "Analyst disposition" }).locator("button:enabled").first()).toBeVisible({ timeout: 20000 });
+  return panel;
+}
+
+test("the CPP scenario: rules approve, the graph model flags, the network and reasons explain why", async ({ page }) => {
+  await mockFraud(page);
+  const panel = await openFraud(page);
+  const band = panel.getByRole("region", { name: "Business problem" });
+  await expect(band).toContainText("Maya");
+  await expect(band.locator(".fx-tag.illustrative").first()).toBeVisible();
+  await expect(band).toContainText("Not measured yet");
+  await expect(panel.locator(".fx-mule")).toContainText("Illustrative");
+
+  await triage(page, /Compromised merchant/);
+  await expect(panel.locator(".fx-queue tbody tr")).toHaveCount(5);
+  await expect(panel.locator(".fx-queue")).toContainText("Sample scores");
+  await expect(panel.locator(".fx-aha")).toContainText("Rules approve what the graph model flags");
+  await expect(panel.locator(".fx-gauge").first()).toContainText("Approve");
+  await expect(panel.locator(".fx-gauge").nth(1)).toContainText("High risk");
+  await expect(panel.locator(".fx-reasons li").first()).toBeVisible();
+  await expect(panel.locator(".fx-reasons")).toContainText("log-odds");
+  await expect(panel).not.toContainText(/Captum|Shapley/);
+
+  await panel.locator("#show-network").click();
+  await expect(panel.getByRole("img", { name: /Network of Orbit Digital Goods/ })).toBeVisible();
+  await expect(panel.locator(".fx-network")).toContainText("only payments before this one count");
+  await expect(panel.locator(".fx-summary")).toContainText("Citations");
+  await expect(panel.locator(".fx-backtest")).toContainText("Not measured yet");
+  await expect(panel).not.toContainText(/tabformer_label|Label reveal/);
+});
+
+test("disposition is gated: the analyst decides, the policy records the approval, the label shows only afterwards", async ({ page }) => {
+  const mock = await mockFraud(page);
+  const panel = await openFraud(page);
+  await triage(page, /Compromised merchant/);
+  const decision = panel.getByRole("group", { name: "Analyst disposition" });
+  await expect(decision.locator('[data-action="block_and_reissue"]')).toBeEnabled();
+  await expect(panel.locator(".fx-decision")).toContainText("fraud.take_action");
+  await expect(panel.locator(".fx-audit")).toContainText("deny · requires analyst approval");
+
+  await decision.locator('[data-action="block_and_reissue"]').click();
+  await expect.poll(() => mock.decisions[0]).toMatchObject({ request_id: "disposition", decision: "block_and_reissue", by: "Maya (analyst)" });
+  const bulk = panel.getByRole("group", { name: "Approve proactive reissue" });
+  await expect(bulk).toBeVisible({ timeout: 10000 });
+  await bulk.getByRole("button", { name: /Reissue/ }).click();
+  await expect.poll(() => mock.decisions[1]).toMatchObject({ request_id: "bulk_reissue", decision: "approve" });
+
+  await expect(panel.locator(".fx-audit")).toContainText("allow · approved by Maya (analyst)", { timeout: 10000 });
+  await expect(decision.locator("button:enabled")).toHaveCount(0);
+  await expect(panel.locator('.fx-queue tr.open')).toContainText("Block and reissue");
+  await expect(page.getByRole("region", { name: "Live run stats" })).toContainText("Tool calls");
+});
+
+test("AI Defense blocks the instruction injected into the dispute note, and the agent never sees it", async ({ page }) => {
+  await mockFraud(page);
+  const panel = await openFraud(page);
+  await triage(page, /injected dispute note/i);
+  const dispute = panel.locator(".fx-dispute");
+  await expect(dispute).toHaveClass(/blocked/);
+  await expect(dispute).toContainText("Untrusted input");
+  await expect(dispute).toContainText("Prompt Injection");
+  await expect(dispute).toContainText("the agent never sees it");
+  await expect(panel.locator('[data-action="false_positive"]')).not.toHaveClass(/recommended/);
+});
+
+test("a full card number in the case note is blocked by AI Defense and the policy, then saved masked", async ({ page }) => {
+  const mock = await mockFraud(page);
+  const panel = await openFraud(page);
+  await triage(page, /card number in a case note/);
+  const note = panel.locator("#fx-note-text");
+  await expect(note).toHaveValue(/4111 1111 1111 1111/);
+  await panel.getByRole("button", { name: "Save note" }).click();
+  const chips = panel.locator(".fx-note .fx-badges");
+  await expect(chips).toContainText("AI Defense · PCI · blocked");
+  await expect(chips).toContainText("Agent Control · fraud.note_pii · deny · card number, SSN");
+  await expect(chips).toContainText("Not saved");
+  await panel.getByRole("button", { name: /Use masked note/ }).click();
+  await expect(note).toHaveValue(/card ending 1111/);
+  await expect(note).not.toHaveValue(/4111 1111 1111 1111|000-12-3456/);
+  await panel.getByRole("button", { name: "Save note" }).click();
+  await expect(chips).toContainText("Saved");
+  expect(mock.notes).toHaveLength(2);
+});
+
+test("escalating saves a SAR handoff for Dana and opens SAR investigation", async ({ page }) => {
+  const mock = await mockFraud(page);
+  const panel = await openFraud(page);
+  await triage(page, /card number in a case note/);
+  await panel.locator('[data-action="escalate"]').click();
+  await expect.poll(() => mock.decisions[0]?.decision).toBe("escalate");
+  await expect(panel.locator(".fx-handoff")).toContainText("SAR referral drafted", { timeout: 10000 });
+  await panel.locator("#escalate-to-sar").click();
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("fsi-studio.handoffs") ?? "[]"));
+  expect(saved[0]).toMatchObject({ kind: "fraud-case", customerId: "dana-whitfield", caseId: "cpp-orbit", disposition: "escalate" });
+  expect(saved[0].evidence.length).toBeGreaterThan(2);
+  expect(JSON.stringify(saved[0])).not.toMatch(/4111 1111 1111 1111|000-12-3456/);
+  await expect(page.locator("#sar-experience")).toBeVisible();
+});
+
+test("never dead: a replay is labelled recorded and cannot decide; a down service says what still works", async ({ page }) => {
+  await mockFraud(page);
+  const panel = await openFraud(page);
+  await expect(panel.locator(".fraud-status")).toContainText("The live GNN scorer on Sparky is offline");
+  await expect(panel.locator(".fraud-status")).toContainText("sample scores");
+  await panel.locator(".rt-replay select").selectOption("cpp-orbit-live");
+  await expect(panel.locator(".fx-summary")).toContainText("Recorded run", { timeout: 15000 });
+  await expect(panel.locator(".fx-summary")).toContainText("OpenAI API");
+  await expect(panel.locator(".fx-decision")).toContainText("as recorded");
+  await expect(panel.getByRole("group", { name: "Analyst disposition" }).locator("button:enabled")).toHaveCount(0);
+
+  await page.unrouteAll({ behavior: "ignoreErrors" });
+  await mockFraud(page, { healthDown: true });
+  await page.reload({ waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Open Card fraud triage experience" }).first().click();
+  await expect(page.locator("#case-panel-demo .fraud-status")).toContainText("The fraud triage service is not answering");
+  await expect(page.locator("#case-panel-demo .fraud-status")).toContainText("Studio settings");
+});
+
+test("a run in progress survives a switch to the Architecture tab", async ({ page }) => {
+  await mockFraud(page);
+  const panel = await openFraud(page);
+  await triage(page, /Compromised merchant/);
+  const heading = panel.locator("#fx-casefile-title");
+  await expect(heading).toContainText("Orbit Digital Goods");
+  await page.getByRole("tab", { name: "Architecture" }).click();
+  await expect(page.locator("#case-panel-architecture")).toBeVisible();
+  await page.getByRole("tab", { name: "Use case demo" }).click();
+  await expect(heading).toContainText("Orbit Digital Goods");
+  await expect(panel.locator('[data-action="block_and_reissue"]')).toBeEnabled();
 });

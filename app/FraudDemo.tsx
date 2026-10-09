@@ -1,207 +1,181 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowLeft,
-  ArrowRight,
-  ChevronDown,
-  ChevronRight,
-  CircleAlert,
-  CircleGauge,
-  Clock3,
-  Loader2,
-  Plus,
-  ShieldCheck,
-  Sparkles,
-  Waypoints,
-  X,
+  ArrowLeft, ArrowRight, Bot, CircleAlert, CircleGauge, FastForward, FileWarning, Gavel, History, Loader2, Network, NotebookPen,
+  Play, Plus, ShieldAlert, ShieldCheck, UserRound, X,
 } from "lucide-react";
 import "./banking.css";
 import "./fraud.css";
 import DemoStatusBanner from "./DemoStatusBanner";
 import FraudRuntimeDetails, { type FraudHealth } from "./FraudRuntimeDetails";
-import RunStats, { defenseFacts, defenseFrom, defenseIntegration, DEFENSE_TILES, servedByFrom, usageFrom, startRun, useRunLedger, type Integration, type ObservedRun, type StatsCard } from "./RunStats";
-import { newRunId, type ServedBy } from "./run/events";
-import ProvenanceBadge, { type Provenance } from "./run/ProvenanceBadge";
-import RunTimeline from "./run/RunTimeline";
+import RunStats, { agentTraceIntegration, defenseFacts, defenseFrom, defenseIntegration, DEFENSE_TILES, startRun, traceFacts, useRunLedger, type ObservedRun, type StatsCard } from "./RunStats";
+import { saveHandoff } from "./lifecycle-handoff";
+import { useStudioNav } from "./studio-nav";
+import NetworkGraph from "./fraud/NetworkGraph";
+import { BacktestStrip, caughtShare, ComputeFooter, type ModelCardData } from "./fraud/ModelCard";
+import { triageState, type FraudCase, type QueueRow, type RiskBand, type Scenario, type TriageState } from "./fraud/triage-state";
+import type { RunEvent } from "./run/events";
+import ProvenanceBadge, { provenanceText, type Provenance } from "./run/ProvenanceBadge";
+import ReplayPicker, { loadRecording, useRecordings } from "./run/ReplayPicker";
+import RunTimeline, { RichText } from "./run/RunTimeline";
 import { useRun } from "./run/useRun";
 
-type CaseItem = {
-  id: string;
-  label: string;
-  account: string;
-  merchant: string;
-  amount: number;
-  channel: string;
-  neighborhood: string;
-};
-type ShapItem = { feature: string; label?: string; value: number; direction: "risk" | "protective" };
-type RiskBand = "high" | "elevated" | "low";
-type Backend = "live" | "cache" | "fixture" | "unavailable";
-type ScoreResult = {
-  case: CaseItem;
-  probability: number;
-  threshold: number;
-  risk_band?: RiskBand;
-  suggested_action?: string;
-  shap: ShapItem[];
-  backend: string;
-  backend_label?: string;
-  recorded_at?: string | null;
-  fallback?: { backend: string; label: string; reason: string }[];
-  narrative?: { status: string; text?: string | null; security?: { status?: string }; usage?: unknown; served_by?: unknown };
-  security?: unknown;
-  duration_ms?: number;
-  run_id?: string;
-};
-type Health = FraudHealth & {
-  backend_label?: string;
-  sidecar?: { status?: string; url?: string };
-  recorded_at?: string | null;
-};
 type FraudDemoProps = { onBack: () => void; onAdd: () => void; inStory: boolean; embedded?: boolean };
+type NoteResult = { saved: boolean; masked?: string | null; ai_defense: { status: string; rules: string[] }; policy: { decision: string; reason: string; engine_label: string; entities?: string[] } };
 
-const RISK: Record<RiskBand, { label: string; action: string }> = {
-  high: { label: "High risk", action: "Contact customer, then block and reissue" },
-  elevated: { label: "Elevated risk", action: "Verify with the customer before the payment settles" },
-  low: { label: "Low risk", action: "No action needed; keep monitoring" },
+const API = "/api/fraud";
+const ANALYST = "Maya (analyst)";
+const CHANNEL: Record<string, string> = { pos: "Card present", cnp: "Card not present" };
+const RULE_LABEL: Record<string, string> = { approve: "Approve", review: "Review", decline: "Decline" };
+const ACTION_LABEL: Record<string, string> = {
+  contact_customer: "Contact customer", block_and_reissue: "Block and reissue", false_positive: "Mark false positive", escalate: "Escalate to investigations",
 };
-const BACKEND_LABEL: Record<Backend, string> = { live: "GNN on Sparky (live)", cache: "Recorded scores", fixture: "Sample scores", unavailable: "No scorer" };
-const STATUS_LABEL: Record<Backend, string> = { live: "Live model", cache: "Recorded scores", fixture: "Sample data", unavailable: "Unavailable" };
-const CHANNEL: Record<string, string> = { pos: "Card present", cnp: "Card not present", ach: "ACH transfer", recurring: "Recurring" };
-const GNN: ServedBy = { provider: "sparky-gnn", label: "GNN on Sparky", model: "GraphSAGE + XGBoost", private: true, fallback: false };
+const KIND_LABEL: Record<Scenario["kind"], string> = { story: "Scenario", illustrative: "Illustrative · rules + agent", attack: "Attack" };
 
-function money(value: number) {
-  return value.toLocaleString("en-US", { style: "currency", currency: "USD" });
-}
+const money = (value: number) => value.toLocaleString("en-US", { style: "currency", currency: "USD" });
+const seconds = (ms?: number) => (typeof ms === "number" ? (ms >= 60_000 ? `${(ms / 60_000).toFixed(1)} min` : `${(ms / 1000).toFixed(ms < 10_000 ? 1 : 0)} s`) : undefined);
 
-function shapWidth(value: number, max: number) {
-  if (!max) return "8%";
-  return `${Math.max(8, Math.round((Math.abs(value) / max) * 100))}%`;
-}
-
-const sentence = (value: string) => {
-  const words = value.replace(/[_\s]+/g, " ").trim();
-  return words ? words[0].toUpperCase() + words.slice(1) : value;
-};
-const channelLabel = (value: string) => CHANNEL[value.toLowerCase()] ?? sentence(value);
-
-/** Older services reported production_http / triton for the live scorer. */
-function backendKind(raw?: string): Backend {
-  if (raw === "live" || raw === "production_http" || raw === "triton") return "live";
-  if (raw === "cache" || raw === "fixture") return raw;
-  return "unavailable";
-}
-
-function bandOf(result: ScoreResult): RiskBand {
-  if (result.risk_band && result.risk_band in RISK) return result.risk_band;
-  if (result.probability >= result.threshold) return "high";
-  return result.probability >= result.threshold * 0.7 ? "elevated" : "low";
-}
-
-function day(iso?: string | null) {
-  const date = iso ? new Date(iso) : null;
-  return date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "";
-}
-
-function scoreProvenance(result: ScoreResult): Provenance {
-  const kind = backendKind(result.backend);
-  if (kind === "live") return { kind: "live", servedBy: GNN };
-  if (kind === "cache") return { kind: "recorded", recordedAt: result.recorded_at || "date unknown", servedBy: GNN };
-  return { kind: "sample", detail: "synthetic payments" };
+function scoreProvenance(backend?: string, recordedAt?: string | null): Provenance {
+  if (backend === "live") return { kind: "live", servedBy: { provider: "sparky-gnn", label: "GNN on Sparky", model: "GraphSAGE + XGBoost", private: true } };
+  if (backend === "cache") return { kind: "recorded", recordedAt: recordedAt || "", servedBy: { provider: "sparky-gnn", label: "GNN on Sparky", model: null, private: true } };
+  return { kind: "sample", detail: "synthetic scores" };
 }
 
 export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: FraudDemoProps) {
-  const [cases, setCases] = useState<CaseItem[]>([]);
-  const [selectedId, setSelectedId] = useState<string>();
-  const [health, setHealth] = useState<Health | null>(null);
+  const nav = useStudioNav();
+  const [health, setHealth] = useState<FraudHealth | null>(null);
   const [healthFailed, setHealthFailed] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [mule, setMule] = useState<string>("");
+  const [cases, setCases] = useState<FraudCase[]>([]);
+  const [card, setCard] = useState<ModelCardData | null>(null);
+  const [scenarioId, setScenarioId] = useState("cpp-orbit");
+  const [starting, setStarting] = useState(false);
+  const [deciding, setDeciding] = useState<string | null>(null);
   const [error, setError] = useState("");
-  const [score, setScore] = useState<ScoreResult | null>(null);
-  const [includeNarrative, setIncludeNarrative] = useState(true);
-  const [showSystem, setShowSystem] = useState(false);
+  const [networkKey, setNetworkKey] = useState<string | null>(null);
+  const [handoffSaved, setHandoffSaved] = useState<{ key: string; id: string } | null>(null);
   const ledger = useRunLedger();
-  const stats = useMemo(() => fraudStats(health, healthFailed), [health, healthFailed]);
-  const steps = useRun({ pageUrl: (id, after) => `/api/fraud/runs/${encodeURIComponent(id)}?after=${after}` });
-  const resultHeading = useRef<HTMLHeadingElement>(null);
-  const focusResult = useRef(false);
+  const ledgerId = useRef<string | null>(null);
+  const caseFile = useRef<HTMLHeadingElement>(null);
+  const recordings = useRecordings(API);
+  const steps = useRun({ pageUrl: (id, after) => `${API}/runs/${encodeURIComponent(id)}?after=${after}`, interval: 700 });
+  const state = useMemo(() => triageState(steps.visible as RunEvent[]), [steps.visible]);
+  const replay = steps.mode !== "live";
+  const runLive = steps.run?.status === "running" && !replay;
 
   useEffect(() => {
-    fetch("/api/fraud/health", { signal: AbortSignal.timeout(10000) })
-      .then((response) => response.ok ? response.json() : Promise.reject(new Error("Health check unavailable")))
-      .then(setHealth)
-      .catch(() => setHealthFailed(true));
-    fetch("/api/fraud/cases", { signal: AbortSignal.timeout(10000) })
-      .then((response) => response.ok ? response.json() : Promise.reject(new Error("Cases unavailable")))
-      .then((body) => {
-        setCases(body.cases || []);
-        setSelectedId(body.cases?.[0]?.id);
-      })
-      .catch(() => setError("Fraud cases are unavailable. Start the fraud scoring service in Studio settings."));
+    const get = (path: string) => fetch(`${API}/${path}`, { signal: AbortSignal.timeout(12000) }).then((r) => (r.ok ? r.json() : Promise.reject(new Error(path))));
+    get("health").then(setHealth).catch(() => setHealthFailed(true));
+    get("scenarios").then((body) => { setScenarios(body.scenarios ?? []); setMule(body.illustrative?.mule ?? ""); }).catch(() => undefined);
+    get("cases").then((body) => setCases(body.cases ?? [])).catch(() => undefined);
+    get("model-card").then(setCard).catch(() => undefined);
   }, []);
 
+  const scenario = scenarios.find((item) => item.id === scenarioId);
+  const recordingFor = (id: string) => {
+    const matches = recordings.filter((item) => item.scenario === id);
+    return matches.find((item) => item.served_by) ?? matches[0] ?? recordings[0];
+  };
+
+  // The case file lands in view when the investigation finishes.
+  const opened = state.opened?.id;
+  const ready = Boolean(state.summary);
   useEffect(() => {
-    const heading = resultHeading.current;
-    if (!score || !focusResult.current || !heading) return;
-    focusResult.current = false;
-    heading.scrollIntoView({ block: "center", behavior: "smooth" });
-    heading.focus({ preventScroll: true });
-  }, [score]);
+    if (ready && !replay) caseFile.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }, [ready, replay]);
+  const caseKey = `${steps.runId ?? ""}:${opened ?? ""}`;
+  const showNetwork = networkKey === caseKey;
+  const handedOff = handoffSaved?.key === caseKey ? handoffSaved.id : null;
 
-  const selected = useMemo(() => cases.find((item) => item.id === selectedId), [cases, selectedId]);
-  const backend = health ? backendKind(health.backend) : null;
-  const statusLabel = backend ? STATUS_LABEL[backend] : healthFailed ? "Unavailable" : "Health check pending";
-  const narrativeReady = health?.narrative?.status === "configured";
-  const narrativeOn = includeNarrative && narrativeReady;
-  const shapMax = Math.max(0.01, ...(score?.shap.map((item) => Math.abs(item.value)) || [0]));
-  const shown = score && selected && score.case.id === selected.id ? score : null;
+  // The stats row follows the run's own counts: investigation first, then the disposition.
+  useEffect(() => {
+    const id = ledgerId.current;
+    if (!id) return;
+    if (!state.investigatedMs && !state.result) return;
+    const finished = !steps.replaying;
+    ledger.record({
+      id, label: state.scenario?.title ?? "Triage", startedAt: Date.now(), status: finished ? "completed" : "running", replay,
+      durationMs: state.result?.duration_ms ?? state.investigatedMs,
+      llmCalls: state.usage?.llm_calls, toolCalls: state.usage?.tool_calls, inputTokens: state.usage?.input_tokens, outputTokens: state.usage?.output_tokens,
+      agentTrace: replay ? undefined : state.agentTrace, defense: defenseFrom(state.security),
+      servedBy: state.summary?.servedBy ?? undefined,
+      provenance: replay ? "recorded" : state.summary?.servedBy ? "live" : state.score?.backend === "fixture" ? "sample" : state.score?.backend === "cache" ? "recorded" : "live",
+      recordedAt: replay ? steps.run?.finished_at ?? undefined : state.score?.recorded_at ?? undefined,
+      note: state.result ? `Disposition · ${ACTION_LABEL[state.result.disposition ?? ""] ?? state.result.disposition}` : state.pending.length ? "Awaiting the analyst's decision" : undefined,
+      counts: { toolCalls: state.usage?.tool_calls },
+    });
+  }, [state.investigatedMs, state.result, state.usage, state.security, state.agentTrace, state.summary, state.score, state.pending.length, state.scenario, steps.replaying, steps.run, replay, ledger]);
 
-  async function scoreCase(event?: FormEvent) {
-    event?.preventDefault();
-    if (!selected || loading) return;
-    setLoading(true);
+  async function replayRecording(name: string) {
     setError("");
-    setScore(null);
-    const runId = newRunId("fraud");
-    steps.open(runId);
-    const run = startRun("score", `${selected.label} · ${narrativeOn ? "score + AI summary" : "score only"}`);
-    ledger.record(run);
     try {
-      const response = await fetch("/api/fraud/score", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ case_id: selected.id, include_narrative: narrativeOn, run_id: runId }),
-        signal: AbortSignal.timeout(narrativeOn ? 180000 : 30000),
-      });
-      if (!response.ok) {
-        // A 502 is a run that failed on the timeline; anything else never opened one.
-        if (response.status !== 502) steps.reset();
-        const body = await response.json().catch(() => ({}));
-        throw new Error(body.detail || `Scoring failed (${response.status}).`);
-      }
-      const result = await response.json() as ScoreResult;
-      if (!result.run_id) steps.reset();
-      else if (result.run_id !== runId) steps.open(result.run_id);
-      ledger.record(observeScore(run, result));
-      focusResult.current = true;
-      setScore(result);
+      const recording = await loadRecording(API, name);
+      if (recording.scenario) setScenarioId(recording.scenario);
+      steps.play({ run: recording.run ?? null, events: recording.events });
+      const run: ObservedRun = { ...startRun("replay", `${recording.title}`), replay: true, provenance: "recorded", recordedAt: recording.recorded_at, servedBy: recording.served_by ?? undefined };
+      ledgerId.current = run.id;
+      ledger.record(run);
     } catch (cause) {
-      ledger.record({ ...run, status: "failed", note: "No score was returned" });
-      setError(cause instanceof DOMException && cause.name === "TimeoutError"
-        ? "Scoring timed out. Try again."
-        : cause instanceof Error ? cause.message : "Scoring failed. Try again.");
-    } finally {
-      setLoading(false);
+      setError(cause instanceof Error ? cause.message : "That recording is unavailable.");
     }
   }
 
-  function selectCase(id: string) {
-    setSelectedId(id);
-    setScore(null);
+  async function triage(id = scenarioId) {
     setError("");
-    steps.reset();
+    setStarting(true);
+    setScenarioId(id);
+    try {
+      const response = await fetch(`${API}/runs`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scenario: id, label: `Triage · ${id}`, input: { score_queue: true } }), signal: AbortSignal.timeout(15000),
+      });
+      if (!response.ok) throw new Error(`The fraud service did not start the run (${response.status}).`);
+      const body = await response.json() as { run_id: string };
+      steps.open(body.run_id);
+      const run = { ...startRun("triage", scenarios.find((item) => item.id === id)?.title ?? id), id: body.run_id };
+      ledgerId.current = run.id;
+      ledger.record(run);
+    } catch (cause) {
+      const recording = recordingFor(id);
+      setError(cause instanceof Error ? cause.message : "The run did not start.");
+      if (recording) void replayRecording(recording.name);
+    } finally {
+      setStarting(false);
+    }
   }
+
+  async function decide(requestId: string, decision: string) {
+    if (!steps.runId) return;
+    setDeciding(decision);
+    setError("");
+    const note = state.notes.filter((item) => item.data.tool === "add_note" && item.data.saved).at(-1)?.body ?? undefined;
+    try {
+      const response = await fetch(`${API}/runs/${encodeURIComponent(steps.runId)}/decision`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ request_id: requestId, decision, by: ANALYST, ...(note ? { note } : {}) }), signal: AbortSignal.timeout(15000),
+      });
+      if (!response.ok) throw new Error(response.status === 409 ? "That decision was already made or the run timed out." : `Decision not recorded (${response.status}).`);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Decision not recorded.");
+    } finally {
+      setDeciding(null);
+    }
+  }
+
+  function escalateToSar() {
+    if (!state.handoff) return;
+    saveHandoff(state.handoff);
+    setHandoffSaved({ key: caseKey, id: state.handoff.id });
+    nav.openUseCase?.("sar-support");
+  }
+
+  const disposition = state.pending.find((item) => item.requestId === "disposition");
+  const bulk = state.pending.find((item) => item.requestId === "bulk_reissue");
+  const canDecide = runLive && !steps.replaying;
+  const busy = starting || (runLive && !state.pending.length);
+  const primaryLabel = starting ? "Starting…" : busy ? "Triaging…" : runLive && state.pending.length ? "Waiting for the analyst" : state.result || steps.run ? "Triage again" : "Triage queue";
 
   return (
     <div className={`banking-demo fraud-demo ${embedded ? "banking-embedded" : ""}`}>
@@ -216,252 +190,407 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
         </div>
         <section className="banking-heading">
           <div>
-            <div className="banking-eyebrow"><CircleGauge size={14} /> TRANSACTION FRAUD SCORING</div>
-            <h1>Review graph-scored payments</h1>
-            <p>Synthetic payments. The score is evidence for the analyst, not a decision.</p>
-          </div>
-          <div className="banking-status">
-            <span className={backend === "live" ? "status-dot ready" : "status-dot"} />
-            {statusLabel}
-            <small>{health?.backend_label || "Checking the scorer"}</small>
+            <div className="banking-eyebrow"><CircleGauge size={14} /> CARD FRAUD TRIAGE</div>
+            <h1>Triage the alert queue, then decide</h1>
+            <p>Synthetic card payments. The graph score is evidence for the analyst, not a decision.</p>
           </div>
         </section>
       </>}
 
-      <FraudStatus health={health} failed={healthFailed} />
+      <BusinessBand card={card} state={state} />
+      <FraudStatus health={health} failed={healthFailed} recording={recordingFor(scenarioId)?.name} onReplay={replayRecording} />
 
-      <section className="banking-layout">
-        <div className="fraud-main">
-          <div className="chat-card queue-card">
-            <div className="queue-card-head">
-              <div className="assistant-identity">
-                <span className="assistant-avatar"><CircleGauge size={18} /></span>
-                <div><strong>Alert queue</strong><span>{cases.length || 0} synthetic card payments</span></div>
-              </div>
-            </div>
-            <ul className="queue-list" aria-label="Alert queue">
-              {cases.map((item) => (
-                <li key={item.id}>
-                  <button
-                    className={`queue-row ${item.id === selectedId ? "selected" : ""}`}
-                    onClick={() => selectCase(item.id)}
-                    aria-pressed={item.id === selectedId}
-                  >
-                    <span><strong>{item.label}</strong><small>{item.merchant}</small></span>
-                    <span className="amount">{money(item.amount)}</span>
-                    <span className="channel">{channelLabel(item.channel)}</span>
-                    <ArrowRight size={15} />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-          {(loading || shown) && steps.runId && (
-            <section className="chat-card score-steps" aria-labelledby="fraud-steps-title">
-              <h4 id="fraud-steps-title">Scoring steps</h4>
-              <RunTimeline label="Scoring steps" events={steps.visible} start={steps.run?.started_at} className="boxed" empty="Waiting for the first step…" />
-            </section>
-          )}
-        </div>
-
-        <aside className="banking-side">
-          <div className="proof-card review-card">
-            {selected ? <>
-              <span className="review-kicker">SELECTED PAYMENT · SYNTHETIC</span>
-              <h3>{selected.label}</h3>
-              <p>{selected.neighborhood}</p>
-              <dl className="fact-grid">
-                <div><dt>Card</dt><dd>{selected.account}</dd></div>
-                <div><dt>Merchant</dt><dd>{selected.merchant}</dd></div>
-                <div><dt>Amount</dt><dd>{money(selected.amount)}</dd></div>
-                <div><dt>Channel</dt><dd>{channelLabel(selected.channel)}</dd></div>
-              </dl>
-              <div className="score-result" aria-live="polite">
-                {shown && <ScorePanel result={shown} shapMax={shapMax} headingRef={resultHeading} />}
-              </div>
-              <form className="review-actions" onSubmit={scoreCase}>
-                <button id="score-payment" className="primary" disabled={loading}>
-                  {loading ? <><Loader2 size={15} className="spin" /> Scoring…</> : <><Sparkles size={15} /> Score this payment</>}
-                </button>
-                <fieldset className="narrative-toggle">
-                  <legend>AI analyst summary</legend>
-                  <div role="group" aria-label="AI analyst summary">
-                    <button
-                      type="button"
-                      className={narrativeOn ? "active" : ""}
-                      aria-pressed={narrativeOn}
-                      disabled={!narrativeReady}
-                      aria-describedby="fraud-narrative-hint"
-                      onClick={() => setIncludeNarrative(true)}
-                    >
-                      On
-                    </button>
-                    <button
-                      type="button"
-                      className={!narrativeOn ? "active" : ""}
-                      aria-pressed={!narrativeOn}
-                      onClick={() => setIncludeNarrative(false)}
-                    >
-                      Off
-                    </button>
-                  </div>
-                  <small id="fraud-narrative-hint">
-                    {!narrativeReady
-                      ? "Unavailable · no summary model is configured for this demo"
-                      : narrativeOn ? "On · AI Defense inspects the summary prompt and draft" : "Off · score only"}
-                  </small>
-                </fieldset>
-              </form>
-            </> : <p>Select a payment from the queue.</p>}
-            {error && <div className="banking-error" role="alert"><CircleAlert size={14} /><div>{error}</div><button aria-label="Dismiss error" onClick={() => setError("")}><X size={14} /></button></div>}
-          </div>
-          <div className="system-card">
-            <button className="system-toggle" onClick={() => setShowSystem((value) => !value)} aria-expanded={showSystem}>
-              <span><Waypoints size={15} /> System view</span>
-              {showSystem ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
-            </button>
-            {showSystem && <div className="system-diagram">
-              <div className="diagram-node supervisor"><span>01</span><CircleGauge size={15} /><strong>Case catalog</strong><small>Synthetic card payments</small></div>
-              <div className="diagram-branch">
-                <div className="diagram-node violet-node"><span>02A</span><strong>GraphSAGE + XGBoost</strong><small>live, recorded, or sample scores</small></div>
-                <div className="diagram-node"><span>02B</span><strong>Reason breakdown</strong><small>what moved the score</small></div>
-              </div>
-              <div className="diagram-foot"><span>Score + reasons</span><span>·</span><span>optional inspected AI summary</span></div>
-              <p className="planned-note">The probability is evidence, not a decision. The analyst decides what happens to the payment.</p>
-              <FraudRuntimeDetails health={health} />
-            </div>}
-          </div>
-        </aside>
+      <section className="fx-scenarios" aria-label="Scenarios">
+        {(scenarios.length ? scenarios : []).map((item) => (
+          <button
+            key={item.id}
+            className={`fx-scenario ${item.kind}${item.id === scenarioId ? " selected" : ""}`}
+            aria-pressed={item.id === scenarioId}
+            onClick={() => setScenarioId(item.id)}
+          >
+            <span className="fx-scenario-kind">{item.kind === "attack" ? <ShieldAlert size={13} aria-hidden="true" /> : null}{KIND_LABEL[item.kind]}</span>
+            <strong>{item.title}</strong>
+            <span>{item.situation}</span>
+            <small><b>Expected:</b> {item.expected}</small>
+          </button>
+        ))}
+        {!scenarios.length && <p className="fx-muted">{healthFailed ? "Scenarios load from the fraud service." : "Loading scenarios…"}</p>}
       </section>
-      <RunStats ledger={ledger} {...stats} empty="Score a payment. The AI analyst summary's model call and its AI Defense inspections land here." />
-      {!embedded && inStory && <div className="story-context"><span>STORY MODE</span> This slice shows graph scoring before investigation or SAR drafting.</div>}
+
+      <div className="fx-actions">
+        <button id="triage-queue" className="fx-primary" onClick={() => triage()} disabled={starting || busy}>
+          {starting || busy ? <Loader2 size={16} className="spin" /> : <Play size={16} />} {primaryLabel}
+        </button>
+        <span className="fx-actions-scenario">{scenario ? <>Scenario: <strong>{scenario.title}</strong></> : null}</span>
+        <ReplayPicker recordings={recordings} onPick={replayRecording} disabled={starting} />
+        {steps.replaying && <button className="fx-secondary" onClick={steps.skip}><FastForward size={14} /> Skip replay</button>}
+      </div>
+      {error && <div className="banking-error fx-error" role="alert"><CircleAlert size={14} /><div>{error}</div><button aria-label="Dismiss error" onClick={() => setError("")}><X size={14} /></button></div>}
+
+      <QueueTable cases={cases} state={state} replay={replay} recordedAt={steps.run?.finished_at} />
+      {mule && <p className="fx-mule"><span className="fx-tag illustrative">Illustrative · not in the card queue</span> {mule}</p>}
+
+      {(state.opened || steps.runId) && (
+        <section className="fx-casefile" aria-labelledby="fx-casefile-title">
+          <div className="fx-case-left">
+            <h3 id="fx-casefile-title" ref={caseFile} tabIndex={-1}>
+              {state.opened ? <>Case file · {state.opened.account} at {state.opened.merchant} · {money(state.opened.amount)}</> : "Case file"}
+            </h3>
+            {state.opened && <p className="fx-muted">{state.opened.customer ? `${state.opened.customer} (fictional) · ` : ""}{CHANNEL[state.opened.channel] ?? state.opened.channel}{state.opened.mcc_label ? ` · ${state.opened.mcc_label}` : ""}{state.opened.at ? ` · ${new Date(state.opened.at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}` : ""}</p>}
+            <Verdicts state={state} threshold={health?.threshold ?? 0.5} />
+            {state.graph && (
+              <div className="fx-network">
+                <button className="fx-secondary" id="show-network" onClick={() => setNetworkKey(showNetwork ? null : caseKey)} aria-expanded={showNetwork}>
+                  <Network size={14} /> {showNetwork ? "Hide network" : "Show network"}
+                </button>
+                {showNetwork && <NetworkGraph graph={state.graph} />}
+              </div>
+            )}
+            {state.reasons && <Reasons state={state} />}
+            {(state.similar?.length || state.playbook) && (
+              <div className="fx-context">
+                {!!state.similar?.length && <div><h4>Similar earlier alerts</h4><ul>{state.similar.map((item) => <li key={item.id}><b>{item.id}</b> {item.summary} → {item.outcome}</li>)}</ul></div>}
+                {state.playbook && <div><h4>Playbook · {state.playbook.title}</h4><RichText text={state.playbook.body} /></div>}
+              </div>
+            )}
+          </div>
+
+          <div className="fx-case-right">
+            <section className="fx-timeline" aria-labelledby="fx-steps-title">
+              <h4 id="fx-steps-title">Triage steps {replay && <ProvenanceBadge provenance={{ kind: "recorded", recordedAt: steps.run?.finished_at ?? steps.run?.started_at ?? "", servedBy: state.servedBy }} />}</h4>
+              <RunTimeline label="Fraud triage steps" events={steps.visible} start={steps.run?.started_at} className="boxed" showLane empty="Waiting for the first step…" />
+            </section>
+            {state.dispute && <DisputeCard state={state} />}
+            <SummaryCard state={state} replay={replay} recordedAt={steps.run?.finished_at ?? steps.run?.started_at} />
+            <DecisionBar
+              state={state} request={disposition} canDecide={canDecide} deciding={deciding} replay={replay}
+              onDecide={(decision) => disposition && decide(disposition.requestId, decision)}
+            />
+            {bulk && (
+              <div className="fx-approval" role="group" aria-label="Approve proactive reissue">
+                <strong>{bulk.title}</strong><p>{bulk.body}</p>
+                <div>{bulk.options.map((option) => (
+                  <button key={option.id} className={option.id === "approve" ? "fx-primary small" : "fx-secondary"} disabled={!canDecide || deciding !== null} onClick={() => decide(bulk.requestId, option.id)}>{option.label}</button>
+                ))}</div>
+              </div>
+            )}
+            {state.opened && <NoteComposer key={`${steps.runId}-${scenarioId}`} runId={replay ? null : steps.runId} caseId={state.opened.id} initial={state.scenario?.analyst_note ?? ""} />}
+            <AuditTrail state={state} />
+            {state.handoff && (
+              <div className="fx-handoff">
+                <div><FileWarning size={16} aria-hidden="true" /><span><strong>SAR referral drafted</strong> · {state.handoff.evidence.length} evidence items · {state.handoff.transactions.length} transaction{state.handoff.transactions.length === 1 ? "" : "s"}{replay ? " · from a recorded run" : ""}</span></div>
+                <button id="escalate-to-sar" className="fx-primary small" onClick={escalateToSar}>Escalate to SAR <ArrowRight size={14} /></button>
+                {handedOff && !nav.openUseCase && <small>Saved for the SAR team. Open “SAR investigation” to continue.</small>}
+              </div>
+            )}
+            {state.reveal && <p className="fx-reveal">Label reveal (after the decision) · TabFormer marks this payment <b>{state.reveal}</b>.</p>}
+          </div>
+        </section>
+      )}
+
+      <BacktestStrip card={card} />
+      <ComputeFooter card={card} run={state.score ? { backend: state.score.backend, device: state.score.device, model_ms: state.score.model_ms } : undefined} />
+      <RunStats ledger={ledger} {...fraudStats(health, healthFailed)} empty="Triage the queue. The agent's model calls, tool spans, and AI Defense verdicts land here." />
+      <details className="fx-hood">
+        <summary>Under the hood</summary>
+        <FraudRuntimeDetails health={health} />
+      </details>
+      {!embedded && inStory && <div className="story-context"><span>STORY MODE</span> Escalate a case to hand it to SAR investigation.</div>}
     </div>
   );
 }
 
-function ScorePanel({ result, shapMax, headingRef }: { result: ScoreResult; shapMax: number; headingRef: RefObject<HTMLHeadingElement | null> }) {
-  const band = bandOf(result);
-  const backend = backendKind(result.backend);
-  const label = result.backend_label || BACKEND_LABEL[backend];
-  const summaryBy = servedByFrom(result.narrative?.served_by);
-  const fallback = result.fallback ?? [];
+/** Act 1: Maya's queue and the KPIs that hurt; "this run" values replace the illustrative ones when measured. */
+function BusinessBand({ card, state }: { card: ModelCardData | null; state: TriageState }) {
+  const measured = card && card.status !== "not_measured";
+  const rules = caughtShare(card, "rules");
+  const graph = caughtShare(card, "gnn_xgboost");
+  const run = state.result?.duration_ms;
+  const tiles = [
+    { label: "Alerts a day", value: "1,240", sub: "38 analysts on the queue", tag: "Illustrative" },
+    { label: "False positives per real fraud", value: "~14 : 1", sub: "rules today · target ~8 : 1", tag: "Illustrative" },
+    measured && rules && graph
+      ? { label: "Fraud $ caught at a 0.5% alert rate", value: `${rules} → ${graph}`, sub: "rules → graph model", tag: card.tag ?? "Measured" }
+      : { label: "Fraud $ caught at a 0.5% alert rate", value: "Not measured yet", sub: "run the backtest on Sparky", tag: "Not measured" },
+    run
+      ? { label: "Time to disposition", value: seconds(run)!, sub: "this run · investigation + analyst decision", tag: "Measured · this run" }
+      : { label: "Average handle time", value: "11 min", sub: "per alert today · target 4 min", tag: "Illustrative" },
+  ];
   return (
-    <div className="score-panel">
-      <div className="score-head">
-        <h4 id="fraud-result-heading" ref={headingRef} tabIndex={-1} className={`risk-heading ${band}`}>
-          <span className="risk-dot" aria-hidden="true" />{RISK[band].label}
-        </h4>
-        <ProvenanceBadge provenance={scoreProvenance(result)} />
-      </div>
-      <div className="score-meter">
+    <section className="fx-band" aria-label="Business problem">
+      <div className="fx-persona">
+        <span className="fx-avatar"><UserRound size={18} aria-hidden="true" /></span>
         <div>
-          <small>Fraud probability</small>
-          <strong>{result.probability.toFixed(2)}</strong>
+          <strong>Maya · card-fraud operations analyst</strong>
+          <p>Rules look at one payment at a time, so a clean customer at a compromised merchant sails through, and real fraud hides among false positives.</p>
         </div>
-        <small>Alert threshold {result.threshold.toFixed(2)}</small>
       </div>
-      <p className={`suggested-action ${band}`}><span>Suggested action</span>{result.suggested_action || RISK[band].action}</p>
-      <small className="score-source">
-        Scored by {label}{backend === "cache" && result.recorded_at ? ` · recorded ${day(result.recorded_at)}` : ""}
-        {fallback.length > 0 && ` · ${fallback.map((item) => item.label).join(" and ")} could not answer`}
-      </small>
-      <div className="shap-list" role="list" aria-label="What moved the score">
-        {result.shap.map((item) => (
-          <div className="shap-row" role="listitem" key={item.feature}>
-            <span>{item.label || sentence(item.feature)}</span>
-            <span>{item.value >= 0 ? "+" : ""}{item.value.toFixed(2)}</span>
-            <span className="shap-track" aria-hidden="true"><span className={`shap-fill ${item.direction}`} style={{ width: shapWidth(item.value, shapMax) }} /></span>
-          </div>
+      <dl className="fx-kpis">
+        {tiles.map((tile) => (
+          <div key={tile.label}><dt>{tile.label}</dt><dd>{tile.value}</dd><small>{tile.sub} · <span className={`fx-tag ${tile.tag.startsWith("Measured") ? "measured" : tile.tag === "Not measured" ? "pending" : "illustrative"}`}>{tile.tag}</span></small></div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+function QueueTable({ cases, state, replay, recordedAt }: { cases: FraudCase[]; state: TriageState; replay: boolean; recordedAt?: string | null }) {
+  const scored = new Map(state.queue.map((row) => [row.case.id, row]));
+  const rows: (QueueRow | { case: FraudCase })[] = state.queue.length ? state.queue : cases.map((item) => ({ case: item }));
+  const first = state.queue[0];
+  return (
+    <section className="fx-queue" aria-labelledby="fx-queue-title">
+      <header>
+        <h3 id="fx-queue-title">Alert queue · {rows.length || 5} flagged payments</h3>
+        {first ? <ProvenanceBadge provenance={replay ? { kind: "recorded", recordedAt: recordedAt ?? "" } : scoreProvenance(first.backend)} label={replay ? undefined : `Scores · ${first.label}`} /> : <span className="fx-muted">Scores fill in as the run streams.</span>}
+      </header>
+      <div className="fx-table-wrap">
+        <table>
+          <thead><tr><th>Payment</th><th>Amount</th><th>Channel</th><th>Rules</th><th>Graph score</th><th>Suggested</th><th>Analyst</th></tr></thead>
+          <tbody>
+            {rows.map(({ case: item }) => {
+              const row = scored.get(item.id);
+              const open = state.opened?.id === item.id;
+              return (
+                <tr key={item.id} className={open ? "open" : undefined} data-case={item.id}>
+                  <td><strong>{item.account} · {item.merchant}</strong><small>{item.label}{item.illustrative ? " · illustrative" : ""}</small></td>
+                  <td>{money(item.amount)}</td>
+                  <td>{CHANNEL[item.channel] ?? item.channel}</td>
+                  <td>{row ? <span className={`fx-pill rules-${row.rules.decision}`}>{RULE_LABEL[row.rules.decision] ?? row.rules.decision} · {row.rules.score}</span> : "—"}</td>
+                  <td>{row ? <span className={`fx-pill band-${row.risk_band}`}>{row.probability.toFixed(2)} · {row.risk_label}</span> : "—"}{row?.model_ms != null && <small>{row.model_ms.toFixed(1)} ms {row.device?.toUpperCase()}</small>}</td>
+                  <td>{row?.suggested_action ?? "—"}</td>
+                  <td>{open ? (state.result?.disposition ? <b>{ACTION_LABEL[state.result.disposition] ?? state.result.disposition}</b> : state.pending.length ? "Deciding" : "Open") : "—"}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function Gauge({ title, value, max, marks, decision, tone, detail }: { title: string; value: number; max: number; marks: { at: number; label: string }[]; decision: string; tone: string; detail: string }) {
+  return (
+    <div className={`fx-gauge tone-${tone}`}>
+      <span className="fx-gauge-title">{title}</span>
+      <strong>{decision}</strong>
+      <div className="fx-gauge-track" aria-hidden="true">
+        <span className="fx-gauge-fill" style={{ width: `${Math.min(100, (value / max) * 100)}%` }} />
+        {marks.map((mark) => <span key={mark.label} className="fx-gauge-mark" style={{ left: `${(mark.at / max) * 100}%` }} title={mark.label} />)}
+      </div>
+      <small>{detail}</small>
+    </div>
+  );
+}
+
+function Verdicts({ state, threshold }: { state: TriageState; threshold: number }) {
+  const { rules, score, opened } = state;
+  if (!rules && !score) return <p className="fx-muted fx-waiting"><Loader2 size={14} className="spin" /> Scoring and gathering evidence…</p>;
+  const tone: Record<RiskBand, string> = { high: "deny", elevated: "warn", low: "ok" };
+  const aha = rules && score
+    ? rules.decision === "approve" && score.risk_band === "high"
+      ? "Rules approve what the graph model flags: the risk is in the merchant's network, not in this payment."
+      : rules.decision === "decline" && score.risk_band === "low"
+        ? "Rules catch what the graph model cannot see: device and address changes are not in the payment graph."
+        : null
+    : null;
+  return (
+    <div className="fx-verdicts">
+      <div className="fx-gauges">
+        {rules ? <Gauge title="Rules engine · one payment at a time" value={rules.score} max={rules.max || 999} decision={`${RULE_LABEL[rules.decision] ?? rules.decision} · ${rules.score}/${rules.max || 999}`}
+          tone={rules.decision === "approve" ? "ok" : rules.decision === "review" ? "warn" : "deny"} marks={[{ at: rules.thresholds.review, label: "Review" }, { at: rules.thresholds.decline, label: "Decline" }]}
+          detail={rules.fired.filter((item) => item.rule !== "BASE").map((item) => item.text).join(" · ") || "No risk rule fired"} /> : <div className="fx-gauge pending">Rules engine…</div>}
+        {score ? <Gauge title="Graph model · GraphSAGE + XGBoost" value={score.probability} max={1} decision={`${score.risk_band === "high" ? "High risk" : score.risk_band === "elevated" ? "Elevated risk" : "Low risk"} · ${score.probability.toFixed(2)}`}
+          tone={tone[score.risk_band]} marks={[{ at: threshold, label: `Alert threshold ${threshold.toFixed(2)}` }]}
+          detail={`${score.label}${score.model_ms != null ? ` · ${score.model_ms.toFixed(1)} ms on ${(score.device ?? "?").toUpperCase()}` : ""}${opened?.scoreable_by_model === false ? " · cannot see device or address events" : ""}`} /> : <div className="fx-gauge pending">Graph model…</div>}
+      </div>
+      {aha && <p className="fx-aha">{aha}</p>}
+    </div>
+  );
+}
+
+function Reasons({ state }: { state: TriageState }) {
+  const reasons = state.reasons?.reasons ?? [];
+  return (
+    <div className="fx-reasons">
+      <h4>Why the graph model scored it this way</h4>
+      <ul>{reasons.slice(0, 6).map((item) => (
+        <li key={item.code + item.feature} className={item.direction}><span>{item.text}</span><b>{item.value >= 0 ? "+" : ""}{item.value.toFixed(2)}</b></li>
+      ))}</ul>
+      <small>{state.reasons?.how} · contributions in log-odds; positive raises risk.</small>
+    </div>
+  );
+}
+
+function DisputeCard({ state }: { state: TriageState }) {
+  const verdict = state.dispute?.verdict;
+  const blocked = verdict?.status === "blocked";
+  return (
+    <div className={`fx-dispute ${blocked ? "blocked" : ""}`}>
+      <span className="fx-tag illustrative">Untrusted input · cardholder dispute note</span>
+      <blockquote>{state.dispute?.text}</blockquote>
+      {verdict ? <p>{blocked ? <ShieldAlert size={14} /> : <ShieldCheck size={14} />} {verdict.title}{blocked ? " · the agent never sees it" : ""}</p> : <p className="fx-muted">AI Defense is inspecting the note…</p>}
+    </div>
+  );
+}
+
+function SummaryCard({ state, replay, recordedAt }: { state: TriageState; replay: boolean; recordedAt?: string | null }) {
+  const summary = state.summary;
+  if (!summary) return null;
+  const output = state.guardrails.find((item) => item.data.stage === "agent_output");
+  const scripted = summary.mode === "scripted";
+  const provenance: Provenance = replay
+    ? { kind: "recorded", recordedAt: recordedAt ?? "", servedBy: summary.servedBy }
+    : scripted ? { kind: "none", detail: "Scripted · no model reachable" } : { kind: "live", servedBy: summary.servedBy };
+  return (
+    <section className="fx-summary" aria-labelledby="fx-summary-title">
+      <header>
+        <h4 id="fx-summary-title"><Bot size={15} aria-hidden="true" /> Analyst summary · {scripted ? "scripted template" : "AI draft"}</h4>
+        <ProvenanceBadge provenance={provenance} label={replay && scripted ? `${provenanceText(provenance)} · scripted` : undefined} />
+      </header>
+      <RichText text={summary.text} />
+      <div className="fx-badges">
+        {state.citations && <span className={`fx-chip ${state.citations.cited === state.citations.total ? "ok" : "warn"}`}>Citations · {state.citations.cited}/{state.citations.total} points cite tool evidence</span>}
+        {output ? <span className={`fx-chip ${output.status === "allowed" ? "ok" : "deny"}`}><ShieldCheck size={12} /> AI Defense · summary {output.status === "allowed" ? "inspected · clean" : output.status}</span>
+          : !scripted && <span className="fx-chip">AI Defense · summary not inspected</span>}
+      </div>
+    </section>
+  );
+}
+
+function DecisionBar({ state, request, canDecide, deciding, replay, onDecide }: {
+  state: TriageState; request?: TriageState["pending"][number]; canDecide: boolean; deciding: string | null; replay: boolean; onDecide: (decision: string) => void;
+}) {
+  const proposals = (state.requests.find((item) => item.requestId === "disposition")?.data.case_file as { proposals?: { action: string; label: string; policy?: string }[] } | undefined)?.proposals ?? [];
+  const recommended = request?.recommended ?? state.draft?.action;
+  const decided = state.result?.disposition;
+  const options = request?.options ?? Object.keys(ACTION_LABEL).map((id) => ({ id, label: ACTION_LABEL[id], policy: id === "contact_customer" || id === "escalate" ? "reversible" : "requires analyst approval" }));
+  return (
+    <section className="fx-decision" aria-labelledby="fx-decision-title">
+      <h4 id="fx-decision-title"><Gavel size={15} aria-hidden="true" /> Disposition {replay ? "· as recorded" : request ? "· your decision" : ""}</h4>
+      {proposals.length > 0 && <p className="fx-muted">Agent proposed: {proposals.map((item) => `${item.label}${item.policy === "deny" ? " (denied until you approve)" : ""}`).join(" · ")}</p>}
+      <div className="fx-decision-buttons" role="group" aria-label="Analyst disposition">
+        {options.map((option) => (
+          <button
+            key={option.id}
+            data-action={option.id}
+            className={`${option.id === recommended ? "recommended" : ""}${decided === option.id ? " chosen" : ""}`}
+            disabled={!canDecide || !request || deciding !== null}
+            onClick={() => onDecide(option.id)}
+            title={option.policy}
+          >
+            {deciding === option.id && <Loader2 size={13} className="spin" />}{option.label}
+            {option.id === recommended && <small>Suggested</small>}
+          </button>
         ))}
       </div>
-      {result.duration_ms != null && <small className="response-meta"><Clock3 size={11} /> {result.duration_ms} ms</small>}
-      {result.narrative?.status && result.narrative.status !== "disabled" && (
-        <small className="response-meta security-meta">
-          <ShieldCheck size={11} /> AI analyst summary: {result.narrative.status.replaceAll("_", " ")}
-          {result.narrative.security?.status ? ` · AI Defense: ${result.narrative.security.status.replaceAll("_", " ")}` : ""}
-        </small>
-      )}
-      {result.narrative?.text && <div className="narrative-box">
-        {result.narrative.text}
-        {summaryBy && <ProvenanceBadge provenance={{ kind: "live", servedBy: summaryBy }} className="narrative-badge" />}
-      </div>}
-    </div>
+      <small className="fx-muted">
+        {decided ? `Decided: ${ACTION_LABEL[decided] ?? decided}.` : request && canDecide ? "Card actions are simulated. Irreversible ones pass fraud.take_action only with your approval." : replay ? "Recorded run: the decision replays as it was made." : "Enabled when the agent finishes and asks for your decision."}
+      </small>
+    </section>
   );
 }
 
-/** Never a dead page: says what is offline, what still works, and how to fix it. */
-function FraudStatus({ health, failed }: { health: Health | null; failed: boolean }) {
+function NoteComposer({ runId, caseId, initial }: { runId: string | null; caseId: string; initial: string }) {
+  const [note, setNote] = useState(initial);
+  const [saving, setSaving] = useState(false);
+  const [result, setResult] = useState<NoteResult | null>(null);
+  async function save() {
+    if (!note.trim()) return;
+    setSaving(true);
+    try {
+      const response = await fetch(`${API}/notes`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note, case_id: caseId, ...(runId ? { run_id: runId } : {}) }), signal: AbortSignal.timeout(30000),
+      });
+      setResult(response.ok ? await response.json() : null);
+    } catch {
+      setResult(null);
+    } finally {
+      setSaving(false);
+    }
+  }
+  const defense = result?.ai_defense;
+  return (
+    <section className="fx-note" aria-labelledby="fx-note-title">
+      <h4 id="fx-note-title"><NotebookPen size={15} aria-hidden="true" /> Case note</h4>
+      <textarea id="fx-note-text" value={note} maxLength={2000} rows={3} placeholder="Add a case note. Last 4 digits only, never a full card number or SSN." onChange={(event) => { setNote(event.target.value); setResult(null); }} />
+      <div className="fx-note-actions">
+        <button className="fx-secondary" onClick={save} disabled={saving || !note.trim()}>{saving ? <Loader2 size={13} className="spin" /> : null} Save note</button>
+        {result?.masked && <button className="fx-secondary" onClick={() => { setNote(result.masked ?? ""); setResult(null); }}>Use masked note (last 4 only)</button>}
+      </div>
+      {result && (
+        <div className="fx-badges" aria-live="polite">
+          <span className={`fx-chip ${defense?.status === "blocked" ? "deny" : defense?.status === "allowed" ? "ok" : ""}`}>
+            AI Defense · {defense?.status === "off" ? "off" : defense?.status === "blocked" ? `${defense.rules.join(", ") || "violation"} · blocked` : defense?.status === "allowed" ? "clean" : defense?.status}
+          </span>
+          <span className={`fx-chip ${result.policy.decision === "deny" ? "deny" : "ok"}`}>
+            {result.policy.engine_label} · fraud.note_pii · {result.policy.decision}{result.policy.entities?.length ? ` · ${result.policy.entities.join(", ")}` : ""}
+          </span>
+          <span className={`fx-chip ${result.saved ? "ok" : "deny"}`}>{result.saved ? "Saved" : "Not saved · re-enter with the last 4 only"}</span>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function AuditTrail({ state }: { state: TriageState }) {
+  if (!state.audit.length) return null;
+  return (
+    <section className="fx-audit" aria-labelledby="fx-audit-title">
+      <h4 id="fx-audit-title"><History size={15} aria-hidden="true" /> Audit trail</h4>
+      <ol>{state.audit.map((item) => (
+        <li key={item.id} className={`status-${item.status}`}>
+          <time>{new Date(item.at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", second: "2-digit" })}</time>
+          <span>{item.title}</span>
+        </li>
+      ))}</ol>
+    </section>
+  );
+}
+
+/** Never a dead page: what is offline, what still works, and how to fix it. */
+function FraudStatus({ health, failed, recording, onReplay }: { health: FraudHealth | null; failed: boolean; recording?: string; onReplay: (name: string) => void }) {
   if (failed) {
-    return <DemoStatusBanner
-      tone="down"
-      className="fraud-status"
-      title="The fraud scoring service is not answering"
-      stillWorks="The architecture view. Scoring, including sample scores, needs the service."
-      fix="Start Fraud scoring under Services in Studio settings."
-    />;
+    return <DemoStatusBanner tone="down" className="fraud-status" title="The fraud triage service is not answering"
+      stillWorks="The architecture view. Scenarios, scores, and recorded runs are served by the fraud service."
+      fix="Start Card fraud triage under Services in Studio settings." />;
   }
   if (!health) return null;
-  const backend = backendKind(health.backend);
-  if (backend === "live") return null;
-  if (backend === "unavailable") {
-    return <DemoStatusBanner tone="down" className="fraud-status" title="No scoring backend is available" stillWorks="The architecture view." fix={health.detail || "Start the GNN scoring sidecar on Sparky."} />;
-  }
-  const sidecarUp = health.sidecar?.status === "up";
-  const scores = backend === "cache"
-    ? `Recorded scores from the GNN${health.recorded_at ? ` (${day(health.recorded_at)})` : ""}`
-    : "Sample scores for the synthetic payments";
+  const scorer = health.backend === "live" ? null : health.backend === "cache" ? `recorded GNN scores${health.recorded_at ? ` (${new Date(health.recorded_at).toLocaleDateString()})` : ""}` : "sample scores for the synthetic payments";
+  const agentDown = health.agent?.status !== "ready";
+  if (!scorer && !agentDown) return null;
+  const replay = recording ? <button type="button" onClick={() => onReplay(recording)}><History size={14} aria-hidden="true" /> Replay recorded run</button> : null;
   return <DemoStatusBanner
-    tone="degraded"
-    className="fraud-status"
-    title={sidecarUp ? "Live scoring is switched off; this demo is using saved scores" : "The live GNN scoring sidecar on Sparky is offline"}
-    stillWorks={`${scores}, the reason breakdown, and the AI analyst summary when a summary model is configured.`}
-    fix="Start the GNN scoring sidecar on Sparky, then reopen this demo. Studio settings shows the service status."
+    tone="degraded" className="fraud-status"
+    title={[scorer && "The live GNN scorer on Sparky is offline", agentDown && "no model is reachable for the triage agent"].filter(Boolean).join("; ").replace(/^n/, "N")}
+    stillWorks={`Triage runs end to end with ${scorer ?? "live scores"}${agentDown ? ", and a scripted summary (no model) labelled as such" : ", and the triage agent"}.`}
+    fix={[scorer && "Start the GNN scoring sidecar on Sparky", agentDown && "check the fraud-modeling model chain in Studio settings"].filter(Boolean).join("; ") + "."}
+    settingsSection={agentDown ? "st-models" : "st-services"}
+    actions={replay}
   />;
-}
-
-/** A score response as the fraud service reported it: the score itself never touches an LLM or AI Defense. */
-function observeScore(run: ObservedRun, result: ScoreResult): ObservedRun {
-  const narrativeOff = result.narrative?.status === "disabled";
-  const backend = backendKind(result.backend);
-  const summaryBy = servedByFrom(result.narrative?.served_by);
-  return {
-    ...run,
-    status: "completed",
-    durationMs: result.duration_ms,
-    ...(narrativeOff ? { llmCalls: 0, inputTokens: 0, outputTokens: 0 } : usageFrom(result.narrative?.usage)),
-    defense: defenseFrom(result.security ?? result.narrative?.security),
-    servedBy: summaryBy ?? (backend === "live" ? GNN : undefined),
-    provenance: backend === "live" ? "live" : backend === "cache" ? "recorded" : "sample",
-    recordedAt: backend === "cache" ? result.recorded_at ?? undefined : undefined,
-    note: narrativeOff ? "AI summary off · nothing for AI Defense to inspect" : undefined,
-  };
-}
-
-function withNarrativeNotice(integration: Integration, health: FraudHealth | null): Integration {
-  if (integration.state !== "on" || !health?.narrative?.status || health.narrative.status === "configured") return integration;
-  return { ...integration, notice: "No AI summary model is configured, so this service has nothing for AI Defense to inspect." };
 }
 
 function fraudStats(health: FraudHealth | null, failed: boolean): { observability: StatsCard; defense: StatsCard } {
   return {
     observability: {
-      integration: failed
-        ? { state: "unknown", summary: "Service not reachable", notice: "The fraud service is not answering." }
-        : { state: "not_instrumented", summary: "Scoring is GraphSAGE + XGBoost, not an agent",
-            notice: "The fraud service sends no traces to Splunk Agent Observability. These figures are measured by the service itself." },
+      integration: agentTraceIntegration(health?.splunk?.galileo, !failed),
       tiles: [
-        { label: "Latency", value: (run) => run.durationMs, format: "ms", total: "avg", hint: "Score, reasons, and AI summary, measured by the fraud service" },
-        { label: "LLM calls", value: (run) => run.llmCalls, hint: "AI summary model calls; scoring makes none" },
+        { label: "Latency", value: (run) => run.durationMs, format: "ms", total: "avg", hint: "Investigation, then the analyst's decision, measured by the fraud service" },
+        { label: "LLM calls", value: (run) => run.llmCalls, hint: "Triage agent model calls; scoring makes none" },
+        { label: "Tool calls", value: (run) => run.toolCalls, hint: "score_payment, rules, neighborhood, explain, playbook, draft, propose_action" },
         { label: "Tokens in", value: (run) => run.inputTokens, format: "tokens" },
         { label: "Tokens out", value: (run) => run.outputTokens, format: "tokens" },
       ],
-      source: "From each /api/fraud/score response. Tokens are what the summary model's provider reported.",
+      facts: traceFacts,
+      source: "From the triage run's own events. Each tool call is a span in the agent's trace.",
     },
     defense: {
-      integration: withNarrativeNotice(defenseIntegration(health?.security, "AI summary only; the score is never inspected", !failed), health),
+      integration: defenseIntegration(health?.security, "dispute notes, agent prompt and summary, case notes", !failed),
       tiles: DEFENSE_TILES,
       facts: defenseFacts,
-      source: "From the security summary on each score response: one inspection per summary prompt and per summary.",
+      source: "From the run's security summary: one inspection per untrusted note, agent prompt, and summary.",
     },
   };
 }

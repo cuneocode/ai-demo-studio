@@ -23,11 +23,13 @@ test('Brahe inspection is on every model boundary and can fail before answer rel
 test('Fraud scoring does not wait on the investigation agent',()=>{
  const graph=proposedRuntime('fraud-modeling');assert.ok(graph.edges.some(e=>e.from==='left'&&e.to==='result'));assert.ok(graph.edges.some(e=>e.to==='right'&&e.kind==='telemetry'));
 });
-test('Live fraud score path does not wait on the LLM explainer',()=>{
+test('Live fraud score path does not wait on the triage agent',()=>{
  const live=fraudRuntime();
  assert.ok(live.edges.some(e=>e.from==='shap'&&e.to==='release'&&e.label.includes('no LLM')));
  assert.ok(live.edges.some(e=>e.from==='shap'&&e.to==='narrative'));
- assert.ok(live.nodes.find(n=>n.id==='defense')?.detail.includes('narrative'));
+ assert.ok(live.nodes.find(n=>n.id==='defense')?.detail.includes('dispute note'));
+ assert.ok(live.nodes.find(n=>n.id==='shap')?.title.includes('TreeSHAP'));
+ assert.ok(live.nodes.find(n=>n.id==='analyst')?.subtitle.includes('fraud.take_action'));
  assert.ok(live.edges.some(e=>e.from==='defense'&&e.to==='omit'));
  assert.ok(!live.nodes.some(n=>n.title.includes('financial-fraud-training')));
 });
@@ -43,9 +45,9 @@ test('Fraud capability keeps AI Defense off the score path',()=>{
   assert.ok(!graph.edges.some(e=>e.from==='ai'&&e.to==='defense'));
   assert.ok(graph.edges.some(e=>e.from==='narrative'&&e.to==='defense'));
   assert.ok(graph.edges.some(e=>e.from==='ai'&&e.to==='p2'&&e.label.includes('no Defense')));
-  assert.ok(graph.nodes.find(n=>n.id==='defense')?.detail.includes('narrative'));
+  assert.ok(graph.nodes.find(n=>n.id==='defense')?.detail.includes('dispute note'));
   assert.ok(graph.nodes.some(n=>n.id==='ai'&&n.title.includes('GraphSAGE')));
-  assert.ok(graph.nodes.find(n=>n.id==='narrative')?.subtitle.toLowerCase().includes('off'));
+  assert.ok(graph.nodes.find(n=>n.id==='narrative')?.title.includes('triage agent'));
  }
 });
 test('Brahe capability keeps Defense on the model path',()=>{
@@ -266,8 +268,10 @@ test('Zoom altitudes keep the live perimeters', () => {
   assert.equal(fraud.coreEdges.some(edge => edge.from === 'graph' && edge.to === 'defense'), false);
   assert.match(fraudText, /no LLM/);
   assert.match(fraudText, /never starts training/);
-  assert.match(fraudText, /else Triton/);
-  assert.match(fraudText, /optional narrative/i);
+  assert.match(fraudText, /recorded Sparky scores/);
+  assert.match(fraudText, /triage agent/i);
+  assert.match(fraudText, /TreeSHAP/);
+  assert.doesNotMatch(fraudText, /Captum|Shapley/);
 
   const briefing = zoomText(zoomMaps['company-briefing']);
   assert.match(briefing, /does not assert live SEC or OpenAI/);

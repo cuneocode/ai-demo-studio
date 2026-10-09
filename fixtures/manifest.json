@@ -102,10 +102,38 @@
       "synthetic": true
     },
     {
-      "path": "services/fraud/data/recorded/cpp-orbit-sample.json",
-      "description": "Recorded fraud run for the cpp-orbit event on card ****1188.",
+      "path": "services/fraud/data/scenarios.json",
+      "description": "Card fraud triage scenario cards (CPP at Orbit Digital Goods for card ****1188, card testing, illustrative ATO, a clean control, two attacks) and the illustrative mule/ACH note.",
+      "owner": "fraud",
+      "demos": ["fraud-modeling", "sar"],
+      "synthetic": true
+    },
+    {
+      "path": "services/fraud/data/recorded/cpp-orbit-live.json",
+      "description": "Golden triage run for the cpp-orbit event on card ****1188: live triage agent (labelled model fallback), block and reissue, approved proactive reissue.",
       "owner": "fraud",
       "demos": ["fraud-modeling"],
+      "synthetic": true
+    },
+    {
+      "path": "services/fraud/data/recorded/cpp-orbit-scripted.json",
+      "description": "Golden triage run for the cpp-orbit event with a scripted investigation (no model).",
+      "owner": "fraud",
+      "demos": ["fraud-modeling"],
+      "synthetic": true
+    },
+    {
+      "path": "services/fraud/data/recorded/attack-dispute-injection-live.json",
+      "description": "Golden triage run where AI Defense blocks an instruction injected into the cardholder dispute note; live triage agent.",
+      "owner": "fraud",
+      "demos": ["fraud-modeling"],
+      "synthetic": true
+    },
+    {
+      "path": "services/fraud/data/recorded/attack-note-pii-scripted.json",
+      "description": "Golden triage run where a full card number and SSN in the analyst note are blocked, masked, and the case is escalated with a SAR handoff.",
+      "owner": "fraud",
+      "demos": ["fraud-modeling", "sar"],
       "synthetic": true
     },
     {

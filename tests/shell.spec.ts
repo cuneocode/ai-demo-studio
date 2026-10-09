@@ -19,7 +19,7 @@ const STATUS: StudioStatus = {
   models: [{ id: "sparky-vllm", label: "Sparky vLLM", host: "127.0.0.1:8003", up: false }],
   links: { agentObservability: "https://console.example.test", splunkObservability: null },
   readiness: [
-    ready("brahe-bank", "Brahe Bank assistant"), ready("company-briefing", "Company briefing"), ready("fraud-modeling", "Transaction fraud scoring"),
+    ready("brahe-bank", "Brahe Bank assistant"), ready("company-briefing", "Company briefing"), ready("fraud-modeling", "Card fraud triage"),
     ready("market-research", "Wealth market research"),
     { id: "client-advisory", title: "Client advisory", ready: false, missing: ["OPENAI_API_KEY"], notes: [] },
     ready("interbank-a2a", "Interbank settlement investigation"),
@@ -193,7 +193,7 @@ test("a run started in the demo keeps going on the Architecture tab and is intac
     await route.fulfill({ json: { case: cases[0], probability: 0.73, threshold: 0.5, decision: "hold", backend: "fixture", shap: [{ feature: "merchant_neighborhood", value: 0.41, direction: "risk" }] } });
   });
   await open(page);
-  await page.getByRole("button", { name: "Open Transaction fraud scoring experience" }).click();
+  await page.getByRole("button", { name: "Open Card fraud triage experience" }).click();
   const demoPanel = page.locator("#case-panel-demo");
   await page.getByRole("button", { name: "Off", exact: true }).click();
   await page.locator("#score-payment").click();
@@ -228,7 +228,7 @@ test("a run started in the demo keeps going on the Architecture tab and is intac
   const refit = await camera();
 
   await page.reload({ waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Open Transaction fraud scoring experience" }).click();
+  await page.getByRole("button", { name: "Open Card fraud triage experience" }).click();
   await page.getByRole("tab", { name: "Architecture" }).click();
   await expect.poll(camera).toBe(refit);
 });
