@@ -57,6 +57,8 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
   const [networkKey, setNetworkKey] = useState<string | null>(null);
   const [handoffSaved, setHandoffSaved] = useState<{ key: string; id: string } | null>(null);
   const ledger = useRunLedger();
+  const recordRun = ledger.record;
+  const ledgerStarted = useRef(0);
   const ledgerId = useRef<string | null>(null);
   const caseFile = useRef<HTMLHeadingElement>(null);
   const recordings = useRecordings(API);
@@ -95,8 +97,8 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
     if (!id) return;
     if (!state.investigatedMs && !state.result) return;
     const finished = !steps.replaying;
-    ledger.record({
-      id, label: state.scenario?.title ?? "Triage", startedAt: Date.now(), status: finished ? "completed" : "running", replay,
+    recordRun({
+      id, label: state.scenario?.title ?? "Triage", startedAt: ledgerStarted.current, status: finished ? "completed" : "running", replay,
       durationMs: state.result?.duration_ms ?? state.investigatedMs,
       llmCalls: state.usage?.llm_calls, toolCalls: state.usage?.tool_calls, inputTokens: state.usage?.input_tokens, outputTokens: state.usage?.output_tokens,
       agentTrace: replay ? undefined : state.agentTrace, defense: defenseFrom(state.security),
@@ -106,7 +108,7 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
       note: state.result ? `Disposition · ${ACTION_LABEL[state.result.disposition ?? ""] ?? state.result.disposition}` : state.pending.length ? "Awaiting the analyst's decision" : undefined,
       counts: { toolCalls: state.usage?.tool_calls },
     });
-  }, [state.investigatedMs, state.result, state.usage, state.security, state.agentTrace, state.summary, state.score, state.pending.length, state.scenario, steps.replaying, steps.run, replay, ledger]);
+  }, [state.investigatedMs, state.result, state.usage, state.security, state.agentTrace, state.summary, state.score, state.pending.length, state.scenario, steps.replaying, steps.run, replay, recordRun]);
 
   async function replayRecording(name: string) {
     setError("");
@@ -116,6 +118,7 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
       steps.play({ run: recording.run ?? null, events: recording.events });
       const run: ObservedRun = { ...startRun("replay", `${recording.title}`), replay: true, provenance: "recorded", recordedAt: recording.recorded_at, servedBy: recording.served_by ?? undefined };
       ledgerId.current = run.id;
+      ledgerStarted.current = run.startedAt;
       ledger.record(run);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "That recording is unavailable.");
@@ -136,6 +139,7 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
       steps.open(body.run_id);
       const run = { ...startRun("triage", scenarios.find((item) => item.id === id)?.title ?? id), id: body.run_id };
       ledgerId.current = run.id;
+      ledgerStarted.current = run.startedAt;
       ledger.record(run);
     } catch (cause) {
       const recording = recordingFor(id);
@@ -236,7 +240,7 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
             <h3 id="fx-casefile-title" ref={caseFile} tabIndex={-1}>
               {state.opened ? <>Case file · {state.opened.account} at {state.opened.merchant} · {money(state.opened.amount)}</> : "Case file"}
             </h3>
-            {state.opened && <p className="fx-muted">{state.opened.customer ? `${state.opened.customer} (fictional) · ` : ""}{CHANNEL[state.opened.channel] ?? state.opened.channel}{state.opened.mcc_label ? ` · ${state.opened.mcc_label}` : ""}{state.opened.at ? ` · ${new Date(state.opened.at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}` : ""}</p>}
+            {state.opened && <p className="fx-muted">{state.opened.customer ? `${state.opened.customer}${/fictional/i.test(state.opened.customer) ? "" : " (fictional)"} · ` : ""}{CHANNEL[state.opened.channel] ?? state.opened.channel}{state.opened.mcc_label ? ` · ${state.opened.mcc_label}` : ""}{state.opened.at ? ` · ${new Date(state.opened.at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}` : ""}</p>}
             <Verdicts state={state} threshold={health?.threshold ?? 0.5} />
             {state.graph && (
               <div className="fx-network">

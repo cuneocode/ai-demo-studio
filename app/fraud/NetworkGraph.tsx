@@ -43,7 +43,7 @@ export default function NetworkGraph({ graph }: { graph: Graph }) {
           >
             <circle cx={node.x} cy={node.y} r={node.r} />
             <title>{`${node.label}${node.detail ? ` · ${node.detail}` : ""}`}</title>
-            {node.kind === "scored" && <text x={node.x} y={node.y - node.r - 6} textAnchor="middle">{node.label}</text>}
+            {node.kind === "scored" && <text x={node.x + node.r + 5} y={node.y + 4} textAnchor="start" className="fx-card-label">{node.label}</text>}
           </g>
         ))}
         {center && <text x={CENTER} y={CENTER + center.r + 16} textAnchor="middle" className="fx-merchant-label">{graph.merchant}</text>}
