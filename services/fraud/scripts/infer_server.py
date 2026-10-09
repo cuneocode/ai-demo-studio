@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
-"""Live NVIDIA GraphSAGE + XGBoost + Shapley scorer.
+"""Live NVIDIA GraphSAGE + XGBoost scorer with point-in-time neighbourhoods.
 
 Runs inside nvcr.io/nvidia/cugraph/financial-fraud-training so the studio
 hits the trained GNN/XGB artifacts, not fixture scores.
+
+POST /score {"case": {"src", "dst", "edge_attr", "as_of"}}: the neighbourhood is
+sampled from payments strictly before ``as_of`` (training split + test window).
+Explanations are exact XGBoost TreeSHAP (log-odds), summed per feature group.
 """
 from __future__ import annotations
 
 import json
 import os
 import sys
+import threading
+import time
 import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -18,27 +24,21 @@ import pandas as pd
 import torch
 import xgboost as xgb
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, "/workspace/mnmg")
 from gnn_arch import LinkPredictionModel  # noqa: E402
-
-try:
-    from captum.attr import ShapleyValueSampling
-    CAPTUM = True
-except ImportError:
-    CAPTUM = False
+from temporal_graph import build_adjacency, load_history, request_rng, sample_subgraph, to_epoch  # noqa: E402
 
 OUTPUT = Path(os.getenv("FRAUD_OUTPUT", "/workspace/output"))
-DATA = Path(os.getenv("FRAUD_GRAPH_DATA", "/data/test_gnn"))
-if not (DATA / "nodes").is_dir():
-    DATA = Path("/data")
+DATA = Path(os.getenv("FRAUD_GRAPH_DATA", "/data"))
 PORT = int(os.getenv("FRAUD_INFER_PORT", "8000"))
-SVS_SAMPLES = int(os.getenv("FRAUD_SVS_SAMPLES", "25"))
+DEVICE = os.getenv("FRAUD_DEVICE", "cuda" if torch.cuda.is_available() else "cpu")
 
 
-def _cfg() -> dict:
+def _cfg(output: Path) -> dict:
     for candidate in (
-        OUTPUT / "infer/triton/gnn_embedder/1/model_config.json",
-        OUTPUT / "model_config.json",
+        output / "infer/triton/gnn_embedder/1/model_config.json",
+        output / "model_config.json",
     ):
         if candidate.is_file():
             return json.loads(candidate.read_text())
@@ -62,116 +62,29 @@ def _cfg() -> dict:
     }
 
 
-def _load_edges(edge_dir: Path, et: list[str]) -> tuple[np.ndarray, np.ndarray]:
-    src_type, rel, dst_type = et
-    if rel.startswith("rev_"):
-        csv_name = f"{dst_type}_{rel[4:]}_{src_type}.csv"
-        frame = pd.read_csv(edge_dir / csv_name)
-        return frame.iloc[:, 1].to_numpy(np.int64), frame.iloc[:, 0].to_numpy(np.int64)
-    frame = pd.read_csv(edge_dir / f"{src_type}_{rel}_{dst_type}.csv")
-    return frame.iloc[:, 0].to_numpy(np.int64), frame.iloc[:, 1].to_numpy(np.int64)
-
-
-def _build_adjacency(edge_idx: dict, edge_types: list) -> dict:
-    adj = {}
-    for et in edge_types:
-        stem = f"{et[0]}_{et[1]}_{et[2]}"
-        src_arr, dst_arr = edge_idx[stem]
-        if len(src_arr) == 0:
-            adj[tuple(et)] = {}
-            continue
-        order = np.argsort(dst_arr, kind="stable")
-        s_dst, s_src = dst_arr[order], src_arr[order]
-        uniq, splits = np.unique(s_dst, return_index=True)
-        groups = np.split(s_src, splits[1:])
-        adj[tuple(et)] = {int(dst): group for dst, group in zip(uniq, groups)}
-    return adj
-
-
-def _sample_subgraph(batch_src, batch_dst, node_x, edge_idx, adj, edge_types,
-                     src_type, dst_type, num_neighbors, rng):
-    node_types = list(node_x)
-    collected = {nt: set() for nt in node_types}
-    collected[src_type].update(int(x) for x in batch_src)
-    collected[dst_type].update(int(x) for x in batch_dst)
-    frontier = {nt: set() for nt in node_types}
-    frontier[src_type] = set(int(x) for x in batch_src)
-    frontier[dst_type].update(int(x) for x in batch_dst)
-    for n_sample in num_neighbors:
-        nxt = {nt: set() for nt in node_types}
-        for et in edge_types:
-            src_t, _, dst_t = et
-            dst_set = frontier[dst_t]
-            if not dst_set:
-                continue
-            adj_et = adj[tuple(et)]
-            for dst_id in dst_set:
-                srcs = adj_et.get(dst_id)
-                if srcs is None or len(srcs) == 0:
-                    continue
-                chosen = rng.choice(srcs, n_sample, replace=False) if n_sample >= 0 and len(srcs) > n_sample else srcs
-                for src in chosen:
-                    src = int(src)
-                    if src not in collected[src_t]:
-                        nxt[src_t].add(src)
-                        collected[src_t].add(src)
-        frontier = nxt
-    ordered = {}
-    for nt in node_types:
-        seeds = ([int(x) for x in batch_src] if nt == src_type else []) + (
-            [int(x) for x in batch_dst] if nt == dst_type else []
-        )
-        seed_list = list(dict.fromkeys(seeds))
-        ordered[nt] = seed_list + sorted(collected[nt] - set(seed_list))
-    luts = {}
-    for nt, nodes in ordered.items():
-        if nodes:
-            lut = np.full(int(max(nodes)) + 1, -1, dtype=np.int64)
-            lut[nodes] = np.arange(len(nodes), dtype=np.int64)
-        else:
-            lut = np.array([], dtype=np.int64)
-        luts[nt] = lut
-    sub_x = {}
-    for nt, nodes in ordered.items():
-        idx = np.asarray(nodes, dtype=np.int64)
-        sub_x[nt] = node_x[nt][idx] if len(idx) else node_x[nt][:0]
-    empty = (np.array([], dtype=np.int64), np.array([], dtype=np.int64))
-    sub_e = {}
-    for et in edge_types:
-        stem = f"{et[0]}_{et[1]}_{et[2]}"
-        src_arr, dst_arr = edge_idx[stem]
-        lut_s, lut_d = luts[et[0]], luts[et[2]]
-        if len(src_arr) == 0 or len(lut_s) == 0 or len(lut_d) == 0:
-            sub_e[stem] = empty
-            continue
-        local_s = np.full(len(src_arr), -1, dtype=np.int64)
-        local_d = np.full(len(dst_arr), -1, dtype=np.int64)
-        ok_s, ok_d = src_arr < len(lut_s), dst_arr < len(lut_d)
-        local_s[ok_s] = lut_s[src_arr[ok_s]]
-        local_d[ok_d] = lut_d[dst_arr[ok_d]]
-        mask = (local_s >= 0) & (local_d >= 0)
-        sub_e[stem] = (local_s[mask], local_d[mask]) if mask.any() else empty
-    return sub_x, sub_e, luts[src_type][batch_src], luts[dst_type][batch_dst]
-
-
 class Engine:
-    def __init__(self):
-        self.cfg = _cfg()
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    def __init__(self, device: str = DEVICE, data: Path = DATA, output: Path = OUTPUT):
+        self.cfg = _cfg(output)
+        self.device = torch.device(device)
         self.src_type, self.rel, self.dst_type = self.cfg["edge_type_to_predict"]
         self.edge_types = [tuple(et) for et in self.cfg["edge_types"]]
         self.node_types = self.cfg["node_types"]
-        self.num_neighbors = self.cfg.get("num_neighbors") or [15, 10]
-        self.rng = np.random.default_rng(42)
+        self.num_neighbors = self.cfg.get("inf_num_neighbors") or self.cfg.get("num_neighbors") or [15, 10]
+        self.lock = threading.Lock()
 
-        node_dir = DATA / "nodes"
-        edge_dir = DATA / "edges"
-        self.node_x = {}
-        for nt in self.node_types:
-            numeric = pd.read_csv(node_dir / f"{nt}.csv").select_dtypes(include=[np.number])
-            self.node_x[nt] = numeric.to_numpy(np.float32)
-        self.edge_idx = {f"{et[0]}_{et[1]}_{et[2]}": _load_edges(edge_dir, list(et)) for et in self.edge_types}
-        self.adj = _build_adjacency(self.edge_idx, self.edge_types)
+        self.edge_idx, self.edge_ts, splits = load_history(data, self.edge_types)
+        node_dir = splits[0] / "nodes"
+        self.node_x = {
+            nt: pd.read_csv(node_dir / f"{nt}.csv").select_dtypes(include=[np.number]).to_numpy(np.float32)
+            for nt in self.node_types
+        }
+        self.adj = build_adjacency(self.edge_idx, self.edge_ts, {nt: len(x) for nt, x in self.node_x.items()})
+        self.history = {
+            "splits": [str(p) for p in splits],
+            "edges": int(len(next(iter(self.edge_ts.values())))),
+            "from": str(np.datetime64(int(min(t.min() for t in self.edge_ts.values())), "s")),
+            "to": str(np.datetime64(int(max(t.max() for t in self.edge_ts.values())), "s")),
+        }
 
         model = LinkPredictionModel(
             graph_schema=(self.node_types, self.edge_types),
@@ -183,7 +96,7 @@ class Engine:
             heads=self.cfg.get("heads", 1),
             concat=self.cfg.get("concat", True),
         )
-        state = torch.load(OUTPUT / "model_final.pt", map_location=self.device, weights_only=True)
+        state = torch.load(output / "model_final.pt", map_location=self.device, weights_only=True)
         state = {key.removeprefix("module."): value for key, value in state.items()}
         model.load_state_dict(state)
         model.eval().to(self.device)
@@ -192,42 +105,37 @@ class Engine:
         self.no_raw = self.cfg.get("no_raw_node_features_in_embedding", False)
 
         self.booster = xgb.Booster()
-        self.booster.load_model(str(OUTPUT / "xgboost_fraud.json"))
-        names_path = OUTPUT / "feature_names.json"
+        self.booster.load_model(str(output / "xgboost_fraud.json"))
+        self.booster.set_param({"device": "cuda" if self.device.type == "cuda" else "cpu"})
+        names_path = output / "feature_names.json"
         self.feature_names = json.loads(names_path.read_text()) if names_path.is_file() else None
-        groups = json.loads((OUTPUT / "feature_map.json").read_text())["feature_groups"]
-        self.feature_groups = groups
-        n_dims = max(max(group["indices"]) for group in groups) + 1
-        mask = torch.zeros(1, n_dims, dtype=torch.long)
-        for gid, group in enumerate(groups):
-            for idx in group["indices"]:
-                mask[0, idx] = gid
-        self.captum_mask = mask
-        self.group_first = [(mask[0] == gid).nonzero(as_tuple=True)[0][0].item() for gid in range(len(groups))]
-        baseline_path = OUTPUT / "svs_baseline.npy"
-        self.baseline = torch.from_numpy(np.load(baseline_path)) if baseline_path.is_file() else None
+        self.feature_groups = json.loads((output / "feature_map.json").read_text())["feature_groups"]
         self.ready = True
-        print(f"infer_server ready device={self.device} nodes="
-              f"{ {nt: self.node_x[nt].shape[0] for nt in self.node_types} } captum={CAPTUM}", flush=True)
+        print(f"infer_server ready device={self.device} history={self.history} "
+              f"nodes={ {nt: x.shape[0] for nt, x in self.node_x.items()} }", flush=True)
 
-    def embed(self, src: int, dst: int, attr: np.ndarray) -> np.ndarray:
-        batch_src = np.asarray([src], dtype=np.int64)
-        batch_dst = np.asarray([dst], dtype=np.int64)
-        sub_x, sub_e, loc_src, loc_dst = _sample_subgraph(
-            batch_src, batch_dst, self.node_x, self.edge_idx, self.adj, self.edge_types,
-            self.src_type, self.dst_type, self.num_neighbors, self.rng,
+    def _sync(self):
+        if self.device.type == "cuda":
+            torch.cuda.synchronize(self.device)
+
+    def embed(self, src: int, dst: int, attr: np.ndarray, as_of: int | None) -> tuple[np.ndarray, dict]:
+        t0 = time.perf_counter()
+        seeds = {self.src_type: [src]}
+        seeds.setdefault(self.dst_type, []).append(dst)
+        sub_x, sub_e, local = sample_subgraph(
+            seeds, self.node_x, self.adj, self.num_neighbors, request_rng(src, dst, as_of), as_of,
         )
+        t1 = time.perf_counter()
         x_dict = {nt: torch.as_tensor(sub_x[nt], device=self.device) for nt in self.node_types}
-        edge_index = {}
-        for et in self.edge_types:
-            stem = f"{et[0]}_{et[1]}_{et[2]}"
-            src_arr, dst_arr = sub_e[stem]
-            edge_index[et] = torch.stack([
-                torch.as_tensor(src_arr, dtype=torch.long, device=self.device),
-                torch.as_tensor(dst_arr, dtype=torch.long, device=self.device),
+        edge_index = {
+            et: torch.stack([
+                torch.as_tensor(sub_e[et][0], dtype=torch.long, device=self.device),
+                torch.as_tensor(sub_e[et][1], dtype=torch.long, device=self.device),
             ])
-        lbl_src = torch.as_tensor(loc_src, dtype=torch.long, device=self.device)
-        lbl_dst = torch.as_tensor(loc_dst, dtype=torch.long, device=self.device)
+            for et in self.edge_types
+        }
+        lbl_src = torch.as_tensor([local[self.src_type][src]], dtype=torch.long, device=self.device)
+        lbl_dst = torch.as_tensor([local[self.dst_type][dst]], dtype=torch.long, device=self.device)
         with torch.no_grad():
             node_emb = self.embedder(x_dict, edge_index)
             src_raw = x_dict[self.src_type][lbl_src]
@@ -239,39 +147,49 @@ class Engine:
                 if not self.no_raw:
                     parts += [src_raw, dst_raw]
             parts.append(torch.as_tensor(attr.reshape(1, -1), device=self.device))
-            return torch.cat(parts, dim=-1).float().cpu().numpy()
+            features = torch.cat(parts, dim=-1).float().cpu().numpy()
+        self._sync()
+        t2 = time.perf_counter()
+        sampled = {f"{et[0]}_{et[1]}_{et[2]}": int(len(sub_e[et][0])) for et in self.edge_types}
+        return features, {"sample_ms": (t1 - t0) * 1e3, "gnn_ms": (t2 - t1) * 1e3, "sampled_edges": sampled}
 
-    def _predict_tensor(self, emb_t: torch.Tensor) -> torch.Tensor:
-        matrix = xgb.DMatrix(emb_t.detach().cpu().numpy(), feature_names=self.feature_names)
-        return torch.tensor(self.booster.predict(matrix), dtype=torch.float32).unsqueeze(1)
+    def predict(self, features: np.ndarray) -> np.ndarray:
+        return self.booster.predict(xgb.DMatrix(features, feature_names=self.feature_names))
 
-    def explain(self, emb: np.ndarray) -> tuple[float, list[dict]]:
-        probability = float(self.booster.predict(xgb.DMatrix(emb, feature_names=self.feature_names))[0])
+    def explain(self, features: np.ndarray) -> tuple[list[dict], float]:
+        contribs = self.booster.predict(
+            xgb.DMatrix(features, feature_names=self.feature_names), pred_contribs=True,
+        )[0]
         shap = []
-        if CAPTUM and self.feature_groups:
-            emb_t = torch.tensor(emb, dtype=torch.float32)
-            baseline = self.baseline.expand(1, -1) if self.baseline is not None else torch.zeros_like(emb_t)
-            raw = ShapleyValueSampling(self._predict_tensor).attribute(
-                emb_t,
-                feature_mask=self.captum_mask,
-                baselines=baseline,
-                target=0,
-                n_samples=SVS_SAMPLES,
-                perturbations_per_eval=4,
-            )
-            for gid, group in enumerate(self.feature_groups):
-                value = float(raw[0, self.group_first[gid]].detach().cpu())
-                shap.append({
-                    "feature": group.get("original_name") or group.get("label") or f"group_{gid}",
-                    "value": value,
-                    "direction": "risk" if value >= 0 else "protective",
-                })
-        return probability, shap
+        for gid, group in enumerate(self.feature_groups):
+            value = float(contribs[group["indices"]].sum())
+            shap.append({
+                "feature": group.get("original_name") or group.get("label") or f"group_{gid}",
+                "value": value,
+                "direction": "risk" if value >= 0 else "protective",
+            })
+        return shap, float(contribs[-1])
 
-    def score(self, src: int, dst: int, attr: np.ndarray) -> dict:
-        emb = self.embed(int(src), int(dst), np.asarray(attr, dtype=np.float32))
-        probability, shap = self.explain(emb)
-        return {"probability": probability, "shap": shap}
+    def score(self, src: int, dst: int, attr, as_of=None, explain: bool = True) -> dict:
+        as_of_s = to_epoch(as_of)
+        with self.lock:
+            t0 = time.perf_counter()
+            features, timing = self.embed(int(src), int(dst), np.asarray(attr, dtype=np.float32), as_of_s)
+            t1 = time.perf_counter()
+            probability = float(self.predict(features)[0])
+            t2 = time.perf_counter()
+            shap, base = self.explain(features) if explain else ([], None)
+            t3 = time.perf_counter()
+        timing.update({"xgb_ms": (t2 - t1) * 1e3, "explain_ms": (t3 - t2) * 1e3, "total_ms": (t3 - t0) * 1e3})
+        return {
+            "probability": probability,
+            "shap": shap,
+            "explain": {"method": "xgboost_treeshap", "units": "log_odds", "base_value": base},
+            "as_of": None if as_of_s is None else str(np.datetime64(as_of_s, "s")),
+            "temporal_filter": as_of_s is not None,
+            "device": str(self.device),
+            "timing_ms": {k: (round(v, 3) if isinstance(v, float) else v) for k, v in timing.items()},
+        }
 
 
 ENGINE: Engine | None = None
@@ -293,7 +211,14 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path in {"/health", "/v2/health/ready"}:
             if ENGINE and ENGINE.ready:
-                _json(self, 200, {"status": "ok", "backend": "gnn_xgb", "device": str(ENGINE.device)})
+                _json(self, 200, {
+                    "status": "ok",
+                    "backend": "gnn_xgb",
+                    "device": str(ENGINE.device),
+                    "temporal_filter": True,
+                    "explain": "xgboost_treeshap",
+                    "history": ENGINE.history,
+                })
             else:
                 _json(self, 503, {"status": "starting"})
             return
@@ -310,10 +235,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             payload = json.loads(self.rfile.read(length) or b"{}")
             case = payload.get("case") or payload
-            src = int(case["src"])
-            dst = int(case["dst"])
-            attr = np.asarray(case["edge_attr"], dtype=np.float32)
-            _json(self, 200, ENGINE.score(src, dst, attr))
+            _json(self, 200, ENGINE.score(case["src"], case["dst"], case["edge_attr"], case.get("as_of")))
         except Exception as exc:
             traceback.print_exc()
             _json(self, 500, {"detail": str(exc)})

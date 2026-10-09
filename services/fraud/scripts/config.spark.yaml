@@ -19,8 +19,10 @@ models:
         learning_rate: 0.005
         save_node_embeddings: false
         emb_dtype: float16
+        # >0 fine-tunes on validation + test edges, which would leak the test window.
         final_fit_epochs: 0
-        skip_gnn_train: true
+        # true skips GraphSAGE training and loads model_final.pt from checkpoint_dir (3.0.0 docs).
+        skip_gnn_train: false
       xgb:
         num_boost_round: 200
         max_depth: 6

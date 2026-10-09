@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import json
+import time
 from pathlib import Path
 
 import numpy as np
@@ -20,9 +22,12 @@ def main() -> None:
     parser.add_argument("--min-year", type=int, default=2019)
     parser.add_argument("--max-date", default="2019-10-31")
     parser.add_argument("--cutoff", default="2019-08-31")
+    parser.add_argument("--stats", type=Path, default=None, help="default: <out>/../preprocess_stats.json")
     args = parser.parse_args()
+    started = time.perf_counter()
 
     raw = pd.read_csv(args.csv, dtype=str, keep_default_na=False)
+    rows_read = len(raw)
     raw["Year"] = pd.to_numeric(raw["Year"], errors="coerce")
     raw = raw[raw["Year"] >= args.min_year].copy()
     raw["amount"] = parse_amount(raw["Amount"])
@@ -40,7 +45,12 @@ def main() -> None:
         + raw["Day"].astype(str).str.zfill(2),
         errors="coerce",
     )
-    raw = raw.dropna(subset=["date"]).sort_values("date").reset_index(drop=True)
+    minutes = pd.to_numeric(raw["Time"].str.split(":").str[1], errors="coerce").fillna(0)
+    raw["ts"] = raw["date"] + pd.to_timedelta(raw["hour"] * 60 + minutes, unit="m")
+    raw["errors"] = raw.get("Errors?", pd.Series("", index=raw.index)).str.strip()
+    raw["mcc"] = raw.get("MCC", pd.Series("", index=raw.index)).astype(str)
+    raw["merchant_state"] = raw.get("Merchant State", pd.Series("", index=raw.index)).astype(str)
+    raw = raw.dropna(subset=["date"]).sort_values("ts", kind="stable").reset_index(drop=True)
 
     account_ids = {value: index for index, value in enumerate(raw["account"].unique())}
     merchant_ids = {value: index for index, value in enumerate(raw["merchant"].unique())}
@@ -90,7 +100,12 @@ def main() -> None:
         channel = pd.get_dummies(frame["channel"], prefix="channel", dtype=float)
         attr = pd.concat([frame[["amount", "hour_sin", "hour_cos"]].astype(float), channel], axis=1)
         attr.to_csv(dest / "edges" / "account_transacts_merchant_attr.csv", index=False)
-        catalog = frame[["account", "merchant", "amount", "channel", "is_fraud", "date"]].copy()
+        # Catalog columns beyond the edge features (errors, mcc, state) feed only the
+        # rules baseline and case selection; the GNN never sees them.
+        catalog = frame[[
+            "account", "merchant", "amount", "channel", "is_fraud", "date", "ts", "hour",
+            "errors", "mcc", "merchant_state",
+        ]].copy()
         catalog["src"] = frame["src"]
         catalog["dst"] = frame["dst"]
         catalog.to_csv(dest / "cases.csv", index=False)
@@ -98,10 +113,26 @@ def main() -> None:
     args.out.mkdir(parents=True, exist_ok=True)
     write_split(train, args.out)
     write_split(test, args.out / "test_gnn")
+    stats = {
+        "source": args.csv.name,
+        "rows_read": rows_read,
+        "accounts": len(account_ids),
+        "merchants": len(merchant_ids),
+        "train": {"from": str(train["date"].min().date()), "to": str(train["date"].max().date()),
+                  "edges": len(train), "fraud": int(train.is_fraud.sum())},
+        "test": {"from": str(test["date"].min().date()), "to": str(test["date"].max().date()),
+                 "edges": len(test), "fraud": int(test.is_fraud.sum()),
+                 "fraud_amount": round(float(test.loc[test.is_fraud == 1, "amount"].sum()), 2)},
+        "amount_clip_p99": round(float(raw["amount"].max()), 2),
+        "edge_features": list(pd.read_csv(args.out / "edges" / "account_transacts_merchant_attr.csv", nrows=0).columns),
+        "node_features": {"account": list(accounts.columns), "merchant": list(merchants.columns)},
+        "seconds": round(time.perf_counter() - started, 1),
+    }
+    (args.stats or args.out.parent / "preprocess_stats.json").write_text(json.dumps(stats, indent=2))
     print(
         f"wrote {args.out}: accounts={len(account_ids)} merchants={len(merchant_ids)} "
         f"train_edges={len(train)} test_edges={len(test)} train_fraud={int(train.is_fraud.sum())} "
-        f"test_fraud={int(test.is_fraud.sum())} cutoff={cutoff.date()}"
+        f"test_fraud={int(test.is_fraud.sum())} cutoff={cutoff.date()} seconds={stats['seconds']}"
     )
 
 
