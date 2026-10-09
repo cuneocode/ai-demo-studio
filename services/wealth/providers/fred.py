@@ -85,7 +85,7 @@ def fetch_series(series_id: str) -> dict:
 
 def fetch_macro() -> dict:
     if not fred_configured():
-        return {"status": "absent", "reason": "FRED_API_KEY is not configured.", "series": {}}
+        return {"status": "absent", "reason": "Live macro series are off: add a FRED API key in Studio settings.", "series": {}}
     series = {}
     for series_id in FRED_SERIES:
         series[series_id] = fetch_series(series_id)

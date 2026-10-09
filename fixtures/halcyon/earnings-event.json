@@ -1,0 +1,22 @@
+{
+  "ticker": "HCYN",
+  "issuer": "Halcyon Interconnect, Inc. (fictional)",
+  "synthetic": true,
+  "source": "Synthetic",
+  "kind": "earnings",
+  "period": "Q3 FY2026",
+  "date": "2026-10-07",
+  "eps_actual": 1.79,
+  "eps_estimate": 1.62,
+  "revenue": 1512000000,
+  "revenue_estimate": 1440000000,
+  "revenue_yoy": 0.426,
+  "gross_margin": 0.428,
+  "guidance_change": "Raised FY2026 revenue guidance to $5.75–5.85B from $5.45–5.60B",
+  "price_reaction": {"close_before": 80.10, "close_after": 87.40, "date_after": "2026-10-08"},
+  "what_changed": [
+    "Q3 EPS of $1.79 beat the $1.62 consensus by 10.5%.",
+    "Revenue of $1,512M grew 42.6% year over year, faster than Q2's 39.8%.",
+    "FY2026 revenue guidance raised to $5.75–5.85B from $5.45–5.60B on 1.6T transceiver and rack-system demand."
+  ]
+}

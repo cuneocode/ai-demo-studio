@@ -1,0 +1,87 @@
+{
+  "_about": "Shared lifecycle customer for the fraud, SAR, briefing, research, and advisory demos. Fictional person; every identifier is synthetic and deliberately invalid (000-prefixed SSN, 555-01xx phone, example.com email, masked card).",
+  "id": "dana-whitfield",
+  "synthetic": true,
+  "fictional": true,
+  "label": "Fictional customer · synthetic PII",
+  "household_id": "dana-whitfield",
+  "household_ref": "fixtures/households/dana-whitfield.json",
+  "person": {
+    "name": "Dana Whitfield",
+    "date_of_birth": "1968-03-14",
+    "age": 58,
+    "ssn": "000-00-0158",
+    "address": { "line1": "1427 Sample Ridge Road", "city": "Fremont", "state": "CA", "postal_code": "94539", "country": "US", "fictional": true },
+    "phone": "+1 (510) 555-0142",
+    "email": "dana.whitfield@example.com",
+    "customer_since": "2008-05-19"
+  },
+  "kyc": {
+    "occupation": "Senior Vice President, Global Operations",
+    "employer": "Halcyon Interconnect, Inc. (fictional)",
+    "employer_ticker": "HCYN",
+    "employer_ref": "fixtures/halcyon/issuer.json",
+    "source_of_wealth": "Employment income and equity compensation from Halcyon Interconnect (RSUs and pre-IPO options, held since 2013)",
+    "source_of_funds": "Payroll deposits; proceeds from HCYN share sales under the company insider trading policy",
+    "expected_activity": "Payroll and household spending in checking; card spend under $8,000 a month; occasional large brokerage transfers after open trading windows",
+    "pep": false,
+    "sanctions_screening": "clear",
+    "adverse_media": "none",
+    "risk_rating": "Medium",
+    "risk_rating_reason": "Concentrated single-issuer wealth and insider status; no adverse findings",
+    "affiliate": true,
+    "insider_flags": ["Section 16 officer of HCYN", "Rule 144 affiliate", "Subject to blackout windows and pre-clearance"],
+    "last_review": "2026-01-22",
+    "next_review": "2027-01-22"
+  },
+  "accounts": [
+    { "id": "chk-3301", "type": "checking", "product": "Premier checking", "number_masked": "****3301", "opened": "2008-05-19", "status": "open", "balance": 48210.55 },
+    {
+      "id": "card-1188",
+      "type": "credit_card",
+      "product": "Signature Visa (synthetic)",
+      "number_masked": "****1188",
+      "opened": "2016-09-02",
+      "status": "reissued",
+      "replacement_masked": "****7740",
+      "fraud_case_ref": "cpp-orbit"
+    },
+    {
+      "id": "brk-4471",
+      "type": "brokerage",
+      "product": "Taxable brokerage",
+      "number_masked": "****4471",
+      "household_id": "dana-whitfield",
+      "household_account_number": "0000-0000-4471",
+      "status": "open"
+    }
+  ],
+  "relationships": [
+    { "role": "primary_owner", "accounts": ["chk-3301", "card-1188", "brk-4471"] },
+    { "role": "household_member", "name": "Daughter (17)", "accounts": [], "note": "Starts college fall 2027" },
+    { "role": "trustee", "accounts": ["0000-0000-8815"], "note": "Revocable trust (2009), held in the advisory household" }
+  ],
+  "service_events": [
+    {
+      "id": "cpp-orbit",
+      "date": "2026-10-02",
+      "kind": "fraud_case",
+      "account": "card-1188",
+      "card_masked": "****1188",
+      "merchant": "Orbit Digital Goods",
+      "merchant_note": "Compromised merchant: 412 cards bought here in the last 21 days and 37 later had confirmed fraud",
+      "amount": 286.40,
+      "currency": "USD",
+      "channel": "card_not_present",
+      "outcome": "blocked",
+      "actions": ["Card blocked", "Card reissued as ****7740", "Customer notified", "$286.40 refunded"],
+      "refunded": true,
+      "refund_date": "2026-10-04",
+      "fraud_demo_case": "txn-compromised-merchant",
+      "recorded_run": "services/fraud/data/recorded/cpp-orbit-sample.json",
+      "summary": "Card ending 1188 used at Orbit Digital Goods, a compromised merchant. Blocked and reissued; $286.40 refunded."
+    }
+  ],
+  "alerts": [],
+  "alerts_note": "SAR placeholder: prior alerts and dispositions are added when the SAR demo goes live. Empty means no prior alerts on file."
+}

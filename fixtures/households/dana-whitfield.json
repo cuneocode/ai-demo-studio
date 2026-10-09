@@ -1,0 +1,51 @@
+{
+  "id": "dana-whitfield",
+  "order": 1,
+  "synthetic": true,
+  "label": "Synthetic client · fictional person and employer",
+  "name": "Dana Whitfield",
+  "headline": "SVP at Halcyon Interconnect (HCYN, fictional) · 46% in employer stock",
+  "scenario": "Annual review",
+  "age": 58,
+  "employer": "Halcyon Interconnect, Inc. (fictional)",
+  "employer_ticker": "HCYN",
+  "title": "SVP, Global Operations",
+  "affiliate": true,
+  "affiliate_note": "Section 16 officer: Rule 144 volume limits, blackout windows, and 10b5-1 cooling-off periods apply [confirm current rules with SME].",
+  "risk_profile": "Moderate",
+  "horizon_years": 4,
+  "goals": ["Retire at 62", "College 2027"],
+  "total_value": 14200000,
+  "as_of": "2026-10-08",
+  "ips": {
+    "objective": "Growth with income, shifting to preservation at retirement",
+    "risk_tolerance": "Moderate",
+    "horizon": "4 years to retirement at 62",
+    "annual_spending_need": 240000,
+    "single_issuer_limit_pct": 10
+  },
+  "holdings": [
+    {"ticker": "HCYN", "vehicle": "stock", "name": "Halcyon Interconnect (fictional)", "weight_pct": 46.0, "asset_class": "equity", "account": "Taxable brokerage", "shares": 74740, "price": 87.40, "cost_basis_per_share": 11.0, "value": 6532276},
+    {"ticker": "VTI", "vehicle": "fund", "name": "Vanguard Total Stock Market ETF", "weight_pct": 20.0, "asset_class": "equity", "account": "401(k) and trust", "value": 2840000},
+    {"ticker": "VXUS", "vehicle": "fund", "name": "Vanguard Total International Stock ETF", "weight_pct": 12.0, "asset_class": "equity", "account": "Trust", "value": 1704000},
+    {"ticker": "BND", "vehicle": "fund", "name": "Vanguard Total Bond Market ETF", "weight_pct": 17.6, "asset_class": "fixed_income", "account": "401(k) and trust", "value": 2503724},
+    {"ticker": "CASH", "vehicle": "cash", "name": "Brokerage sweep cash", "weight_pct": 4.4, "asset_class": "cash", "account": "Taxable brokerage", "value": 620000, "idle": true}
+  ],
+  "accounts": [
+    {"type": "Taxable brokerage", "number": "0000-0000-4471", "value": 7152276, "beneficiary": "Transfer on death: revocable trust"},
+    {"type": "401(k)", "number": "0000-0000-2290", "value": 2100000, "beneficiary": "Spouse"},
+    {"type": "Revocable trust", "number": "0000-0000-8815", "value": 4947724, "created": 2009, "last_review": null, "beneficiary": "Per trust document"}
+  ],
+  "estate": {"documents": ["Revocable living trust (2009)", "Pour-over will (2009)"], "last_review": null},
+  "dependents": [{"relation": "Daughter", "age": 17, "note": "Starts college fall 2027; no 529 plan in place"}],
+  "rmd_due": false,
+  "crm_notes": [
+    {"date": "2026-09-12", "author": "Jordan (advisor)", "text": "Dana said the Halcyon position is most of our net worth and she is nervous about Q3 earnings. Wants to retire at 62. Next open trading window is expected after Q3 earnings."},
+    {"date": "2026-06-03", "author": "Jordan (advisor)", "text": "Daughter starts college fall 2027, estimated $85k a year. No 529 plan yet."},
+    {"date": "2026-03-18", "author": "Jordan (advisor)", "text": "Revocable trust drafted in 2009 by a prior attorney and never reviewed. Dana is unsure the successor trustee is still right."},
+    {"date": "2026-01-22", "author": "Jordan (advisor)", "text": "$620k has sat in the brokerage sweep since the January RSU sale. Dana has not decided what to do with it."}
+  ],
+  "service_events": [
+    {"date": "2026-10-02", "kind": "fraud_case", "summary": "Card ending 1188 used at Orbit Digital Goods, a compromised merchant. Blocked and reissued; $286.40 refunded.", "source": "Card fraud triage demo (synthetic)"}
+  ]
+}

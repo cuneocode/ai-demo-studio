@@ -163,7 +163,8 @@ def ground_recommendation(recommendation: dict | None, snapshot: dict, conflicts
     }
 
 
-def ground_brief(brief: dict | None, snapshot: dict, briefing: dict | None, research: dict | None, holdings: list[dict], suitability: list[dict]) -> dict:
+def ground_brief(brief: dict | None, snapshot: dict, briefing: dict | None, research: dict | None, holdings: list[dict],
+                 suitability: list[dict], household: dict | None = None) -> dict:
     if not brief:
         return {"status": "omitted", "reason": "No meeting brief was produced.", "dropped_claims": 0}
     corpus = "\n".join([
@@ -172,6 +173,7 @@ def ground_brief(brief: dict | None, snapshot: dict, briefing: dict | None, rese
         research_corpus(research),
         _json_corpus(holdings),
         _json_corpus(suitability),
+        _json_corpus(household or {}),
     ])
     dropped = 0
     points = []

@@ -25,7 +25,7 @@ def _client(monkeypatch, tmp_path, galileo="disabled"):
     monkeypatch.setattr(security.defense, "mode", "off")
     monkeypatch.setattr(server, "_agent_importable", lambda: True)
 
-    async def reachable():
+    async def reachable(*_args):
         return True
 
     monkeypatch.setattr(nim, "nim_reachable", reachable)
@@ -63,7 +63,7 @@ def test_health_reports_galileo_configured_without_dashboard_proof(monkeypatch, 
 def test_health_not_ready_when_nim_down(monkeypatch, tmp_path):
     client = _client(monkeypatch, tmp_path)
 
-    async def down():
+    async def down(*_args):
         return False
 
     monkeypatch.setattr(nim, "nim_reachable", down)

@@ -6,6 +6,7 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
+from fixtures import fictional_snapshot, fixture_snapshot
 from providers.fred import fetch_macro
 from providers.yahoo import ProviderError, fetch_snapshot
 
@@ -96,10 +97,27 @@ def store_macro(payload: dict) -> None:
 
 
 def get_snapshot(ticker: str, refresh: bool = False) -> tuple[dict, str]:
+    """Fictional fixture → fresh cache → Yahoo → stale cache → committed fixture snapshot.
+
+    Kinds: "fictional" (synthetic issuer; Yahoo is never asked), "cache", "live", "fixture".
+    """
+    fictional = fictional_snapshot(ticker)
+    if fictional:
+        return fictional, "fictional"
     cached = load_snapshot(ticker)
     if not refresh and is_fresh(cached):
         return cached, "cache"
-    payload = fetch_snapshot(ticker)
+    try:
+        payload = fetch_snapshot(ticker)
+    except Exception as exc:
+        if cached:
+            return cached, "cache"
+        fixture = fixture_snapshot(ticker)
+        if fixture:
+            return fixture, "fixture"
+        if isinstance(exc, ProviderError):
+            raise
+        raise ProviderError("Market data for that ticker was empty.") from exc
     store_snapshot(payload)
     return payload, "live"
 
@@ -108,7 +126,10 @@ def get_macro(refresh: bool = False) -> tuple[dict, str | None]:
     cached = load_macro()
     if not refresh and is_fresh(cached) and cached.get("status") == "ready":
         return cached, "cache"
-    payload = fetch_macro()
+    try:
+        payload = fetch_macro()
+    except Exception:
+        payload = {"status": "absent", "reason": "FRED did not answer, so macro series are omitted.", "series": {}}
     if payload.get("status") == "ready":
         store_macro(payload)
         return payload, "live"

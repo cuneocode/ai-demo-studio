@@ -1,0 +1,20 @@
+{
+  "ticker": "HCYN",
+  "issuer": "Halcyon Interconnect, Inc. (fictional)",
+  "synthetic": true,
+  "rating": "Constructive",
+  "focus_list": true,
+  "as_of": "2026-09-15",
+  "owner": "CIO Office · US Equity Strategy",
+  "thesis_points": [
+    "AI cluster build-outs keep demand for 800G and 1.6T optical transceivers ahead of supply through 2027.",
+    "Liquid-cooled rack systems widen the addressable market beyond optics and grew faster than optics in fiscal 2025.",
+    "Trades at a discount to optical and thermal peers on trailing earnings despite faster revenue growth."
+  ],
+  "key_risks": [
+    "Customer concentration: a handful of hyperscale buyers drive most revenue.",
+    "Co-packaged optics could shrink the pluggable-module market over time.",
+    "Export controls on advanced computing items limit sales to some regions."
+  ],
+  "rating_policy": "Only the CIO Office changes the rating. AI drafts may flag 'needs strategist review' with reasons but cannot propose a rating."
+}

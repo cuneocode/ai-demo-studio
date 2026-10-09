@@ -1,0 +1,707 @@
+{
+ "v": 1,
+ "name": "research-hcyn",
+ "title": "HCYN research",
+ "scenario": "research",
+ "recorded_at": "2026-10-09T21:20:57.201827+00:00",
+ "served_by": {
+  "provider": "openai",
+  "label": "OpenAI API",
+  "model": "gpt-5.6-luna",
+  "kind": "openai",
+  "private": false,
+  "external": true,
+  "fallback": true,
+  "reason": "Sparky vLLM unreachable (connection refused)",
+  "source": "saved",
+  "egress": "allow",
+  "ai_defense": null
+ },
+ "synthetic": true,
+ "note": "Recorded from a live run of the wealth service. Synthetic client, fictional or public market data.",
+ "run": {
+  "id": "wealth-research-20261009212043-cf2c93",
+  "service": "wealth",
+  "label": "HCYN research",
+  "scenario": "research",
+  "status": "completed",
+  "started_at": "2026-10-09T21:20:43.630170+00:00",
+  "finished_at": "2026-10-09T21:20:57.201827+00:00",
+  "meta": {
+   "ticker": "HCYN"
+  }
+ },
+ "events": [
+  {
+   "v": 1,
+   "id": "b470e03d-7a37-4264-a3f7-713ccb59b98b",
+   "at": "2026-10-09T21:20:48.509798+00:00",
+   "ns": 4879618541,
+   "run_id": "wealth-research-20261009212043-cf2c93",
+   "component": "wealth",
+   "kind": "run",
+   "status": "started",
+   "title": "Research \u00b7 HCYN",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Market data, indicators, and a compliance pre-check, then a cited draft note.",
+   "data": {}
+  },
+  {
+   "v": 1,
+   "id": "a04be1ca-e5f7-43cf-9597-b6a7d84b9a9a",
+   "at": "2026-10-09T21:20:48.511515+00:00",
+   "ns": 4881333625,
+   "run_id": "wealth-research-20261009212043-cf2c93",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "market_snapshot(HCYN)",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "market_snapshot",
+    "arguments": {
+     "ticker": "HCYN",
+     "refresh": false
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "ab129c52-75ad-4d9b-9db7-14a97d66747f",
+   "at": "2026-10-09T21:20:48.518252+00:00",
+   "ns": 4888069458,
+   "run_id": "wealth-research-20261009212043-cf2c93",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Market data \u00b7 Fictional \u00b7 synthetic data",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "market_snapshot",
+    "source_kind": "fictional",
+    "as_of": "2026-10-08",
+    "fictional": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "21e5a90f-8229-4d86-b737-efed2c667404",
+   "at": "2026-10-09T21:20:48.523094+00:00",
+   "ns": 4892911041,
+   "run_id": "wealth-research-20261009212043-cf2c93",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "fred_macro()",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "fred_macro"
+   }
+  },
+  {
+   "v": 1,
+   "id": "8da2ced9-bbdd-41e5-9a7e-e235fbf82e87",
+   "at": "2026-10-09T21:20:48.528956+00:00",
+   "ns": 4898772416,
+   "run_id": "wealth-research-20261009212043-cf2c93",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "info",
+   "title": "Macro \u00b7 not available",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Live macro series are off: add a FRED API key in Studio settings.",
+   "data": {
+    "tool": "fred_macro",
+    "source_kind": null
+   }
+  },
+  {
+   "v": 1,
+   "id": "2f75c70c-ad3c-4842-acc4-21a429619dbe",
+   "at": "2026-10-09T21:20:48.533707+00:00",
+   "ns": 4903526125,
+   "run_id": "wealth-research-20261009212043-cf2c93",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Indicators \u00b7 earnings, peers, returns",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Beat rate 87.5% \u00b7 1-year +19.4% vs SPY +16.9%, ahead by 2.5 pts \u00b7 P/E 13.9 vs peer median 18.4",
+   "data": {
+    "tool": "indicators"
+   }
+  },
+  {
+   "v": 1,
+   "id": "8b8dc7ae-1b40-4467-800c-b5705cab7c74",
+   "at": "2026-10-09T21:20:48.538329+00:00",
+   "ns": 4908148416,
+   "run_id": "wealth-research-20261009212043-cf2c93",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Signal divergences \u00b7 none",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "signal_divergences"
+   }
+  },
+  {
+   "v": 1,
+   "id": "da08cf95-2a54-417f-83f9-2274b927e8c1",
+   "at": "2026-10-09T21:20:48.544142+00:00",
+   "ns": 4913958125,
+   "run_id": "wealth-research-20261009212043-cf2c93",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "House view \u00b7 Constructive \u00b7 CIO Office \u00b7 US Equity Strategy",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Owned by the CIO Office. The AI cannot change the rating.",
+   "data": {
+    "tool": "house_view",
+    "synthetic": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "05c0548a-797f-46ed-a003-681a90c4850d",
+   "at": "2026-10-09T21:20:48.548321+00:00",
+   "ns": 4918144083,
+   "run_id": "wealth-research-20261009212043-cf2c93",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Earnings event \u00b7 Q3 FY2026 \u00b7 EPS $1.79 vs $1.62 est.",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": "Raised FY2026 revenue guidance to $5.75\u20135.85B from $5.45\u20135.60B",
+   "data": {
+    "tool": "earnings_event",
+    "source": "Synthetic"
+   }
+  },
+  {
+   "v": 1,
+   "id": "01758f9e-c271-47e0-8c7f-5ceeac084610",
+   "at": "2026-10-09T21:20:48.553141+00:00",
+   "ns": 4922965166,
+   "run_id": "wealth-research-20261009212043-cf2c93",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Affected households \u00b7 214 hold it, 31 above 10%, 6 executives",
+   "lane": "tools",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "affected_households",
+    "synthetic": true
+   }
+  },
+  {
+   "v": 1,
+   "id": "f195e1db-2216-4457-8f6a-9526212b51d7",
+   "at": "2026-10-09T21:20:48.557576+00:00",
+   "ns": 4927395583,
+   "run_id": "wealth-research-20261009212043-cf2c93",
+   "component": "wealth",
+   "kind": "control",
+   "status": "allowed",
+   "title": "Compliance pre-check \u00b7 restricted list \u00b7 clear",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "policy": "research.publish"
+   }
+  },
+  {
+   "v": 1,
+   "id": "8f9cdcc7-c493-47ab-aa9f-b2edb4de63f5",
+   "at": "2026-10-09T21:20:56.211391+00:00",
+   "ns": 12581193458,
+   "run_id": "wealth-research-20261009212043-cf2c93",
+   "component": "wealth",
+   "kind": "model.failover",
+   "status": "flagged",
+   "title": "Model fallback \u00b7 answered by OpenAI API",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": "Sparky vLLM unreachable (connection refused)",
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "5794cfd9-6c43-43b7-9d31-6debcf50c98a",
+   "at": "2026-10-09T21:20:56.213960+00:00",
+   "ns": 12583759875,
+   "run_id": "wealth-research-20261009212043-cf2c93",
+   "component": "wealth",
+   "kind": "llm.call",
+   "status": "ok",
+   "title": "gpt-5.6-luna \u00b7 OpenAI API",
+   "lane": "model",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {
+    "served_by": {
+     "provider": "openai",
+     "label": "OpenAI API",
+     "model": "gpt-5.6-luna",
+     "kind": "openai",
+     "private": false,
+     "external": true,
+     "fallback": true,
+     "reason": "Sparky vLLM unreachable (connection refused)",
+     "source": "saved",
+     "egress": "allow",
+     "ai_defense": null
+    },
+    "latency_ms": 7082,
+    "input_tokens": 1970,
+    "output_tokens": 771
+   }
+  },
+  {
+   "v": 1,
+   "id": "b1b7a10e-7cf2-40a8-b77c-a247bd11ba17",
+   "at": "2026-10-09T21:20:56.560728+00:00",
+   "ns": 12930530208,
+   "run_id": "wealth-research-20261009212043-cf2c93",
+   "component": "wealth",
+   "kind": "claim.verdict",
+   "status": "flagged",
+   "title": "Grounding \u00b7 2 unsupported claims dropped",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Claims that did not match the market data or the attached context were removed, not shown.",
+   "data": {}
+  },
+  {
+   "v": 1,
+   "id": "2200e76c-ef26-4972-b786-f4a1b5581873",
+   "at": "2026-10-09T21:20:57.200433+00:00",
+   "ns": 13570246416,
+   "run_id": "wealth-research-20261009212043-cf2c93",
+   "component": "wealth",
+   "kind": "result",
+   "status": "ok",
+   "title": "Draft note ready for review",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "HCYN\u2019s Q3 FY2026 update strengthened the operating picture: EPS was $1.79 versus $1.62 expected, revenue reached $1,512M with 42.6% year-over-year growth, and FY2026 revenue guidance increased to $5.75\u20135.85B from $5.45\u20135.60B. The data is consistent with the CIO Office\u2019s Constructive house view, while recent three- and six-month relative performance remains weaker than the S&P 500.",
+   "data": {}
+  }
+ ],
+ "result": {
+  "ticker": "HCYN",
+  "company": {
+   "name": "Halcyon Interconnect, Inc.",
+   "ticker": "HCYN",
+   "sector": "Technology",
+   "industry": "Communication Equipment"
+  },
+  "source": {
+   "kind": "fictional",
+   "fetchedAt": "2026-10-08T21:00:00+00:00",
+   "label": "Fictional \u00b7 synthetic data",
+   "asOf": "2026-10-08",
+   "fictional": true,
+   "macro": null,
+   "fresh": false
+  },
+  "earnings": {
+   "status": "ready",
+   "quarters": [
+    {
+     "period": "2026-10-07",
+     "epsActual": 1.79,
+     "epsEstimate": 1.62,
+     "surprisePct": 10.49,
+     "beat": true
+    },
+    {
+     "period": "2026-07-29",
+     "epsActual": 1.61,
+     "epsEstimate": 1.52,
+     "surprisePct": 5.92,
+     "beat": true
+    },
+    {
+     "period": "2026-04-29",
+     "epsActual": 1.48,
+     "epsEstimate": 1.41,
+     "surprisePct": 4.96,
+     "beat": true
+    },
+    {
+     "period": "2026-02-11",
+     "epsActual": 1.4,
+     "epsEstimate": 1.33,
+     "surprisePct": 5.26,
+     "beat": true
+    },
+    {
+     "period": "2025-10-22",
+     "epsActual": 1.22,
+     "epsEstimate": 1.24,
+     "surprisePct": -1.61,
+     "beat": false
+    },
+    {
+     "period": "2025-07-30",
+     "epsActual": 1.13,
+     "epsEstimate": 1.05,
+     "surprisePct": 7.62,
+     "beat": true
+    },
+    {
+     "period": "2025-04-30",
+     "epsActual": 1.02,
+     "epsEstimate": 0.95,
+     "surprisePct": 7.37,
+     "beat": true
+    },
+    {
+     "period": "2025-02-12",
+     "epsActual": 0.86,
+     "epsEstimate": 0.8,
+     "surprisePct": 7.5,
+     "beat": true
+    }
+   ],
+   "observations": 8,
+   "beats": 7,
+   "beatRate": 0.875,
+   "latestSurprisePct": 10.49,
+   "revenue": {
+    "quarters": [
+     {
+      "period": "2024-12-31",
+      "revenue": 852100000
+     },
+     {
+      "period": "2025-03-31",
+      "revenue": 905000000
+     },
+     {
+      "period": "2025-06-30",
+      "revenue": 980000000
+     },
+     {
+      "period": "2025-09-30",
+      "revenue": 1060000000
+     },
+     {
+      "period": "2025-12-31",
+      "revenue": 1167600000
+     },
+     {
+      "period": "2026-03-31",
+      "revenue": 1255000000
+     },
+     {
+      "period": "2026-06-30",
+      "revenue": 1370000000
+     },
+     {
+      "period": "2026-09-30",
+      "revenue": 1512000000
+     }
+    ],
+    "yoy": [
+     {
+      "period": "2025-12-31",
+      "growth": 0.37026170637249156
+     },
+     {
+      "period": "2026-03-31",
+      "growth": 0.3867403314917126
+     },
+     {
+      "period": "2026-06-30",
+      "growth": 0.3979591836734695
+     },
+     {
+      "period": "2026-09-30",
+      "growth": 0.42641509433962255
+     }
+    ],
+    "latestYoy": 0.42641509433962255,
+    "priorYoy": 0.3979591836734695,
+    "decelerating": false
+   }
+  },
+  "peers": {
+   "status": "ready",
+   "tickers": [
+    "ARQX",
+    "LMFX",
+    "VNTL",
+    "QFLX"
+   ],
+   "count": 4,
+   "sector": "Technology",
+   "industry": "Communication Equipment",
+   "subjectPe": 13.92,
+   "medianPe": 18.35,
+   "pePremium": -0.24141689373297004,
+   "pePercentile": 0.25,
+   "members": [
+    {
+     "ticker": "ARQX",
+     "name": "Arquent Networks (fictional)",
+     "marketCap": 31000000000.0,
+     "trailingPE": 19.5
+    },
+    {
+     "ticker": "LMFX",
+     "name": "Lumafex Photonics (fictional)",
+     "marketCap": 11800000000.0,
+     "trailingPE": 17.2
+    },
+    {
+     "ticker": "VNTL",
+     "name": "Ventralis Systems (fictional)",
+     "marketCap": 7900000000.0,
+     "trailingPE": 12.4
+    },
+    {
+     "ticker": "QFLX",
+     "name": "Quillflex Thermal (fictional)",
+     "marketCap": 5300000000.0,
+     "trailingPE": 21.0
+    }
+   ]
+  },
+  "returns": {
+   "status": "ready",
+   "asOf": "2026-10-08",
+   "windows": {
+    "1M": {
+     "ticker": 0.042213212497018926,
+     "spy": 0.007351205065013744,
+     "excess": 0.03486200743200518
+    },
+    "3M": {
+     "ticker": 0.01852930893835225,
+     "spy": 0.03763733011341697,
+     "excess": -0.019108021175064716
+    },
+    "6M": {
+     "ticker": 0.11351764555994404,
+     "spy": 0.18605526475331802,
+     "excess": -0.07253761919337398
+    },
+    "1Y": {
+     "ticker": 0.19431538671768234,
+     "spy": 0.16911722608346103,
+     "excess": 0.02519816063422131
+    }
+   }
+  },
+  "macro": {
+   "status": "absent",
+   "reason": "Live macro series are off: add a FRED API key in Studio settings.",
+   "series": {}
+  },
+  "conflicts": [],
+  "context": {
+   "house_view": {
+    "ticker": "HCYN",
+    "issuer": "Halcyon Interconnect, Inc. (fictional)",
+    "synthetic": true,
+    "rating": "Constructive",
+    "focus_list": true,
+    "as_of": "2026-09-15",
+    "owner": "CIO Office \u00b7 US Equity Strategy",
+    "thesis_points": [
+     "AI cluster build-outs keep demand for 800G and 1.6T optical transceivers ahead of supply through 2027.",
+     "Liquid-cooled rack systems widen the addressable market beyond optics and grew faster than optics in fiscal 2025.",
+     "Trades at a discount to optical and thermal peers on trailing earnings despite faster revenue growth."
+    ],
+    "key_risks": [
+     "Customer concentration: a handful of hyperscale buyers drive most revenue.",
+     "Co-packaged optics could shrink the pluggable-module market over time.",
+     "Export controls on advanced computing items limit sales to some regions."
+    ],
+    "rating_policy": "Only the CIO Office changes the rating. AI drafts may flag 'needs strategist review' with reasons but cannot propose a rating."
+   },
+   "restricted": null,
+   "event": {
+    "ticker": "HCYN",
+    "issuer": "Halcyon Interconnect, Inc. (fictional)",
+    "synthetic": true,
+    "source": "Synthetic",
+    "kind": "earnings",
+    "period": "Q3 FY2026",
+    "date": "2026-10-07",
+    "eps_actual": 1.79,
+    "eps_estimate": 1.62,
+    "revenue": 1512000000,
+    "revenue_estimate": 1440000000,
+    "revenue_yoy": 0.426,
+    "gross_margin": 0.428,
+    "guidance_change": "Raised FY2026 revenue guidance to $5.75\u20135.85B from $5.45\u20135.60B",
+    "price_reaction": {
+     "close_before": 80.1,
+     "close_after": 87.4,
+     "date_after": "2026-10-08"
+    },
+    "what_changed": [
+     "Q3 EPS of $1.79 beat the $1.62 consensus by 10.5%.",
+     "Revenue of $1,512M grew 42.6% year over year, faster than Q2's 39.8%.",
+     "FY2026 revenue guidance raised to $5.75\u20135.85B from $5.45\u20135.60B on 1.6T transceiver and rack-system demand."
+    ]
+   },
+   "affected_households": {
+    "ticker": "HCYN",
+    "households": 240,
+    "count": 214,
+    "concentrated": 31,
+    "executives": 6,
+    "threshold_pct": 10,
+    "synthetic": true
+   }
+  },
+  "note": {
+   "summary": "HCYN\u2019s Q3 FY2026 update strengthened the operating picture: EPS was $1.79 versus $1.62 expected, revenue reached $1,512M with 42.6% year-over-year growth, and FY2026 revenue guidance increased to $5.75\u20135.85B from $5.45\u20135.60B. The data is consistent with the CIO Office\u2019s Constructive house view, while recent three- and six-month relative performance remains weaker than the S&P 500.",
+   "bullets": [
+    "Q3 EPS beat consensus by 10.5%; HCYN has beaten EPS estimates in 7 of 8 reported quarters, with a latest surprise of +10.5%.",
+    "Revenue growth accelerated to +42.6% year over year from +39.8% in Q2, and Q3 revenue exceeded the $1,440M estimate.",
+    "The stock rose from $80.1 before the event to $87.4 afterward, a +9.1% reaction based on the cited closes.",
+    "Valuation remains below the peer median: HCYN trades at 13.92x trailing earnings versus an 18.35x median, a -24.1% discount.",
+    "Key house-view risks remain customer concentration, potential displacement from co-packaged optics, and export controls."
+   ],
+   "citations": [
+    {
+     "field": "event.eps_actual",
+     "excerpt": "Q3 EPS of $1.79 beat the $1.62 consensus by 10.5%.",
+     "value": "1.79"
+    },
+    {
+     "field": "event.revenue",
+     "excerpt": "Revenue of $1,512M grew 42.6% year over year, faster than Q2's 39.8%.",
+     "value": "1512000000"
+    },
+    {
+     "field": "event.guidance_change",
+     "excerpt": "Raised FY2026 revenue guidance to $5.75\u20135.85B from $5.45\u20135.60B",
+     "value": "Raised FY2026 revenue guidance to $5.75\u20135.85B from $5.45\u20135.60B"
+    },
+    {
+     "field": "earnings.beatRate",
+     "excerpt": "HCYN beat EPS estimates in 7 of 8 observations.",
+     "value": "0.875"
+    },
+    {
+     "field": "peers.subjectPe",
+     "excerpt": "HCYN trades at 13.92x trailing earnings.",
+     "value": "13.92"
+    },
+    {
+     "field": "peers.medianPe",
+     "excerpt": "The peer median trailing P/E is 18.35x.",
+     "value": "18.35"
+    },
+    {
+     "field": "house_view.rating",
+     "excerpt": "The CIO Office house view is Constructive.",
+     "value": "Constructive"
+    }
+   ],
+   "status": "ready",
+   "dropped_claims": 2
+  },
+  "recommendation": {
+   "status": "ready",
+   "action": "hold",
+   "thesis": "The Q3 earnings event improved the fundamental case through a +10.5% EPS surprise, +42.6% revenue growth, accelerating year-over-year growth, and higher FY2026 revenue guidance. This is consistent with the CIO Office\u2019s Constructive view and its thesis that demand for advanced optical transceivers and rack systems remains strong, while HCYN\u2019s 13.92x trailing P/E is below the 18.35x peer median. The main counterweight is mixed relative performance\u2014particularly the -7.3% six-month excess return versus the S&P 500\u2014alongside the house-view risks of customer concentration, co-packaged optics, and export controls.",
+   "disclaimer": "Demo research \u2014 not financial advice"
+  },
+  "grounding": {
+   "dropped_claims": 2
+  },
+  "security": {
+   "mode": "off",
+   "status": "disabled",
+   "checks": 0,
+   "blocked": 0,
+   "errors": 0,
+   "event_ids": [],
+   "fail_open": false,
+   "forced": false
+  },
+  "usage": {
+   "llm_calls": 1,
+   "input_tokens": 1970,
+   "output_tokens": 771
+  },
+  "duration_ms": 12939,
+  "perimeter": "Yahoo + FRED allowlist only",
+  "disclaimer": "Demo research \u2014 not financial advice",
+  "telemetry": {
+   "splunk": {
+    "status": "not_configured",
+    "trace_id": "d609f42de11171670af1a90a3e650453"
+   },
+   "galileo": "recorded"
+  },
+  "served_by": {
+   "provider": "openai",
+   "label": "OpenAI API",
+   "model": "gpt-5.6-luna",
+   "kind": "openai",
+   "private": false,
+   "external": true,
+   "fallback": true,
+   "reason": "Sparky vLLM unreachable (connection refused)",
+   "source": "saved",
+   "egress": "allow",
+   "ai_defense": null
+  },
+  "run_id": "wealth-research-20261009212043-cf2c93"
+ }
+}

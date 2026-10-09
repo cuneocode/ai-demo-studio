@@ -1,0 +1,47 @@
+{
+  "id": "okafor",
+  "order": 2,
+  "synthetic": true,
+  "label": "Synthetic clients · fictional people",
+  "name": "Ruth & Samuel Okafor",
+  "headline": "Retired · Conservative income profile · 68% in equities",
+  "scenario": "Conservative mismatch",
+  "age": 71,
+  "ages": [71, 69],
+  "affiliate": false,
+  "risk_profile": "Conservative",
+  "horizon_years": 12,
+  "goals": ["Reliable retirement income", "Leave a legacy to the grandchildren"],
+  "total_value": 3400000,
+  "as_of": "2026-10-08",
+  "ips": {
+    "objective": "Income and capital preservation",
+    "risk_tolerance": "Conservative",
+    "horizon": "12+ years, income now",
+    "annual_spending_need": 150000,
+    "single_issuer_limit_pct": 10
+  },
+  "holdings": [
+    {"ticker": "VTI", "vehicle": "fund", "name": "Vanguard Total Stock Market ETF", "weight_pct": 40.0, "asset_class": "equity", "account": "Joint brokerage and IRAs", "value": 1360000},
+    {"ticker": "SCHD", "vehicle": "fund", "name": "Schwab US Dividend Equity ETF", "weight_pct": 18.0, "asset_class": "equity", "account": "Joint brokerage", "value": 612000},
+    {"ticker": "VXUS", "vehicle": "fund", "name": "Vanguard Total International Stock ETF", "weight_pct": 10.0, "asset_class": "equity", "account": "Ruth IRA", "value": 340000},
+    {"ticker": "BND", "vehicle": "fund", "name": "Vanguard Total Bond Market ETF", "weight_pct": 14.2, "asset_class": "fixed_income", "account": "Samuel IRA", "value": 482800},
+    {"ticker": "CASH", "vehicle": "cash", "name": "Cash and CD ladder", "weight_pct": 17.8, "asset_class": "cash", "account": "Joint brokerage", "value": 605200, "note": "Includes a $400k CD ladder maturing 2026-11-07"}
+  ],
+  "accounts": [
+    {"type": "Joint brokerage", "number": "0000-0000-3317", "value": 1817200, "beneficiary": "Transfer on death: children"},
+    {"type": "Ruth IRA", "number": "0000-0000-3318", "value": 820000, "beneficiary": "Samuel Okafor"},
+    {"type": "Samuel IRA", "number": "0000-0000-3319", "value": 482800, "beneficiary": null},
+    {"type": "Samuel inherited IRA", "number": "0000-0000-3320", "value": 280000, "beneficiary": "Ruth Okafor", "note": "Inherited 2022; annual distribution due by Dec 31 [confirm RMD rules with SME]"}
+  ],
+  "cd_ladder": {"value": 400000, "matures": "2026-11-07"},
+  "estate": {"documents": ["Wills (2019)", "Durable powers of attorney (2019)"], "last_review": "2023-05-10"},
+  "rmd_due": true,
+  "rmd_note": "Samuel's inherited IRA has a required distribution due this year [confirm RMD rules with SME].",
+  "crm_notes": [
+    {"date": "2026-09-02", "author": "Jordan (advisor)", "text": "Ruth asked why the account swung so much in the spring. They want steady income and do not want to watch the market."},
+    {"date": "2026-08-14", "author": "Jordan (advisor)", "text": "$400k CD ladder matures in early November. They have not said whether to roll it."},
+    {"date": "2026-05-20", "author": "Operations", "text": "Beneficiary designation missing on Samuel's IRA (0000-0000-3319). Form sent, not returned."}
+  ],
+  "service_events": []
+}

@@ -1,11 +1,29 @@
 import type { BriefingTheme, CompanyBriefingRecord, SecuritySummary, StoredCompanyProfile } from "./company-profile";
+import type { RunEvent, RunInfo, ServedBy } from "./run/events";
 
 export const RESEARCH_NOTE_STORAGE_KEY = "fsi-demo-studio.research-note";
-export const RESEARCH_DISCLAIMER = "Demo recommendation — not financial advice";
-export const EXAMPLE_RESEARCH_TICKERS = ["JPM", "AAPL", "MSFT", "XOM"] as const;
+export const RESEARCH_DISCLAIMER = "Demo research — not financial advice";
+
+/** Example chips. services/wealth/scripts/warm_cache.py reads the tickers from this list. */
+export const EXAMPLE_RESEARCH_TICKERS: readonly { ticker: string; tag?: string; title?: string }[] = [
+  { ticker: "HCYN", tag: "Fictional", title: "Halcyon Interconnect, Inc. · fictional issuer, synthetic data" },
+  { ticker: "NVDA" },
+  { ticker: "JPM" },
+  { ticker: "MSFT" },
+  { ticker: "AAPL" },
+  { ticker: "XOM" },
+];
+
+/** Audience titles for signal-divergence ids (services/wealth/tools/conflicts.py TITLES), for older stored notes. */
+export const DIVERGENCE_TITLES: Record<string, string> = {
+  beat_vs_spy: "Earnings beats vs. a lagging stock",
+  pe_vs_growth: "Valuation premium vs. slowing growth",
+  macro_vs_sector: "Rates or inflation vs. a rate-sensitive sector",
+};
 
 export type ConflictRow = {
   id: string;
+  title: string;
   severity: string;
   left: string;
   right: string;
@@ -13,9 +31,12 @@ export type ConflictRow = {
 };
 
 export type ResearchSource = {
-  kind: "live" | "cache";
+  /** live and cache are Yahoo; fixture is a committed snapshot; fictional is a synthetic issuer. */
+  kind: "live" | "cache" | "fixture" | "fictional";
   fetchedAt?: string;
   label?: string;
+  asOf?: string;
+  fictional?: boolean;
   macro?: string | null;
   fresh?: boolean;
 };
@@ -52,13 +73,20 @@ export type MacroPanel = {
   series?: Record<string, { label?: string; latest?: number | null; asOf?: string; direction?: string }>;
 };
 
+export type HouseView = { rating?: string; owner?: string; asOf?: string; focusList?: boolean; thesisPoints: string[]; keyRisks: string[]; synthetic?: boolean };
+export type EarningsEvent = { period?: string; date?: string; epsActual?: number; epsEstimate?: number; guidanceChange?: string; whatChanged: string[]; source?: string };
+export type AffectedHouseholds = { households?: number; count?: number; concentrated?: number; executives?: number; thresholdPct?: number };
+export type ResearchContext = { houseView?: HouseView; restricted?: { reason?: string; since?: string }; event?: EarningsEvent; affected?: AffectedHouseholds };
+
 export type ResearchNoteBody = {
   status: string;
   reason?: string;
   summary?: string | null;
   bullets?: string[];
-  citations?: { field?: string; excerpt?: string; value?: string }[];
+  citations?: Citation[];
 };
+
+export type Citation = { field?: string; excerpt?: string; value?: string };
 
 export type ResearchRecommendation = {
   status: string;
@@ -98,19 +126,29 @@ export type ResearchAnalyze = {
   durationMs?: number;
   perimeter?: string;
   disclaimer?: string;
+  context?: ResearchContext;
+  servedBy?: ServedBy | null;
+  runId?: string;
 };
 
 export type StoredResearchNote = {
   ticker: string;
   acceptedAt: string;
   analyze: ResearchAnalyze;
+  /** Set when the accepted note is a recorded run rather than a live one. */
+  recordedAt?: string;
 };
+
+export type ModelHealth = { status?: string; base_url?: string; model?: string; label?: string; private?: boolean; fallback?: boolean; reason?: string };
 
 export type WealthHealth = {
   ready?: boolean;
   model?: string;
   detail?: string;
-  nim?: { status?: string; base_url?: string; model?: string };
+  nim?: ModelHealth;
+  advisoryModel?: ModelHealth;
+  /** How client data may reach a hosted model: "allowed with AI Defense enforce" or "refused: …". */
+  advisoryHostedFallback?: string;
   yahoo?: { status?: string };
   fred?: { status?: string };
   cache?: { root?: string };
@@ -213,6 +251,14 @@ export function parseApiError(text: string, status: number) {
   return text.trim() || `Request failed (${status}).`;
 }
 
+function modelHealth(value: unknown): ModelHealth | undefined {
+  if (!isRecord(value)) return undefined;
+  return {
+    status: readableStatus(asString(value.status)), base_url: asString(value.base_url), model: asString(value.model),
+    label: asString(value.label), private: value.private === true, fallback: value.fallback === true, reason: asString(value.reason),
+  };
+}
+
 export function normalizeWealthHealth(value: unknown): WealthHealth | null {
   if (!isRecord(value)) return null;
   const nim = isRecord(value.nim) ? value.nim : undefined;
@@ -221,7 +267,9 @@ export function normalizeWealthHealth(value: unknown): WealthHealth | null {
     ready: value.ready === true,
     model: asString(value.model) || asString(nim?.model),
     detail: asString(value.detail) || asString(value.error),
-    nim: nim ? { status: readableStatus(asString(nim.status)), base_url: asString(nim.base_url), model: asString(nim.model) } : undefined,
+    nim: modelHealth(nim),
+    advisoryModel: modelHealth(value.advisory_model),
+    advisoryHostedFallback: asString(value.advisory_hosted_fallback),
     yahoo: isRecord(value.yahoo) ? { status: readableStatus(asString(value.yahoo.status)) } : { status: "not asserted" },
     fred: fred ? { status: readableStatus(asString(fred.status)) } : { status: "absent" },
     cache: isRecord(value.cache) ? { root: asString(value.cache.root) } : undefined,
@@ -245,13 +293,18 @@ export function normalizeWealthHealth(value: unknown): WealthHealth | null {
   };
 }
 
+const SOURCE_KINDS = new Set<ResearchSource["kind"]>(["live", "cache", "fixture", "fictional"]);
+
 function normalizeSource(value: unknown): ResearchSource {
   if (!isRecord(value)) return { kind: "live" };
-  const kind = asString(value.kind) === "cache" ? "cache" : "live";
+  const raw = asString(value.kind) as ResearchSource["kind"] | undefined;
+  const kind = raw && SOURCE_KINDS.has(raw) ? raw : "live";
   return {
     kind,
     fetchedAt: asString(value.fetchedAt) || asString(value.fetched_at),
     label: asString(value.label) || "Yahoo Finance",
+    asOf: asString(value.asOf) || asString(value.as_of),
+    fictional: value.fictional === true || kind === "fictional",
     macro: asString(value.macro),
     fresh: value.fresh === true,
   };
@@ -266,12 +319,43 @@ function normalizeConflicts(value: unknown): ConflictRow[] {
     if (!id || !left || !right) return null;
     return {
       id,
+      title: asString(item.title) || DIVERGENCE_TITLES[id] || "Signal divergence",
       severity: asString(item.severity) || "medium",
       left,
       right,
       detail: asString(item.detail) || "",
     };
   }).filter((item): item is ConflictRow => Boolean(item));
+}
+
+const strings = (value: unknown) => asArray(value).map(asString).filter((item): item is string => Boolean(item));
+
+function normalizeContext(value: unknown): ResearchContext | undefined {
+  if (!isRecord(value)) return undefined;
+  const view = isRecord(value.house_view) ? value.house_view : undefined;
+  const restricted = isRecord(value.restricted) ? value.restricted : undefined;
+  const event = isRecord(value.event) ? value.event : undefined;
+  const affected = isRecord(value.affected_households) ? value.affected_households : undefined;
+  return {
+    houseView: view ? {
+      rating: asString(view.rating), owner: asString(view.owner), asOf: asString(view.as_of), focusList: view.focus_list === true,
+      thesisPoints: strings(view.thesis_points), keyRisks: strings(view.key_risks), synthetic: view.synthetic === true,
+    } : undefined,
+    restricted: restricted ? { reason: asString(restricted.reason), since: asString(restricted.since) } : undefined,
+    event: event ? {
+      period: asString(event.period), date: asString(event.date), epsActual: asNumber(event.eps_actual), epsEstimate: asNumber(event.eps_estimate),
+      guidanceChange: asString(event.guidance_change), whatChanged: strings(event.what_changed), source: asString(event.source),
+    } : undefined,
+    affected: affected ? {
+      households: asNumber(affected.households), count: asNumber(affected.count), concentrated: asNumber(affected.concentrated),
+      executives: asNumber(affected.executives), thresholdPct: asNumber(affected.threshold_pct),
+    } : undefined,
+  };
+}
+
+/** A response's served_by (services/llm/studio_models.py), when the service named one. */
+export function servedByOf(value: unknown): ServedBy | null {
+  return isRecord(value) && typeof value.label === "string" ? value as ServedBy : null;
 }
 
 export function normalizeAnalyze(value: unknown, fallbackTicker?: string): ResearchAnalyze | null {
@@ -344,10 +428,10 @@ export function normalizeAnalyze(value: unknown, fallbackTicker?: string): Resea
       reason: asString(note.reason),
       summary: asString(note.summary) || null,
       bullets: asArray(note.bullets).map(asString).filter((item): item is string => Boolean(item)),
-      citations: asArray(note.citations).map((item) => {
+      citations: asArray(note.citations).map((item): Citation | null => {
         if (!isRecord(item)) return null;
         return { field: asString(item.field), excerpt: asString(item.excerpt), value: asString(item.value) };
-      }).filter((item): item is { field?: string; excerpt?: string; value?: string } => Boolean(item)),
+      }).filter((item): item is Citation => Boolean(item)),
     },
     recommendation: {
       status: asString(recommendation.status) || "omitted",
@@ -365,6 +449,41 @@ export function normalizeAnalyze(value: unknown, fallbackTicker?: string): Resea
     durationMs: asNumber(value.duration_ms ?? value.durationMs),
     perimeter: asString(value.perimeter),
     disclaimer: asString(value.disclaimer) || RESEARCH_DISCLAIMER,
+    context: normalizeContext(value.context),
+    servedBy: servedByOf(value.served_by),
+    runId: asString(value.run_id),
+  };
+}
+
+/** One golden run from GET /api/wealth/recordings/{name} (services/common/runs.py record format). */
+export type WealthRecording = {
+  name: string;
+  title: string;
+  recordedAt: string;
+  servedBy: ServedBy | null;
+  synthetic: boolean;
+  run: RunInfo | null;
+  events: RunEvent[];
+  result: unknown;
+};
+
+export const RESEARCH_RECORDING = "research-hcyn";
+export const ADVISORY_RECORDING = "advisory-dana-whitfield";
+
+export async function loadWealthRecording(name: string): Promise<WealthRecording> {
+  const response = await fetch(`/api/wealth/recordings/${encodeURIComponent(name)}`, { signal: AbortSignal.timeout(8000) });
+  if (!response.ok) throw new Error(`The recorded run is unavailable (${response.status}).`);
+  const body = await response.json() as unknown;
+  if (!isRecord(body)) throw new Error("The recorded run is empty.");
+  return {
+    name: asString(body.name) || name,
+    title: asString(body.title) || name,
+    recordedAt: asString(body.recorded_at) || "",
+    servedBy: servedByOf(body.served_by),
+    synthetic: body.synthetic === true,
+    run: isRecord(body.run) ? body.run as RunInfo : null,
+    events: asArray(body.events).filter(isRecord) as RunEvent[],
+    result: body.result,
   };
 }
 
@@ -381,6 +500,7 @@ export function loadResearchNote(): StoredResearchNote | null {
       ticker: (asString(parsed.ticker) || analyze.ticker).toUpperCase(),
       acceptedAt: asString(parsed.acceptedAt) || asString(parsed.accepted_at) || new Date().toISOString(),
       analyze,
+      recordedAt: asString(parsed.recordedAt),
     };
   } catch {
     return null;
@@ -415,4 +535,50 @@ export function switcherContextLabel(profile: StoredCompanyProfile | null | unde
   if (note && ticker && note.ticker === ticker.toUpperCase()) extras.push("note");
   if (briefExists) extras.push("brief");
   return extras.length ? `${base} · ${extras.join(" · ")}` : base;
+}
+
+const CITATION_AREAS: Record<string, string> = {
+  earnings: "Earnings", peers: "Peers", returns: "Returns", macro: "Macro", event: "Earnings event", house_view: "House view",
+  research: "Research note", briefing: "Briefing", suitability: "Suitability", household: "Household", holdings: "Holdings",
+  context: "Context", tools: "Data",
+};
+
+/** "returns.1Y.excess" → "Returns · 1Y excess": a readable chip label for a cited payload field. */
+export function citationLabel(field?: string) {
+  if (!field) return "Source";
+  const parts = field.replace(/\[(\d+)\]/g, (_, index: string) => ` #${Number(index) + 1}`).split(".").filter(Boolean);
+  const [head, ...rest] = parts;
+  const area = CITATION_AREAS[head] ?? head.replaceAll("_", " ");
+  const detail = rest.join(" ").replaceAll("_", " ").replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase()
+    .replace(/\bpe\b/g, "P/E").replace(/\beps\b/g, "EPS").replace(/\byoy\b/g, "YoY");
+  return detail ? `${area} · ${detail}` : area;
+}
+
+/** A signed percentage for comparisons: 0.194 → "+19.4%". */
+export function signedPct(value?: number | null, digits = 1) {
+  if (value == null || Number.isNaN(value)) return "Not reported";
+  const pct = value * 100;
+  return `${pct > 0 ? "+" : ""}${pct.toFixed(digits)}%`;
+}
+
+/** "+19.4% vs SPY +16.9%": a return against the benchmark, the way every wealth panel shows it. */
+export function vsSpy(ticker?: number | null, spy?: number | null) {
+  if (ticker == null) return "Not reported";
+  return spy == null ? signedPct(ticker) : `${signedPct(ticker)} vs SPY ${signedPct(spy)}`;
+}
+
+/** A cited value as a chip shows it: 1512000000 → "1.51B", a 0.875 rate → "87.5%", long text clipped. */
+export function citationValue(field: string | undefined, value: string | undefined) {
+  if (!value) return "";
+  const number = Number(value.replace(/[,$%x]/g, ""));
+  if (value.trim() && !Number.isNaN(number) && /^[\s$+\-\d.,%x]+$/.test(value)) {
+    if (Math.abs(number) >= 1e9) return `${(number / 1e9).toFixed(2)}B`;
+    if (Math.abs(number) >= 1e6) return `${(number / 1e6).toFixed(1)}M`;
+    if (!value.includes("%") && Math.abs(number) < 1.5 && /rate|yoy|excess|premium|pct|margin|return|growth|weight/i.test(field || "")) {
+      const change = /excess|premium|return|growth|yoy/i.test(field || "");
+      return change ? signedPct(number) : `${(number * 100).toFixed(1)}%`;
+    }
+    return value;
+  }
+  return value.length > 32 ? `${value.slice(0, 30).trimEnd()}…` : value;
 }

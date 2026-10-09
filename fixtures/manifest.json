@@ -1,0 +1,112 @@
+{
+  "_about": "Index of shared synthetic fixtures. Every entry is fictional or synthetic. 'owner' is the workstream that writes the file; tests/fixtures.test.mjs asserts every entry that exists and requires the shell-owned ones.",
+  "synthetic": true,
+  "version": 1,
+  "fixtures": [
+    {
+      "path": "fixtures/halcyon/issuer.json",
+      "description": "Fictional issuer Halcyon Interconnect, Inc. (HCYN): profile, FY2025 financial summary, executive officers, insider trading policy summary, and real public peers labelled real.",
+      "owner": "shell",
+      "demos": ["company-briefing", "market-research", "client-advisory", "sar"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/halcyon/annual-report-fy2025.html",
+      "description": "Synthetic FY2025 annual report in 10-K layout (Items 1, 1A, 1C, 3, 4, 5, 7, 8, 9B, 10). Uploads through the Company briefing path.",
+      "owner": "shell",
+      "demos": ["company-briefing", "market-research", "client-advisory"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/customers/lifecycle-customer.json",
+      "description": "Shared lifecycle customer Dana Whitfield: fake PII, KYC, accounts (checking, card ****1188, brokerage linked to household dana-whitfield), the cpp-orbit fraud event, and an empty SAR alerts list.",
+      "owner": "shell",
+      "demos": ["fraud-modeling", "sar", "company-briefing", "market-research", "client-advisory"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/halcyon/market/HCYN.json",
+      "description": "Recorded market data for HCYN: price history, quarterly revenue, earnings, recommendations, and fictional peers.",
+      "owner": "wealth",
+      "demos": ["market-research", "client-advisory"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/halcyon/market/KSTL.json",
+      "description": "Recorded market data for a second fictional ticker used by the research and advisory demos.",
+      "owner": "wealth",
+      "demos": ["market-research", "client-advisory"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/halcyon/house-view.json",
+      "description": "Firm house view on HCYN and the sector.",
+      "owner": "wealth",
+      "demos": ["market-research", "client-advisory"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/halcyon/restricted-list.json",
+      "description": "Firm restricted and watch list entries.",
+      "owner": "wealth",
+      "demos": ["market-research", "client-advisory"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/halcyon/earnings-event.json",
+      "description": "HCYN earnings event that triggers the advisory moment.",
+      "owner": "wealth",
+      "demos": ["market-research", "client-advisory"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/halcyon/news.json",
+      "description": "Recorded news items for HCYN.",
+      "owner": "wealth",
+      "demos": ["market-research", "client-advisory"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/households/dana-whitfield.json",
+      "description": "Advisory household for Dana Whitfield: holdings, accounts, IPS, estate, goals, CRM notes, service events.",
+      "owner": "wealth",
+      "demos": ["client-advisory"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/households/okafor.json",
+      "description": "Second advisory household in the advisor's book.",
+      "owner": "wealth",
+      "demos": ["client-advisory"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/households/priya-raman.json",
+      "description": "Third advisory household in the advisor's book.",
+      "owner": "wealth",
+      "demos": ["client-advisory"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/households/book-summary.json",
+      "description": "Advisor book summary across households.",
+      "owner": "wealth",
+      "demos": ["client-advisory"],
+      "synthetic": true
+    },
+    {
+      "path": "services/fraud/data/fixture_scores.json",
+      "description": "Sample fraud scores for the studio cases, keyed by case id; used when the scoring model is offline.",
+      "owner": "fraud",
+      "demos": ["fraud-modeling"],
+      "synthetic": true
+    },
+    {
+      "path": "services/fraud/data/recorded/cpp-orbit-sample.json",
+      "description": "Recorded fraud run for the cpp-orbit event on card ****1188.",
+      "owner": "fraud",
+      "demos": ["fraud-modeling"],
+      "synthetic": true
+    }
+  ]
+}

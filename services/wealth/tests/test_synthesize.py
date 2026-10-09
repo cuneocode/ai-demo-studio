@@ -14,13 +14,7 @@ def test_draft_note_omits_on_defense(monkeypatch, snapshot):
     async def blocked(*_args, **_kwargs):
         raise security.DefenseBlocked("blocked")
 
-    class Fake:
-        def with_structured_output(self, _schema, **_kwargs):
-            return self
-
-        ainvoke = blocked
-
-    monkeypatch.setattr(synthesize, "chat_model", lambda _use_case: Fake())
+    monkeypatch.setattr(synthesize, "structured", blocked)
     note, rec = __import__("asyncio").run(synthesize.draft_note("JPM", {"earnings": {}}, [], snapshot, None))
     assert note["status"] == "blocked"
     assert rec["status"] == "blocked"
@@ -37,13 +31,7 @@ def test_draft_note_grounds_structured_output(monkeypatch, snapshot):
                 thesis="JPMorgan Chase lagged SPY on beat_vs_spy.",
         )
 
-    class Fake:
-        def with_structured_output(self, _schema, **_kwargs):
-            return self
-
-        ainvoke = complete
-
-    monkeypatch.setattr(synthesize, "chat_model", lambda _use_case: Fake())
+    monkeypatch.setattr(synthesize, "structured", complete)
     note, rec = __import__("asyncio").run(synthesize.draft_note(
         "JPM",
         {"earnings": {"beatRate": 1.0}},

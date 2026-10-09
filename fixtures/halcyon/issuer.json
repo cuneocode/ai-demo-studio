@@ -1,0 +1,61 @@
+{
+  "_about": "Shared fictional issuer for the briefing, research, advisory, fraud, and SAR demos. Synthetic: not a real company, ticker, or listing. Numbers match fixtures/halcyon/annual-report-fy2025.html.",
+  "ticker": "HCYN",
+  "name": "Halcyon Interconnect, Inc.",
+  "short_name": "Halcyon Interconnect",
+  "exchange": "NASDAQ (fictional listing)",
+  "fictional": true,
+  "synthetic": true,
+  "label": "Fictional issuer · synthetic data · not an SEC registrant",
+  "sector": "Technology",
+  "industry": "Optical interconnect and data center liquid cooling",
+  "hq": "Fremont, California (fictional)",
+  "incorporated": "Delaware",
+  "founded": 2011,
+  "ipo": { "date": "2019-06-14", "price": 14.0 },
+  "employees": 6850,
+  "description": "Designs and manufactures 800G and 1.6T optical interconnect modules and liquid-cooled AI rack systems (coolant distribution units, cold plates, rear-door heat exchangers) for accelerated-compute data centers. Two segments: Optical Interconnect and Rack Systems.",
+  "fiscal_year_end": "12-31",
+  "segments": [
+    { "name": "Optical Interconnect", "fy2025_revenue_musd": 2632.1, "fy2025_gross_margin_pct": 46.8 },
+    { "name": "Rack Systems", "fy2025_revenue_musd": 1480.5, "fy2025_gross_margin_pct": 31.2 }
+  ],
+  "financials": {
+    "currency": "USD",
+    "unit": "millions",
+    "fy2025": { "revenue": 4112.6, "revenue_growth_pct": 38.0, "gross_margin_pct": 41.2, "operating_income": 954.1, "net_income": 802.5, "diluted_eps": 4.77, "diluted_shares_m": 168.4, "free_cash_flow": 528.6 },
+    "fy2024": { "revenue": 2980.1, "gross_margin_pct": 39.1, "operating_income": 569.2, "net_income": 471.8, "diluted_eps": 2.84 },
+    "shares_outstanding_m": 165.2,
+    "customer_concentration_top3_pct": 61
+  },
+  "market": {
+    "as_of": "2026-10-08",
+    "close": 87.40,
+    "close_2025_12_31": 78.15,
+    "close_2024_12_31": 52.60,
+    "data": "fixtures/halcyon/market/HCYN.json"
+  },
+  "executives": [
+    { "name": "Marcus Ellery", "age": 54, "title": "President and Chief Executive Officer", "since": 2014, "fictional": true },
+    { "name": "Lena Vasquez", "age": 49, "title": "Chief Financial Officer", "since": 2021, "fictional": true },
+    { "name": "Tomas Brandt", "age": 51, "title": "Chief Technology Officer and co-founder", "since": 2011, "fictional": true },
+    { "name": "Dana Whitfield", "age": 58, "title": "Senior Vice President, Global Operations", "since": 2019, "joined": 2013, "section16_officer": true, "fictional": true, "customer_ref": "fixtures/customers/lifecycle-customer.json" },
+    { "name": "Hollis Grant", "age": 52, "title": "Senior Vice President, Worldwide Sales", "since": 2022, "fictional": true },
+    { "name": "Gareth Lin", "age": 47, "title": "Senior Vice President, General Counsel and Secretary", "since": 2020, "fictional": true }
+  ],
+  "insider_trading_policy": {
+    "summary": "Officers trade only in open windows after pre-clearance or under a Rule 10b5-1 plan with the required cooling-off period. Short sales, listed options, and pledging are prohibited; hedging such as a collar needs General Counsel pre-clearance. Officers are affiliates, so Rule 144 limits apply.",
+    "source": "annual-report-fy2025.html · Item 1A, Risks Related to Our Common Stock",
+    "review": "[confirm current rules with SME]"
+  },
+  "peers": [
+    { "ticker": "COHR", "name": "Coherent Corp.", "real": true, "relationship": "Real public company used as a comparable; not affiliated with the fictional issuer" },
+    { "ticker": "LITE", "name": "Lumentum Holdings Inc.", "real": true, "relationship": "Real public company used as a comparable; not affiliated with the fictional issuer" },
+    { "ticker": "AAOI", "name": "Applied Optoelectronics, Inc.", "real": true, "relationship": "Real public company used as a comparable; not affiliated with the fictional issuer" },
+    { "ticker": "FN", "name": "Fabrinet", "real": true, "relationship": "Real public company used as a comparable; not affiliated with the fictional issuer" },
+    { "ticker": "CRDO", "name": "Credo Technology Group Holding Ltd", "real": true, "relationship": "Real public company used as a comparable; not affiliated with the fictional issuer" },
+    { "ticker": "VRT", "name": "Vertiv Holdings Co", "real": true, "relationship": "Real public company used as a comparable; not affiliated with the fictional issuer" }
+  ],
+  "annual_report": "fixtures/halcyon/annual-report-fy2025.html",
+  "annual_report_meta": { "form": "10-K (synthetic)", "fiscal_year": 2025, "period_of_report": "2025-12-31", "filed_at": "2026-02-20", "sec_filing": false }
+}

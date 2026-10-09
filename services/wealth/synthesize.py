@@ -8,17 +8,21 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field, model_validator
 
 from grounding import ground_note, ground_recommendation
-from nim import RESEARCH, chat_model
+from nim import RESEARCH, ChainUnavailable, EgressRefused, structured
 from security import DefenseBlocked, DefenseUnavailable
 
-RESEARCH_DISCLAIMER = "Demo recommendation — not financial advice"
+RESEARCH_DISCLAIMER = "Demo research — not financial advice"
 
 SYSTEM = """You draft a cited wealth research note for a demo studio.
-Use only the provided tool JSON and conflict rows. Do not invent numbers, peers, or macro prints.
+Use only the provided tool JSON and signal-divergence rows. Do not invent numbers, peers, or macro prints.
 Do not write legal disclaimers or compliance language.
 Do not output BUY, SELL, a target price, or an overweight/underweight rating.
+If a house_view is present, it is owned by the CIO Office: describe whether the data is consistent with it; never propose a different rating.
+If an event is present, lead with what changed in that event.
 Recommendation action must be one of: watch, hold, review, trim_watch.
-If conflict rows exist, the thesis must reference at least one conflict id.
+If divergence rows exist, the thesis must name at least one divergence by its title.
+Only the rows in "conflicts" are signal divergences. When "conflicts" is empty, never use the words "signal divergence"; describe weak relative performance plainly.
+Write returns as signed percentages with one decimal (for example +19.4%).
 Every citation field or excerpt must repeat a value that already appears in the tools.
 Return JSON with exactly these keys:
 {"summary": string, "bullets": [string], "citations": [{"field": string, "excerpt": string|null, "value": string|null}], "action": "watch"|"hold"|"review"|"trim_watch", "thesis": string}."""
@@ -68,17 +72,20 @@ def omitted(reason: str, status: str = "omitted") -> tuple[dict, dict]:
 async def draft_note(ticker: str, tools: dict, conflicts: list[dict], snapshot: dict, macro: dict | None, callbacks=None) -> tuple[dict, dict]:
     payload = json.dumps({"ticker": ticker, "tools": tools, "conflicts": conflicts}, default=str)
     try:
-        model = chat_model(RESEARCH).with_structured_output(ResearchDraft, method="json_mode")
-        result = await model.ainvoke([
+        result = await structured(RESEARCH, ResearchDraft, [
             SystemMessage(content=SYSTEM),
             HumanMessage(content=payload),
-        ], config={"callbacks": callbacks or [], "metadata": {"workflow_name": "wealth-research"}})
+        ], {"callbacks": callbacks or [], "metadata": {"workflow_name": "wealth-research"}})
+    except EgressRefused as exc:
+        return omitted(str(exc), "refused")
     except DefenseBlocked:
         return omitted("AI Defense blocked this synthesis.", "blocked")
     except DefenseUnavailable:
         return omitted("AI Defense inspection is unavailable.", "unavailable")
+    except ChainUnavailable:
+        return omitted("No model backend in the Studio settings chain is reachable.", "unavailable")
     except Exception:
-        return omitted("The local NIM did not return a usable note.", "unavailable")
+        return omitted("The model did not return a usable note.", "unavailable")
 
     raw = result.model_dump() if hasattr(result, "model_dump") else dict(result)
     note = ground_note({

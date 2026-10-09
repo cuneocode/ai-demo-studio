@@ -1,0 +1,9 @@
+[
+  {
+    "ticker": "KSTL",
+    "issuer": "Kestrel Grid Storage, Inc. (fictional)",
+    "reason": "Underwriting syndicate",
+    "since": "2026-09-15",
+    "synthetic": true
+  }
+]

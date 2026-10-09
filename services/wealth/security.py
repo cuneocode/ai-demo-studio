@@ -10,6 +10,10 @@ from dataclasses import dataclass, field
 
 import httpx
 
+from runlog import emit_current
+
+STAGE_LABEL = {"model_input": "prompt", "model_output": "model response"}
+
 
 class DefenseBlocked(Exception):
     pass
@@ -26,9 +30,10 @@ class SecurityRun:
     blocked: int = 0
     errors: int = 0
     event_ids: list[str] = field(default_factory=list)
+    forced: bool = False  # enforce was forced because client data went to a hosted model
 
     def summary(self):
-        mode = defense.mode
+        mode = "enforce" if self.forced else defense.mode
         status = "disabled" if mode == "off" else "not_checked"
         if self.checks:
             status = "allowed"
@@ -44,6 +49,7 @@ class SecurityRun:
             "errors": self.errors,
             "event_ids": self.event_ids,
             "fail_open": False,
+            "forced": self.forced,
         }
 
 
@@ -84,12 +90,21 @@ class Defense:
             return True
         return bool(self.key and self.valid)
 
-    async def inspect(self, messages, stage="model_input"):
-        if self.mode == "off" or not self.key:
-            return
+    def can_enforce(self):
+        """Whether a request can be inspected in enforce mode, whatever the configured mode."""
+        return bool(self.key and self.endpoint and 0 < self.timeout <= 120)
+
+    async def inspect(self, messages, stage="model_input", enforce=False):
+        mode = "enforce" if enforce else self.mode
         run = security_run.get()
+        if enforce and run:
+            run.forced = True
+        if mode == "off" or (not self.key and not enforce):
+            return
         try:
-            if not self.valid:
+            if not self.key or not self.endpoint or not (0 < self.timeout <= 120):
+                raise ValueError("Invalid security configuration")
+            if not enforce and not self.valid:
                 raise ValueError("Invalid security configuration")
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=False) as client:
                 response = await client.post(
@@ -110,15 +125,22 @@ class Defense:
         except Exception:
             if run:
                 run.errors += 1
+            emit_current("guardrail", f"AI Defense · {STAGE_LABEL.get(stage, stage)} · inspection unavailable", status="error",
+                         body="No verdict came back, so the request failed closed.", data={"stage": stage, "mode": mode})
             raise DefenseUnavailable("AI Defense inspection is unavailable. Note or brief omitted.") from None
+        event_id = verdict.get("event_id") if isinstance(verdict.get("event_id"), str) else None
         if run:
             run.checks += 1
-            event_id = verdict.get("event_id")
-            if isinstance(event_id, str) and event_id and event_id not in run.event_ids:
+            if event_id and event_id not in run.event_ids:
                 run.event_ids.append(event_id)
             if not verdict["is_safe"]:
                 run.blocked += 1
-        if not verdict["is_safe"] and self.mode != "monitor":
+        outcome = "allowed" if verdict["is_safe"] else "flagged" if mode == "monitor" else "blocked"
+        classes = [str(item) for item in verdict.get("classifications") or [] if item]
+        emit_current("guardrail", f"AI Defense · {STAGE_LABEL.get(stage, stage)} · {outcome}" + (f" · {', '.join(classes)}" if classes else ""),
+                     status=outcome, data={"stage": stage, "mode": mode, "forced": enforce and self.mode != "enforce",
+                                           "event_id": event_id, "classifiers": classes})
+        if not verdict["is_safe"] and mode != "monitor":
             raise DefenseBlocked("AI Defense blocked this synthesis. Note or brief omitted.")
 
 
