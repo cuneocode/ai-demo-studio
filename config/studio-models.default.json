@@ -2,7 +2,8 @@
   "version": 2,
   "chain": ["sparky-vllm", "openai"],
   "useCases": {
-    "client-advisory": { "externalPolicy": "require_ai_defense" }
+    "client-advisory": { "externalPolicy": "require_ai_defense" },
+    "sar-support": { "externalPolicy": "require_ai_defense" }
   },
   "providers": {
     "sparky-vllm": {

@@ -114,7 +114,7 @@ security_run: ContextVar[SecurityRun | None] = ContextVar("sar_security_run", de
 class Defense:
     def __init__(self):
         self.key = os.getenv("AIDEFENSE_API_KEY", "")
-        self.mode = (os.getenv("SAR_AIDEFENSE_MODE") or os.getenv("AIDEFENSE_MODE") or "off").lower()
+        self.mode = (os.getenv("SAR_AIDEFENSE_MODE") or os.getenv("AIDEFENSE_MODE") or ("enforce" if self.key else "off")).lower()
         try:
             self.timeout = float(os.getenv("AIDEFENSE_TIMEOUT", "30"))
         except ValueError:

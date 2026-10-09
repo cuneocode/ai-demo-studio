@@ -6,6 +6,7 @@ import FraudDemo from "./FraudDemo";
 import CompanyBriefing from "./CompanyBriefing";
 import MarketResearch from "./MarketResearch";
 import ClientAdvisory from "./ClientAdvisory";
+import SarInvestigation from "./SarInvestigation";
 import InterbankDemo from "./InterbankDemo";
 import ArchitectureMap from "./ArchitectureMap";
 import StudioSettings, { ModelChip } from "./StudioSettings";
@@ -79,7 +80,7 @@ type UseCase = {
 };
 
 type UseCaseFrame = {
-  liveExperience?: "banking" | "fraud" | "briefing" | "research" | "advisory" | "interbank";
+  liveExperience?: "banking" | "fraud" | "briefing" | "research" | "advisory" | "interbank" | "sar";
   transformation: {
     friction: string;
     aiShift: string;
@@ -175,15 +176,15 @@ const useCases: UseCase[] = [
   },
   {
     id: "sar-support",
-    title: "SAR reporting support",
+    title: "SAR investigation",
     category: "Risk & compliance",
-    description: "Draft analyst-ready narratives from transaction signals and case notes, with human approval.",
-    outcome: "More time for investigation and escalation.",
+    description: "Assemble the case, match typologies, and draft a cited SAR narrative for investigator and QA approval.",
+    outcome: "A reviewable, cited draft in minutes; people decide and QA approves.",
     icon: FileSearch,
     accent: "violet",
-    solutions: ["Splunk Observability", "AI Defense"],
-    signal: "Case investigation",
-    stage: "Ready",
+    solutions: ["AI Defense", "Splunk Observability", "AI Infrastructure"],
+    signal: "Investigation agent + cited narrative",
+    stage: "Interactive",
   },
   {
     id: "transaction-llm",
@@ -274,39 +275,30 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
     primaryAction: "Review next case",
   },
   "sar-support": {
+    liveExperience: "sar",
     transformation: {
-      friction: "Investigators manually connect transaction patterns, notes, and supporting evidence.",
-      aiShift: "AI builds a cited event timeline and drafts a narrative from approved case evidence.",
-      humanControl: "Investigators validate every claim and own escalation, filing, and final language.",
+      friction: "Investigators spend half a day per SAR pulling KYC, transactions, counterparties, and prior alerts, then write a narrative that QA often returns.",
+      aiShift: "An investigation agent assembles the case and drafts a FinCEN-style narrative where every sentence cites evidence. The typology indicators are deterministic rules, not the model.",
+      humanControl: "The investigator edits and decides file or no SAR with a rationale; a different QA reviewer approves. E-filing is simulated, and the customer is never contacted.",
     },
     architecture: {
       process: [
-        { title: "Triage alert", detail: "Prioritize suspicious activity" },
-        { title: "Investigate activity", detail: "Link accounts and transactions" },
-        { title: "Draft narrative", detail: "Build chronology and rationale" },
-        { title: "Review and file", detail: "Investigator-owned filing" },
+        { title: "Assemble the case", detail: "Alert, KYC, activity, counterparties, media" },
+        { title: "Match typologies", detail: "Deterministic money-mule, structuring, funnel rules" },
+        { title: "Draft and verify", detail: "Cited who / what / when / where / why / how" },
+        { title: "Decide and approve", detail: "Investigator → QA → simulated e-filing" },
       ],
       ai: [
-        { point: "01 → 02", label: "Alert enrichment", detail: "Models rank alerts and identify linked accounts, parties, and transaction patterns." },
-        { point: "02 → 03", label: "RAG + context engineering", detail: "Assemble transactions, KYC, case history, typologies, and guidance as cited evidence." },
-        { point: "03 → 04", label: "Narrative generation", detail: "GPU-hosted LLM drafts from approved evidence; the investigator edits and approves." },
+        { point: "01 → 02", label: "Investigation Deep Agent", detail: "deepagents on the Studio model chain: Sparky vLLM, else the OpenAI API with AI Defense enforcing every hop. Customer documents and memos are inspected segment by segment before the agent sees them." },
+        { point: "02 → 03", label: "Typology rules", detail: "Money-mule, structuring, and funnel-account indicators computed on CPU from the transactions. Not an LLM; the agent's recommendation is checked against them." },
+        { point: "03 → 04", label: "Citation check + policies", detail: "Every sentence must cite evidence that states its figures and dates; unsupported sentences are dropped. sar.narrative_cited, sar.no_tipping_off, and sar.file_requires_approval gate release, contact, and filing." },
       ],
     },
-    metrics: [
-      { label: "Open investigations", value: "18", detail: "3 due today" },
-      { label: "Narratives ready", value: "6", detail: "Awaiting approval" },
-      { label: "Evidence linked", value: "94%", detail: "Across open cases" },
-    ],
-    rows: [
-      { name: "SAR-2481", stage: "Structuring pattern", signal: "Narrative ready", status: "Ready", tone: "ready" },
-      { name: "SAR-2476", stage: "Rapid movement", signal: "5 linked accounts", status: "Review", tone: "review" },
-      { name: "SAR-2469", stage: "Wire destination", signal: "Evidence incomplete", status: "Pending", tone: "pending" },
-    ],
-    workbenchLabel: "Investigation brief",
-    workbenchTitle: "SAR-2481",
-    workbenchSummary: "Repeated deposits below the reporting threshold were followed by same-day outbound wires across three beneficiaries.",
-    evidence: ["12 transactions", "3 beneficiaries", "90-day timeline"],
-    primaryAction: "Open next investigation",
+    metrics: [], rows: [], evidence: [],
+    workbenchLabel: "SAR investigation",
+    workbenchTitle: "Alert queue · FIU",
+    workbenchSummary: "Investigate a synthetic alert, review a cited narrative, and decide under policy with second-line QA.",
+    primaryAction: "Investigate a case",
   },
   "fraud-modeling": {
     liveExperience: "fraud",
@@ -478,7 +470,7 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
 const storySteps = [
   { title: "KYC intake", label: "Know the client", icon: Fingerprint, color: "blue" },
   { title: "Fraud monitoring", label: "Catch the fraud", icon: ReceiptText, color: "violet" },
-  { title: "SAR support", label: "Investigate & report", icon: FileSearch, color: "mint" },
+  { title: "SAR investigation", label: "Investigate & report", icon: FileSearch, color: "mint" },
   { title: "Client advisory", label: "Serve with context", icon: WalletCards, color: "amber" },
 ];
 
@@ -511,10 +503,11 @@ const LIVE_SUBJECT: Record<LiveExperience, string> = {
   research: "Yahoo + FRED · committed snapshots",
   advisory: "synthetic households + shared context",
   interbank: "two Deep Agents",
+  sar: "synthetic cases · cited narrative",
 };
 
 /** Demos that can replay a recorded run when their service or model is down. */
-const HAS_RECORDED_RUNS = new Set<LiveExperience>(["fraud", "research", "advisory"]);
+const HAS_RECORDED_RUNS = new Set<LiveExperience>(["fraud", "research", "advisory", "sar"]);
 
 /** The header chip: "Live" only when the studio status says this use case's service is up and ready. */
 function liveExperienceStatus(useCaseId: string, experience: UseCaseFrame["liveExperience"], status: StudioStatus | null): { label: string; tone: Tone; title: string } {
@@ -534,6 +527,7 @@ const FOCUS_TARGETS: Record<LiveExperience, { section: string; control: string }
   research: { section: "research-experience", control: "#research-ticker" },
   advisory: { section: "advisory-experience", control: "input" },
   interbank: { section: "interbank-experience", control: "#interbank-kickoff" },
+  sar: { section: "sar-experience", control: "#sar-investigate" },
 };
 const FOCUSABLE = "input, select, textarea, button, [href], [tabindex]:not([tabindex='-1'])";
 
@@ -859,6 +853,9 @@ function UseCaseWorkspace({
       </section> : frame.liveExperience === "advisory" ? <section id="advisory-experience">
         <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Client advisory</h2></div><span>Synthetic households + shared context · not advice</span></div>
         <ClientAdvisory embedded inStory={inStory} companyProfile={companyProfile} researchNote={researchNote} brief={advisoryBrief} onBriefChange={onAdvisoryBriefChange} />
+      </section> : frame.liveExperience === "sar" ? <section id="sar-experience">
+        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>SAR investigation</h2></div><span>Synthetic cases · simulated e-filing · the investigator and QA decide</span></div>
+        <SarInvestigation embedded inStory={inStory} />
       </section> : frame.liveExperience === "interbank" ? <section id="interbank-experience">
         <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Agent-to-agent investigation</h2></div><span>Fictional banks · read-only agents · live Splunk trace</span></div>
         <InterbankDemo embedded inStory={inStory} onBack={onBack} onAdd={onAdd} />

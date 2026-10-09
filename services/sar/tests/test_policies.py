@@ -47,6 +47,28 @@ def test_checks_are_labelled_local_when_agent_control_is_not_registered():
     assert "Agent Control" not in event["title"]
 
 
+def test_hosted_result_that_skips_the_control_fails_closed(monkeypatch):
+    import agent_control
+    from types import SimpleNamespace
+
+    calls = []
+
+    async def evaluate(step, **kwargs):
+        calls.append(kwargs.get("step_type"))
+        return SimpleNamespace(is_safe=True, errors=None, matches=[], non_matches=[])
+
+    monkeypatch.setattr(agent_control, "evaluate_controls", evaluate)
+    controls = Controls()
+    controls.mode = "hosted"
+    run = store.open(prefix="sar-test")
+    with store.bind(run.id):
+        verdict = asyncio.run(controls.check("sar-file-requires-approval-v1", {
+            "investigator_decided": True, "rationale_recorded": True, "qa_approved": True, "separate_reviewers": True}))
+    assert calls == ["tool"], "tool-scoped controls must be evaluated as tool steps"
+    assert verdict["allowed"] is False and verdict["engine"] == "hosted-unavailable"
+    assert run.events[-1]["title"].startswith("Agent Control unavailable · sar.file_requires_approval · deny")
+
+
 def test_contact_detection_in_suggested_steps():
     assert _contacts("Email the customer that the review is closed.")
     assert _contacts("Call Kendall Reyes to ask about the transfers.")

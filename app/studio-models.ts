@@ -47,6 +47,7 @@ export const MODEL_USE_CASES: { id: string; experience: string; title: string; c
   { id: "fraud-modeling", experience: "fraud", title: "Transaction fraud scoring", calls: "Optional analyst narrative (the score never uses an LLM)", applies: "Next score" },
   { id: "market-research", experience: "research", title: "Wealth market research", calls: "Cited research note", applies: "Next note" },
   { id: "client-advisory", experience: "advisory", title: "Client advisory", calls: "Meeting brief draft", applies: "Next brief", clientData: true },
+  { id: "sar-support", experience: "sar", title: "SAR investigation", calls: "Investigation Deep Agent and narrative draft", applies: "Next investigation", clientData: true },
   { id: "interbank-a2a", experience: "interbank", title: "Interbank settlement investigation", calls: "Both banks' Deep Agents", applies: "Next investigation (after one interbank:up)" },
 ];
 

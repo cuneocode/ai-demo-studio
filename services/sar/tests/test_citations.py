@@ -47,6 +47,13 @@ def test_dates_inside_a_cited_window_and_masked_refs():
     assert "ending 9999" in check_sentence("Account ending 9999 was opened on 2026-08-28.", ["ACCT-1"], cf.ledger, cf.year)["unverified"]
 
 
+def test_a_comma_after_a_number_is_punctuation_not_a_thousands_separator():
+    found = extract("A customer since 1998, aged 64, received 23, then 1,250 and 12,500.5 more.")
+    assert found.numbers == [64.0, 23.0, 1250.0, 12500.5]
+    cf = CaseFile(scenario("explained-novak"))
+    assert check_sentence("Gabriel Novak, age 64, has been a customer since 1998, per KYC.", ["KYC-1"], cf.ledger, cf.year)["ok"]
+
+
 def test_month_names_percentages_and_inline_citations():
     cf = mule()
     assert check_sentence("About 96% of credits left, the last on October 5, 2026.", ["AGG-OUT"], cf.ledger, cf.year)["ok"]

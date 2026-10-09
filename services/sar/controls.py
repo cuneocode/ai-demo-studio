@@ -132,10 +132,14 @@ class Controls:
         import agent_control
         spec = POLICIES[name]
         result = await asyncio.wait_for(agent_control.evaluate_controls(
-            spec["step"], agent_name=AGENT_NAME, stage=spec["stage"],
+            spec["step"], agent_name=AGENT_NAME, stage=spec["stage"], step_type=spec["step_type"],
             **{"input" if spec["stage"] == "pre" else "output": verdict}), 20)
         if result.errors:
             raise RuntimeError("Agent Control did not complete the check")
+        seen = {item.control_name for item in [*(result.matches or []), *(result.non_matches or [])]}
+        # An empty result is a scope mismatch, not an allow: fail closed instead of a vacuous pass.
+        if name not in seen and result.is_safe:
+            raise RuntimeError("Agent Control did not evaluate the control")
         return bool(result.is_safe)
 
     async def check(self, name: str, verdict: dict, *, note: str | None = None, deny_note: str | None = None) -> dict:

@@ -19,6 +19,7 @@ export const SERVICES: ServiceSpec[] = [
   { id: "fraud", label: "Fraud scoring", port: 8012, health: "/api/fraud/health", directory: "fraud", reads: [...AIDEFENSE, "AIDEFENSE_MODE", ...OTEL, ...MODEL_KEYS] },
   { id: "briefing", label: "Company briefing", port: 8013, health: "/api/briefing/health", directory: "briefing", reads: [...AIDEFENSE, "BRIEFING_AIDEFENSE_MODE", ...OTEL, ...MODEL_KEYS, "SEC_USER_AGENT"] },
   { id: "wealth", label: "Wealth research and advisory", port: 8014, health: "/api/wealth/health", directory: "wealth", reads: [...GALILEO, ...AIDEFENSE, "WEALTH_AIDEFENSE_MODE", ...OTEL, ...MODEL_KEYS, "FRED_API_KEY"] },
+  { id: "sar", label: "SAR investigation", port: 8015, health: "/api/sar/health", directory: "sar", reads: [...GALILEO, "AGENT_CONTROL_URL", ...AIDEFENSE, "AIDEFENSE_MODE", "SAR_AIDEFENSE_MODE", ...OTEL, ...MODEL_KEYS] },
 ];
 export const INTERBANK: ServiceSpec = {
   id: "interbank", label: "Interbank lab (Docker)", port: 8088, health: "/api/health",

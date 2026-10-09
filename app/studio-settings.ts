@@ -66,6 +66,7 @@ export const SETTING_GROUPS: SettingGroup[] = [
       { name: "AIDEFENSE_MODE", label: "Brahe Bank and fraud narrative", options: MODES, help: "Default: enforce when a key is set." },
       { name: "BRIEFING_AIDEFENSE_MODE", label: "Company briefing", options: MODES, help: "Default: off." },
       { name: "WEALTH_AIDEFENSE_MODE", label: "Market research and client advisory", options: MODES, help: "Default: off." },
+      { name: "SAR_AIDEFENSE_MODE", label: "SAR investigation", options: MODES, help: "Default: the Brahe Bank mode. The hosted fallback always runs with enforce." },
     ],
   },
   {
@@ -158,6 +159,15 @@ export function readiness(settings: Record<string, SettingState>, model: (useCas
       id: "client-advisory", title: "Client advisory",
       missing: [...modelNeed("client-advisory"), ...defenseNeed(defenseMode("WEALTH_AIDEFENSE_MODE", "off"))],
       notes: [`AI Defense: ${defenseMode("WEALTH_AIDEFENSE_MODE", "off")}`],
+    },
+    {
+      id: "sar-support", title: "SAR investigation",
+      missing: [...modelNeed("sar-support"), ...defenseNeed(defenseMode("SAR_AIDEFENSE_MODE", value("AIDEFENSE_MODE") || (has("AIDEFENSE_API_KEY") ? "enforce" : "off")))],
+      notes: [
+        `AI Defense: ${defenseMode("SAR_AIDEFENSE_MODE", value("AIDEFENSE_MODE") || (has("AIDEFENSE_API_KEY") ? "enforce" : "off"))}`,
+        has("GALILEO_API_KEY") && has("AGENT_CONTROL_URL") ? "Agent Control: hosted when the SAR policies are registered" : "Policies: local checks",
+        "Recorded and sample runs need no credentials",
+      ],
     },
     {
       id: "interbank-a2a", title: "Interbank settlement investigation",

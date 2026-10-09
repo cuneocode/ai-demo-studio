@@ -42,6 +42,7 @@ export const USE_CASE_SERVICE: Record<string, string> = {
   "company-briefing": "briefing",
   "market-research": "wealth",
   "client-advisory": "wealth",
+  "sar-support": "sar",
   "interbank-a2a": "interbank",
 };
 

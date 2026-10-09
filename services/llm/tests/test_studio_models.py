@@ -151,6 +151,7 @@ def test_client_data_policy_cannot_be_loosened(isolated, live_server):
     write(isolated, {"version": 2, "chain": ["up"], "useCases": {"client-advisory": {"externalPolicy": "allow"}},
                      "providers": {"up": provider(live_server, kind="openai", private=False)}})
     assert sm.external_policy("client-advisory") == "require_ai_defense"
+    assert sm.external_policy("sar-support") == "require_ai_defense"
     assert sm.external_policy("market-research") == "allow"
 
 

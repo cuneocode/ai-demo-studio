@@ -100,7 +100,7 @@ class SentenceIn(BaseModel):
 
 class SectionIn(BaseModel):
     section: str = Field(max_length=12)
-    sentences: list[SentenceIn] = Field(default_factory=list, max_length=8)
+    sentences: list[SentenceIn] = Field(default_factory=list, max_length=16)
 
 
 class ReviewIn(BaseModel):
@@ -108,7 +108,7 @@ class ReviewIn(BaseModel):
     decision: Literal["file", "no_file"]
     by: str = Field(min_length=1, max_length=80)
     rationale: str = Field(default="", max_length=2000)
-    narrative: list[SectionIn] | None = Field(default=None, max_length=6)
+    narrative: list[SectionIn] | None = Field(default=None, max_length=8)
 
 
 class QaIn(BaseModel):

@@ -22,7 +22,7 @@ _TIME = re.compile(r"\b\d{1,2}:\d{2}(?::\d{2})?\b")
 _MASKED = re.compile(r"(?:\*{2,}|\bending(?: in)?\s+|\bx{2,})(\d{4})\b", re.IGNORECASE)
 _MONEY = re.compile(r"\$\s?(\d[\d,]*(?:\.\d+)?)(?:\s?(k|K|thousand|million|m|M)\b)?")
 _PERCENT = re.compile(r"(\d+(?:\.\d+)?)\s?(?:%|percent\b)")
-_NUMBER = re.compile(r"(?<![\w.])(\d[\d,]*(?:\.\d+)?)(?![\w%])")
+_NUMBER = re.compile(r"(?<![\w.])(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?![\w%])")
 
 
 @dataclass

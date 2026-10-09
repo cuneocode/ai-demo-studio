@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 
 from langchain_core.tools import tool
 
-from casefile import CaseFile, media
+from casefile import CaseFile, Evidence, media
 from controls import controls
 from runlog import emit_current
 from security import defense
@@ -127,8 +127,15 @@ async def search_adverse_media_impl(names: list[str]) -> str:
     names = [str(n)[:80] for n in (names or [])][:8]
     ctx = _call("search_adverse_media", ", ".join(names), note=f"Allowlisted source only: {media()['source']['name']}. No web search.")
     ids = _media_matches(names)
-    _result(f"Adverse media · {len(ids)} hit{'s' if len(ids) != 1 else ''} in {media()['source']['name']}", ids, source="allowlist")
-    return ctx.give(ids) if ids else f"No articles in {media()['source']['name']} (the only allowlisted source) for: {', '.join(names)}."
+    source = media()["source"]["name"]
+    search_id = f"AMS-{sum(1 for i in ctx.casefile.ledger.items if i.startswith('AMS-')) + 1}"
+    ctx.casefile.ledger.add(Evidence(
+        search_id, "adverse_media", f"Adverse media search · {len(ids)} article{'s' if len(ids) != 1 else ''}",
+        f"Search of {source}, the only allowlisted source, for {', '.join(names) or 'no names'}: "
+        + (f"{len(ids)} article{'s' if len(ids) != 1 else ''} ({', '.join(ids)})." if ids else "no articles."),
+        f"{source} (allowlisted)"))
+    _result(f"Adverse media · {len(ids)} hit{'s' if len(ids) != 1 else ''} in {source}", [search_id, *ids], source="allowlist")
+    return ctx.give([search_id, *ids])
 
 
 async def get_customer_documents_impl() -> str:
