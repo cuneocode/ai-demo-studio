@@ -7,6 +7,7 @@ import {
   CircleAlert,
   ClipboardCheck,
   Database,
+  FastForward,
   FileSearch,
   History,
   Inbox,
@@ -351,8 +352,9 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
     for (const item of pkg?.evidence ?? []) counts.set(item.kind, (counts.get(item.kind) ?? 0) + 1);
     return [...counts.entries()];
   }, [pkg?.evidence]);
-  const withheld = (pkg?.evidence ?? []).filter((item) => item.withheld);
-  const shownEvidence = (pkg?.evidence ?? []).filter((item) => evidenceFilter === "all" || (evidenceFilter === "withheld" ? item.withheld : item.kind === evidenceFilter));
+  const isWithheld = (item: Evidence) => item.withheld || item.flagged_by.length > 0;
+  const withheld = (pkg?.evidence ?? []).filter(isWithheld);
+  const shownEvidence = (pkg?.evidence ?? []).filter((item) => evidenceFilter === "all" || (evidenceFilter === "withheld" ? isWithheld(item) : item.kind === evidenceFilter));
   const modelDown = Boolean(health && (!health.model?.label || health.model.status === "down"));
   const refusal = willRefuse(health) || pkg?.outcome === "refused";
   const fallbackActions = (
@@ -482,6 +484,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
               </button>
               <button className="sar-secondary" type="button" disabled={busy || !reachable} onClick={() => investigate("sample")}><Play size={15} /> Run with sample narrative</button>
               <ReplayPicker recordings={recordings} onPick={replay} disabled={busy} />
+              {timeline.replaying && <button className="sar-secondary" type="button" onClick={timeline.skip}><FastForward size={15} /> Skip replay</button>}
             </div>
             <p className="sar-note">Investigate runs the Deep Agent on the Studio model chain{health?.model?.label && health.model.status !== "down" ? ` (${health.model.label})` : ""}. The sample narrative is pre-written and cited, with no model call; tools, AI Defense screening, typology rules, the citation check, policies, and approvals still run live.</p>
             {error && (
@@ -668,11 +671,16 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
                 </label>
                 <ol className="sar-evidence" ref={evidenceRef} aria-label="Case evidence">
                   {shownEvidence.map((item: Evidence) => (
-                    <li key={item.id} data-evidence={item.id} className={`${item.withheld ? "is-withheld" : ""} ${focusEvidence === item.id ? "is-focus" : ""}`}>
+                    <li key={item.id} data-evidence={item.id} className={`${item.withheld ? "is-withheld" : item.flagged_by.length ? "is-flagged" : ""} ${focusEvidence === item.id ? "is-focus" : ""}`}>
                       <div className="sar-evidence-head"><code>{item.id}</code><strong>{item.title}</strong>{item.untrusted && <span className="sar-tag">Untrusted</span>}</div>
                       {item.withheld ? (
                         <p className="sar-withheld"><ShieldAlert size={13} /> Withheld from the agent · {item.flagged_by.join(", ") || "flagged"}</p>
-                      ) : <p>{item.text}</p>}
+                      ) : (
+                        <>
+                          <p>{item.text}</p>
+                          {item.flagged_by.length > 0 && <p className="sar-withheld"><ShieldAlert size={13} /> Memo withheld from the agent · {item.flagged_by.join(", ")}</p>}
+                        </>
+                      )}
                       <small>{item.source}</small>
                     </li>
                   ))}

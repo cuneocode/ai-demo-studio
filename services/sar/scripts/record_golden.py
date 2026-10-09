@@ -96,7 +96,7 @@ def main() -> int:
     doc = {
         "v": SCHEMA_VERSION, "name": name, "title": scenario.get("title") or args.scenario, "scenario": args.scenario,
         "recorded_at": run.get("finished_at") or datetime.now(UTC).isoformat(),
-        "served_by": pkg.get("served_by"), "synthetic": True,
+        "served_by": pkg.get("served_by"), "synthetic": True, "card": scenario,
         "note": "Recorded from a live run of the SAR service. Synthetic case and fake PII; e-filing is simulated.",
         "run": {key: value for key, value in run.items() if key != "result"}, "events": page["events"], "result": result,
     }

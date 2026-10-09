@@ -18,6 +18,37 @@
   "ai_defense": "enforce (forced for hosted model)"
  },
  "synthetic": true,
+ "card": {
+  "id": "explained-novak",
+  "kind": "control",
+  "title": "Explained activity \u00b7 home-sale proceeds",
+  "summary": "A $418,500 wire from a title company with the settlement statement on file. The right answer is no SAR, with a written rationale.",
+  "expected": {
+   "typology": null,
+   "recommendation": "no_file"
+  },
+  "case_id": "explained-novak",
+  "label": "Explained activity \u00b7 home-sale proceeds",
+  "subject": {
+   "name": "Gabriel Novak",
+   "kind": "individual"
+  },
+  "alert": {
+   "id": "ALR-2026-0930-0517",
+   "source": "Transaction monitoring rule TM-WIRE-11 (large inbound wire versus profile)",
+   "priority": "medium"
+  },
+  "deadline": {
+   "detected": "2026-09-30",
+   "due": "2026-10-30",
+   "as_of": "2026-10-09",
+   "day": 9,
+   "of": 30,
+   "days_left": 21
+  },
+  "inbound_total": 421912.55,
+  "synthetic": true
+ },
  "note": "Recorded from a live run of the SAR service. Synthetic case and fake PII; e-filing is simulated.",
  "run": {
   "id": "sar-golden-explained-novak-20261009225420",

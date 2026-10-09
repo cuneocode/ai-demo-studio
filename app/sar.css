@@ -204,6 +204,7 @@
 .sar-evidence li { padding: 8px 10px; border: 1px solid #22303f; border-radius: 7px; background: #0f1823; }
 .sar-evidence li.is-focus { border-color: #b9a6f0; box-shadow: inset 0 0 0 1px #b9a6f0; }
 .sar-evidence li.is-withheld { border-style: dashed; border-color: #7a3a48; background: #1a1117; }
+.sar-evidence li.is-flagged { border-color: #7a3a48; }
 .sar-evidence-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .sar-evidence-head code { color: #cdbfff; font-size: 12px; }
 .sar-evidence-head strong { font-size: var(--font-meta); }

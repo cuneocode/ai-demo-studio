@@ -18,6 +18,37 @@
   "ai_defense": "enforce (forced for hosted model)"
  },
  "synthetic": true,
+ "card": {
+  "id": "structuring-harbor",
+  "kind": "case",
+  "title": "Structuring \u00b7 cash under the CTR threshold",
+  "summary": "Twelve cash deposits just under $10,000 at four branches in 16 days, then a $98,000 wire to a free-zone trader.",
+  "expected": {
+   "typology": "structuring",
+   "recommendation": "file"
+  },
+  "case_id": "structuring-harbor",
+  "label": "Structuring \u00b7 cash under the CTR threshold",
+  "subject": {
+   "name": "Harbor Lane Auto Detailing LLC",
+   "kind": "business"
+  },
+  "alert": {
+   "id": "ALR-2026-0926-0291",
+   "source": "Transaction monitoring rule TM-CASH-03 (cash just under $10,000, multiple locations)",
+   "priority": "high"
+  },
+  "deadline": {
+   "detected": "2026-09-26",
+   "due": "2026-10-26",
+   "as_of": "2026-10-09",
+   "day": 13,
+   "of": 30,
+   "days_left": 17
+  },
+  "inbound_total": 113550.55,
+  "synthetic": true
+ },
  "note": "Recorded from a live run of the SAR service. Synthetic case and fake PII; e-filing is simulated.",
  "run": {
   "id": "sar-golden-structuring-harbor-20261009225420",

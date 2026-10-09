@@ -382,7 +382,6 @@ class CaseFile:
                 item.flagged_by = result.get("flagged_by", [])
                 if kind == "memo":
                     item.text = re.sub(r' · memo ".*"$', " · memo withheld (flagged as unsafe)", item.text)
-                    item.flagged_by = result.get("flagged_by", [])
                 else:
                     item.withheld = True
 

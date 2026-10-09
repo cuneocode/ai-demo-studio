@@ -112,6 +112,22 @@ The settings API is served by the Node layer in front of the worker (the Vite de
 server and `scripts/start-studio.mjs`), because it writes to disk and manages
 processes. It accepts same-origin JSON writes only.
 
+### Live services
+
+`STUDIO_START_SERVICES=1 npm run dev` (or `npm run dev:studio`) starts the Python
+services below; Vite proxies `/api/<id>` to each. Install with `npm run <id>:install`
+and test with `npm run <id>:test`.
+
+| Service | Port | Demo |
+| --- | --- | --- |
+| `banking` | 8011 | Brahe Bank assistant |
+| `fraud` | 8012 | Card fraud triage |
+| `briefing` | 8013 | Company briefing |
+| `wealth` | 8014 | Market research and client advisory |
+| `sar` | 8015 | SAR investigation: synthetic cases, a cited narrative, investigator and QA approval, simulated e-filing |
+
+The interbank lab runs in Docker (`npm run interbank:up`).
+
 The top bar's **Controls** and **Telemetry** pages, the service bell, the help
 drawer, the Cisco platform rows, and the story builder's readiness score all read
 `/api/studio/status`: a read-only snapshot of each service's health (AI Defense
