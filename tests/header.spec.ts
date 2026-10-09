@@ -53,9 +53,9 @@ for (const { title, section, cta } of LIVE_CASES) {
   });
 }
 
-test("the fraud header CTA reads 'Score selected payment'", async ({ page }) => {
+test("the fraud header CTA reads 'Triage queue'", async ({ page }) => {
   await openCase(page, "Card fraud triage");
-  await expect(heading(page).locator(".primary-button")).toHaveText(/^Score selected payment/);
+  await expect(heading(page).locator(".primary-button")).toHaveText(/^Triage queue/);
   await expect(heading(page).getByRole("button", { name: "Review next alert" })).toHaveCount(0);
 });
 

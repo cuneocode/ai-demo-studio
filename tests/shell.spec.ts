@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import type { StudioStatus } from "../app/studio-status.ts";
 
@@ -183,38 +184,43 @@ test("use case tabs are a keyboard tablist and opening another case resets to th
 });
 
 test("a run started in the demo keeps going on the Architecture tab and is intact on return", async ({ page }) => {
-  const cases = [{ id: "c-1", label: "Card 4417 at Northwind Fuel", account: "acct-1", merchant: "Northwind Fuel", amount: 182.4, channel: "Chip", neighborhood: "Shared merchant with two flagged cards.", hint: "Fixture payment." }];
-  let scored = false;
-  await page.route("**/api/fraud/health", (route) => route.fulfill({ json: { ready: true, backend: "fixture", model: "Fixture scorer", threshold: 0.5 } }));
-  await page.route("**/api/fraud/cases", (route) => route.fulfill({ json: { cases } }));
-  await page.route("**/api/fraud/score", async (route) => {
-    await new Promise((resolve) => setTimeout(resolve, 2500));
-    scored = true;
-    await route.fulfill({ json: { case: cases[0], probability: 0.73, threshold: 0.5, decision: "hold", backend: "fixture", shap: [{ feature: "merchant_neighborhood", value: 0.41, direction: "risk" }] } });
+  const golden = JSON.parse(readFileSync("services/fraud/data/recorded/cpp-orbit-scripted.json", "utf8")) as { run: Record<string, unknown>; events: { kind: string }[] };
+  const pause = golden.events.findIndex((event) => event.kind === "hitl.request");
+  let startedAt = 0;
+  let served = false;
+  await page.route("**/api/fraud/health", (route) => route.fulfill({ json: { ready: true, backend: "fixture", backend_label: "Sample scores", model: "Sample scores (synthetic)", threshold: 0.5, agent: { status: "ready" } } }));
+  await page.route("**/api/fraud/scenarios", (route) => route.fulfill({ json: { scenarios: [{ id: "cpp-orbit", title: "Compromised merchant", kind: "story", situation: "Clean card at a compromised merchant.", expected: "Rules approve; the graph flags." }], illustrative: {} } }));
+  await page.route("**/api/fraud/cases", (route) => route.fulfill({ json: { cases: [] } }));
+  await page.route("**/api/fraud/recordings", (route) => route.fulfill({ json: { recordings: [] } }));
+  await page.route((url) => url.pathname === "/api/fraud/runs", (route) => { startedAt = Date.now(); return route.fulfill({ json: { run_id: "fraud-tab-run" } }); });
+  await page.route((url) => url.pathname === "/api/fraud/runs/fraud-tab-run", (route) => {
+    const ready = Date.now() - startedAt > 2500;
+    served ||= ready;
+    const events = golden.events.slice(0, ready ? pause + 1 : 2);
+    const after = Number(new URL(route.request().url()).searchParams.get("after") ?? 0);
+    return route.fulfill({ json: { run: { ...golden.run, id: "fraud-tab-run", status: "running", finished_at: null }, events: events.slice(after), total: events.length } });
   });
   await open(page);
   await page.getByRole("button", { name: "Open Card fraud triage experience" }).click();
   const demoPanel = page.locator("#case-panel-demo");
-  await page.getByRole("button", { name: "Off", exact: true }).click();
-  await page.locator("#score-payment").click();
-  await expect(page.locator("#score-payment")).toContainText("Scoring");
+  await page.locator("#triage-queue").click();
+  await expect(page.locator("#triage-queue")).toContainText("Triaging");
 
   await page.getByRole("tab", { name: "Architecture" }).click();
   await expect(demoPanel).toBeHidden();
   const explorer = page.getByTestId("architecture-explorer");
   await expect(explorer).toBeVisible();
   await expect(explorer).toHaveAttribute("data-system-id", "fraud-modeling");
-  await expect.poll(() => scored, { timeout: 10_000 }).toBe(true);
-  await expect(demoPanel.locator(".score-meter strong")).toHaveText("0.73");
+  await expect.poll(() => served, { timeout: 10_000 }).toBe(true);
+  await expect(demoPanel.locator(".fx-aha")).toHaveText(/Rules approve what the graph model flags/);
   const zoom = await explorer.getAttribute("data-zoom");
   expect(Number(zoom)).toBeGreaterThan(0.4);
 
   await page.getByRole("tab", { name: "Use case demo" }).click();
   await expect(explorer).toBeHidden();
-  await expect(demoPanel.locator(".score-meter strong")).toHaveText("0.73");
-  await expect(demoPanel.getByRole("heading", { name: "High risk" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Off", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator("#score-payment")).toContainText("Score this payment");
+  await expect(demoPanel.locator("#fx-casefile-title")).toContainText("Orbit Digital Goods");
+  await expect(demoPanel.locator('[data-action="block_and_reissue"]')).toBeEnabled();
+  await expect(page.locator("#triage-queue")).toContainText("Waiting for the analyst");
 
   await page.getByRole("tab", { name: "Architecture" }).click();
   await expect(page.locator(".react-flow")).toHaveCount(1);
