@@ -295,6 +295,14 @@ test('Zoom altitudes keep the live perimeters', () => {
   assert.equal(zoomMaps['transaction-llm'].coreEdges.some(edge => edge.from === 'pipeline' && edge.to === 'defense'), false);
   assert.equal(zoomMaps['fraud-modeling'].interiors.observe.entities.some(entity => /eval model/i.test(entity.title)), false);
   assert.equal(zoomMaps['kyc-processing'].implemented, false);
+
+  const sar = zoomText(zoomMaps['sar-support']);
+  assert.equal(zoomMaps['sar-support'].implemented, true);
+  assert.match(sar, /e-filing is simulated/i);
+  assert.match(sar, /only with AI Defense forced to enforce/);
+  assert.match(sar, /sar\.file_requires_approval/);
+  assert.match(sar, /Typology rules[\s\S]*Not an LLM/);
+  assert.equal(zoomMaps['sar-support'].coreEdges.some(edge => edge.from === 'evidence' && edge.to === 'model'), false);
 });
 
 test('Zoom scene draws every altitude on one canvas', () => {

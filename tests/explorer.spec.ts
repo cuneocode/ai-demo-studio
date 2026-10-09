@@ -246,7 +246,7 @@ test("every other use case follows the continuous-system projection contract", a
     { id: "market-research", title: "Wealth market research", mode: "implemented" },
     { id: "client-advisory", title: "Client advisory", mode: "implemented" },
     { id: "kyc-processing", title: "KYC processing", mode: "proposed" },
-    { id: "sar-support", title: "SAR reporting support", mode: "proposed" },
+    { id: "sar-support", title: "SAR investigation", mode: "implemented" },
     { id: "transaction-llm", title: "Transaction intelligence", mode: "proposed" },
   ];
   for (const viewport of [{ width: 1440, height: 900 }, { width: 1280, height: 800 }]) {

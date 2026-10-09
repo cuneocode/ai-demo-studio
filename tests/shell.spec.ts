@@ -131,7 +131,7 @@ test("the story is reordered, scored from live readiness, and presented full scr
   await page.getByRole("heading", { level: 1 }).click();
   await page.keyboard.press("ArrowRight");
   await expect(bar).toContainText("MOMENT 2 OF 2");
-  await expect(page.getByRole("heading", { name: "SAR reporting support", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "SAR investigation", level: 1 })).toBeVisible();
   await expect(page.getByRole("tab", { name: "Use case demo" })).toHaveAttribute("aria-selected", "true");
   await bar.getByRole("button", { name: "Finish" }).click();
   await expect(page.getByRole("heading", { name: "Build a demo story", level: 1 })).toBeVisible();

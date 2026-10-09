@@ -191,14 +191,18 @@ const kyc = journeyCase({
 
 const sar = journeyCase({
   id: "sar-support",
-  title: "Investigation aid",
-  purpose: "A proposed investigation aid. The studio does not file a suspicious-activity report.",
-  modes: ["proposed"],
-  environment: ["This use case is a proposed design. A draft would not be submitted automatically."],
+  title: "SAR investigation",
+  purpose: "A BSA/AML investigator opens an alert or a fraud referral, reviews a cited narrative the investigation agent drafts, decides file or no SAR with a rationale, and a separate QA reviewer approves. E-filing is simulated.",
+  modes: ["implemented", "proposed"],
+  environment: [
+    "Cases are synthetic with obviously fake PII. Nothing is sent to FinCEN; the e-filing confirmation is simulated.",
+    "Typology indicators and the citation check are deterministic code. The model drafts; it does not decide or file.",
+  ],
   steps: [
-    { id: "case", label: "Open a case", text: "Investigator activity", emphasis: "customer" },
-    { id: "draft", label: "Draft a chronology", text: "Cite the case notes for the investigator.", emphasis: "assisted" },
-    { id: "edit", label: "Edit and file", text: "Investigator activity", emphasis: "customer" },
+    { id: "case", label: "Open the case", text: "Alert, or a fraud referral from the inbox", emphasis: "customer" },
+    { id: "draft", label: "Assemble, draft, and verify", text: "Agent gathers evidence; every sentence must cite it.", emphasis: "assisted" },
+    { id: "decide", label: "Investigator decides", text: "Edit, then file or no SAR with a rationale", emphasis: "customer" },
+    { id: "qa", label: "Second-line QA approves", text: "A different reviewer; Agent Control gates filing", emphasis: "customer" },
   ],
 });
 
