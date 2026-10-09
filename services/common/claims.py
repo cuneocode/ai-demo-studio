@@ -31,6 +31,7 @@ COUNT = {"count", "shares", "quarters", "households"}
 YEARS = {"years"}
 MIN_QUOTE_WORDS = 8
 COVERAGE = 0.5
+MAX_NOVEL_WORDS = 2  # content words a quoted sentence may add that no cited evidence contains
 
 NUMBER_WORDS = {
     "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8,
@@ -301,7 +302,7 @@ def verify(claim: dict, evidence: dict[str, dict]) -> dict:
     if not item:
         reason = "Cites no evidence." if not evidence_id else f"Cites evidence '{evidence_id}' that this run did not retrieve or withheld."
         return verdict(claim, "unverified", reason, "none")
-    also = [evidence[eid] for eid in claim.get("also") or [] if eid in evidence]
+    also = [evidence[eid] for eid in claim.get("also") or [] if isinstance(eid, str) and eid in evidence]
     cited = [item, *also]
     written = quantities(text)
     path = str(claim.get("field_path") or "").strip()
@@ -341,9 +342,17 @@ def verify(claim: dict, evidence: dict[str, dict]) -> dict:
         return verdict(claim, "verified", f"Matches {item.get('title') or evidence_id} · {spec.get('label') or path} = {display}.", "numeric", display=display)
 
     quote = normalize_text(str(claim.get("quote") or ""))
+    found = False
+    if not quote:
+        quote = _find_quote(text, cited)
+        found = bool(quote)
     if not quote:
         return verdict(claim, "unverified", "A qualitative claim needs a verbatim quote from the cited evidence.", "quote")
-    if len(quote.split()) < MIN_QUOTE_WORDS and normalize_text(item.get("text") or "") != quote:
+    if found:
+        if len(text.split()) - len(quote.split()) > 3:
+            return verdict(claim, "unverified", "Only part of the sentence appears in the cited evidence.", "quote")
+    if len(quote.split()) < MIN_QUOTE_WORDS and not any(
+            normalize_text(part.get("text") or "").strip().rstrip(".") == quote.rstrip(".") for part in cited):
         return verdict(claim, "unverified", f"The quote is shorter than {MIN_QUOTE_WORDS} words.", "quote")
     source = normalize_text(" ".join(str(part.get("text") or "") for part in cited)).lower()
     if quote.lower().rstrip(".") not in source:
@@ -355,6 +364,9 @@ def verify(claim: dict, evidence: dict[str, dict]) -> dict:
         if coverage < COVERAGE:
             missing = sorted(claim_words - quote_words)[:4]
             return verdict(claim, "unverified", f"The quote does not support '{', '.join(missing)}'.", "quote", coverage=round(coverage, 2))
+    novel = claim_words - _content(" ".join(_text_of(part) for part in cited))
+    if len(novel) > MAX_NOVEL_WORDS:
+        return verdict(claim, "unverified", f"The sentence adds what the cited evidence never says: '{', '.join(sorted(novel)[:4])}'.", "quote")
     if bool(set(_words(quote)) & NEGATIONS) != bool(set(_words(text)) & NEGATIONS):
         return verdict(claim, "unverified", "The quote and the sentence disagree on a negation.", "quote")
     for q in written:
@@ -362,7 +374,28 @@ def verify(claim: dict, evidence: dict[str, dict]) -> dict:
             continue
         if not _supported(q, cited):
             return verdict(claim, "unverified", f"States {q.raw}, which is not in the cited evidence.", "quote")
-    return verdict(claim, "verified", f"Quoted from {item.get('title') or evidence_id}.", "quote")
+    return verdict(claim, "verified", f"Quoted from {item.get('title') or evidence_id}.", "quote", **({"quote": quote} if found else {}))
+
+
+def _find_quote(text: str, cited: list[dict]) -> str:
+    """The longest run of the sentence's own words that appears verbatim in the cited text (8+ words, or a whole short text)."""
+    sources = [normalize_text(str(part.get("text") or "")) for part in cited]
+    joined = " ".join(sources).lower()
+    for source in sources:
+        whole = source.strip().rstrip(".")
+        if whole and len(whole.split()) < MIN_QUOTE_WORDS and whole.lower() in text.lower():
+            return whole
+    words = text.split()
+    best = ""
+    for start in range(len(words)):
+        for end in range(len(words), start + MIN_QUOTE_WORDS - 1, -1):
+            if end - start <= len(best.split()):
+                break
+            segment = " ".join(words[start:end]).strip(" .,;:")
+            if segment.lower() in joined:
+                best = segment
+                break
+    return best if len(best.split()) >= MIN_QUOTE_WORDS else ""
 
 
 def _render(value: float, dim: str) -> str:
@@ -375,6 +408,12 @@ def _render(value: float, dim: str) -> str:
     return count(value)
 
 
+def unsupported_numbers(text: str, items: Iterable[dict]) -> list[str]:
+    """Numbers in a sentence that none of these evidence items contain (for agenda lines and questions)."""
+    pool = list(items)
+    return [q.raw for q in quantities(text) if not _ignorable(q) and not _supported(q, pool)]
+
+
 def verify_all(claims: Iterable[dict], evidence: dict[str, dict]) -> dict:
     results = [verify(dict(claim), evidence) for claim in claims]
     verified = sum(1 for row in results if row["status"] == "verified")
@@ -382,4 +421,4 @@ def verify_all(claims: Iterable[dict], evidence: dict[str, dict]) -> dict:
 
 
 __all__ = ["Quantity", "canonical", "count", "field", "matches", "money", "multiple", "normalize_text", "pct",
-           "quantities", "verify", "verify_all"]
+           "quantities", "unsupported_numbers", "verify", "verify_all"]

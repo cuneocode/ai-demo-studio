@@ -93,13 +93,30 @@ class ProtectedChatOpenAI(ChatOpenAI):
     disable_streaming: bool = True
     streaming: bool = False
     enforce: bool = False
+    # Set for agent models: every call then emits its own llm.call event (structured() emits its own).
+    served_record: dict | None = None
+    call_label: str | None = None
 
     async def _agenerate(self, messages, stop=None, run_manager=None, **kwargs):
         await defense.inspect(inspection_messages(messages), "model_input", enforce=self.enforce)
-        result = await super()._agenerate(messages, stop=stop, run_manager=run_manager, **kwargs)
+        started = time.monotonic()
+        try:
+            result = await super()._agenerate(messages, stop=stop, run_manager=run_manager, **kwargs)
+        except Exception as exc:
+            if self.served_record:
+                emit_model_call(self.served_record, title=f"{self.served_record.get('model') or 'Model'} · {self.call_label or 'call'} failed ({type(exc).__name__})",
+                                latency_ms=round((time.monotonic() - started) * 1000), status="error")
+            raise
         usage = model_usage.get()
         if usage:
             usage.record(result.generations)
+        if self.served_record:
+            tokens = [getattr(getattr(g, "message", None), "usage_metadata", None) or {} for g in result.generations]
+            emit_model_call({**self.served_record, "fallback": False},
+                            title=f"{self.served_record.get('model') or 'Model'} · {self.call_label or 'agent step'}",
+                            latency_ms=round((time.monotonic() - started) * 1000),
+                            input_tokens=sum(int(t.get("input_tokens") or 0) for t in tokens) or None,
+                            output_tokens=sum(int(t.get("output_tokens") or 0) for t in tokens) or None)
         for generation in result.generations:
             await defense.inspect(inspection_messages([generation.message]), "model_output", enforce=self.enforce)
         return result
@@ -108,7 +125,8 @@ class ProtectedChatOpenAI(ChatOpenAI):
         raise RuntimeError("Use async model invocation for the protected wealth runtime.")
 
 
-def chat_model(use_case: str = RESEARCH, selection: Selection | None = None, enforce: bool = False) -> ProtectedChatOpenAI:
+def chat_model(use_case: str = RESEARCH, selection: Selection | None = None, enforce: bool = False, *,
+               max_tokens: int | None = None, served_record: dict | None = None, call_label: str | None = None) -> ProtectedChatOpenAI:
     backend = (selection or pick(use_case)).backend
     settings = backend.chat_kwargs()
     if not backend.vllm and backend.model.startswith("gpt-5"):
@@ -119,9 +137,11 @@ def chat_model(use_case: str = RESEARCH, selection: Selection | None = None, enf
         temperature=0,
         timeout=150,
         max_retries=0,
-        max_tokens=1600 if use_case == ADVISORY else 1200,
+        max_tokens=max_tokens or (1600 if use_case == ADVISORY else 1200),
         disable_streaming=True,
         streaming=False,
+        served_record=served_record,
+        call_label=call_label,
     )
 
 
@@ -130,6 +150,33 @@ def _served(selection: Selection, decision: dict) -> dict:
     record["egress"] = decision["policy"]
     record["ai_defense"] = "enforce (forced for hosted model)" if decision["force_enforce"] else None
     return record
+
+
+async def agent_model(use_case: str, *, max_tokens: int = 3000, call_label: str = "agent step",
+                      exclude: tuple[str, ...] = ()) -> tuple[ProtectedChatOpenAI, Selection, dict]:
+    """A chain-selected, egress-checked model for a Deep Agent. Every call it makes emits llm.call."""
+    selection = await apick(use_case, exclude=exclude) if exclude else await apick(use_case)
+    decision = egress_decision(use_case, selection, defense.can_enforce())
+    record = _served(selection, decision)
+    holder = served.get()
+    if holder is not None:
+        holder.clear()
+        holder.update(record)
+    label = selection.backend.label
+    if selection.fallback:
+        emit_current("model.failover", f"Model fallback · next in chain is {label}", status="flagged",
+                     body=selection.reason or None, data={"served_by": record})
+    if not decision["allowed"]:
+        emit_current("guardrail", f"Client data not sent · {label} is a hosted model", status="blocked",
+                     body=decision["reason"], data={"served_by": record, "policy": decision["policy"]})
+        raise EgressRefused(decision["reason"], selection)
+    if decision["force_enforce"]:
+        emit_current("guardrail", f"AI Defense forced to enforce · client data bound for {label} (hosted)", status="ok",
+                     body="Every prompt and response is inspected in enforce mode before data leaves; an unsafe verdict stops the call.",
+                     data={"served_by": record, "policy": decision["policy"]})
+    model = chat_model(use_case, selection, enforce=decision["force_enforce"], max_tokens=max_tokens,
+                       served_record=record, call_label=call_label)
+    return model, selection, record
 
 
 async def structured(use_case: str, schema, messages: list, config: dict):

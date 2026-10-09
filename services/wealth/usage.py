@@ -9,6 +9,7 @@ class ModelUsage:
     input_tokens: int = 0
     output_tokens: int = 0
     reported: bool = False
+    tool_calls: int = 0
 
     def record(self, generations) -> None:
         self.llm_calls += 1
@@ -24,6 +25,7 @@ class ModelUsage:
             "llm_calls": self.llm_calls,
             "input_tokens": self.input_tokens if self.reported else None,
             "output_tokens": self.output_tokens if self.reported else None,
+            "tool_calls": self.tool_calls,
         }
 
 

@@ -144,6 +144,64 @@ class Defense:
             raise DefenseBlocked("AI Defense blocked this synthesis. Note or brief omitted.")
 
 
+    async def inspect_untrusted(self, text: str, label: str) -> dict:
+        """Tool-result inspection of one untrusted item (a news story, a CRM note). Never raises.
+
+        Runs whenever an AI Defense key is configured, whatever the model-hop mode, because the caller
+        withholds or masks the item rather than failing the run. Returns the verdict and the detected
+        PII spans (offsets into `text`)."""
+        if not (self.key and self.endpoint and 0 < self.timeout <= 120):
+            return {"status": "not_configured", "by": "AI Defense", "classifications": [], "rules": [], "spans": []}
+        run = security_run.get()
+        content = UNTRUSTED_PREFIX + text
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=False) as client:
+                response = await client.post(
+                    self.endpoint,
+                    headers={"X-Cisco-AI-Defense-API-Key": self.key},
+                    json={"messages": [{"role": "user", "content": content}],
+                          "metadata": {"src_app": "fsi-ai-studio-wealth",
+                                       "client_transaction_id": f"{run.request_id if run else uuid.uuid4()}:tool_result:{label}"[:120]}},
+                )
+                response.raise_for_status()
+                verdict = response.json()
+            if type(verdict.get("is_safe")) is not bool:
+                raise ValueError("Missing inspection verdict")
+        except Exception:
+            if run:
+                run.errors += 1
+            return {"status": "unavailable", "by": "AI Defense", "classifications": [], "rules": [], "spans": []}
+        if run:
+            run.checks += 1
+            if not verdict["is_safe"]:
+                run.blocked += 1
+            event_id = verdict.get("event_id")
+            if isinstance(event_id, str) and event_id not in run.event_ids:
+                run.event_ids.append(event_id)
+        spans = []
+        for row in verdict.get("detected_spans") or verdict.get("detected_pii") or []:
+            try:
+                start = int(row.get("start_index")) - len(UNTRUSTED_PREFIX)
+                end = int(row.get("end_index")) - len(UNTRUSTED_PREFIX)
+            except (TypeError, ValueError):
+                continue
+            if 0 <= start < end <= len(text):
+                entity = str(row.get("entity_name") or row.get("type") or "PII").replace("PII_ENTITY_TYPE_", "").replace("_", " ").title()
+                spans.append({"start": start, "end": end, "entity": entity})
+        return {
+            "status": "allowed" if verdict["is_safe"] else "flagged",
+            "by": "AI Defense",
+            "action": verdict.get("action"),
+            "classifications": [str(item) for item in verdict.get("classifications") or [] if item],
+            "rules": sorted({str(rule.get("rule_name")) for rule in verdict.get("rules") or [] if isinstance(rule, dict) and rule.get("rule_name")}),
+            "spans": spans,
+            "event_id": verdict.get("event_id") if isinstance(verdict.get("event_id"), str) else None,
+        }
+
+
+UNTRUSTED_PREFIX = "Tool result (untrusted data): "
+
+
 def inspection_messages(messages):
     result = []
     for message in messages:
@@ -154,7 +212,7 @@ def inspection_messages(messages):
         if getattr(message, "tool_calls", None):
             content += "\nTool calls: " + json.dumps(message.tool_calls, default=str)
         if getattr(message, "type", None) in {"tool", "function"}:
-            content = "Tool result (untrusted data): " + content
+            content = UNTRUSTED_PREFIX + content
         result.append({"role": role, "content": content or "[empty message]"})
     return result
 

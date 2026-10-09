@@ -107,3 +107,32 @@ def macro():
 @pytest.fixture(autouse=True)
 def no_studio_models(monkeypatch, tmp_path):
     monkeypatch.setenv("STUDIO_MODELS_FILE", str(tmp_path / "models.json"))
+
+
+@pytest.fixture(autouse=True)
+def no_hosted_guardrails(monkeypatch):
+    """Tests never reach AI Defense or Agent Control: untrusted items get the local screen, policies run locally."""
+    import controls
+    import security
+
+    async def not_configured(_text, _label):
+        return {"status": "not_configured", "by": "AI Defense", "classifications": [], "rules": [], "spans": []}
+
+    monkeypatch.setattr(security.defense, "inspect_untrusted", not_configured)
+    monkeypatch.setattr(controls.controls, "ready", False)
+    monkeypatch.setattr(controls.controls, "_tried", True)
+    monkeypatch.setattr(controls.controls, "reason", "Agent Control is not used in tests")
+
+
+@pytest.fixture
+def no_models(monkeypatch):
+    """Every drafting tier above the fixture fails, as when no model answers."""
+    import advisory
+    import research
+
+    async def down(*_args, **_kwargs):
+        raise RuntimeError("no model in tests")
+
+    for module in (research, advisory):
+        monkeypatch.setattr(module, "run_deep_agent", down)
+        monkeypatch.setattr(module, "run_single_call", down)

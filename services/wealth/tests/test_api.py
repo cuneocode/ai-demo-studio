@@ -1,6 +1,10 @@
+import json
+
 from fastapi.testclient import TestClient
 
+import advisory
 import nim
+import research
 import security
 import server
 from providers.yahoo import ProviderError
@@ -36,20 +40,19 @@ def _client(monkeypatch, tmp_path, galileo="disabled"):
 def test_health_ready_when_nim_up(monkeypatch, tmp_path):
     client = _client(monkeypatch, tmp_path)
     health = client.get("/api/wealth/health").json()
-    assert health["ready"] is True
+    assert health["ready"] is True and health["agent"] == "deepagents"
     assert health["nim"]["status"] == "reachable"
     assert health["yahoo"]["status"] == "not_asserted"
     assert health["fred"]["status"] == "absent"
     assert health["perimeter"] == "Yahoo + FRED allowlist only"
-    assert health["source"]["kind"] != "fixture" if "source" in health else True
     assert health["security"]["fail_open"] is False
     assert health["galileo"] == "disabled"
     assert health["splunk"]["status"] == "missing_configuration"
     assert health["observability"]["tracing"]["status"] == "not_configured"
     assert health["observability"]["tracing"]["transport"] == "Galileo SDK"
-    assert health["observability"]["evaluators"]["status"] == "not_verified"
-    assert health["observability"]["controls"]["status"] == "not_integrated"
-    assert "controls" not in health
+    assert health["controls"]["source"] == "local"
+    assert set(health["controls"]["policies"]) == {"research.precheck", "research.publish", "advisory.recommendation"}
+    assert health["evaluation"]["status"] == "not_configured"
 
 
 def test_health_reports_galileo_configured_without_dashboard_proof(monkeypatch, tmp_path):
@@ -73,62 +76,38 @@ def test_health_not_ready_when_nim_down(monkeypatch, tmp_path):
     assert health["nim"]["status"] == "down"
 
 
-def test_analyze_requires_ticker(monkeypatch, tmp_path):
+def test_analyze_requires_ticker_and_a_known_scenario(monkeypatch, tmp_path):
     client = _client(monkeypatch, tmp_path)
     assert client.post("/api/wealth/research/analyze", json={}).status_code == 422
     assert client.post("/api/wealth/research/analyze", json={"ticker": "not a ticker"}).status_code == 422
+    assert client.post("/api/wealth/research/analyze", json={"ticker": "JPM", "scenario": "anything"}).status_code == 422
 
 
-def test_analyze_live_tools_and_omitted_note(monkeypatch, tmp_path):
+def _market(monkeypatch, kind="live", macro=None):
+    monkeypatch.setattr(research, "get_snapshot", lambda ticker, refresh=False: (sample_snapshot(ticker), kind))
+    monkeypatch.setattr(research, "get_macro", lambda refresh=False: (macro, "live" if macro else None))
+
+
+def test_real_ticker_releases_panels_with_bank_metrics_when_no_model_answers(monkeypatch, tmp_path, no_models):
     client = _client(monkeypatch, tmp_path)
-    snap = sample_snapshot()
-    monkeypatch.setattr(server, "get_snapshot", lambda ticker, refresh=False: (snap, "live"))
-    monkeypatch.setattr(server, "get_macro", lambda refresh=False: ({"status": "absent", "reason": "FRED_API_KEY is not configured.", "series": {}}, None))
-
-    async def fake_note(*_args, **_kwargs):
-        return (
-            {"status": "unavailable", "reason": "The local NIM did not return a usable note.", "summary": None, "bullets": [], "citations": []},
-            {"status": "unavailable", "reason": "The local NIM did not return a usable note.", "action": None, "thesis": None, "disclaimer": "Demo recommendation — not financial advice"},
-        )
-
-    monkeypatch.setattr(server, "draft_note", fake_note)
-    response = client.post("/api/wealth/research/analyze", json={"ticker": "JPM"})
-    assert response.status_code == 200
-    body = response.json()
+    _market(monkeypatch, macro={"status": "absent", "reason": "FRED_API_KEY is not configured.", "series": {}})
+    body = client.post("/api/wealth/research/analyze", json={"ticker": "JPM", "scenario": "bank"}).json()
     assert body["source"]["kind"] == "live"
-    assert body["source"]["kind"] != "fixture"
-    assert body["conflicts"]
-    assert body["earnings"]["beatRate"] == 1.0
-    assert body["note"]["status"] == "unavailable"
-    assert body["recommendation"]["disclaimer"]
-    assert "not financial advice" in body["disclaimer"]
-    assert "controls" not in body
+    assert body["conflicts"] and body["earnings"]["beatRate"] == 1.0
+    assert body["company"]["metric_family"] == "bank"
+    assert body["update"]["status"] == "unavailable" and body["update"]["mode"] == "none"
+    assert body["publish"]["status"] == "unavailable" and "No house view" in body["publish"]["reason"]
+    assert "public market data" in body["disclaimer"] and "Not investment advice" in body["disclaimer"]
+    assert "rating" not in json.dumps(body["update"]).lower().replace('"rating": null', "")
 
 
-def test_analyze_cache_kind_and_refresh(monkeypatch, tmp_path):
+def test_analyze_cache_kind_and_refresh(monkeypatch, tmp_path, no_models):
     client = _client(monkeypatch, tmp_path)
-    calls = {"n": 0}
-
-    def fetch(ticker, refresh=False):
-        calls["n"] += 1
-        return sample_snapshot(ticker), "live" if refresh or calls["n"] == 1 else "cache"
-
-    async def fake_note(*_args, **_kwargs):
-        return (
-            {"status": "omitted", "reason": "skip", "summary": None, "bullets": [], "citations": []},
-            {"status": "omitted", "reason": "skip", "action": None, "thesis": None, "disclaimer": "Demo recommendation — not financial advice"},
-        )
-
-    monkeypatch.setattr(server, "get_snapshot", fetch)
-    monkeypatch.setattr(server, "get_macro", lambda refresh=False: (sample_macro(), "cache"))
-    monkeypatch.setattr(server, "draft_note", fake_note)
-    first = client.post("/api/wealth/research/analyze", json={"ticker": "JPM"}).json()
-    assert first["source"]["kind"] == "live"
-    monkeypatch.setattr(server, "get_snapshot", lambda ticker, refresh=False: (sample_snapshot(ticker), "cache" if not refresh else "live"))
-    cached = client.post("/api/wealth/research/analyze", json={"ticker": "JPM"}).json()
-    assert cached["source"]["kind"] == "cache"
-    refreshed = client.post("/api/wealth/research/analyze", json={"ticker": "JPM", "refresh": True}).json()
-    assert refreshed["source"]["kind"] == "live"
+    _market(monkeypatch, kind="live", macro=sample_macro())
+    assert client.post("/api/wealth/research/analyze", json={"ticker": "JPM"}).json()["source"]["kind"] == "live"
+    monkeypatch.setattr(research, "get_snapshot", lambda ticker, refresh=False: (sample_snapshot(ticker), "live" if refresh else "cache"))
+    assert client.post("/api/wealth/research/analyze", json={"ticker": "JPM"}).json()["source"]["kind"] == "cache"
+    assert client.post("/api/wealth/research/analyze", json={"ticker": "JPM", "refresh": True}).json()["source"]["kind"] == "live"
 
 
 def test_analyze_empty_provider_is_502(monkeypatch, tmp_path):
@@ -137,89 +116,60 @@ def test_analyze_empty_provider_is_502(monkeypatch, tmp_path):
     def boom(*_args, **_kwargs):
         raise ProviderError("Market data for that ticker was empty.")
 
-    monkeypatch.setattr(server, "get_snapshot", boom)
+    monkeypatch.setattr(research, "get_snapshot", boom)
     response = client.post("/api/wealth/research/analyze", json={"ticker": "ZZZZ"})
     assert response.status_code == 502
     assert "empty" in response.json()["detail"].lower()
 
 
-def test_defense_omits_note_keeps_conflicts(monkeypatch, tmp_path):
+def test_defense_block_on_the_agent_falls_back_and_keeps_the_panels(monkeypatch, tmp_path):
     client = _client(monkeypatch, tmp_path)
-    monkeypatch.setattr(server, "get_snapshot", lambda ticker, refresh=False: (sample_snapshot(), "live"))
-    monkeypatch.setattr(server, "get_macro", lambda refresh=False: (sample_macro(), "live"))
+    _market(monkeypatch, macro=sample_macro())
 
     async def blocked(*_args, **_kwargs):
-        run = security.security_run.get()
-        if run:
-            run.checks += 1
-            run.blocked += 1
-        return (
-            {"status": "blocked", "reason": "AI Defense blocked this synthesis.", "summary": None, "bullets": [], "citations": []},
-            {"status": "blocked", "reason": "AI Defense blocked this synthesis.", "action": None, "thesis": None, "disclaimer": "Demo recommendation — not financial advice"},
-        )
+        raise security.DefenseBlocked("AI Defense blocked this synthesis.")
 
-    monkeypatch.setattr(server, "draft_note", blocked)
+    monkeypatch.setattr(research, "run_deep_agent", blocked)
+    monkeypatch.setattr(research, "run_single_call", blocked)
     body = client.post("/api/wealth/research/analyze", json={"ticker": "JPM"}).json()
-    assert body["conflicts"]
-    assert body["earnings"]["status"] == "ready"
-    assert body["note"]["status"] == "blocked"
-    assert body["recommendation"]["status"] == "blocked"
-    assert body["usage"] == {"llm_calls": 0, "input_tokens": None, "output_tokens": None}
+    assert body["conflicts"] and body["earnings"]["status"] == "ready"
+    assert body["update"]["status"] == "unavailable" and "AI Defense blocked" in body["update"]["reason"]
+    assert body["usage"]["llm_calls"] == 0
 
 
-def test_analyze_reports_model_usage(monkeypatch, tmp_path):
+def test_analyze_reports_model_and_tool_usage(monkeypatch, tmp_path):
     from langchain_core.messages import AIMessage
     from langchain_core.outputs import ChatGeneration
 
     import usage
 
     client = _client(monkeypatch, tmp_path)
-    monkeypatch.setattr(server, "get_snapshot", lambda ticker, refresh=False: (sample_snapshot(), "live"))
-    monkeypatch.setattr(server, "get_macro", lambda refresh=False: (sample_macro(), "live"))
+    _market(monkeypatch, macro=sample_macro())
 
     async def drafted(*_args, **_kwargs):
         reply = AIMessage(content="note", usage_metadata={"input_tokens": 900, "output_tokens": 210, "total_tokens": 1110})
         usage.model_usage.get().record([ChatGeneration(message=reply)])
-        return (
-            {"status": "omitted", "reason": "fixture", "summary": None, "bullets": [], "citations": []},
-            {"status": "omitted", "reason": "fixture", "action": None, "thesis": None, "disclaimer": "Demo recommendation — not financial advice"},
-        )
+        return {"house_view_impact": "no_house_view", "claims": []}, "deep_agent"
 
-    monkeypatch.setattr(server, "draft_note", drafted)
+    monkeypatch.setattr(research, "run_deep_agent", drafted)
     body = client.post("/api/wealth/research/analyze", json={"ticker": "JPM"}).json()
-    assert body["usage"] == {"llm_calls": 1, "input_tokens": 900, "output_tokens": 210}
+    assert body["usage"]["llm_calls"] == 1 and body["usage"]["input_tokens"] == 900 and body["usage"]["output_tokens"] == 210
+    assert body["usage"]["tool_calls"] >= 5
 
 
-def test_advisory_brief_keeps_holdings_when_nim_omits(monkeypatch, tmp_path):
+def test_entered_holdings_get_rules_but_no_brief(monkeypatch, tmp_path):
     client = _client(monkeypatch, tmp_path)
     monkeypatch.setattr(server, "get_snapshot", lambda ticker, refresh=False: (sample_snapshot(ticker), "cache"))
-
-    async def fake_brief(*_args, **_kwargs):
-        return {
-            "status": "unavailable",
-            "reason": "The local NIM did not return a usable brief.",
-            "opening": None,
-            "agenda": [],
-            "discussion_points": [],
-            "suitability_callouts": [],
-            "citations": [],
-            "disclaimer": "Demo brief — not advice",
-        }
-
-    monkeypatch.setattr(server, "draft_brief", fake_brief)
     response = client.post("/api/wealth/advisory/brief", json={
         "holdings": [{"ticker": "JPM", "weight": 0.4}, {"ticker": "BAC", "weight": 0.6}],
         "clientNotes": "Growth objective, moderate risk, 8 year horizon.",
-        "briefing": {"objectives": {"facts": [{"text": "Expand digital platforms", "excerpt": "Expand digital platforms"}]}},
-        "research": {"ticker": "JPM", "note": {"summary": "Beat rate 100%"}},
     })
     assert response.status_code == 200
     body = response.json()
     assert len(body["holdings"]) == 2
-    assert body["brief"]["status"] == "unavailable"
-    assert "not advice" in body["disclaimer"]
-    assert body["suitability"] == [] or all(item["id"] != "missing_ips" for item in body["suitability"])
-    assert "controls" not in body
+    assert body["brief"]["status"] == "unavailable" and "Choose a household" in body["brief"]["reason"]
+    assert "Not investment, tax, or legal advice" in body["disclaimer"]
+    assert any(item["severity"] == "high" for item in body["suitability"]), "60% in one name is above the 20% cap"
 
 
 def test_advisory_all_holdings_empty_is_502(monkeypatch, tmp_path):
@@ -233,9 +183,7 @@ def test_advisory_all_holdings_empty_is_502(monkeypatch, tmp_path):
     assert response.status_code == 502
 
 
-def test_analyze_attaches_galileo_callback_when_configured(monkeypatch, tmp_path):
-    seen = {}
-
+def _galileo(seen):
     class Logger:
         def start_trace(self, **kwargs):
             seen["start"] = kwargs
@@ -250,94 +198,56 @@ def test_analyze_attaches_galileo_callback_when_configured(monkeypatch, tmp_path
         def disable_agent_control(self):
             seen["disabled"] = True
 
-    class Callback:
-        def __init__(self, **kwargs):
-            seen["callback"] = kwargs
+        def add_tool_span(self, **kwargs):
+            seen.setdefault("tools", []).append(kwargs["name"])
 
-    monkeypatch.setattr(server, "attach_galileo", lambda name, text: (Logger(), [Callback(galileo_logger="attached")], "enabled"))
+    return Logger()
+
+
+def test_analyze_attaches_galileo_callback_and_tool_spans_when_configured(monkeypatch, tmp_path):
+    seen = {}
+    monkeypatch.setattr(server, "attach_galileo", lambda name, text: (_galileo(seen), ["callback"], "enabled"))
     client = _client(monkeypatch, tmp_path, galileo="configured")
-    monkeypatch.setattr(server, "get_snapshot", lambda ticker, refresh=False: (sample_snapshot(), "live"))
-    monkeypatch.setattr(server, "get_macro", lambda refresh=False: (sample_macro(), "cache"))
+    _market(monkeypatch, macro=sample_macro())
 
-    async def fake_note(*_args, callbacks=None, **_kwargs):
+    async def drafted(_ctx, callbacks):
         seen["callbacks"] = callbacks
-        return (
-            {"status": "unavailable", "reason": "skip", "summary": None, "bullets": [], "citations": []},
-            {"status": "unavailable", "reason": "skip", "action": None, "thesis": None, "disclaimer": "Demo recommendation — not financial advice"},
-        )
+        raise RuntimeError("skip")
 
-    monkeypatch.setattr(server, "draft_note", fake_note)
+    monkeypatch.setattr(research, "run_deep_agent", drafted)
+    monkeypatch.setattr(research, "run_single_call", drafted)
     body = client.post("/api/wealth/research/analyze", json={"ticker": "JPM"}).json()
-    assert seen["callbacks"]
-    assert body["telemetry"]["galileo"] == "recorded"
-    assert seen.get("flush") is True
+    assert seen["callbacks"] == ["callback"]
+    assert body["telemetry"]["galileo"] == "recorded" and seen.get("flush") is True
+    assert {"restricted_list_check", "market_snapshot", "indicators"} <= set(seen["tools"])
     assert body["telemetry"]["splunk"]["status"] == "not_configured"
 
 
-def test_analyze_does_not_export_when_unconfigured(monkeypatch, tmp_path):
+def test_analyze_does_not_export_when_unconfigured(monkeypatch, tmp_path, no_models):
     attached = []
     monkeypatch.setattr(server, "attach_galileo", lambda name, text: attached.append((name, text)) or (None, [], "disabled"))
     client = _client(monkeypatch, tmp_path)
-    monkeypatch.setattr(server, "get_snapshot", lambda ticker, refresh=False: (sample_snapshot(), "cache"))
-    monkeypatch.setattr(server, "get_macro", lambda refresh=False: ({"status": "absent", "series": {}}, None))
-
-    async def fake_note(*_args, callbacks=None, **_kwargs):
-        attached.append({"callbacks": callbacks})
-        return (
-            {"status": "omitted", "reason": "skip", "summary": None, "bullets": [], "citations": []},
-            {"status": "omitted", "reason": "skip", "action": None, "thesis": None, "disclaimer": "Demo recommendation — not financial advice"},
-        )
-
-    monkeypatch.setattr(server, "draft_note", fake_note)
+    _market(monkeypatch, kind="cache")
     body = client.post("/api/wealth/research/analyze", json={"ticker": "JPM"}).json()
     assert body["telemetry"]["galileo"] == "disabled"
     assert body["telemetry"]["splunk"]["status"] == "not_configured"
-    assert attached[-1]["callbacks"] == []
-    assert body["source"]["kind"] == "cache"
-    assert body["earnings"]
+    assert body["source"]["kind"] == "cache" and body["earnings"]
 
 
-def test_advisory_attaches_galileo_callback_when_configured(monkeypatch, tmp_path):
+def test_meeting_prep_attaches_galileo_callback_when_configured(monkeypatch, tmp_path):
     seen = {}
-
-    class Logger:
-        def start_trace(self, **kwargs):
-            return None
-
-        def conclude(self, **kwargs):
-            seen["conclude"] = kwargs
-
-        async def async_flush(self):
-            return ["trace-1"]
-
-        def disable_agent_control(self):
-            return None
-
-    class Callback:
-        def __init__(self, **kwargs):
-            seen["callback"] = True
-
-    monkeypatch.setattr(server, "attach_galileo", lambda name, text: (Logger(), [Callback()], "enabled"))
+    monkeypatch.setattr(server, "attach_galileo", lambda name, text: (_galileo(seen), ["callback"], "enabled"))
     client = _client(monkeypatch, tmp_path, galileo="configured")
-    monkeypatch.setattr(server, "get_snapshot", lambda ticker, refresh=False: (sample_snapshot(ticker), "cache"))
 
-    async def fake_brief(*_args, callbacks=None, **_kwargs):
+    async def drafted(_ctx, callbacks):
         seen["callbacks"] = callbacks
-        return {
-            "status": "unavailable",
-            "reason": "skip",
-            "opening": None,
-            "agenda": [],
-            "discussion_points": [],
-            "suitability_callouts": [],
-            "citations": [],
-            "disclaimer": "Demo brief — not advice",
-        }
+        raise RuntimeError("skip")
 
-    monkeypatch.setattr(server, "draft_brief", fake_brief)
-    body = client.post("/api/wealth/advisory/brief", json={"holdings": [{"ticker": "JPM", "weight": 1}]}).json()
-    assert seen["callbacks"]
-    assert body["telemetry"]["galileo"] == "recorded"
+    monkeypatch.setattr(advisory, "run_deep_agent", drafted)
+    monkeypatch.setattr(advisory, "run_single_call", drafted)
+    body = client.post("/api/wealth/advisory/brief", json={"household_id": "okafor"}).json()
+    assert seen["callbacks"] == ["callback"] and body["telemetry"]["galileo"] == "recorded"
+    assert {"get_household", "crm_notes", "suitability_rules", "next_best_actions"} <= set(seen["tools"])
 
 
 def test_attach_galileo_skips_sdk_without_key(monkeypatch):

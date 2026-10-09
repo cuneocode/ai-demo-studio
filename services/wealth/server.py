@@ -1,11 +1,12 @@
-"""Local studio adapter for live wealth research and client advisory.
+"""Local studio adapter for the wealth demos: market event → house-view update, and advisor meeting prep.
 
-Localhost only. No CORS. Fetch, cache, tools, and grounding never enter Inspection.
-Note and brief may be omitted; indicator rows still release.
-
-Both POST endpoints accept an optional client-chosen run_id and emit the shared run timeline
-(services/common/runs.py) while they work; GET /api/wealth/runs/{id}?after=n streams it and
+Localhost only. No CORS. Every POST accepts an optional client-chosen run_id and emits the shared run
+timeline (services/common/runs.py) while it works; GET /api/wealth/runs/{id}?after=n streams it and
 GET /api/wealth/recordings serves the recorded golden runs in data/recorded/.
+
+Publishing a house-view update and approving a meeting brief are separate requests: each one re-checks
+the stored run (or, for a recorded run, the posted result, labelled as such) through Agent Control and
+appends the decision to the run's timeline.
 """
 from __future__ import annotations
 
@@ -29,32 +30,29 @@ from pydantic import BaseModel, Field
 
 load_dotenv(Path(os.getenv("WEALTH_ENV_FILE", Path(__file__).resolve().parents[2] / ".env")))
 
-from advise import ADVISORY_DISCLAIMER, draft_brief
-from advise import omitted as omitted_brief
-from cache import cache_root, get_macro, get_snapshot, is_fresh, load_snapshot
-from fixtures import household, households, research_context, source_meta
-from nim import ADVISORY, models_url, nim_health, nim_model, nim_reachable, served
+import advisory
+import research
+from agentkit import galileo_current
+from cache import cache_root, get_snapshot, is_fresh, load_snapshot
+from compliance import scan_research
+from controls import controls
+from fixtures import household, households
+from nim import ADVISORY, nim_health, nim_model, nim_reachable, served
 from observability_status import stream_status, summarize
-from providers.fred import FredError, fred_health
+from providers.fred import fred_health
 from providers.yahoo import ProviderError
 from runlog import emit_current, runs_router, store
 from security import SecurityRun, defense, security_run
-from synthesize import RESEARCH_DISCLAIMER, draft_note
-from synthesize import omitted as omitted_note
 from telemetry import wealth_telemetry
-from usage import ModelUsage, model_usage
-from tools.conflicts import detect_conflicts, vs_spy
-from tools.earnings import earnings_from_snapshot
-from tools.macro import macro_from_payload
-from tools.peers import peers_from_snapshot
 from tools.returns import returns_from_snapshot
-from tools.suitability import household_findings, suitability_findings
+from tools.suitability import suitability_findings
+from usage import ModelUsage, model_usage
 
 app = FastAPI(docs_url=None, redoc_url=None)
 app.include_router(runs_router(store, "/api/wealth"))
 logger = logging.getLogger("wealth")
 startup_error = None
-ANALYZE_TIMEOUT = 160
+RUN_TIMEOUT = 240
 TICKER = re.compile(r"^[A-Za-z]{1,5}(?:[.-][A-Za-z])?$")
 PERIMETER = "Yahoo + FRED allowlist only"
 CASH = "CASH"
@@ -62,6 +60,7 @@ CASH = "CASH"
 
 def _agent_importable() -> bool:
     try:
+        import deepagents  # noqa: F401
         import langchain_openai  # noqa: F401
         from langchain_core.messages import SystemMessage  # noqa: F401
         return True
@@ -121,8 +120,16 @@ def normalize_ticker(value: str | None) -> str:
 
 class AnalyzeRequest(BaseModel):
     ticker: str = Field(min_length=1, max_length=10)
+    scenario: str | None = Field(default=None, max_length=32)
     refresh: bool = False
     run_id: str | None = Field(default=None, max_length=90)
+
+
+class PublishRequest(BaseModel):
+    run_id: str | None = Field(default=None, max_length=90)
+    decision: Literal["approve", "reject"] = "approve"
+    result: dict | None = None
+    by: str = Field(default="Sam Ortiz · CIO Office strategist", max_length=80)
 
 
 class HoldingIn(BaseModel):
@@ -131,97 +138,75 @@ class HoldingIn(BaseModel):
 
 
 class AdvisoryRequest(BaseModel):
-    holdings: list[HoldingIn] = Field(min_length=1, max_length=12)
+    household_id: str | None = Field(default=None, max_length=64)
+    holdings: list[HoldingIn] | None = Field(default=None, max_length=12)
     clientNotes: str | None = Field(default=None, max_length=4000)
     briefing: dict | None = None
     research: dict | None = None
     refresh: bool = False
-    household_id: str | None = Field(default=None, max_length=64)
     weights_unit: Literal["percent", "fraction"] | None = None
     run_id: str | None = Field(default=None, max_length=90)
 
 
-def _tools(snapshot: dict, macro_payload: dict | None) -> tuple[dict, dict, dict, dict, list[dict]]:
-    earnings = earnings_from_snapshot(snapshot)
-    peers = peers_from_snapshot(snapshot)
-    returns = returns_from_snapshot(snapshot)
-    macro = macro_from_payload(macro_payload)
-    conflicts = detect_conflicts(snapshot, earnings, peers, returns, macro)
-    return earnings, peers, returns, macro, conflicts
-
-
-def _source(snapshot: dict, kind: str) -> dict:
-    return {"kind": kind, "fetchedAt": snapshot.get("fetchedAt"), **source_meta(snapshot, kind)}
-
-
-def _holding_metrics(snapshot: dict, weight: float, source_kind: str, known: dict | None = None) -> dict:
-    returns = returns_from_snapshot(snapshot)
-    info = snapshot.get("info") or {}
-    window = (returns.get("windows") or {}).get("1Y") or {}
-    return {
-        "ticker": snapshot.get("ticker"),
-        "name": (known or {}).get("name") or snapshot.get("name") or info.get("name"),
-        "weight": weight,
-        "sector": info.get("sector"),
-        "industry": info.get("industry"),
-        "trailingPE": info.get("trailingPE"),
-        "marketCap": info.get("marketCap"),
-        "return_1y": window.get("ticker"),
-        "return_1y_spy": window.get("spy"),
-        "return_1y_vs_spy": window.get("excess"),
-        "asset_class": (known or {}).get("asset_class"),
-        "value": (known or {}).get("value"),
-        "source": _source(snapshot, source_kind),
-        "status": "ready" if returns.get("status") == "ready" or info else "absent",
-    }
-
-
-def _cash_metric(weight: float, known: dict | None) -> dict:
-    return {
-        "ticker": CASH, "name": (known or {}).get("name") or "Cash", "weight": weight, "asset_class": "cash",
-        "value": (known or {}).get("value"), "note": (known or {}).get("note"),
-        "source": {"kind": "household" if known else "entered", "label": "Household record · Synthetic" if known else "Entered by the advisor"},
-        "status": "ready",
-    }
-
-
-def _household_profile(record: dict) -> dict:
-    """What the model sees of a synthetic household: no account numbers."""
-    keep = ("id", "name", "age", "ages", "employer", "employer_ticker", "title", "affiliate", "affiliate_note", "risk_profile",
-            "horizon_years", "goals", "total_value", "as_of", "ips", "dependents", "estate", "rmd_note", "cd_ladder", "service_events")
-    profile = {key: record[key] for key in keep if record.get(key) is not None}
-    fields = ("ticker", "name", "weight_pct", "asset_class", "vehicle", "value", "shares", "price", "cost_basis_per_share", "note")
-    profile["holdings"] = [{key: row[key] for key in fields if key in row} for row in record.get("holdings") or []]
-    profile["accounts"] = [{"type": row.get("type"), "value": row.get("value"), "beneficiary_on_file": bool(row.get("beneficiary"))}
-                           for row in record.get("accounts") or []]
-    profile["synthetic"] = True
-    return profile
+class ApproveRequest(BaseModel):
+    run_id: str | None = Field(default=None, max_length=90)
+    stage: Literal["advisor", "supervisor"]
+    decision: Literal["approve", "reject"] = "approve"
+    action_ids: list[str] = Field(default_factory=list, max_length=12)
+    result: dict | None = None
+    by: str | None = Field(default=None, max_length=80)
 
 
 def _galileo_configured() -> str:
     return "configured" if os.getenv("GALILEO_API_KEY") else "disabled"
 
 
-def _money(value: float | None) -> str:
-    if not value:
-        return "$0"
-    return f"${value / 1_000_000:.1f}M" if value >= 1_000_000 else f"${value / 1000:,.0f}k"
+def _evaluation() -> dict:
+    """Galileo Luna groundedness runs only with a working endpoint; none is configured here."""
+    configured = all(os.getenv(name) for name in ("GALILEO_LUNA_INVOKE_URL", "GALILEO_LUNA_SCORER_ID", "GALILEO_API_SECRET_KEY"))
+    return {"status": "configured" if configured else "not_configured",
+            "label": "Galileo Luna groundedness" if configured else "Evaluation not configured",
+            "verifier": "Structured claim verifier (code) checks every claim"}
 
 
-def _finish_status(ai_status: str | None, failed: bool) -> str:
-    if failed:
-        return "failed"
-    return "blocked" if ai_status in {"blocked", "refused"} else "completed"
-
-
-def _grounding_event(dropped: int, status: str | None) -> None:
-    if status != "ready" and not dropped:
-        return
-    if dropped:
-        emit_current("claim.verdict", f"Grounding · {dropped} unsupported claim{'s' if dropped != 1 else ''} dropped", status="flagged",
-                     body="Claims that did not match the market data or the attached context were removed, not shown.")
-    else:
-        emit_current("claim.verdict", "Grounding · every kept claim matched the data", status="ok")
+async def _instrumented(run_id: str, trace: tuple[str, str], work):
+    """Security run, served-by, usage, Galileo, and the Splunk span around one run. Returns (body|failure, extras)."""
+    run = SecurityRun()
+    token: Token = security_run.set(run)
+    served_token: Token = served.set({})
+    usage = ModelUsage()
+    usage_token: Token = model_usage.set(usage)
+    galileo_logger, callbacks, galileo = attach_galileo(*trace)
+    galileo_token: Token = galileo_current.set(galileo_logger)
+    body, failure, output, code, splunk = None, None, "", 200, {"status": "not_configured"}
+    try:
+        with wealth_telemetry.span() as span:
+            trace_id = format(span.get_span_context().trace_id, "032x")
+            try:
+                body = await asyncio.wait_for(work(callbacks), RUN_TIMEOUT)
+                output = str(((body.get("update") or body.get("brief") or {}).get("status")) or body.get("status") or "")
+            except research.ResearchFailed as exc:
+                failure = (exc.status, str(exc))
+            except asyncio.TimeoutError:
+                failure = (504, "The run did not finish in time.")
+            if failure:
+                code, output = failure
+        splunk = wealth_telemetry.delivery(trace_id)
+    finally:
+        galileo = await finish_galileo(galileo_logger, galileo, output, code)
+        galileo_current.reset(galileo_token)
+        model_usage.reset(usage_token)
+        security_run.reset(token)
+        served_by = served.get() or None
+        served.reset(served_token)
+    extras = {"security": run.summary(), "usage": usage.summary(), "served_by": served_by,
+              "telemetry": {"splunk": splunk, "galileo": galileo}, "evaluation": _evaluation(), "run_id": run_id}
+    if failure:
+        emit_current("result", "Run failed", status="error", body=failure[1])
+        store.finish(run_id, "failed")
+        return JSONResponse(status_code=failure[0], content={"detail": failure[1], **extras})
+    body = {**body, **extras, "perimeter": PERIMETER}
+    return body
 
 
 @app.get("/api/wealth/health")
@@ -229,27 +214,26 @@ async def health():
     reachable = await nim_reachable()
     advisory_reachable = await nim_reachable(ADVISORY)
     agent_ok = _agent_importable()
-    root = cache_root()
     return {
         "ready": bool(reachable and agent_ok),
         "model": nim_model(),
-        "agent": "langchain",
+        "agent": "deepagents",
         "nim": nim_health(reachable),
         "advisory_model": nim_health(advisory_reachable, ADVISORY),
         "advisory_hosted_fallback": "allowed with AI Defense enforce" if defense.can_enforce() else "refused: AI Defense is not configured",
         "yahoo": {"status": "not_asserted"},
         "fred": fred_health(),
-        "cache": {
-            "root": str(root),
-            "ttl": "same UTC day or WEALTH_CACHE_TTL_SECONDS",
-        },
+        "cache": {"root": str(cache_root()), "ttl": "same UTC day or WEALTH_CACHE_TTL_SECONDS"},
         "security": defense.health(),
+        "untrusted_inspection": "AI Defense inspects news items and CRM notes" if defense.can_enforce() else "local screen only",
+        "controls": controls.health(),
+        "evaluation": _evaluation(),
         "galileo": _galileo_configured(),
         "splunk": wealth_telemetry.health(),
         "observability": summarize(),
         "error": "Wealth dependencies are unavailable." if startup_error and not agent_ok else None,
         "perimeter": PERIMETER,
-        "disclaimer": RESEARCH_DISCLAIMER,
+        "disclaimer": research.DISCLAIMER,
     }
 
 
@@ -271,322 +255,202 @@ async def get_household(household_id: str):
     return record
 
 
+# ------------------------------------------------------------------ research ----
 @app.post("/api/wealth/research/analyze")
 async def analyze(request: AnalyzeRequest):
     ticker = normalize_ticker(request.ticker)
-    timeline = store.open(request.run_id, label=f"{ticker} research", scenario="research", meta={"ticker": ticker}, prefix="wealth-research")
+    scenario = request.scenario or "ticker"
+    if scenario not in research.SCENARIOS:
+        raise HTTPException(422, "Unknown scenario.")
+    timeline = store.open(request.run_id, label=f"House-view update · {ticker}", scenario=f"research-{scenario}",
+                          meta={"ticker": ticker, "scenario": scenario}, prefix="wealth-research")
     with store.bind(timeline.id):
         try:
-            return await _analyze(ticker, request, timeline.id)
+            body = await _instrumented(timeline.id, ("Wealth research · house-view update", ticker),
+                                       lambda callbacks: research.run_research(ticker, scenario, refresh=request.refresh, callbacks=callbacks))
         except Exception:
             store.finish(timeline.id, "failed")
             raise
+        if isinstance(body, dict):
+            store.finish(timeline.id, "blocked" if body.get("status") == "blocked" else "completed", body)
+        return body
 
 
-async def _analyze(ticker: str, request: AnalyzeRequest, run_id: str):
-    started = time.monotonic()
-    run = SecurityRun()
-    token: Token = security_run.set(run)
-    served_token: Token = served.set({})
-    usage = ModelUsage()
-    usage_token: Token = model_usage.set(usage)
-    galileo_logger, callbacks, galileo = attach_galileo("Wealth research · synthesize", ticker)
-    output = ""
-    code = 200
-    failure = None
-    body = None
-    splunk = {"status": "not_configured"}
-    emit_current("run", f"Research · {ticker}", status="started",
-                 body="Market data, indicators, and a compliance pre-check, then a cited draft note.")
-    try:
-        with wealth_telemetry.span() as span:
-            trace_id = format(span.get_span_context().trace_id, "032x")
-            try:
-                emit_current("agent.tool_call", f"market_snapshot({ticker})", data={"tool": "market_snapshot", "arguments": {"ticker": ticker, "refresh": request.refresh}})
-                snapshot, source_kind = get_snapshot(ticker, refresh=request.refresh)
-                source = _source(snapshot, source_kind)
-                emit_current("tool.result", f"Market data · {source['label']}", status="ok",
-                             data={"tool": "market_snapshot", "source_kind": source_kind, "as_of": source.get("asOf"), "fictional": source.get("fictional")})
-                emit_current("agent.tool_call", "fred_macro()", data={"tool": "fred_macro"})
-                macro_payload, macro_kind = get_macro(refresh=request.refresh)
-            except ProviderError as exc:
-                failure = (exc.status, str(exc))
-                emit_current("tool.result", f"Market data · {exc}", status="error", data={"tool": "market_snapshot"})
-            except FredError as exc:
-                failure = (exc.status, str(exc))
-                emit_current("tool.result", f"Macro · {exc}", status="error", data={"tool": "fred_macro"})
-            else:
-                earnings, peers, returns, macro, conflicts = _tools(snapshot, macro_payload)
-                emit_current("tool.result", f"Macro · {'FRED ' + macro_kind if macro_kind else 'not available'}",
-                             status="ok" if macro.get("status") == "ready" else "info",
-                             body=None if macro.get("status") == "ready" else macro.get("reason"), data={"tool": "fred_macro", "source_kind": macro_kind})
-                one_year = (returns.get("windows") or {}).get("1Y") or {}
-                emit_current("tool.result", "Indicators · earnings, peers, returns", status="ok", body=" · ".join(part for part in [
-                    f"Beat rate {earnings['beatRate'] * 100:.1f}%" if earnings.get("beatRate") is not None else "",
-                    f"1-year {vs_spy(one_year.get('ticker'), one_year.get('spy'))}" if one_year.get("ticker") is not None else "",
-                    f"P/E {peers['subjectPe']:.1f} vs peer median {peers['medianPe']:.1f}" if peers.get("subjectPe") and peers.get("medianPe") else "",
-                ] if part), data={"tool": "indicators"})
-                emit_current("tool.result", f"Signal divergences · {len(conflicts) or 'none'}", status="flagged" if conflicts else "ok",
-                             body="; ".join(row["title"] for row in conflicts) or None, data={"tool": "signal_divergences"})
-                context = research_context(ticker)
-                if context["house_view"]:
-                    view = context["house_view"]
-                    emit_current("tool.result", f"House view · {view.get('rating')} · {view.get('owner')}", status="ok",
-                                 body="Owned by the CIO Office. The AI cannot change the rating.", data={"tool": "house_view", "synthetic": view.get("synthetic")})
-                if context["event"]:
-                    event = context["event"]
-                    emit_current("tool.result", f"Earnings event · {event.get('period')} · EPS ${event.get('eps_actual')} vs ${event.get('eps_estimate')} est.",
-                                 status="ok", body=event.get("guidance_change"), data={"tool": "earnings_event", "source": event.get("source")})
-                if context["affected_households"]:
-                    book = context["affected_households"]
-                    emit_current("tool.result", f"Affected households · {book['count']} hold it, {book['concentrated']} above 10%, {book['executives']} executives",
-                                 status="ok", data={"tool": "affected_households", "synthetic": True})
-                restricted = context["restricted"]
-                if restricted:
-                    emit_current("control", f"Compliance pre-check · restricted list · {ticker} denied", status="denied",
-                                 body=f"{restricted.get('reason')} since {restricted.get('since')}. Nothing is drafted or published, and no model is called.",
-                                 data={"policy": "research.publish", "restricted": restricted})
-                    note, recommendation = omitted_note(
-                        f"Compliance pre-check: {ticker} is on the restricted list ({restricted.get('reason')}). No research is drafted or published.", "blocked")
-                else:
-                    emit_current("control", "Compliance pre-check · restricted list · clear", status="allowed", data={"policy": "research.publish"})
-                    tools = {"earnings": earnings, "peers": peers, "returns": returns, "macro": macro}
-                    if context["house_view"]:
-                        tools["house_view"] = {key: context["house_view"].get(key) for key in ("rating", "owner", "as_of", "thesis_points", "key_risks")}
-                    if context["event"]:
-                        tools["event"] = context["event"]
-                    try:
-                        note, recommendation = await asyncio.wait_for(
-                            draft_note(ticker, tools, conflicts, snapshot, macro, callbacks=callbacks),
-                            ANALYZE_TIMEOUT,
-                        )
-                    except asyncio.TimeoutError:
-                        note, recommendation = omitted_note("The model timed out.", "unavailable")
-                        emit_current("llm.call", "Model timed out", status="error")
-                    _grounding_event(note.get("dropped_claims") or 0, note.get("status"))
-                output = note.get("summary") or note.get("reason") or recommendation.get("status") or ""
-                body = {
-                    "ticker": ticker,
-                    "company": {
-                        "name": snapshot.get("name"),
-                        "ticker": ticker,
-                        "sector": (snapshot.get("info") or {}).get("sector"),
-                        "industry": (snapshot.get("info") or {}).get("industry"),
-                    },
-                    "source": {**source, "macro": macro_kind, "fresh": is_fresh(snapshot)},
-                    "earnings": earnings,
-                    "peers": peers,
-                    "returns": returns,
-                    "macro": macro,
-                    "conflicts": conflicts,
-                    "context": context,
-                    "note": note,
-                    "recommendation": recommendation,
-                    "grounding": {
-                        "dropped_claims": (note.get("dropped_claims") or 0),
-                    },
-                    "security": run.summary(),
-                    "usage": usage.summary(),
-                    "duration_ms": round((time.monotonic() - started) * 1000),
-                    "perimeter": PERIMETER,
-                    "disclaimer": RESEARCH_DISCLAIMER,
-                }
-            if failure:
-                code, output = failure
-        splunk = wealth_telemetry.delivery(trace_id)
-    finally:
-        galileo = await finish_galileo(galileo_logger, galileo, output, code)
-        model_usage.reset(usage_token)
-        security_run.reset(token)
-        served_by = served.get() or None
-        served.reset(served_token)
-    telemetry = {"splunk": splunk, "galileo": galileo}
-    if failure:
-        emit_current("result", "Research failed", status="error", body=failure[1])
-        store.finish(run_id, "failed")
-        return JSONResponse(status_code=failure[0], content={"detail": failure[1], "security": run.summary(), "usage": usage.summary(),
-                                                             "served_by": served_by, "telemetry": telemetry, "run_id": run_id})
-    body["telemetry"] = telemetry
-    body["served_by"] = served_by
-    body["run_id"] = run_id
-    status = body["note"].get("status")
-    emit_current("result", "Draft note ready for review" if status == "ready" else f"Draft note {status} · indicators released",
-                 status="ok" if status == "ready" else "blocked" if status in {"blocked", "refused"} else "info",
-                 body=body["note"].get("summary") or body["note"].get("reason"))
-    store.finish(run_id, _finish_status(status, False), body)
-    return body
+def _stored(run_id: str | None, posted: dict | None, service: str) -> tuple[dict, str, str | None]:
+    """The run's own stored result, or a posted one (a recorded run replayed in the browser)."""
+    run = store.get(run_id) if run_id else None
+    if run and run.result:
+        return run.result, "run", run.id
+    if isinstance(posted, dict):
+        return posted, "posted", None
+    raise HTTPException(409, f"Nothing to {service}: run the scenario first.")
+
+
+@app.post("/api/wealth/research/publish")
+async def publish(request: PublishRequest):
+    result, origin, run_id = _stored(request.run_id, request.result, "publish")
+    update = result.get("update") or {}
+    if (result.get("publish") or {}).get("status") not in {"awaiting_approval", "published", "rejected"}:
+        raise HTTPException(409, (result.get("publish") or {}).get("reason") or "This update cannot be published.")
+    verified = [row for row in update.get("claims") or [] if row.get("status") == "verified"]
+    scan = scan_research([row.get("text") or "" for row in verified])
+    verdicts = {
+        "issuer_not_restricted": bool(((result.get("precheck") or {}).get("verdicts") or {}).get("issuer_not_restricted", True)),
+        "no_rating_or_price_target": scan["verdicts"]["no_rating_or_price_target"],
+        "no_guarantee": scan["verdicts"]["no_guarantee"],
+        "claims_verified": bool(verified),
+        "strategist_approved": request.decision == "approve",
+    }
+
+    async def gate():
+        emit_current("hitl.decision", f"{request.by} · {'approved' if request.decision == 'approve' else 'rejected'} the update",
+                     status="ok" if request.decision == "approve" else "denied", lane="human",
+                     data={"request_id": "publish", "decision": request.decision, "origin": origin})
+        return await controls.evaluate("research_publish", verdicts)
+
+    if run_id:
+        with store.bind(run_id):
+            outcome = await gate()
+            published = outcome["allowed"]
+            emit_current("result", "Published to the advisor desk" if published else "Not published · a research.publish policy denied it",
+                         status="ok" if published else "denied",
+                         body=f"{len(verified)} verified claims; the house view stays {((result.get('context') or {}).get('house_view') or {}).get('rating')}."
+                         if published else "; ".join(f"{c['label']}: {c['status']}" for c in outcome["checks"] if c["status"] == "denied"))
+    else:
+        outcome = await controls.evaluate("research_publish", verdicts, emit=False)
+        published = outcome["allowed"]
+    stamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    status = "published" if published else "rejected" if request.decision == "reject" else "denied"
+    record = {"status": status, "by": request.by, "at": stamp, "controls": outcome, "verdicts": verdicts, "origin": origin,
+              "origin_label": "Checked on this run" if origin == "run" else "Checked on the recorded run's result"}
+    if run_id and store.get(run_id).result is not None:
+        store.get(run_id).result = {**store.get(run_id).result, "publish": {**(result.get("publish") or {}), **record}}
+    return record
+
+
+# ------------------------------------------------------------------ advisory ----
+def _custom_holdings(request: AdvisoryRequest) -> list[dict]:
+    rows = []
+    for item in request.holdings or []:
+        ticker = normalize_ticker(item.ticker)
+        if request.weights_unit == "percent":
+            weight = item.weight / 100.0
+        elif request.weights_unit == "fraction":
+            weight = item.weight
+        else:
+            weight = item.weight / 100.0 if item.weight > 1.5 else item.weight
+        if weight <= 0 or weight > 1.5:
+            raise HTTPException(422, "Holding weights must be positive percents.")
+        rows.append({"ticker": ticker, "weight": weight})
+    if not rows:
+        raise HTTPException(422, "Choose a household or enter at least one holding.")
+    return rows
+
+
+async def _custom_prep(rows: list[dict], notes: str | None, refresh: bool) -> dict:
+    """Entered holdings: market data and concentration rules only. A brief needs a household record."""
+    emit_current("run", "Holdings check · entered holdings", status="started", body="Market data and concentration rules for entered holdings.")
+    metrics, failed = [], 0
+    for row in rows:
+        if row["ticker"] == CASH:
+            metrics.append({**row, "asset_class": "cash", "status": "ready", "source": {"kind": "entered", "label": "Entered by the advisor"}})
+            continue
+        try:
+            snapshot, kind = get_snapshot(row["ticker"], refresh=refresh)
+        except ProviderError:
+            failed += 1
+            metrics.append({**row, "status": "absent", "reason": "Market data for that ticker was empty."})
+            continue
+        window = (returns_from_snapshot(snapshot).get("windows") or {}).get("1Y") or {}
+        metrics.append({**row, "name": snapshot.get("name"), "return_1y": window.get("ticker"), "return_1y_spy": window.get("spy"),
+                        "status": "ready", "source": {"kind": kind}})
+    securities = [row for row in rows if row["ticker"] != CASH]
+    if securities and failed == len(securities):
+        raise research.ResearchFailed(502, "Market data for those holdings was empty.")
+    findings = suitability_findings(rows, notes)
+    emit_current("result", f"Holdings checked · {len(findings)} findings", status="ok")
+    return {"household": None, "holdings": metrics, "suitability": findings, "actions": [],
+            "brief": {"status": "unavailable", "lines": [], "mode": "none", "mode_label": advisory.MODES["none"],
+                      "reason": "Choose a household for a full meeting brief: the rules need a profile, horizon, and goals."},
+            "approval": {"status": "unavailable"}, "disclaimer": advisory.DISCLAIMER}
 
 
 @app.post("/api/wealth/advisory/brief")
 async def brief(request: AdvisoryRequest):
-    record = None
-    if request.household_id:
-        record = household(request.household_id)
-        if not record:
-            raise HTTPException(404, "Unknown household.")
-    label = f"Meeting prep · {record['name']}" if record else "Meeting prep · custom holdings"
+    record = household(request.household_id) if request.household_id else None
+    if request.household_id and not record:
+        raise HTTPException(404, "Unknown household.")
+    rows = None if record else _custom_holdings(request)
+    label = f"Meeting prep · {record['name']}" if record else "Holdings check · entered holdings"
     timeline = store.open(request.run_id, label=label, scenario=f"advisory-{record['id']}" if record else "advisory-custom",
                           meta={"household_id": record["id"] if record else None}, prefix="wealth-advisory")
+
+    def work(callbacks):
+        if record:
+            return advisory.run_meeting_prep(record, research=request.research, briefing=request.briefing, callbacks=callbacks)
+        return _custom_prep(rows, request.clientNotes, request.refresh)
+
     with store.bind(timeline.id):
         try:
-            return await _brief(request, record, timeline.id)
+            body = await _instrumented(timeline.id, ("Wealth advisory · meeting prep", label), work)
         except Exception:
             store.finish(timeline.id, "failed")
             raise
+        if isinstance(body, dict):
+            refused = (body.get("brief") or {}).get("refused")
+            store.finish(timeline.id, "blocked" if refused else "completed", body)
+        return body
 
 
-async def _brief(request: AdvisoryRequest, record: dict | None, run_id: str):
-    started = time.monotonic()
-    run = SecurityRun()
-    token: Token = security_run.set(run)
-    served_token: Token = served.set({})
-    usage = ModelUsage()
-    usage_token: Token = model_usage.set(usage)
-    output = ""
-    code = 200
-    failure = None
-    body = None
-    splunk = {"status": "not_configured"}
-    galileo_logger, callbacks, galileo = None, [], "disabled"
-    try:
-        holdings_in = []
-        for item in request.holdings:
-            ticker = normalize_ticker(item.ticker)
-            if request.weights_unit == "percent":
-                weight = item.weight / 100.0
-            elif request.weights_unit == "fraction":
-                weight = item.weight
-            else:
-                weight = item.weight / 100.0 if item.weight > 1.5 else item.weight
-            if weight <= 0 or weight > 1.5:
-                raise HTTPException(422, "Holding weights must be positive percents.")
-            holdings_in.append({"ticker": ticker, "weight": weight})
-        if not holdings_in:
-            raise HTTPException(422, "Enter at least one holding.")
-        emit_current("run", "Meeting prep · " + (record["name"] if record else "custom holdings"), status="started",
-                     body="Household, market data, suitability rules, then a meeting brief drafted from that record only.")
-        known = {str(row.get("ticker", "")).upper(): row for row in (record or {}).get("holdings") or []}
-        profile = _household_profile(record) if record else None
-        if record:
-            emit_current("agent.tool_call", f"get_household({record['id']})", data={"tool": "get_household", "arguments": {"id": record["id"]}})
-            emit_current("tool.result", f"Household · Synthetic · {_money(record.get('total_value'))} · {record.get('risk_profile')} profile",
-                         status="ok", body=record.get("headline"), data={"tool": "get_household", "synthetic": True})
-        galileo_logger, callbacks, galileo = attach_galileo("Wealth advisory · meeting brief", "client advisory brief")
-
-        with wealth_telemetry.span() as span:
-            trace_id = format(span.get_span_context().trace_id, "032x")
-            metrics = []
-            snapshots = []
-            failed = 0
-            securities = [item for item in holdings_in if item["ticker"] != CASH]
-            if securities:
-                emit_current("agent.tool_call", f"market_snapshot({', '.join(item['ticker'] for item in securities)})",
-                             data={"tool": "market_snapshot", "arguments": {"tickers": [item["ticker"] for item in securities]}})
-            for item in holdings_in:
-                if item["ticker"] == CASH:
-                    metrics.append(_cash_metric(item["weight"], known.get(CASH)))
-                    continue
-                try:
-                    snapshot, source_kind = get_snapshot(item["ticker"], refresh=request.refresh)
-                except ProviderError:
-                    failed += 1
-                    emit_current("tool.result", f"{item['ticker']} · market data unavailable", status="error", data={"tool": "market_snapshot"})
-                    metrics.append({
-                        "ticker": item["ticker"],
-                        "weight": item["weight"],
-                        "status": "absent",
-                        "reason": "Market data for that ticker was empty.",
-                    })
-                    continue
-                snapshots.append(snapshot)
-                metric = _holding_metrics(snapshot, item["weight"], source_kind, known.get(item["ticker"]))
-                emit_current("tool.result", f"{item['ticker']} · {metric['source']['label']}", status="ok",
-                             data={"tool": "market_snapshot", "ticker": item["ticker"], "source_kind": source_kind})
-                metrics.append(metric)
-            if securities and failed == len(securities):
-                failure = (502, "Market data for those holdings was empty.")
-            else:
-                emit_current("agent.tool_call", "suitability_check", data={"tool": "suitability_check", "rules": "household policy" if record else "concentration and notes"})
-                suitability = household_findings(record, holdings_in) if record else suitability_findings(holdings_in, request.clientNotes)
-                for finding in suitability:
-                    emit_current("claim.verdict", f"Suitability · {finding.get('rule') or 'check'} · {finding.get('title') or finding['severity']}",
-                                 status="flagged", body=finding["detail"], data={"rule": finding.get("rule"), "severity": finding["severity"]})
-                if not suitability:
-                    emit_current("claim.verdict", "Suitability · no findings", status="ok")
-                attached = [name for name, present in (("research note", request.research), ("company briefing", request.briefing)) if present]
-                if attached:
-                    emit_current("tool.result", f"Attached context · {' and '.join(attached)}", status="ok", data={"tool": "attached_context"})
-                primary = snapshots[0] if snapshots else {}
-                try:
-                    meeting = await asyncio.wait_for(
-                        draft_brief(
-                            metrics,
-                            suitability,
-                            request.briefing,
-                            request.research,
-                            primary,
-                            request.clientNotes,
-                            callbacks=callbacks,
-                            household=profile,
-                        ),
-                        ANALYZE_TIMEOUT,
-                    )
-                except asyncio.TimeoutError:
-                    meeting = omitted_brief("The model timed out.", "unavailable")
-                    emit_current("llm.call", "Model timed out", status="error")
-                _grounding_event(meeting.get("dropped_claims") or 0, meeting.get("status"))
-                output = meeting.get("opening") or meeting.get("reason") or meeting.get("status") or ""
-                body = {
-                    "household": {"id": record["id"], "name": record.get("name"), "synthetic": True} if record else None,
-                    "holdings": metrics,
-                    "suitability": suitability,
-                    "brief": meeting,
-                    "entitled": {
-                        "briefing": bool(request.briefing),
-                        "research": bool(request.research),
-                    },
-                    "grounding": {"dropped_claims": meeting.get("dropped_claims") or 0},
-                    "security": run.summary(),
-                    "usage": usage.summary(),
-                    "duration_ms": round((time.monotonic() - started) * 1000),
-                    "perimeter": PERIMETER,
-                    "disclaimer": ADVISORY_DISCLAIMER,
-                }
-            if failure:
-                code, output = failure
-        splunk = wealth_telemetry.delivery(trace_id)
-    finally:
-        galileo = await finish_galileo(galileo_logger, galileo, output, code)
-        model_usage.reset(usage_token)
-        security_run.reset(token)
-        served_by = served.get() or None
-        served.reset(served_token)
-    telemetry = {"splunk": splunk, "galileo": galileo}
-    if failure:
-        emit_current("result", "Meeting prep failed", status="error", body=failure[1])
-        store.finish(run_id, "failed")
-        return JSONResponse(status_code=failure[0], content={"detail": failure[1], "security": run.summary(), "usage": usage.summary(),
-                                                             "served_by": served_by, "telemetry": telemetry, "run_id": run_id})
-    body["telemetry"] = telemetry
-    body["served_by"] = served_by
-    body["run_id"] = run_id
-    status = body["brief"].get("status")
-    titles = {"ready": "Meeting brief ready for advisor review", "refused": "Brief not drafted · client data stayed in the bank",
-              "blocked": "Brief not drafted · AI Defense blocked it"}
-    emit_current("result", titles.get(status, f"Brief {status} · holdings and suitability released"),
-                 status="ok" if status == "ready" else "blocked" if status in {"blocked", "refused"} else "info",
-                 body=body["brief"].get("opening") or body["brief"].get("reason"))
-    store.finish(run_id, _finish_status(status, False), body)
-    return body
+@app.post("/api/wealth/advisory/approve")
+async def approve(request: ApproveRequest):
+    result, origin, run_id = _stored(request.run_id, request.result, "approve")
+    if (result.get("brief") or {}).get("status") != "ready":
+        raise HTTPException(409, "There is no brief to approve.")
+    approval = dict(result.get("approval") or {})
+    stamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    if request.stage == "advisor":
+        by = request.by or "Jordan Lee · advisor"
+        approval.update({"status": "awaiting_supervisor" if request.decision == "approve" else "returned", "advisor": {"by": by, "at": stamp},
+                         "action_ids": request.action_ids})
+        if run_id:
+            with store.bind(run_id):
+                emit_current("hitl.decision", f"{by} · {'submitted the brief for supervision' if request.decision == 'approve' else 'returned the brief'}",
+                             status="ok" if request.decision == "approve" else "denied", lane="human",
+                             data={"request_id": "advisor", "actions": request.action_ids})
+                if request.decision == "approve":
+                    emit_current("hitl.request", "Supervisor approval", status="info", lane="human",
+                                 body="Approval runs the advisory.recommendation policies on the brief and the chosen actions.",
+                                 data={"request_id": "supervisor", "policy": "advisory.recommendation"})
+    else:
+        if approval.get("status") not in {"awaiting_supervisor", "sent", "denied"} and origin == "run":
+            raise HTTPException(409, "The advisor submits the brief first.")
+        by = request.by or "Morgan Patel · supervising principal"
+        action_ids = request.action_ids or approval.get("action_ids") or (result.get("brief") or {}).get("action_ids") or []
+        if run_id:
+            with store.bind(run_id):
+                emit_current("hitl.decision", f"{by} · {'approved' if request.decision == 'approve' else 'rejected'} the brief",
+                             status="ok" if request.decision == "approve" else "denied", lane="human",
+                             data={"request_id": "supervisor", "actions": action_ids})
+                outcome = await advisory.supervise(result, action_ids, request.decision)
+                sent = outcome["controls"]["allowed"]
+                emit_current("result", "Brief recorded to the CRM · nothing is executed" if sent else "Brief not recorded · an advisory.recommendation policy denied it",
+                             status="ok" if sent else "denied",
+                             body=None if sent else "; ".join(f"{c['label']}: {c['status']}" for c in outcome["controls"]["checks"] if c["status"] == "denied"))
+        else:
+            outcome = await advisory.supervise(result, action_ids, request.decision)
+            sent = outcome["controls"]["allowed"]
+        approval.update({"status": "sent" if sent else "rejected" if request.decision == "reject" else "denied",
+                         "supervisor": {"by": by, "at": stamp}, "action_ids": outcome["actions"], **outcome})
+    approval["origin"] = origin
+    approval["origin_label"] = "Checked on this run" if origin == "run" else "Checked on the recorded run's result"
+    if run_id and store.get(run_id).result is not None:
+        store.get(run_id).result = {**store.get(run_id).result, "approval": approval}
+    return approval
 
 
 @app.get("/api/wealth/cache/{ticker}")
 async def cache_status(ticker: str):
     symbol = normalize_ticker(ticker)
     payload = load_snapshot(symbol)
-    return {
-        "ticker": symbol,
-        "present": bool(payload),
-        "fresh": is_fresh(payload),
-        "fetchedAt": (payload or {}).get("fetchedAt"),
-    }
+    return {"ticker": symbol, "present": bool(payload), "fresh": is_fresh(payload), "fetchedAt": (payload or {}).get("fetchedAt")}
