@@ -1,0 +1,432 @@
+{
+ "_about": "Synthetic SAR case for the SAR investigation demo. Fictional business, owner, branches, and counterparties; every identifier is deliberately invalid (000-prefixed SSN, 555-01xx phone, example.com email, masked account numbers).",
+ "synthetic": true,
+ "fictional": true,
+ "id": "structuring-harbor",
+ "label": "Structuring \u00b7 cash under the CTR threshold",
+ "typology_hint": "structuring",
+ "as_of": "2026-10-09",
+ "alert": {
+  "id": "ALR-2026-0926-0291",
+  "detected": "2026-09-26",
+  "source": "Transaction monitoring rule TM-CASH-03 (cash just under $10,000, multiple locations)",
+  "summary": "Repeated cash deposits just under the currency transaction report threshold at four branches, followed by a large international wire.",
+  "queue": "FIU \u00b7 cash structuring",
+  "priority": "high"
+ },
+ "referral": null,
+ "subject": {
+  "name": "Harbor Lane Auto Detailing LLC",
+  "role": "subject (business)",
+  "entity_type": "California LLC (fictional)",
+  "ein": "00-0000417",
+  "address": {
+   "line1": "410 Sample Wharf Way",
+   "city": "Oakland",
+   "state": "CA",
+   "postal_code": "94607",
+   "country": "US",
+   "fictional": true
+  },
+  "phone": "+1 (510) 555-0163",
+  "email": "harborlane.office@example.com",
+  "customer_since": "2025-11-12",
+  "beneficial_owner": {
+   "name": "Marisol Vance",
+   "role": "owner, 100%",
+   "date_of_birth": "1983-07-29",
+   "ssn": "000-63-1180",
+   "fictional": true
+  },
+  "home_state": "CA"
+ },
+ "kyc": {
+  "risk_rating": "Medium",
+  "business": "Mobile auto detailing; two vans; card and invoice payments",
+  "expected_activity": "Card-processor settlements of about $2,500 a month; cash deposits of $2,000\u2013$4,000 a month",
+  "expected_monthly_inflow": 6500,
+  "expected_monthly_cash": 3000,
+  "source_of_funds": "Detailing revenue",
+  "pep": false,
+  "sanctions_screening": "clear"
+ },
+ "accounts": [
+  {
+   "id": "bus-5108",
+   "type": "business_checking",
+   "number_masked": "****5108",
+   "opened": "2025-11-12",
+   "status": "open",
+   "balance_before_window": 4310.22
+  }
+ ],
+ "window": {
+  "start": "2026-09-08",
+  "end": "2026-09-26"
+ },
+ "transactions": [
+  {
+   "at": "2026-09-08T10:12:00-07:00",
+   "direction": "in",
+   "type": "cash_deposit",
+   "amount": 9450.0,
+   "location": "Oakland Downtown branch",
+   "channel": "Teller cash deposit",
+   "conducted_by": "Marisol Vance (owner)",
+   "ctr_filed": false,
+   "id": "TXN-01",
+   "status": "posted",
+   "state": "CA"
+  },
+  {
+   "at": "2026-09-09T15:40:00-07:00",
+   "direction": "in",
+   "type": "cash_deposit",
+   "amount": 9800.0,
+   "location": "Emeryville branch",
+   "channel": "Teller cash deposit",
+   "conducted_by": "Marisol Vance (owner)",
+   "ctr_filed": false,
+   "id": "TXN-02",
+   "status": "posted",
+   "state": "CA"
+  },
+  {
+   "at": "2026-09-10T11:05:00-07:00",
+   "direction": "in",
+   "type": "cash_deposit",
+   "amount": 8900.0,
+   "location": "Berkeley Shattuck branch",
+   "channel": "Teller cash deposit",
+   "conducted_by": "Marisol Vance (owner)",
+   "ctr_filed": false,
+   "id": "TXN-03",
+   "status": "posted",
+   "state": "CA"
+  },
+  {
+   "at": "2026-09-11T16:22:00-07:00",
+   "direction": "in",
+   "type": "cash_deposit",
+   "amount": 9650.0,
+   "location": "San Leandro branch",
+   "channel": "Teller cash deposit",
+   "conducted_by": "Marisol Vance (owner)",
+   "ctr_filed": false,
+   "id": "TXN-04",
+   "status": "posted",
+   "state": "CA"
+  },
+  {
+   "at": "2026-09-12T02:00:00-07:00",
+   "direction": "in",
+   "type": "card_settlement",
+   "amount": 612.4,
+   "channel": "Card-processor settlement (fictional processor)",
+   "counterparty": "CP-02",
+   "id": "TXN-05",
+   "status": "posted"
+  },
+  {
+   "at": "2026-09-14T09:48:00-07:00",
+   "direction": "in",
+   "type": "cash_deposit",
+   "amount": 9200.0,
+   "location": "Oakland Downtown branch",
+   "channel": "Teller cash deposit",
+   "conducted_by": "Marisol Vance (owner)",
+   "ctr_filed": false,
+   "id": "TXN-06",
+   "status": "posted",
+   "state": "CA"
+  },
+  {
+   "at": "2026-09-15T13:30:00-07:00",
+   "direction": "in",
+   "type": "cash_deposit",
+   "amount": 9850.0,
+   "location": "Emeryville branch",
+   "channel": "Teller cash deposit",
+   "conducted_by": "Marisol Vance (owner)",
+   "ctr_filed": false,
+   "id": "TXN-07",
+   "status": "posted",
+   "state": "CA"
+  },
+  {
+   "at": "2026-09-16T10:55:00-07:00",
+   "direction": "in",
+   "type": "cash_deposit",
+   "amount": 8800.0,
+   "location": "Berkeley Shattuck branch",
+   "channel": "Teller cash deposit",
+   "conducted_by": "Marisol Vance (owner)",
+   "ctr_filed": false,
+   "id": "TXN-08",
+   "status": "posted",
+   "state": "CA"
+  },
+  {
+   "at": "2026-09-17T14:10:00-07:00",
+   "direction": "in",
+   "type": "cash_deposit",
+   "amount": 9500.0,
+   "location": "San Leandro branch",
+   "channel": "Teller cash deposit",
+   "conducted_by": "Marisol Vance (owner)",
+   "ctr_filed": false,
+   "id": "TXN-09",
+   "status": "posted",
+   "state": "CA"
+  },
+  {
+   "at": "2026-09-18T11:35:00-07:00",
+   "direction": "in",
+   "type": "cash_deposit",
+   "amount": 9300.0,
+   "location": "Oakland Downtown branch",
+   "channel": "Teller cash deposit",
+   "conducted_by": "Marisol Vance (owner)",
+   "ctr_filed": false,
+   "id": "TXN-10",
+   "status": "posted",
+   "state": "CA"
+  },
+  {
+   "at": "2026-09-19T02:00:00-07:00",
+   "direction": "in",
+   "type": "card_settlement",
+   "amount": 588.15,
+   "channel": "Card-processor settlement (fictional processor)",
+   "counterparty": "CP-02",
+   "id": "TXN-11",
+   "status": "posted"
+  },
+  {
+   "at": "2026-09-21T15:02:00-07:00",
+   "direction": "in",
+   "type": "cash_deposit",
+   "amount": 9700.0,
+   "location": "Emeryville branch",
+   "channel": "Teller cash deposit",
+   "conducted_by": "Marisol Vance (owner)",
+   "ctr_filed": false,
+   "id": "TXN-12",
+   "status": "posted",
+   "state": "CA"
+  },
+  {
+   "at": "2026-09-22T10:18:00-07:00",
+   "direction": "in",
+   "type": "cash_deposit",
+   "amount": 9100.0,
+   "location": "Berkeley Shattuck branch",
+   "channel": "Teller cash deposit",
+   "conducted_by": "Marisol Vance (owner)",
+   "ctr_filed": false,
+   "id": "TXN-13",
+   "status": "posted",
+   "state": "CA"
+  },
+  {
+   "at": "2026-09-23T12:44:00-07:00",
+   "direction": "in",
+   "type": "cash_deposit",
+   "amount": 9100.0,
+   "location": "San Leandro branch",
+   "channel": "Teller cash deposit",
+   "conducted_by": "Marisol Vance (owner)",
+   "ctr_filed": false,
+   "id": "TXN-14",
+   "status": "posted",
+   "state": "CA"
+  },
+  {
+   "at": "2026-09-25T09:31:00-07:00",
+   "direction": "out",
+   "type": "wire_out",
+   "amount": 98000.0,
+   "channel": "International wire (SWIFT)",
+   "counterparty": "CP-01",
+   "memo": "auto parts invoice 7781",
+   "beneficiary_country": "AE",
+   "id": "TXN-15",
+   "status": "posted"
+  },
+  {
+   "at": "2026-09-26T08:00:00-07:00",
+   "direction": "out",
+   "type": "ach_out",
+   "amount": 2140.0,
+   "channel": "ACH (rent)",
+   "counterparty": "CP-03",
+   "memo": "shop lease Sept",
+   "id": "TXN-16",
+   "status": "posted"
+  }
+ ],
+ "counterparties": [
+  {
+   "id": "CP-01",
+   "name": "Bramblecoast Trading FZE (fictional)",
+   "kind": "wire beneficiary",
+   "country": "AE",
+   "relationship_on_file": "none; first wire to this beneficiary",
+   "note": "Free-zone trading company; the invoice on the wire is for auto parts",
+   "fictional": true
+  },
+  {
+   "id": "CP-02",
+   "name": "Tidepool Payments (fictional card processor)",
+   "kind": "card-processor settlement",
+   "relationship_on_file": "merchant services since 2025-11",
+   "fictional": true
+  },
+  {
+   "id": "CP-03",
+   "name": "Wharfside Properties LLC (fictional)",
+   "kind": "landlord (ACH)",
+   "relationship_on_file": "monthly lease since 2025-12",
+   "fictional": true
+  }
+ ],
+ "teller_notes": [
+  {
+   "id": "TN-1",
+   "date": "2026-09-15",
+   "location": "Emeryville branch",
+   "note": "Customer asked how much she could deposit before the bank fills out the form, then split the deposit across two days.",
+   "author": "Teller (fictional)"
+  }
+ ],
+ "prior_alerts": [],
+ "documents": {
+  "clean": []
+ },
+ "sample_draft": {
+  "_about": "Pre-written sample narrative (no model call), cited to this case's evidence ids.",
+  "sections": [
+   {
+    "section": "who",
+    "sentences": [
+     {
+      "text": "The subject is Harbor Lane Auto Detailing LLC, a California LLC (fictional) in Oakland, CA, owned by Marisol Vance, with business checking account ending 5108 opened 2025-11-12.",
+      "cites": [
+       "KYC-1",
+       "ACCT-1"
+      ]
+     }
+    ]
+   },
+   {
+    "section": "what",
+    "sentences": [
+     {
+      "text": "Between 2026-09-08 and 2026-09-23 the owner made 12 cash deposits totalling $112,350.00, each between $8,800.00 and $9,850.00, so none reached the $10,000 currency transaction report threshold.",
+      "cites": [
+       "AGG-IN-CASH",
+       "IND-ST-01"
+      ]
+     },
+     {
+      "text": "Cash in a rolling 7 days reached $56,300.00 with no single deposit at or over $10,000.",
+      "cites": [
+       "IND-ST-02"
+      ]
+     },
+     {
+      "text": "On 2026-09-25 the account sent a $98,000.00 international wire to Bramblecoast Trading FZE (fictional) with an auto-parts invoice memo.",
+      "cites": [
+       "AGG-OUT-WIRE",
+       "CP-01"
+      ]
+     }
+    ]
+   },
+   {
+    "section": "when",
+    "sentences": [
+     {
+      "text": "The deposits ran from 2026-09-08 to 2026-09-23, the wire followed on 2026-09-25, and the alert detected on 2026-09-26 sets the filing deadline at 2026-10-26.",
+      "cites": [
+       "AGG-IN-CASH",
+       "AGG-OUT-WIRE",
+       "ALERT-1"
+      ]
+     }
+    ]
+   },
+   {
+    "section": "where",
+    "sentences": [
+     {
+      "text": "The cash was deposited at 4 distinct branches: Oakland Downtown, Emeryville, Berkeley Shattuck, and San Leandro.",
+      "cites": [
+       "AGG-IN-CASH",
+       "IND-ST-03"
+      ]
+     },
+     {
+      "text": "The wire beneficiary is a free-zone trading company in the United Arab Emirates.",
+      "cites": [
+       "CP-01"
+      ]
+     }
+    ]
+   },
+   {
+    "section": "why",
+    "sentences": [
+     {
+      "text": "The structuring typology matched with 5 of 5 indicators fired, and cash was 37.5 times the expected monthly cash.",
+      "cites": [
+       "TYP-ST",
+       "IND-ST-05"
+      ]
+     },
+     {
+      "text": "On 2026-09-15 a teller recorded that the owner asked how much she could deposit before the bank fills out the form.",
+      "cites": [
+       "TN-1"
+      ]
+     },
+     {
+      "text": "FinCrime Wire reported that a regulator named Bramblecoast Trading FZE in a trade-based laundering notice.",
+      "cites": [
+       "AM-2"
+      ]
+     }
+    ]
+   },
+   {
+    "section": "how",
+    "sentences": [
+     {
+      "text": "Cash was split into deposits just under the threshold across several branches on consecutive business days, then consolidated into a single outbound wire of $98,000.00.",
+      "cites": [
+       "IND-ST-01",
+       "IND-ST-03",
+       "AGG-OUT-WIRE"
+      ]
+     }
+    ]
+   }
+  ],
+  "recommendation": "file",
+  "rationale": "Structuring matched with 5 of 5 indicators fired, including a statement about avoiding the form, and the proceeds left by an international wire to a trader named in adverse media.",
+  "rationale_cites": [
+   "TYP-ST",
+   "TN-1",
+   "AM-2"
+  ],
+  "typologies": [
+   "structuring"
+  ],
+  "next_steps": [
+   "Note the teller observation in the structuring SAR.",
+   "Review the beneficial owner's personal accounts for related cash activity.",
+   "Check for other wires to Bramblecoast Trading FZE across the bank.",
+   "Put the account on enhanced monitoring of cash deposits."
+  ]
+ }
+}

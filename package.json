@@ -16,6 +16,8 @@
     "briefing:test": "cd services/briefing && .venv/bin/python -m pytest tests -q",
     "wealth:install": "cd services/wealth && uv sync --frozen",
     "wealth:test": "cd services/wealth && .venv/bin/python -m pytest tests -q",
+    "sar:install": "cd services/sar && uv sync --frozen",
+    "sar:test": "cd services/sar && .venv/bin/python -m pytest tests -q",
     "platform:test": "services/wealth/.venv/bin/python -m pytest services/llm/tests services/common/tests -q -p no:cacheprovider",
     "interbank:up": "cd services/interbank && uv run --no-project --python 3.12 --with httpx --with pyjwt --with cryptography python labctl.py up",
     "interbank:down": "cd services/interbank && uv run --no-project --python 3.12 --with httpx --with pyjwt --with cryptography python labctl.py down",

@@ -1,0 +1,33 @@
+[project]
+name = "fsi-sar-investigation"
+version = "0.1.0"
+description = "Studio sidecar: SAR investigation Deep Agent with cited narratives, AI Defense, Agent Control, and human approval"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "agent-control-evaluators==8.5.0",
+  "agent-control-models==8.5.0",
+  "agent-control-sdk==8.5.0",
+  "deepagents==0.7.15",
+  "fastapi>=0.115.13,<0.116",
+  "galileo==2.6.0",
+  "httpx>=0.28,<0.29",
+  "langchain[openai]>=0.3.18",
+  "opentelemetry-exporter-otlp-proto-http>=1.38,<1.39",
+  "opentelemetry-sdk>=1.38,<1.39",
+  "python-dotenv>=1.1.0",
+  "splunk-otel-instrumentation-langchain==0.1.16",
+  "truststore>=0.10,<0.11",
+  "uvicorn>=0.34.3,<0.35",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.4.1,<9.0.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

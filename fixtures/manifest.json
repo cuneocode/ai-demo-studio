@@ -107,6 +107,48 @@
       "owner": "fraud",
       "demos": ["fraud-modeling"],
       "synthetic": true
+    },
+    {
+      "path": "fixtures/sar/cases/mule-reyes.json",
+      "description": "SAR money-mule case: Kendall Reyes, a new checking account receiving P2P credits funded by cards from the cpp-orbit compromise (including the lifecycle customer's ****1188), cashed out by ATM and crypto. Carries a clean and an injected explanation letter, and a sample narrative.",
+      "owner": "sar",
+      "demos": ["sar"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/sar/cases/structuring-harbor.json",
+      "description": "SAR structuring case: Harbor Lane Auto Detailing LLC, sub-$10,000 cash deposits across branches followed by an international wire, with a teller note and a sample narrative.",
+      "owner": "sar",
+      "demos": ["sar"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/sar/cases/explained-novak.json",
+      "description": "SAR control case: Gabriel Novak, a large wire explained by a documented home sale; the expected outcome is no SAR.",
+      "owner": "sar",
+      "demos": ["sar"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/sar/typologies.json",
+      "description": "Typology catalogue for the SAR demo: money mule, structuring, and funnel account indicators with thresholds and match rules.",
+      "owner": "sar",
+      "demos": ["sar"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/sar/adverse-media.json",
+      "description": "Allowlisted adverse-media source for the SAR demo (FinCrime Wire, fictional) with articles on fictional entities.",
+      "owner": "sar",
+      "demos": ["sar"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/sar/scenarios.json",
+      "description": "SAR scenario cards: mule, structuring, explained activity, and the prompt-injection variant of the mule case.",
+      "owner": "sar",
+      "demos": ["sar"],
+      "synthetic": true
     }
   ]
 }

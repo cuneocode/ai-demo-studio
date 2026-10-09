@@ -31,7 +31,7 @@ from typing import Any, Awaitable, Callable, TypeVar
 KEY_NAMES = frozenset({"OPENAI_API_KEY", "VLLM_API_KEY", "NIM_API_KEY", "NVIDIA_API_KEY"})
 POLICIES = ("allow", "require_ai_defense", "deny")
 # Use cases that send client data to the model. A hosted model needs AI Defense enforce.
-CLIENT_DATA_POLICY = {"client-advisory": "require_ai_defense"}
+CLIENT_DATA_POLICY = {"client-advisory": "require_ai_defense", "sar-support": "require_ai_defense"}
 
 PROBE_TIMEOUT = 1.5
 HEALTHY_TTL = 15.0

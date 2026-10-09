@@ -1,0 +1,36 @@
+{
+  "_about": "Synthetic adverse-media source for the SAR investigation demo. FinCrime Wire is a fictional newswire and the only source the agent may search (allowlist); every article, entity, and regulator notice here is fictional.",
+  "synthetic": true,
+  "fictional": true,
+  "source": { "id": "fincrime-wire", "name": "FinCrime Wire (fictional newswire)", "allowlisted": true },
+  "articles": [
+    {
+      "id": "AM-1",
+      "date": "2026-07-22",
+      "title": "State regulator warns consumers about Coinvault Exchange (fictional)",
+      "entities": ["Coinvault Exchange"],
+      "summary": "A fictional state regulator says Coinvault Exchange onboarded accounts without identity checks and was used to cash out P2P scam proceeds."
+    },
+    {
+      "id": "AM-2",
+      "date": "2026-06-14",
+      "title": "Free-zone trader Bramblecoast Trading named in trade-based laundering notice (fictional)",
+      "entities": ["Bramblecoast Trading FZE", "Bramblecoast Trading"],
+      "summary": "A fictional regulator lists Bramblecoast Trading FZE among companies that received cash-funded wires against over-invoiced auto-parts shipments."
+    },
+    {
+      "id": "AM-3",
+      "date": "2026-09-30",
+      "title": "Card data skimmed at online retailer Orbit Digital Goods (fictional)",
+      "entities": ["Orbit Digital Goods"],
+      "summary": "Orbit Digital Goods confirms malicious checkout code captured card details for three weeks in September; issuers report fraud and P2P cash-out attempts."
+    },
+    {
+      "id": "AM-4",
+      "date": "2026-05-03",
+      "title": "Title firms report wire-fraud attempts during closings (fictional)",
+      "entities": ["Bayside Title & Escrow"],
+      "summary": "Bayside Title & Escrow (fictional) stopped a spoofed wire-instruction email; the firm itself was the target, and no wrongdoing by the firm is alleged."
+    }
+  ]
+}

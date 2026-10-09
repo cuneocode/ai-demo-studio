@@ -1,0 +1,45 @@
+{
+  "_about": "Synthetic typology rule catalogue for the SAR investigation demo. Thresholds are illustrative demo values, not any bank's monitoring thresholds; descriptions paraphrase public FinCEN and FFIEC red-flag guidance. services/sar/typologies.py reads this file; the rules are deterministic.",
+  "synthetic": true,
+  "ctr_threshold": 10000,
+  "typologies": [
+    {
+      "id": "money_mule",
+      "label": "Money mule",
+      "reference": "FinCEN money-mule red flags; FFIEC BSA/AML Manual appendix F (illustrative paraphrase)",
+      "match": { "min_indicators": 4, "required": ["MM-01"] },
+      "indicators": [
+        { "id": "MM-01", "label": "Pass-through: inbound funds left within 48 hours", "metric": "share_out_within_48h", "op": ">=", "threshold": 0.8, "unit": "share" },
+        { "id": "MM-02", "label": "Many-to-one: distinct unrelated P2P senders in 14 days", "metric": "distinct_p2p_senders_14d", "op": ">=", "threshold": 8, "unit": "count" },
+        { "id": "MM-03", "label": "Inflow far above the KYC expected activity", "metric": "inflow_vs_expected_monthly", "op": ">=", "threshold": 3, "unit": "ratio" },
+        { "id": "MM-04", "label": "Inbound transfers funded by instruments on a fraud list", "metric": "fraud_listed_funding_transfers", "op": ">=", "threshold": 1, "unit": "count" },
+        { "id": "MM-05", "label": "New account: opened within 90 days of the activity", "metric": "account_age_days", "op": "<=", "threshold": 90, "unit": "days" },
+        { "id": "MM-06", "label": "Cash-out channels: ATM cash, crypto exchange, or P2P out", "metric": "cash_out_share", "op": ">=", "threshold": 0.7, "unit": "share" }
+      ]
+    },
+    {
+      "id": "structuring",
+      "label": "Structuring",
+      "reference": "31 U.S.C. 5324; FFIEC BSA/AML Manual, structuring red flags (illustrative paraphrase)",
+      "match": { "min_indicators": 3, "required": ["ST-01", "ST-02"] },
+      "indicators": [
+        { "id": "ST-01", "label": "Cash deposits just under the $10,000 CTR threshold", "metric": "near_threshold_cash_count", "op": ">=", "threshold": 3, "unit": "count", "band": [8000, 9999.99] },
+        { "id": "ST-02", "label": "Cash above $10,000 in a rolling 7 days with no single deposit at or over it", "metric": "max_cash_7d_under_single", "op": ">=", "threshold": 10000, "unit": "usd" },
+        { "id": "ST-03", "label": "Cash deposits spread across branches", "metric": "distinct_cash_locations", "op": ">=", "threshold": 3, "unit": "count" },
+        { "id": "ST-04", "label": "Statement about avoiding the reporting threshold", "metric": "ctr_avoidance_notes", "op": ">=", "threshold": 1, "unit": "count" },
+        { "id": "ST-05", "label": "Cash far above the KYC expected cash", "metric": "cash_vs_expected_monthly", "op": ">=", "threshold": 3, "unit": "ratio" }
+      ]
+    },
+    {
+      "id": "funnel_account",
+      "label": "Funnel account",
+      "reference": "FinCEN advisory FIN-2014-A005 on funnel accounts (illustrative paraphrase)",
+      "match": { "min_indicators": 2, "required": ["FA-01"] },
+      "indicators": [
+        { "id": "FA-01", "label": "Cash deposits in several states by several depositors", "metric": "cash_deposit_states_and_depositors", "op": ">=", "threshold": 3, "unit": "count" },
+        { "id": "FA-02", "label": "Withdrawals or wires out of area soon after deposits", "metric": "out_of_area_share_72h", "op": ">=", "threshold": 0.5, "unit": "share" },
+        { "id": "FA-03", "label": "Low retained balance: under 10% of inflow kept", "metric": "retained_share", "op": "<=", "threshold": 0.1, "unit": "share", "needs": "cash_deposits" }
+      ]
+    }
+  ]
+}

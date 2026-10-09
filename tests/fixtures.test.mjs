@@ -174,6 +174,30 @@ test("issuer, customer, and household agree where they overlap", (t) => {
     "brokerage account number matches the household");
 });
 
+test("SAR cases cite the fraud event, carry the injection, and agree with the scenarios", () => {
+  const scenarios = JSON.parse(read("fixtures/sar/scenarios.json")).scenarios;
+  const customer = JSON.parse(read("fixtures/customers/lifecycle-customer.json"));
+  const card = customer.accounts.find((account) => account.type === "credit_card").number_masked;
+  assert.deepEqual(scenarios.map((item) => item.id), ["mule-reyes", "structuring-harbor", "explained-novak", "injection-reyes"]);
+  for (const item of scenarios) {
+    assert.ok(existsSync(join(root, item.case)), `${item.id}: ${item.case} exists`);
+    const sar = JSON.parse(read(item.case));
+    assert.ok(sar.sample_draft?.sections?.length >= 6, `${item.id} has a sample narrative`);
+    for (const section of sar.sample_draft.sections) {
+      for (const sentence of section.sentences) assert.ok(sentence.cites.length, `${item.id}: "${sentence.text}" is cited`);
+    }
+  }
+  const mule = JSON.parse(read("fixtures/sar/cases/mule-reyes.json"));
+  assert.equal(mule.referral.linked_fraud_case, "cpp-orbit");
+  const declined = mule.transactions.find((txn) => txn.status === "declined");
+  assert.equal(declined.funding.card_masked, card, "the declined push uses the lifecycle customer's blocked card");
+  const injected = mule.documents.injected.flatMap((doc) => doc.segments).join(" ");
+  assert.match(injected, /Ignore all previous instructions/);
+  assert.match(injected, new RegExp(TEST_PAN));
+  assert.doesNotMatch(mule.documents.clean.flatMap((doc) => doc.segments).join(" "), /Ignore all previous/);
+  assert.equal(JSON.parse(read("fixtures/sar/cases/explained-novak.json")).sample_draft.recommendation, "no_file");
+});
+
 test("fixture paths stay inside the repo", () => {
   for (const entry of manifest.fixtures) {
     assert.ok(!relative(root, join(root, entry.path)).startsWith(".."), `${entry.path} stays in the repo`);

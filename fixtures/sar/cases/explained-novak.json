@@ -1,0 +1,267 @@
+{
+ "_about": "Synthetic SAR case for the SAR investigation demo: an explained large wire that should close without a SAR. Fictional customer, title company, and addresses; every identifier is deliberately invalid (000-prefixed SSN, 555-01xx phone, example.com email, masked account numbers).",
+ "synthetic": true,
+ "fictional": true,
+ "id": "explained-novak",
+ "label": "Explained activity \u00b7 home-sale proceeds",
+ "typology_hint": null,
+ "as_of": "2026-10-09",
+ "alert": {
+  "id": "ALR-2026-0930-0517",
+  "detected": "2026-09-30",
+  "source": "Transaction monitoring rule TM-WIRE-11 (large inbound wire versus profile)",
+  "summary": "A $418,500 inbound wire is about 60 times the customer's usual monthly inflow.",
+  "queue": "FIU \u00b7 large-value review",
+  "priority": "medium"
+ },
+ "referral": null,
+ "subject": {
+  "name": "Gabriel Novak",
+  "role": "customer under review",
+  "date_of_birth": "1962-01-08",
+  "age": 64,
+  "ssn": "000-27-9034",
+  "address": {
+   "line1": "15 Sample Harbor Lane",
+   "city": "Alameda",
+   "state": "CA",
+   "postal_code": "94501",
+   "country": "US",
+   "fictional": true
+  },
+  "phone": "+1 (510) 555-0129",
+  "email": "gabriel.novak@example.com",
+  "occupation": "Retired high-school teacher",
+  "customer_since": "1998-04-02",
+  "home_state": "CA"
+ },
+ "kyc": {
+  "risk_rating": "Low",
+  "expected_activity": "Pension and Social Security deposits; household spending; occasional transfers to own brokerage",
+  "expected_monthly_inflow": 7000,
+  "source_of_funds": "Pension, Social Security, savings",
+  "pep": false,
+  "sanctions_screening": "clear"
+ },
+ "accounts": [
+  {
+   "id": "chk-2954",
+   "type": "checking",
+   "number_masked": "****2954",
+   "opened": "1998-04-02",
+   "status": "open",
+   "balance_before_window": 18640.12
+  },
+  {
+   "id": "brk-8120",
+   "type": "brokerage",
+   "number_masked": "****8120",
+   "opened": "2011-06-17",
+   "status": "open",
+   "owner": "same customer"
+  }
+ ],
+ "window": {
+  "start": "2026-09-29",
+  "end": "2026-10-03"
+ },
+ "transactions": [
+  {
+   "at": "2026-09-29T10:42:00-07:00",
+   "direction": "in",
+   "type": "wire_in",
+   "amount": 418500.0,
+   "channel": "Domestic wire (Fedwire)",
+   "counterparty": "CP-01",
+   "memo": "Seller proceeds 22 Linden Ct escrow 26-1187",
+   "id": "TXN-01",
+   "status": "posted"
+  },
+  {
+   "at": "2026-10-01T03:00:00-07:00",
+   "direction": "in",
+   "type": "ach_in",
+   "amount": 3412.55,
+   "channel": "ACH (pension)",
+   "counterparty": "CP-02",
+   "memo": "CalSTRS-style pension (fictional)",
+   "id": "TXN-02",
+   "status": "posted"
+  },
+  {
+   "at": "2026-10-01T09:15:00-07:00",
+   "direction": "out",
+   "type": "internal_transfer",
+   "amount": 400000.0,
+   "channel": "Transfer to own brokerage ****8120",
+   "counterparty": "CP-03",
+   "memo": "invest house proceeds",
+   "id": "TXN-03",
+   "status": "posted",
+   "own_account": true
+  },
+  {
+   "at": "2026-10-03T12:20:00-07:00",
+   "direction": "out",
+   "type": "card_purchase",
+   "amount": 186.4,
+   "channel": "Debit card purchase",
+   "counterparty": "CP-04",
+   "memo": "groceries",
+   "id": "TXN-04",
+   "status": "posted"
+  }
+ ],
+ "counterparties": [
+  {
+   "id": "CP-01",
+   "name": "Bayside Title & Escrow (fictional)",
+   "kind": "title and escrow company",
+   "relationship_on_file": "none; licensed escrow agent named on the settlement statement",
+   "fictional": true
+  },
+  {
+   "id": "CP-02",
+   "name": "Teachers' pension fund (fictional)",
+   "kind": "pension payer",
+   "relationship_on_file": "monthly since 2021",
+   "fictional": true
+  },
+  {
+   "id": "CP-03",
+   "name": "Own brokerage account ****8120",
+   "kind": "internal account, same owner",
+   "relationship_on_file": "customer's own account",
+   "fictional": true
+  },
+  {
+   "id": "CP-04",
+   "name": "Neighborhood grocer (fictional)",
+   "kind": "merchant",
+   "relationship_on_file": "regular",
+   "fictional": true
+  }
+ ],
+ "prior_alerts": [],
+ "documents": {
+  "clean": [
+   {
+    "id": "DOC-1",
+    "title": "Seller settlement statement (closing disclosure)",
+    "received": "2026-09-30",
+    "source": "customer-supplied at the Alameda branch, verified against the escrow number",
+    "untrusted": true,
+    "segments": [
+     "Settlement statement for the sale of 22 Linden Court, Alameda CA, escrow 26-1187, closing date 2026-09-29.",
+     "Sale price $455,000.00; mortgage payoff $31,240.00; commissions and fees $5,260.00; net proceeds to seller $418,500.00.",
+     "Disbursed by wire to the seller's checking account ending 2954. Escrow officer: Bayside Title & Escrow (fictional)."
+    ]
+   }
+  ]
+ },
+ "sample_draft": {
+  "_about": "Pre-written sample narrative (no model call), cited to this case's evidence ids.",
+  "sections": [
+   {
+    "section": "who",
+    "sentences": [
+     {
+      "text": "The customer is Gabriel Novak, age 64, a retired high-school teacher in Alameda, CA, and a customer since 1998-04-02.",
+      "cites": [
+       "KYC-1"
+      ]
+     }
+    ]
+   },
+   {
+    "section": "what",
+    "sentences": [
+     {
+      "text": "On 2026-09-29 checking account ending 2954 received a $418,500.00 inbound wire from Bayside Title & Escrow (fictional).",
+      "cites": [
+       "AGG-IN-WIRE",
+       "ACCT-1",
+       "CP-01"
+      ]
+     },
+     {
+      "text": "On 2026-10-01 $400,000.00 moved to the customer's own brokerage account ending 8120.",
+      "cites": [
+       "AGG-OUT-OWN",
+       "ACCT-2"
+      ]
+     }
+    ]
+   },
+   {
+    "section": "when",
+    "sentences": [
+     {
+      "text": "The alert was detected on 2026-09-30, one day after the wire, with a filing decision due by 2026-10-30.",
+      "cites": [
+       "ALERT-1",
+       "AGG-IN-WIRE"
+      ]
+     }
+    ]
+   },
+   {
+    "section": "where",
+    "sentences": [
+     {
+      "text": "The wire came from a title and escrow company for the sale of 22 Linden Court, Alameda CA.",
+      "cites": [
+       "DOC-1.1",
+       "CP-01"
+      ]
+     }
+    ]
+   },
+   {
+    "section": "why",
+    "sentences": [
+     {
+      "text": "The settlement statement shows a sale price of $455,000.00, a mortgage payoff of $31,240.00, and fees of $5,260.00, leaving net proceeds of $418,500.00, which matches the wire.",
+      "cites": [
+       "DOC-1.2",
+       "AGG-IN-WIRE"
+      ]
+     },
+     {
+      "text": "Only one money-mule indicator fired, inflow 60.3 times the expected monthly activity, and no typology matched.",
+      "cites": [
+       "TYP-MM",
+       "IND-MM-03"
+      ]
+     }
+    ]
+   },
+   {
+    "section": "how",
+    "sentences": [
+     {
+      "text": "Funds arrived by a single domestic wire from the escrow agent and moved to the customer's own brokerage account at this bank, with no cash, third-party, or cross-border activity.",
+      "cites": [
+       "AGG-IN-WIRE",
+       "AGG-OUT-OWN",
+       "TYP-ST",
+       "TYP-FA"
+      ]
+     }
+    ]
+   }
+  ],
+  "recommendation": "no_file",
+  "rationale": "The large wire is explained by a documented home sale whose net proceeds of $418,500.00 match the wire, and the funds stayed in the customer's own accounts.",
+  "rationale_cites": [
+   "DOC-1.2",
+   "AGG-OUT-OWN"
+  ],
+  "typologies": [],
+  "next_steps": [
+   "Keep the settlement statement in the case file as the basis for closing.",
+   "Update the KYC profile with the home-sale event.",
+   "Close the alert with the no-SAR rationale after QA approval."
+  ]
+ }
+}
