@@ -1,6 +1,6 @@
 # FSI AI Demo Studio — Redesign plan for Fraud, Market research, and Client advisory
 
-Status: **draft for review** · Branch: `studio-integration` ([PR #1](https://github.com/cuneocode/FSI-AI-demo-platfrom/pull/1)) · Date: 2026-10-09
+Status: **built through M3, final integration pass done** (see [As built](#as-built-2026-10-09)) · Branch: `studio-integration` ([PR #1](https://github.com/cuneocode/FSI-AI-demo-platfrom/pull/1)) · Date: 2026-10-09
 Scope: *Transaction fraud scoring*, *Wealth market research*, *Client advisory*, plus the platform pieces they share and the client-lifecycle story they belong to.
 Inputs: three expert reviews (financial-services domain, UI/UX, AI solution), checked against the code. Every `file:line` below was re-read on this branch; where a review was wrong or out of date, §0.3 corrects it.
 
@@ -637,6 +637,25 @@ Two default stories, plus the builder:
 ## 4. Phased implementation plan
 
 Effort is in engineer-days (d) for one engineer familiar with the repo. Phases 0–1 are prerequisites, while Phases 2–4 can run in parallel tracks (fraud, wealth, platform).
+
+### As built (2026-10-09)
+
+The plan below is kept as written; this table records what shipped on `studio-integration`. "Proposed" means shown on the Architecture tab as a design, not running.
+
+| Phase | Status | As built |
+|---|---|---|
+| 0 Platform | Done | Registry v2 with `config/studio-models.default.json`; `services/llm/studio_models.py` picks the first healthy backend (Sparky vLLM, then the OpenAI API) and every response reports `served_by`. Shared run timeline (`services/common/runs.py`, `useRun`) with replay from golden recordings. Interbank reports `model.failover` once per run per service, and again only if the backend changes mid-run. |
+| 1 Quick UX | Done | Renamed demos, honest status chips (live / recorded / sample / illustrative), and the model that answered on every run. |
+| 2 Stories | Done, with one deviation | Fraud (F-1 to F-8), research (R-1 to R-8), advisory (A-1 to A-6), and SAR are built. Track X uses `app/lifecycle-handoff.ts` (localStorage `fsi-studio.handoffs`) rather than a `client-context.ts`: `fraud-case` handoffs go to the SAR inbox, and `service-event` handoffs (customer-visible facts only) go to meeting prep. `tests/lifecycle.spec.ts` covers fraud escalation → SAR inbox → meeting prep. KYC is linked to Dana Whitfield and labelled "Illustrative prototype · no live service"; no KYC service was built. |
+| 3 Agents and guardrails | Done | Structured claim verifier (`services/common/claims.py`); Deep Agents for fraud triage, research, meeting prep, and SAR; AI Defense on untrusted text and model hops; Agent Control policies for fraud actions, research publish, advisory recommendation, and SAR filing; pre-egress refusal when client data would reach a hosted model without AI Defense in enforce. Claim verdicts render per demo; there is no shared `ClaimChip` component. |
+| 4 Evaluation and observability | Partial | OTLP span export code exists in banking, fraud, briefing, wealth, and SAR, and exports only when `SPLUNK_REALM` + `SPLUNK_ACCESS_TOKEN` or an `OTEL_EXPORTER_OTLP_*` endpoint is set; none is set in this environment, so every service reports export off. Interbank exports to Splunk Agent Observability through its collectors. Galileo Luna is **not configured**: no scorer is called, and the label says so even if `GALILEO_LUNA_*` is set. O-3 custom evaluators, O-4 GPU metrics, and O-5 measured model card are not built. |
+| 5 Architecture and presenter | Done | Every Architecture tab names TreeSHAP (not Captum or Shapley sampling), shows the GraphSAGE scorer as implemented only on the Sparky sidecar path with recorded or sample scores otherwise, names Sparky as an NVIDIA DGX Spark dev box (not Cisco hardware), and shows Cisco UCS / AI POD as proposed. Group layout sizes rows from the card text, so second-row cards stay inside the group on maps with five or more cores. Three-act presenter notes per demo (`app/presenter-notes.ts`: problem, AI change, Cisco value, lifecycle cue) render in the Present-mode talk track, plus the fraud scenario hints. No run-of-show doc was written. |
+
+**No tipping off, as built.** The advisor never learns that a SAR exists. The fraud UI derives the service event from customer-visible actions only (block and reissue, contact customer). The wealth service rebuilds the sentence in code from an allowlist of fields and ignores anything else, and code (not the model) writes the brief's opening line about it. A compliance flag blocks any brief line that mentions a SAR, investigation, FinCEN, money mule, or similar term.
+
+**Company briefing uploads.** An uploaded annual report gets its form, fiscal year end, ticker, and registrant from its own cover page, and revenue, operating income, net income, and diluted EPS from its income statement (`services/briefing/cover.py`). This is code, not a model, and each metric keeps its verbatim table line as an excerpt.
+
+**Still pending.** Live Sparky scoring and NIM inference need the VPN and an NGC key (§5.1). Until then the GNN path replays recorded Sparky scores or uses sample scores, labelled as such.
 
 ### Phase 0: Platform (M1)
 
