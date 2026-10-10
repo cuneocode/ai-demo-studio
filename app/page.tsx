@@ -11,6 +11,7 @@ import InterbankDemo from "./InterbankDemo";
 import ArchitectureMap from "./ArchitectureMap";
 import StudioSettings, { ModelChip } from "./StudioSettings";
 import { ControlsPage, HelpDrawer, PresenterBar, ServiceBell, TelemetryPage } from "./StudioShell";
+import { presenterNotes } from "./presenter-notes";
 import { momentReady, platformSummary, useStudioStatus, type StudioStatus, type Tone } from "./studio-status";
 import { StudioNavContext } from "./studio-nav";
 import { IllustrativeRunStats } from "./RunStats";
@@ -241,9 +242,9 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
   },
   "kyc-processing": {
     transformation: {
-      friction: "Analysts move between documents, registries, and screening tools to assemble a case.",
-      aiShift: "AI extracts evidence, reconciles entities, and sends only uncertain matches to review.",
-      humanControl: "Analysts retain approval authority with source evidence and policy context attached.",
+      friction: "Analysts move between documents, registries, and screening tools to assemble a case, and periodic refreshes queue up behind onboarding.",
+      aiShift: "Proposed: document models extract fields, entity resolution reconciles registries and screening hits, and only uncertain matches reach a person. Illustrative prototype; no live service.",
+      humanControl: "Analysts keep approval authority with source evidence and policy context attached.",
     },
     architecture: {
       process: [
@@ -253,7 +254,7 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
         { title: "Approve onboarding", detail: "Analyst-owned decision" },
       ],
       ai: [
-        { point: "01 → 02", label: "Document intelligence", detail: "GPU-accelerated OCR and document models extract fields and detect mismatches." },
+        { point: "01 → 02", label: "Document intelligence", detail: "Proposed: GPU-accelerated OCR and document models extract fields and detect mismatches. Not built in this studio." },
         { point: "02 → 03", label: "RAG + context engineering", detail: "Build an entitled case context from registry, ownership, policy, and prior-case data." },
         { point: "03 → 04", label: "Exception review", detail: "Summarize discrepancies with cited evidence; the analyst retains approval." },
       ],
@@ -264,14 +265,15 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
       { label: "Auto-verified", value: "71%", detail: "Within policy threshold" },
     ],
     rows: [
+      { name: "Dana Whitfield (fictional)", stage: "Periodic KYC refresh", signal: "Section 16 officer of HCYN · sanctions clear", status: "Review", tone: "review" },
       { name: "Northstar Imports LLC", stage: "Business verification", signal: "2 documents missing", status: "Review", tone: "review" },
       { name: "Avery Chen", stage: "Identity match", signal: "Selfie mismatch", status: "Review", tone: "review" },
       { name: "Morrow Family Trust", stage: "Beneficial ownership", signal: "1 owner unverified", status: "Pending", tone: "pending" },
     ],
     workbenchLabel: "Next case",
-    workbenchTitle: "Northstar Imports LLC",
-    workbenchSummary: "Registration data matched. Two ownership documents are still required before approval.",
-    evidence: ["Registry match", "Sanctions clear", "Ownership incomplete"],
+    workbenchTitle: "Dana Whitfield (fictional)",
+    workbenchSummary: "Periodic refresh of the lifecycle customer. Sanctions, PEP, and adverse media are clear. Risk stays Medium: concentrated wealth in her employer, Halcyon Interconnect (HCYN, fictional), where she is a Section 16 officer, so her HCYN trades need pre-clearance and respect blackout windows. Illustrative prototype; the same customer appears in fraud triage and advisor meeting prep.",
+    evidence: ["Sanctions clear", "Section 16 officer · HCYN", "Risk rating: Medium"],
     primaryAction: "Review next case",
   },
   "sar-support": {
@@ -343,7 +345,7 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
       ai: [
         { point: "01 → 02", label: "Screened client context", detail: "AI Defense inspects CRM notes as tool results: PII is masked, an injected instruction is withheld." },
         { point: "02 → 03", label: "Rules and sized actions", detail: "Code compares the risk profile with the portfolio and sizes each action in dollars. Not an LLM." },
-        { point: "03 → 04", label: "Meeting-prep Deep Agent", detail: "Private inference on Sparky; a hosted fallback only with AI Defense in enforce. Every statement is verified against the record." },
+        { point: "03 → 04", label: "Meeting-prep Deep Agent", detail: "Private inference on Sparky (an NVIDIA DGX Spark dev box) when it is up; a hosted fallback only with AI Defense in enforce. Every statement is verified against the record." },
       ],
     },
     metrics: [], rows: [], evidence: [],
@@ -368,7 +370,7 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
       ],
       ai: [
         { point: "01 → 02", label: "Pre-check + screened news", detail: "Agent Control blocks a restricted issuer before any data or model call; AI Defense inspects news as tool results." },
-        { point: "02 → 03", label: "Deep Agent + subagents", detail: "Supervisor and subagents on the Studio model chain; every tool and model call streams to the timeline and Splunk." },
+        { point: "02 → 03", label: "Deep Agent + subagents", detail: "Supervisor and subagents on the Studio model chain; every tool and model call streams to the timeline, and to Splunk when OTLP export is configured." },
         { point: "03 → 04", label: "Claim verifier + publish gate", detail: "Unit-aware checks against the cited field or quote; no ratings or targets; the strategist decides." },
       ],
     },
@@ -392,7 +394,7 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
         { title: "Publish downstream", detail: "Governed enriched data" },
       ],
       ai: [
-        { point: "01 → 02", label: "Accelerated extraction", detail: "GPU models parse payment text, resolve entities, and classify purpose at volume." },
+        { point: "01 → 02", label: "Accelerated extraction", detail: "Proposed: GPU models parse payment text, resolve entities, and classify purpose at volume. Not built in this studio." },
         { point: "02 → 03", label: "RAG + context engineering", detail: "Ground exceptions in account, counterparty, policy, codes, and transaction history." },
         { point: "03 → 04", label: "Resolution agent", detail: "Propose normalized fields with evidence; low-confidence cases route to operations." },
       ],
@@ -468,11 +470,23 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
 };
 
 const storySteps = [
-  { title: "KYC intake", label: "Know the client", icon: Fingerprint, color: "blue" },
+  { title: "KYC review", label: "Know the client", icon: Fingerprint, color: "blue" },
   { title: "Fraud monitoring", label: "Catch the fraud", icon: ReceiptText, color: "violet" },
   { title: "SAR investigation", label: "Investigate & report", icon: FileSearch, color: "mint" },
   { title: "Advisor meeting prep", label: "Serve with context", icon: WalletCards, color: "amber" },
 ];
+
+/** Present mode's three acts for a moment, falling back to the frame's copy. */
+function presenterTalk(item: UseCase) {
+  const note = presenterNotes[item.id];
+  const frame = useCaseFrames[item.id].transformation;
+  return [
+    { label: "Problem", text: note?.problem ?? frame.friction },
+    { label: "AI changes", text: note?.ai ?? frame.aiShift },
+    { label: "Cisco value", text: note?.cisco ?? frame.humanControl },
+    ...(note?.lifecycle ? [{ label: "In the story", text: note.lifecycle }] : []),
+  ];
+}
 
 const navItems: { id: View; label: string; icon: LucideIcon }[] = [
   { id: "overview", label: "Overview", icon: Home },
@@ -488,6 +502,7 @@ const shellPages: { id: View; label: string; icon: LucideIcon }[] = [
 ];
 
 const COLLAPSED_KEY = "fsi-studio.sidebar-collapsed";
+const OUTLINE_MINUTES: Record<string, number> = { "kyc-processing": 3, "fraud-modeling": 6, "sar-support": 5, "client-advisory": 5 };
 
 type Solution = "AI Defense" | "Splunk observability" | "AI Infrastructure";
 const SOLUTIONS: Solution[] = ["AI Defense", "Splunk observability", "AI Infrastructure"];
@@ -938,7 +953,7 @@ export default function HomePage() {
   const [selectedCase, setSelectedCase] = useState<UseCase | null>(null);
   const [launcherOpen, setLauncherOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [storyItems, setStoryItems] = useState<string[]>(["kyc-processing", "sar-support", "client-advisory"]);
+  const [storyItems, setStoryItems] = useState<string[]>(["kyc-processing", "fraud-modeling", "sar-support", "client-advisory"]);
   const [companyProfile, setCompanyProfile] = useState<StoredCompanyProfile | null>(null);
   const [researchNote, setResearchNote] = useState<StoredResearchNote | null>(null);
   const [advisoryBrief, setAdvisoryBrief] = useState<StoredAdvisoryBrief | null>(null);
@@ -1011,7 +1026,12 @@ export default function HomePage() {
 
   const openCaseById = (id: string) => {
     const item = useCases.find((candidate) => candidate.id === id);
-    if (item) { setSidebarOpen(false); openUseCase(item); }
+    if (!item) return;
+    setSidebarOpen(false);
+    // A handoff during Present mode (fraud → SAR) advances the presenter to that step.
+    const step = presenting === null ? -1 : storyItems.indexOf(id);
+    if (step >= 0) setPresenting(step);
+    openUseCase(item);
   };
 
   const story = storyItems.map((id) => useCases.find((candidate) => candidate.id === id)).filter((item): item is UseCase => Boolean(item));
@@ -1066,7 +1086,8 @@ export default function HomePage() {
   const openCaseRef = useRef(openCaseById);
   useLayoutEffect(() => { openCaseRef.current = openCaseById; });
   const openUseCaseById = useCallback((id: string) => openCaseRef.current(id), []);
-  const studioNav = useMemo(() => ({ openSettings, links, openUseCase: openUseCaseById }), [openSettings, links, openUseCaseById]);
+  const isPresenting = presenting !== null;
+  const studioNav = useMemo(() => ({ openSettings, links, openUseCase: openUseCaseById, presenting: isPresenting }), [openSettings, links, openUseCaseById, isPresenting]);
 
   return (
     <StudioNavContext.Provider value={studioNav}>
@@ -1181,7 +1202,7 @@ export default function HomePage() {
                 <div className="hero-copy">
                   <span className="eyebrow"><Sparkles size={13} /> FEATURED DEMO NARRATIVE</span>
                   <h2>Client lifecycle</h2>
-                  <p>Connect onboarding, monitoring, investigation, and advisory. Each module works alone or as part of the full story.</p>
+                  <p>Follow one fictional customer, Dana Whitfield, from a KYC review to card fraud triage, a SAR investigation, and her advisor&apos;s meeting prep. Each module also works alone.</p>
                   <div className="hero-meta">
                     <span><Workflow size={15} /> 4 connected moments</span>
                     <span><CircleGauge size={15} /> 18–22 minutes</span>
@@ -1298,7 +1319,7 @@ export default function HomePage() {
                             <button aria-label={`Move ${item.title} down`} disabled={index === story.length - 1} onClick={() => moveStoryItem(item.id, index + 1)}><ArrowDown size={15} /></button>
                             <button className="remove" aria-label={`Remove ${item.title} from the story`} onClick={() => setStoryItems((items) => items.filter((id) => id !== item.id))}><Trash2 size={15} /></button>
                           </span>
-                        ) : <span className="outline-time">{index === 0 ? "05" : "04"} min</span>}
+                        ) : <span className="outline-time">{String(OUTLINE_MINUTES[item.id] ?? 4).padStart(2, "0")} min</span>}
                         {editingStory ? <span /> : <button aria-label={`Open ${item.title}`} onClick={() => openUseCase(item)}><ArrowUpRight size={17} /></button>}
                       </div>
                     );
@@ -1308,8 +1329,8 @@ export default function HomePage() {
                 <section className="presenter-panel">
                   <span className="eyebrow">PRESENTER VIEW</span>
                   <h2>Talk track</h2>
-                  <div className="presenter-card"><span className="presenter-tag">OPENING</span><p>One governed AI foundation across the client lifecycle.</p></div>
-                  <div className="talk-track"><span><Check size={15} /> Start with client and employee outcomes</span><span><Check size={15} /> Show architecture when relevant</span><span><Check size={15} /> Close with end-to-end observability</span></div>
+                  <div className="presenter-card"><span className="presenter-tag">OPENING</span><p>One customer, four teams, one governed AI foundation. Dana Whitfield is fictional; every record is synthetic.</p></div>
+                  <div className="talk-track"><span><Check size={15} /> Each moment: the business problem, what AI changes, where Cisco adds value</span><span><Check size={15} /> Fraud hands the case to SAR; the advisor sees only the reissued card</span><span><Check size={15} /> Call out live, recorded, or sample, and which model answered</span></div>
                   <button className="secondary-button" disabled={!story.length} onClick={startPresenting}><Play size={16} fill="currentColor" /> Present from moment 1</button>
                 </section>
               </div>
@@ -1363,7 +1384,7 @@ export default function HomePage() {
           index={presenting}
           total={story.length}
           title={story[presenting].title}
-          talk={[story[presenting].outcome, useCaseFrames[story[presenting].id].transformation.aiShift, useCaseFrames[story[presenting].id].transformation.humanControl]}
+          talk={presenterTalk(story[presenting])}
           onPrev={() => present(presenting - 1)}
           onNext={() => (presenting === story.length - 1 ? stopPresenting() : present(presenting + 1))}
           onExit={stopPresenting}

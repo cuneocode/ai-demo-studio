@@ -225,7 +225,7 @@ export function TelemetryPage({ status, onOpenCase, onOpenSettings }: { status: 
 
 /** Present mode: one story moment at a time, full screen. */
 export function PresenterBar({ index, total, title, talk, onPrev, onNext, onExit }: {
-  index: number; total: number; title: string; talk: string[]; onPrev: () => void; onNext: () => void; onExit: () => void;
+  index: number; total: number; title: string; talk: { label: string; text: string }[]; onPrev: () => void; onNext: () => void; onExit: () => void;
 }) {
   const [notes, setNotes] = useState(true);
   useEffect(() => {
@@ -241,7 +241,7 @@ export function PresenterBar({ index, total, title, talk, onPrev, onNext, onExit
   }, [onNext, onPrev, onExit]);
   return (
     <div className="presenter-bar" role="region" aria-label="Presenter controls">
-      {notes && <ul className="presenter-notes">{talk.map((line) => <li key={line}>{line}</li>)}</ul>}
+      {notes && <ul className="presenter-notes" aria-label="Talk track">{talk.map((line) => <li key={line.label}><b>{line.label}</b>{line.text}</li>)}</ul>}
       <div className="presenter-controls">
         <span className="presenter-step"><small>MOMENT {index + 1} OF {total}</small><strong>{title}</strong></span>
         <button className="secondary-button" onClick={() => setNotes(!notes)} aria-pressed={notes}><Terminal size={15} /> Talk track</button>

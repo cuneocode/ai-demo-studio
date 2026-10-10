@@ -113,13 +113,17 @@ test("Cmd-K searches use cases and pages, and library filters narrow the grid", 
 test("the story is reordered, scored from live readiness, and presented full screen", async ({ page }) => {
   await open(page);
   await page.locator(".side-nav").getByRole("button", { name: /Story builder/ }).click();
-  await expect(page.locator(".story-score strong")).toHaveText("67%");
+  await expect(page.locator(".outline-item strong")).toHaveText(["KYC processing", "Card fraud triage", "SAR investigation", "Advisor meeting prep"]);
+  await expect(page.locator(".story-score strong")).toHaveText("50%");
   await expect(page.locator(".story-outline")).toContainText("Needs OPENAI_API_KEY");
+  await expect(page.locator(".story-outline")).toContainText("Illustrative prototype · no live service");
 
   await page.getByRole("button", { name: "Edit sequence" }).click();
   await page.getByRole("button", { name: "Move Advisor meeting prep up" }).click();
-  await expect(page.locator(".outline-item strong").nth(1)).toHaveText("Advisor meeting prep");
+  await expect(page.locator(".outline-item strong").nth(2)).toHaveText("Advisor meeting prep");
   await page.getByRole("button", { name: "Remove Advisor meeting prep from the story" }).click();
+  await expect(page.locator(".story-score strong")).toHaveText("67%");
+  await page.getByRole("button", { name: "Remove Card fraud triage from the story" }).click();
   await expect(page.locator(".story-score strong")).toHaveText("100%");
   await page.getByRole("button", { name: "Done" }).click();
 
@@ -144,7 +148,7 @@ test("prototype queue rows select the workbench item", async ({ page }) => {
   await open(page);
   await page.locator(".side-nav").getByRole("button", { name: "Use case library" }).click();
   await page.getByRole("button", { name: /Open KYC processing/ }).click();
-  await expect(page.locator(".workbench-body h3")).toHaveText("Northstar Imports LLC");
+  await expect(page.locator(".workbench-body h3")).toHaveText("Dana Whitfield (fictional)");
   await page.getByRole("row", { name: /Avery Chen/ }).click();
   await expect(page.getByRole("row", { name: /Avery Chen/ })).toHaveAttribute("aria-selected", "true");
   await expect(page.locator(".workbench-body h3")).toHaveText("Avery Chen");

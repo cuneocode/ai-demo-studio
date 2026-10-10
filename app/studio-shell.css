@@ -75,12 +75,15 @@
 .app-shell.presenting .topbar, .app-shell.presenting .sidebar, .app-shell.presenting .case-back-button { display: none; }
 .app-shell.presenting .shell-body { padding-top: 0; }
 .app-shell.presenting .main-content { padding-bottom: 190px; }
+.app-shell.presenting:has(.presenter-notes) .main-content { padding-bottom: calc(32vh + 150px); }
 .presenter-bar { position: fixed; z-index: 70; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(980px, calc(100vw - 32px)); display: grid; gap: 10px; padding: 12px 14px; border: 1px solid #34486a; border-radius: 12px; background: rgba(12,18,28,.94); box-shadow: 0 20px 60px rgba(0,0,0,.5); backdrop-filter: blur(18px); }
 .presenter-controls { display: flex; align-items: center; gap: 8px; }
 .presenter-step { display: grid; margin-right: auto; min-width: 0; }
 .presenter-step small { color: var(--blue-soft); font-size: var(--font-meta); font-weight: 700; letter-spacing: .12em; }
 .presenter-step strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-control); }
-.presenter-notes { display: grid; gap: 4px; margin: 0; padding: 0 0 10px 18px; border-bottom: 1px solid var(--border-soft); color: #d6dfec; font-size: var(--font-body); }
+.presenter-notes { display: grid; gap: 6px; max-height: 32vh; overflow-y: auto; margin: 0; padding: 0 0 10px; border-bottom: 1px solid var(--border-soft); color: #d6dfec; font-size: var(--font-body); line-height: 1.45; list-style: none; }
+.presenter-notes li { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; }
+.presenter-notes b { color: var(--blue-soft); font-size: var(--font-meta); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding-top: 2px; }
 .presenter-controls button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 
 /* Story builder edits and readiness. */

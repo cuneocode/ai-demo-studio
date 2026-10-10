@@ -101,7 +101,7 @@ export function platformSummary(status: StudioStatus | null) {
 
 /** Whether a story moment can be shown live right now; prototypes always can. */
 export function momentReady(status: StudioStatus | null, useCaseId: string, live: boolean) {
-  if (!live) return { ready: true, reason: "Illustrative" };
+  if (!live) return { ready: true, reason: "Illustrative prototype · no live service" };
   if (!status) return { ready: false, reason: "Studio status unavailable" };
   const settings = status.readiness.find((row) => row.id === useCaseId);
   if (settings && !settings.ready) return { ready: false, reason: `Needs ${settings.missing.join(", ")}` };
