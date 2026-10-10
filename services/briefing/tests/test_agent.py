@@ -134,3 +134,21 @@ def test_briefing_schema_treats_null_fields_as_absent():
     briefing = CompanyBriefing.model_validate({"company": {"name": None, "ticker": None}, "risks": {"status": "ready", "facts": [{"text": "x", "excerpt": None}]}})
     assert briefing.company.name == ""
     assert briefing.risks.facts[0].excerpt == ""
+
+
+def test_uploaded_annual_report_yields_period_ticker_and_table_metrics(tmp_path):
+    from cover import cover_identity
+
+    report = Path(__file__).resolve().parents[3] / "fixtures" / "halcyon" / "annual-report-fy2025.html"
+    (tmp_path / "source.html").write_text(report.read_text(encoding="utf-8"), encoding="utf-8")
+    session = tools.BriefingSession(run_id="u", run_dir=tmp_path, path="upload", filename="annual-report-fy2025.html")
+    for key, value in cover_identity(tmp_path).items():
+        setattr(session, key, value)
+    briefing = agent.assemble_briefing(session, {"company": {"name": "Halcyon Interconnect, Inc."}})
+    assert briefing["company"]["ticker"] == "HCYN"
+    assert briefing["period"] == {"form": "10-K", "filedAt": None, "periodOfReport": "2025-12-31", "fiscalYear": 2025}
+    metrics = {row["label"]: row for row in briefing["metrics"]}
+    assert {label: row["value"] for label, row in metrics.items()} == {
+        "Revenue": 4112.6, "Operating income": 954.1, "Net income": 802.5, "Diluted EPS": 4.77}
+    assert all(row["origin"] == "verbatim-table" and row["period"] == "FY2025" for row in metrics.values())
+    assert metrics["Revenue"]["excerpt"].startswith("Revenue") and briefing["grounding"]["dropped_metrics"] == 0

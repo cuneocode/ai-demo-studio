@@ -27,6 +27,7 @@ os.environ.setdefault("MODEL_NAME", "gpt-4o-mini")
 
 from agent import AgentIncomplete
 import model_backend
+from cover import cover_identity
 from documents import UploadError, validate_upload, write_source
 from edgar import (
     AmbiguousIssuer,
@@ -207,6 +208,8 @@ async def analyze(
                 write_source(session.run_dir, data, suffix, file.filename)
             except UploadError as exc:
                 raise HTTPException(exc.status, str(exc)) from None
+            for key, value in cover_identity(session.run_dir).items():
+                setattr(session, key, getattr(session, key, None) or value)
             if pinned or q:
                 try:
                     company = resolve_company(query=q, cik=pinned)

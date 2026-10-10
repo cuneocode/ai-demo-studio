@@ -8,6 +8,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, model_validator
 
+from cover import table_metrics
 from grounding import ground_briefing
 from model_backend import model_settings
 from security import ProtectedChatOpenAI
@@ -289,8 +290,11 @@ def assemble_briefing(session, structured=None) -> dict:
                     session.company_facts = loaded
             except json.JSONDecodeError:
                 xbrl_facts = []
+    table = table_metrics(run_dir) if session.path == "upload" and not xbrl_facts else []
     if xbrl_facts:
         data["metrics"] = xbrl_facts
+    elif table:
+        data["metrics"] = table
     elif isinstance(metrics_notes, dict) and isinstance(metrics_notes.get("items"), list):
         data["metrics"] = metrics_notes["items"]
     data.setdefault("company", {
@@ -304,6 +308,9 @@ def assemble_briefing(session, structured=None) -> dict:
             "ticker": session.ticker,
             "cik": session.cik,
         }
+    for key, value in (("name", session.name), ("ticker", session.ticker), ("cik", session.cik)):
+        if value and not data["company"].get(key):
+            data["company"][key] = value
     data["period"] = {
         "form": session.form,
         "filedAt": session.filed_at,
