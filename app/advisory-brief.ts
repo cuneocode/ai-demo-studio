@@ -10,7 +10,7 @@ export const ADVISORY_BRIEF_STORAGE_KEY = "fsi-demo-studio.advisory-brief";
 export const ADVISOR = "Jordan Lee · advisor";
 export const SUPERVISOR = "Morgan Patel · supervising principal";
 
-export type HouseholdCard = { id: string; name: string; headline?: string; age?: number; riskProfile?: string; totalValue?: number; scenario?: string };
+export type HouseholdCard = { id: string; name: string; headline?: string; age?: number; riskProfile?: string; totalValue?: number; scenario?: string; serviceEvent?: string };
 
 export type Holding = {
   ticker: string; name?: string; weight: number; value?: number; assetClass?: string; account?: string; status: string;
@@ -189,7 +189,7 @@ function householdCard(value: Record<string, unknown>): HouseholdCard | null {
   const name = asString(value.name);
   if (!id || !name) return null;
   return { id, name, headline: asString(value.headline), age: asNumber(value.age), riskProfile: asString(value.risk_profile),
-    totalValue: asNumber(value.total_value), scenario: asString(value.scenario) };
+    totalValue: asNumber(value.total_value), scenario: asString(value.scenario), serviceEvent: asString(value.service_event) };
 }
 
 export async function fetchHouseholds(): Promise<HouseholdCard[]> {

@@ -12,9 +12,11 @@
 """
 from __future__ import annotations
 
+import re
 import time
+from datetime import datetime
 
-from advisory_agent import AdvisoryContext, fixture_brief, run_deep_agent, run_single_call
+from advisory_agent import AdvisoryContext, fixture_brief, run_deep_agent, run_single_call, with_service_opening
 from agentkit import record_tool
 from cache import get_snapshot
 from claims import field, money, unsupported_numbers
@@ -113,6 +115,48 @@ def _add_research(ev: Evidence, research: dict | None, holdings: list[dict]) -> 
             "published_at": update.get("published_at"), "claims": len(claims)}
 
 
+SERVICE_ACTIONS = {"block_and_reissue": "blocked the card and issued a replacement with a new number",
+                   "contact_customer": "contacted the client"}
+
+
+def _day(value) -> str:
+    try:
+        when = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return "recently"
+    return f"{when:%b} {when.day}"
+
+
+def _add_service_events(ev: Evidence, record: dict, events: list | None) -> dict | None:
+    """What the client already knows about a resolved card issue: from card fraud triage this session, else the
+    household record (sample). Only whitelisted fields are read and the text is written here, so an escalation,
+    a SAR, or any investigation detail can never reach the brief (no tipping off)."""
+    for item in events or []:
+        if not isinstance(item, dict) or item.get("customerId") != record["id"]:
+            continue
+        last4 = re.sub(r"\D", "", str(item.get("cardLast4") or ""))[-4:]
+        actions = [action for action in SERVICE_ACTIONS if action in (item.get("actions") or [])]
+        if len(last4) != 4 or "block_and_reissue" not in actions:
+            continue
+        merchant = re.sub(r"[^A-Za-z0-9 &'.-]", "", str(item.get("merchant") or ""))[:60].strip() or "a merchant"
+        try:
+            amount = f" ({money(float(item['amount']))})" if item.get("amount") is not None else ""
+        except (TypeError, ValueError):
+            amount = ""
+        origin = "this session" if item.get("provenance") == "live" else "recorded run"
+        text = (f"On {_day(item.get('occurredAt'))}, card ending {last4} was used for an unauthorised online purchase at {merchant}{amount}. "
+                f"The bank {', and '.join(SERVICE_ACTIONS[action] for action in actions)}.")
+        title = f"Card ending {last4} compromised and reissued"
+        ev.add(f"service:card-{last4}", title, source=f"Card fraud triage · {origin}", kind="service", text=text, synthetic=True)
+        return {"origin": "fraud", "detail": origin, "title": title}
+    for item in record.get("service_events") or []:
+        if item.get("kind") == "fraud_case" and item.get("summary"):
+            ev.add("service:record", "Recent card issue (customer record)", source="Customer record · sample", kind="service",
+                   text=item["summary"], synthetic=True)
+            return {"origin": "record", "detail": "sample", "title": "Recent card issue"}
+    return None
+
+
 def _add_issuer_policy(ev: Evidence, record: dict) -> bool:
     issuer = _halcyon("issuer.json")
     if not record.get("affiliate") or not isinstance(issuer, dict) or issuer.get("ticker") != record.get("employer_ticker"):
@@ -123,7 +167,8 @@ def _add_issuer_policy(ev: Evidence, record: dict) -> bool:
     return True
 
 
-async def run_meeting_prep(record: dict, *, research: dict | None, briefing: dict | None, callbacks: list) -> dict:
+async def run_meeting_prep(record: dict, *, research: dict | None, briefing: dict | None, callbacks: list,
+                           service_events: list | None = None) -> dict:
     started = time.monotonic()
     ev = Evidence()
     evidence_run.set(ev)
@@ -172,7 +217,11 @@ async def run_meeting_prep(record: dict, *, research: dict | None, briefing: dic
                 f"Next-best actions · {len(actions) - len(excluded)} suitable · {money(addressable(actions))} investable in play",
                 started=t0, body="; ".join(f"{row['title']}: {row['fit']}" for row in excluded) or None)
     context = {"research": _add_research(ev, research, holdings), "issuer_policy": _add_issuer_policy(ev, record),
-               "briefing": bool(briefing)}
+               "briefing": bool(briefing), "service_event": _add_service_events(ev, record, service_events)}
+    if context["service_event"]:
+        r = context["service_event"]
+        record_tool("service_events", {"household": record["id"]}, f"Service event · {r['title']} · {r['detail']}",
+                    body="Customer-visible facts only, written by code from an allowlist of fields.")
     if context["research"]:
         r = context["research"]
         record_tool("house_view_update", {"ticker": r["ticker"]},
@@ -198,7 +247,7 @@ async def run_meeting_prep(record: dict, *, research: dict | None, briefing: dic
         emit_current("agent.message", "No model drafted the brief · code wrote it from the rules and actions", status="flagged",
                      body=("Client data stayed in the bank: " + failure) if refused else failure)
 
-    brief = _ground(ev, draft, actions, findings)
+    brief = _ground(ev, with_service_opening(ctx, draft), actions, findings)
     included = [a for a in actions if a["id"] in brief["action_ids"]]
     scan = scan_advisory([row["text"] for row in brief["lines"] if row["status"] in {"verified", "agenda", "question"}], included,
                          record.get("risk_profile"))

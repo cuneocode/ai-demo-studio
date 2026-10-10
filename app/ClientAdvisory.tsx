@@ -14,6 +14,7 @@ import { newRunId } from "./run/events";
 import ProvenanceBadge, { type Provenance } from "./run/ProvenanceBadge";
 import RunTimeline from "./run/RunTimeline";
 import { useRun } from "./run/useRun";
+import { useHandoffs } from "./lifecycle-handoff";
 import { useStudioNav } from "./studio-nav";
 import { ClaimRow, EvidenceCard, PolicyList, type Focus } from "./wealth-evidence";
 import { observeRecordedWealth, observeWealth, wealthService, wealthStats, type WealthService } from "./wealth-stats";
@@ -148,7 +149,18 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
   }, []);
 
   const published = researchNote?.analyze.publish.status === "published" ? researchNote : null;
+  // Only what the client already knows (card blocked and reissued); fraud escalations and SAR work never reach this panel.
+  const serviceEvent = useHandoffs("service-event").find((item) => item.customerId === householdId);
+  const recordEvent = households.find((item) => item.id === householdId)?.serviceEvent;
+  const serviceRow: ContextItem[] = serviceEvent
+    ? [{ id: "service", label: `Recent service event · ${serviceEvent.title}`, tone: "ok",
+      detail: `${serviceEvent.summary} From Card fraud triage · ${serviceEvent.provenance === "live" ? "this session" : "recorded run"}.` }]
+    : recordEvent
+      ? [{ id: "service", label: "Recent service event · from the customer record", tone: "info", detail: `${recordEvent} Sample record; run Card fraud triage to share this session's event.`,
+        action: openUseCase ? { label: "Open fraud triage", open: () => openUseCase("fraud-modeling") } : undefined }]
+      : [];
   const context: ContextItem[] = [
+    ...serviceRow,
     published
       ? { id: "research", label: `House-view update · ${published.ticker} · ${published.analyze.context?.houseView?.rating ?? ""}`.trim(), tone: "ok",
         detail: `Published by ${published.publishedBy ?? "the CIO office"} · ${IMPACT_LABEL[published.analyze.update.impact ?? ""] ?? ""} · ${published.analyze.update.counts.verified} verified claims` }
@@ -193,7 +205,8 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
     try {
       const response = await fetch("/api/wealth/advisory/brief", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ household_id: householdId, research: published ? rawResearchNote() : null, briefing: briefingPayload(companyProfile), run_id: runId }),
+        body: JSON.stringify({ household_id: householdId, research: published ? rawResearchNote() : null, briefing: briefingPayload(companyProfile),
+          service_events: serviceEvent ? [serviceEvent] : null, run_id: runId }),
         signal: AbortSignal.timeout(260000),
       });
       const text = await response.text();

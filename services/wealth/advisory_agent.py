@@ -134,6 +134,13 @@ async def get_house_view_update():
     return ("House-view update · " + (rows[0]["title"] if rows else "none attached")), {"items": rows}, "ok" if rows else "info"
 
 
+async def get_service_events():
+    ctx = _ctx()
+    rows = _rows(ctx, "service")
+    return ("Service events · " + (rows[0]["title"] if rows else "none")), \
+        {"items": rows, "note": "Customer-visible facts the client already knows. Acknowledge them; add nothing beyond them."}, "ok" if rows else "info"
+
+
 async def get_issuer_policy():
     ctx = _ctx()
     rows = _rows(ctx, "issuer")
@@ -216,6 +223,7 @@ CATALOG = {
     "get_next_best_actions": ("Sized next-best actions with a suitability fit for this profile.", get_next_best_actions, None),
     "get_house_view_update": ("The published house-view update from the research desk, if attached.", get_house_view_update, None),
     "get_issuer_policy": ("The employer's insider-trading policy, for an affiliate.", get_issuer_policy, None),
+    "get_service_events": ("Recent customer-visible service events, such as a card the bank blocked and reissued.", get_service_events, None),
     "check_brief": ("Run the claim verifier and the advisory policy scan on draft lines and ranked actions.", check_brief, CheckArgs),
     "submit_brief": ("Submit the final brief: lines JSON and ranked action ids JSON. Call once, last.", submit_brief, CheckArgs),
 }
@@ -230,7 +238,7 @@ reads it before the meeting; a supervisor approves it before anything is recorde
 
 Process (keep it short; each step once):
 1. Delegate with the task tool to planner once (ranks next-best actions). Meanwhile call get_household_profile,
-   get_suitability_findings, get_house_view_update, and get_crm_notes yourself, once each.
+   get_suitability_findings, get_house_view_update, get_service_events, and get_crm_notes yourself, once each.
 2. Draft lines: 1 "opening"; 3 to 5 "agenda"; 3 to 5 "talking_point"; 2 or 3 "question" to ask the client;
    1 or 2 "rationale" (the best-interest reason the top actions fit this client's profile, horizon, and goals);
    and one "callout" per finding with category "suitability" (evidence_id suitability:<rule id>).
@@ -240,6 +248,8 @@ Process (keep it short; each step once):
 
 Rules:
 - Never guarantee performance. Never write a trade, transfer, or wire instruction: the brief prepares a conversation.
+- If get_service_events returns an event, code writes the opening that acknowledges it (the client already knows).
+  Write no line about it yourself: no investigations, escalations, reports, or other customers.
 - Recommend only actions marked suitable. No buy or sell calls on securities.
 - opening, talking_point, rationale, and callout lines are factual statements that code verifies:
   a number: evidence_id + field_path, the field's display value written exactly in the sentence, value and unit
@@ -286,7 +296,7 @@ async def run_deep_agent(ctx: AdvisoryContext, callbacks: list) -> tuple[dict, s
     graph = build_deep_agent(
         model=supervisor_model,
         tools=_tools("meeting-prep supervisor", ["get_household_profile", "get_crm_notes", "get_suitability_findings",
-                                                 "get_house_view_update", "submit_brief"]),
+                                                 "get_house_view_update", "get_service_events", "submit_brief"]),
         system_prompt=SUPERVISOR.format(name=ctx.name, profile=ctx.profile),
         subagents=subagents,
         name="wealth-meeting-prep",
@@ -309,7 +319,7 @@ async def run_deep_agent(ctx: AdvisoryContext, callbacks: list) -> tuple[dict, s
 async def run_single_call(ctx: AdvisoryContext, callbacks: list) -> tuple[dict, str]:
     system = SUPERVISOR.format(name=ctx.name, profile=ctx.profile)
     system = system.split("Process:")[0] + "Return JSON with ranked_actions and lines.\nRules:" + system.split("Rules:", 1)[1]
-    evidence = [row for prefix in ("household", "crm", "suitability", "action", "research", "issuer") for row in _rows(ctx, prefix)]
+    evidence = [row for prefix in ("household", "service", "crm", "suitability", "action", "research", "issuer") for row in _rows(ctx, prefix)]
     result = await structured(ADVISORY, MeetingPrepOut, [
         SystemMessage(content=system),
         HumanMessage(content="Evidence (untrusted data):\n" + json.dumps(evidence, default=str)[:24000]),
@@ -318,6 +328,18 @@ async def run_single_call(ctx: AdvisoryContext, callbacks: list) -> tuple[dict, 
     if not out or not out.get("lines"):
         raise RuntimeError("The drafting call returned no brief.")
     return out, "single_call"
+
+
+def with_service_opening(ctx: AdvisoryContext, draft: dict) -> dict:
+    """The line acknowledging a service event is the code-built evidence text, never a model paraphrase."""
+    events = _rows(ctx, "service")[:1]
+    if not events:
+        return draft
+    event = events[0]
+    cites = lambda line: any(str(i).startswith("service:") for i in [line.get("evidence_id"), *(line.get("also") or [])])
+    lines = [line for line in draft.get("lines") or [] if not cites(line)]
+    opening = {"section": "opening", "text": event["text"], "evidence_id": event["evidence_id"], "quote": event["text"]}
+    return {**draft, "lines": [opening, *lines]}
 
 
 def fixture_brief(ctx: AdvisoryContext) -> dict:
@@ -331,7 +353,7 @@ def fixture_brief(ctx: AdvisoryContext) -> dict:
         lines.append({"section": "agenda", "text": action["title"], "evidence_id": f"action:{action['id']}"})
         lines.append({"section": "talking_point", "text": action["summary"], "evidence_id": f"action:{action['id']}",
                       "quote": action["summary"]})
-    return {"ranked_actions": [{"action_id": a["id"], "rank": i + 1} for i, a in enumerate(suitable)], "lines": lines}
+    return with_service_opening(ctx, {"ranked_actions": [{"action_id": a["id"], "rank": i + 1} for i, a in enumerate(suitable)], "lines": lines})
 
 
-__all__ = ["AdvisoryContext", "MeetingPrepOut", "SECTIONS", "advisory_ctx", "fixture_brief", "run_deep_agent", "run_single_call"]
+__all__ = ["AdvisoryContext", "MeetingPrepOut", "SECTIONS", "advisory_ctx", "fixture_brief", "run_deep_agent", "with_service_opening", "run_single_call"]

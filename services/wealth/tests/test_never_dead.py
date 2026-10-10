@@ -204,7 +204,44 @@ def test_every_household_preps_offline_with_a_verified_code_written_brief(offlin
         assert brief["mode"] == "fixture" and brief["counts"]["verified"] == brief["counts"]["claims"] > 0, hid
         assert brief["action_ids"] and all(a in {row["id"] for row in body["actions"] if row["suitable"]} for a in brief["action_ids"])
         assert body["approval"]["status"] == "awaiting_advisor"
-        assert "service_events" not in json.dumps(body["evidence"]), "fraud events are not part of meeting prep"
+        service = [row for row in body["evidence"] if row["kind"] == "service"]
+        if hid == "dana-whitfield":
+            assert [row["source"] for row in service] == ["Customer record · sample"]
+            assert brief["lines"][0]["section"] == "opening" and brief["lines"][0]["status"] == "verified"
+        else:
+            assert not service, hid
+
+
+def test_fraud_service_event_reaches_meeting_prep_without_investigation_details(offline, no_models):
+    event = {"id": "service-dana-whitfield-cpp-orbit", "kind": "service-event", "customerId": "dana-whitfield",
+             "occurredAt": "2026-10-02T21:14:00Z", "cardLast4": "1188", "merchant": "Orbit Digital Goods", "amount": 286.4,
+             "actions": ["contact_customer", "block_and_reissue", "escalate"], "provenance": "live",
+             "summary": "Escalated to investigations; SAR referral drafted.", "title": "SAR filed"}
+    stranger = {**event, "customerId": "okafor", "cardLast4": "9999"}
+    body = TestClient(server.app).post("/api/wealth/advisory/brief",
+                                       json={"household_id": "dana-whitfield", "service_events": [stranger, event]}).json()
+    service = [row for row in body["evidence"] if row["kind"] == "service"]
+    assert [row["id"] for row in service] == ["service:card-1188"] and service[0]["source"] == "Card fraud triage · this session"
+    assert service[0]["text"] == ("On Oct 2, card ending 1188 was used for an unauthorised online purchase at Orbit Digital Goods ($286.40). "
+                                  "The bank blocked the card and issued a replacement with a new number, and contacted the client.")
+    assert body["context"]["service_event"]["origin"] == "fraud"
+    assert body["brief"]["lines"][0]["evidence_id"] == "service:card-1188" and body["brief"]["lines"][0]["status"] == "verified"
+    shown = json.dumps(body)
+    assert "SAR" not in shown and "Escalat" not in shown and "investigations" not in shown
+
+
+def test_a_line_that_tips_off_is_blocked_by_policy(offline, monkeypatch):
+    async def drafted(ctx, _callbacks):
+        return {"lines": [{"section": "agenda", "text": "Mention that the card case was escalated to investigations.", "evidence_id": "household"},
+                          {"section": "question", "text": "Has anyone contacted you about the SAR?", "evidence_id": "household"}],
+                "ranked_actions": []}, "deep_agent"
+
+    monkeypatch.setattr(advisory, "run_deep_agent", drafted)
+    body = TestClient(server.app).post("/api/wealth/advisory/brief", json={"household_id": "dana-whitfield"}).json()
+    opening, *drafted_lines = body["brief"]["lines"]
+    assert (opening["section"], opening["evidence_id"], opening["status"]) == ("opening", "service:record", "verified")
+    assert [row["status"] for row in drafted_lines] == ["policy", "policy"]
+    assert all("confidential investigation" in row["reason"] for row in drafted_lines)
 
 
 def test_priya_crm_injection_is_withheld_and_pii_masked_before_any_model(offline, monkeypatch):
@@ -300,3 +337,19 @@ def test_recordings_are_served_when_present():
             assert item["served_by"] is None, "the restricted issuer is blocked before any model call"
         else:
             assert item["served_by"]
+
+
+def test_a_model_paraphrase_of_the_service_event_is_replaced_by_the_code_built_opening():
+    from advisory_agent import AdvisoryContext, with_service_opening
+    from evidence import Evidence
+
+    ev = Evidence()
+    ev.add("service:card-1188", "Card ending 1188 compromised and reissued", source="Card fraud triage · this session",
+           kind="service", text="On Oct 2, card ending 1188 was used for an unauthorised online purchase.", synthetic=True)
+    ctx = AdvisoryContext(name="Dana", profile="moderate", evidence=ev, actions=[], findings=[], notes=[])
+    draft = {"lines": [{"section": "opening", "text": "Please confirm whether the bank blocked the card.", "evidence_id": "service:card-1188"},
+                       {"section": "agenda", "text": "Review concentration", "evidence_id": "action:x"}]}
+    lines = with_service_opening(ctx, draft)["lines"]
+    assert lines[0] == {"section": "opening", "text": ev.items["service:card-1188"]["text"], "evidence_id": "service:card-1188",
+                        "quote": ev.items["service:card-1188"]["text"]}
+    assert [line["text"] for line in lines[1:]] == ["Review concentration"]

@@ -3,7 +3,8 @@
 * Research: restricted list (before any data pull or model call), rating or price-target language
   (only the CIO Office rates), guarantees, and material non-public information terms.
 * Advisory: guarantees, trade or wire instructions (the brief prepares a conversation; it never moves
-  money), and a recommendation that does not fit the client's profile.
+  money), a recommendation that does not fit the client's profile, and any reference to a confidential
+  investigation (a SAR, its referral, or law enforcement interest must never reach the advisor: tipping off).
 * Untrusted text (news items, CRM notes): an instruction-like-text screen that runs next to AI Defense
   as defense in depth. Its verdicts are labelled "local screen", never as AI Defense.
 """
@@ -31,6 +32,13 @@ MNPI = re.compile(
 INSTRUCTION = re.compile(
     r"\bwire\b|\btransfer\s+(?:the\s+|all\s+)?(?:funds|proceeds|money|cash)\b|\bplace\s+(?:an?|the)\s+(?:order|trade)\b"
     r"|\bexecute\s+(?:an?|the)\s+(?:trade|sale|order)\b|\b(?:sell|buy)\s+[\d,]+\s+shares\b|\bliquidate\b|\bmove\s+(?:the\s+)?money\b",
+    re.I,
+)
+CONFIDENTIAL_INVESTIGATION = re.compile(
+    r"\bSARs?\b|\bsuspicious\s+activity\b|\bFinCEN\b|\bFIU\b|\bfinancial\s+intelligence\b|\bmoney[-\s]mul(?:e|ing)\b"
+    r"|\bmoney\s+laundering\b|\bAML\s+(?:alert|case|investigation|review)\b|\blaw\s+enforcement\b|\bsubpoena\b"
+    r"|\b(?:escalated|referred)\s+to\s+(?:investigations?|financial\s+crimes)\b|\b(?:fraud|financial[-\s]crimes?|criminal)\s+investigation\b"
+    r"|\bunder\s+investigation\b",
     re.I,
 )
 INJECTION = re.compile(
@@ -89,6 +97,8 @@ def advisory_sentence_flags(text: str) -> list[str]:
         flags.append("a performance guarantee")
     if INSTRUCTION.search(text or ""):
         flags.append("a trade or wire instruction")
+    if CONFIDENTIAL_INVESTIGATION.search(text or ""):
+        flags.append("a reference to a confidential investigation")
     return flags
 
 

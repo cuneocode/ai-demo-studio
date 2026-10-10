@@ -163,6 +163,7 @@ def households() -> list[dict]:
             "risk_profile": record.get("risk_profile"),
             "total_value": record.get("total_value"),
             "scenario": record.get("scenario"),
+            "service_event": next((row.get("summary") for row in record.get("service_events") or [] if row.get("kind") == "fraud_case"), None),
             "order": record.get("order", 99),
             "synthetic": True,
         })

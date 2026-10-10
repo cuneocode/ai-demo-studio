@@ -143,6 +143,7 @@ class AdvisoryRequest(BaseModel):
     clientNotes: str | None = Field(default=None, max_length=4000)
     briefing: dict | None = None
     research: dict | None = None
+    service_events: list[dict] | None = Field(default=None, max_length=5)
     refresh: bool = False
     weights_unit: Literal["percent", "fraction"] | None = None
     run_id: str | None = Field(default=None, max_length=90)
@@ -162,10 +163,8 @@ def _galileo_configured() -> str:
 
 
 def _evaluation() -> dict:
-    """Galileo Luna groundedness runs only with a working endpoint; none is configured here."""
-    configured = all(os.getenv(name) for name in ("GALILEO_LUNA_INVOKE_URL", "GALILEO_LUNA_SCORER_ID", "GALILEO_API_SECRET_KEY"))
-    return {"status": "configured" if configured else "not_configured",
-            "label": "Galileo Luna groundedness" if configured else "Evaluation not configured",
+    """No Galileo Luna scorer is called by this service yet, so setting GALILEO_LUNA_* must not claim one ran."""
+    return {"status": "not_configured", "label": "Evaluation not configured",
             "verifier": "Structured claim verifier (code) checks every claim"}
 
 
@@ -387,7 +386,8 @@ async def brief(request: AdvisoryRequest):
 
     def work(callbacks):
         if record:
-            return advisory.run_meeting_prep(record, research=request.research, briefing=request.briefing, callbacks=callbacks)
+            return advisory.run_meeting_prep(record, research=request.research, briefing=request.briefing, callbacks=callbacks,
+                                             service_events=request.service_events)
         return _custom_prep(rows, request.clientNotes, request.refresh)
 
     with store.bind(timeline.id):
