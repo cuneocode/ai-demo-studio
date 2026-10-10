@@ -268,6 +268,8 @@ test("every other use case follows the continuous-system projection contract", a
       await expect(explorer).toHaveAttribute("data-expanded-groups", `${useCase.id}.group.system`);
       for (const id of rootIds) await expect(explorer.locator(`.react-flow__node[data-id="${id}"]`), `${useCase.id} retains ${id}`).toHaveCount(1);
       const systemCoreIds = await explorer.locator(`.react-flow__node[data-id^="${useCase.id}.core."]`).evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-id")!).filter(Boolean));
+      await expectGroupGeometry(explorer, primaryOccurrence!, systemCoreIds);
+      await expectGroupGeometry(explorer, primaryOccurrence!, systemCoreIds);
       await expectInsideCanvas(explorer, [...rootIds, ...systemCoreIds]);
 
       const systemViewport = await explorer.locator(".react-flow__viewport").getAttribute("style");

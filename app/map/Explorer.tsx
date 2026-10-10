@@ -583,10 +583,10 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
           const authored = projectedNodes.find((candidate) => candidate.instanceId === node.instanceId);
           return node.instanceId === primaryOccurrence || node.instanceId === selectedCoreOccurrence || authored?.parentId === selectedCoreOccurrence;
         })
-        : absolute).map((node) => node.instanceId === primaryOccurrence ? { ...node, width: 220, height: 44 } : node);
+        : absolute).map((node) => coreExpanded && node.instanceId === primaryOccurrence ? { ...node, width: 220, height: 44 } : node);
       const ids = new Set(visible.map((node) => node.instanceId));
       const routed = routeScene({ ...nextScene, nodes: projectedNodes }).filter((edge) => ids.has(edge.sourceInstanceId) && ids.has(edge.targetInstanceId));
-      const viewport = frameScene(visible, routed, undefined, canvas.clientWidth, canvas.clientHeight, { minZoom: coreExpanded ? 0.78 : 0.75, pad: 32 });
+      const viewport = frameScene(visible, routed, undefined, canvas.clientWidth, canvas.clientHeight, { minZoom: 0.6, pad: 32 });
       automaticViewport.current = viewport;
       cameraOwner.current = "automatic";
       (globalThis as { __mapFramingInputs?: unknown }).__mapFramingInputs = {

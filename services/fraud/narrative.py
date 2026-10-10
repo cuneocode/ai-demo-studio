@@ -77,7 +77,7 @@ async def explain(case: dict, score: dict) -> dict:
         "The probability is evidence, not a disposition.\n"
         f"Case: {case['label']}. Merchant: {case['merchant']}. Amount: {case['amount']}. "
         f"Channel: {case['channel']}. Neighborhood: {case['neighborhood']}. "
-        f"Probability: {score['probability']:.2f}. Shapley groups: {shap_lines}."
+        f"Probability: {score['probability']:.2f}. TreeSHAP groups: {shap_lines}."
     )
     messages = [{"role": "user", "content": prompt}]
     served_by = None

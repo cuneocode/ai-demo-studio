@@ -116,7 +116,8 @@ function systemProjection(
 ): SceneSpec {
   const selected = primaryOccurrence(root);
   const selectedInteriorHeight = expandedCoreId ? interiorGroupHeight(map, expandedCoreId) : 0;
-  const coreLaneBase = expandedCoreId ? 55 + selectedInteriorHeight + 28 : coreCardsBottom(map.cores.length, map.coreEdges.length) + 30;
+  const grid = coreGrid(map);
+  const coreLaneBase = expandedCoreId ? 55 + selectedInteriorHeight + 28 : grid.bottom + 30;
   const compactCoreCount = Math.max(0, map.cores.length - 1);
   const expandedWidth = Math.max(980, 760 + compactCoreCount * 195 + 20);
   const primary = {
@@ -127,10 +128,10 @@ function systemProjection(
     expanded: true,
     x: 220,
     y: 20,
-    width: expandedCoreId ? expandedWidth : Math.max(740, (map.cores.length > 4 ? 3 : map.cores.length) * 180 + 20),
+    width: expandedCoreId ? expandedWidth : Math.max(740, grid.columns * 180 + 20),
     height: expandedCoreId
       ? coreLaneBase + map.coreEdges.length * 30 + 24
-      : coreGridHeight(map.cores.length, map.coreEdges.length),
+      : grid.rows > 1 ? grid.bottom + 24 : coreLaneBase + map.coreEdges.length * 30 + 24,
   };
   const nodes: SceneNode[] = [];
   const rootOrder = root.nodes.filter((node) => node.role === "activity");
@@ -141,15 +142,15 @@ function systemProjection(
       return;
     }
     if (index < selectedIndex) nodes.push({ ...node, drillInto: undefined, compact: true, x: 0, y: 100 + index * 120, width: 210, height: 100 });
-    else nodes.push({ ...node, drillInto: undefined, compact: true, x: primary.x + primary.width - 210, y: primary.y + primary.height + 30 + (index - selectedIndex - 1) * 115, width: 210, height: 100 });
+    else nodes.push({ ...node, drillInto: undefined, compact: true, x: primary.x + primary.width + 40, y: 100 + (index - selectedIndex - 1) * 120, width: 210, height: 100 });
   });
 
   map.cores.forEach((core, index) => {
     const isExpanded = core.id === expandedCoreId;
-    const columns = map.cores.length > 4 ? 3 : map.cores.length;
+    const row = Math.floor(index / grid.columns);
     const position = expandedCoreId
       ? (isExpanded ? { x: 20, y: 55, width: 720, height: selectedInteriorHeight } : { x: 760 + compactCoreIndex(map, core.id, expandedCoreId) * 195, y: 55, width: 180, height: 105 })
-      : { x: 20 + (index % columns) * 180, y: 60 + Math.floor(index / columns) * (150 + map.coreEdges.length * 24), width: 170, height: 125 };
+      : { x: 20 + (index % grid.columns) * 180, y: grid.tops[row], width: CORE_CARD_WIDTH, height: 125 };
     nodes.push({
       instanceId: coreOccurrenceId(catalog.id, core.id),
       entityId: core.id,
@@ -178,20 +179,20 @@ function systemProjection(
     ...map.coreEdges.map((edge, index) => {
       const source = nodes.find((node) => node.instanceId === coreOccurrenceId(catalog.id, edge.from))!;
       const target = nodes.find((node) => node.instanceId === coreOccurrenceId(catalog.id, edge.to))!;
-      const grid = !expandedCoreId && map.cores.length > 4;
-      const laneY = grid ? primary.y + 197 + index * 24 : primary.y + coreLaneBase + index * 30;
+      const lanes = !expandedCoreId && grid.rows > 1;
+      const laneY = lanes ? primary.y + grid.tops[0] + grid.heights[0] + 12 + index * 24 : primary.y + coreLaneBase + index * 30;
       const sourceX = primary.x + source.x + source.width / 2;
       const targetX = primary.x + target.x + target.width / 2;
-      const sourceTopRow = source.y === 60;
-      const targetTopRow = target.y === 60;
+      const sourceTopRow = source.y === grid.tops[0];
+      const targetTopRow = target.y === grid.tops[0];
       return {
         id: `${catalog.id}.visible.core.${index}.${edge.from}-${edge.to}`,
         sourceInstanceId: coreOccurrenceId(catalog.id, edge.from),
         targetInstanceId: coreOccurrenceId(catalog.id, edge.to),
         kind: relationKind(edge.kind),
         label: edge.label,
-        sourcePort: grid && !sourceTopRow ? "out-t" : "out-b",
-        targetPort: grid && !targetTopRow ? "in-t" : "in-b",
+        sourcePort: lanes && !sourceTopRow ? "out-t" : "out-b",
+        targetPort: lanes && !targetTopRow ? "in-t" : "in-b",
         via: [{ x: sourceX, y: laneY }, { x: targetX, y: laneY }],
         modelRelationshipIds: [relationId(catalog.id, "core", index, edge)],
       };
@@ -232,10 +233,11 @@ function systemProjection(
 
 function addInteriorNodes(caseId: string, primaryOccurrence: string, map: ZoomMap, coreId: string, nodes: SceneNode[]) {
   const interior = map.interiors[coreId];
-  const contentTop = interiorContentTop(interior);
   const coreOccurrence = coreOccurrenceId(caseId, coreId);
   const boxes = [...interior.entities, ...interior.stubs];
+  const rows = interiorRows(interior);
   boxes.forEach((box, index) => {
+    const row = Math.floor(index / 3);
     const source = sourceFor(caseId, `${coreId}.${box.id}`);
     nodes.push({
       instanceId: entityOccurrenceId(caseId, coreId, box.id),
@@ -248,8 +250,8 @@ function addInteriorNodes(caseId: string, primaryOccurrence: string, map: ZoomMa
       dense: true,
       platformFocus: platformFor(box),
       x: 20 + (index % 3) * 235,
-      y: contentTop + Math.floor(index / 3) * 155,
-      width: 215,
+      y: rows.tops[row],
+      width: INTERIOR_CARD_WIDTH,
       height: 135,
       ...source,
     });
@@ -263,28 +265,59 @@ function primaryOccurrence(root: SceneSpec) {
     ?? root.nodes[Math.min(1, root.nodes.length - 1)]!;
 }
 
-function coreCardsBottom(count: number, edgeCount: number) {
-  const columns = count > 4 ? 3 : Math.max(1, count);
-  return 185 + (Math.ceil(count / columns) - 1) * (150 + edgeCount * 24);
+const CORE_CARD_WIDTH = 170;
+const INTERIOR_CARD_WIDTH = 215;
+
+/** Lines a string wraps to at an average glyph width; cards size to their text, so rows must too. */
+function wrappedLines(text: string, width: number, glyph: number) {
+  if (!text) return 0;
+  const perLine = Math.max(1, Math.floor(width / glyph));
+  let lines = 1;
+  let used = 0;
+  for (const word of text.split(/\s+/)) {
+    const length = word.length;
+    if (used === 0) used = length;
+    else if (used + 1 + length <= perLine) used += 1 + length;
+    else { lines += 1; used = length; }
+    while (used > perLine) { lines += 1; used -= perLine; }
+  }
+  return lines;
 }
 
-function coreGridHeight(count: number, edgeCount: number) {
-  const cardsBottom = coreCardsBottom(count, edgeCount);
-  return count > 4 ? cardsBottom + 24 : cardsBottom + 30 + edgeCount * 30 + 24;
+/** Height of a dense map card (map.css .map-node.is-dense: 17px title, 14px body, Explore button). */
+function denseCardHeight(box: ZoomBox, width: number, expandable: boolean) {
+  const inner = width - 26;
+  const title = wrappedLines(box.title, inner, 9.0) * 21.5;
+  const subtitle = wrappedLines(box.subtitle, inner, 6.6) * 18.5;
+  const detail = box.detail ? 4 + wrappedLines(box.detail, inner, 6.6) * 18.5 : 0;
+  return Math.ceil(24 + title + 4 + subtitle + detail + (expandable ? 40 : 6));
 }
 
-function interiorContentTop(interior: ZoomMap["interiors"][string]) {
-  return 72 + interior.edges.length * 28;
+function rowLayout(heights: number[], columns: number, top: number, gap: number, min: number) {
+  const rows = Math.max(1, Math.ceil(heights.length / columns));
+  const rowHeights = Array.from({ length: rows }, (_, row) => Math.max(min, ...heights.slice(row * columns, row * columns + columns)));
+  const tops: number[] = [];
+  let y = top;
+  for (const height of rowHeights) {
+    tops.push(y);
+    y += height + gap;
+  }
+  return { rows, tops, heights: rowHeights, bottom: tops[rows - 1] + rowHeights[rows - 1] };
 }
 
-function interiorChildrenBottom(count: number, contentTop: number) {
-  return contentTop + (Math.ceil(Math.max(count, 1) / 3) - 1) * 155 + 135;
+function coreGrid(map: ZoomMap) {
+  const columns = map.cores.length > 4 ? 3 : Math.max(1, map.cores.length);
+  const heights = map.cores.map((core) => denseCardHeight(core, CORE_CARD_WIDTH, Boolean(map.interiors[core.id])));
+  return { columns, ...rowLayout(heights, columns, 60, 25 + map.coreEdges.length * 24, 125) };
+}
+
+function interiorRows(interior: ZoomMap["interiors"][string]) {
+  const heights = [...interior.entities, ...interior.stubs].map((box) => denseCardHeight(box, INTERIOR_CARD_WIDTH, true));
+  return rowLayout(heights, 3, 72 + interior.edges.length * 28, 20, 135);
 }
 
 function interiorGroupHeight(map: ZoomMap, coreId: string) {
-  const interior = map.interiors[coreId];
-  const childCount = interior.entities.length + interior.stubs.length;
-  return interiorChildrenBottom(childCount, interiorContentTop(interior)) + 24;
+  return interiorRows(map.interiors[coreId]).bottom + 24;
 }
 
 function compactCoreIndex(map: ZoomMap, coreId: string, expandedCoreId: string) {
