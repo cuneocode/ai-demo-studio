@@ -261,7 +261,9 @@ def test_escalation_builds_the_sar_handoff(client):
     client.post(f"/api/fraud/runs/{run_id}/decision",
                 json={"request_id": "disposition", "decision": "escalate", "by": "Maya (analyst)", "note": "Customer denies the charge."})
     wait_for(client, run_id, "result")
-    handoff = client.get(f"/api/fraud/runs/{run_id}").json()["run"]["result"]["handoff"]
+    result = client.get(f"/api/fraud/runs/{run_id}").json()["run"]["result"]
+    assert [a["action"] for a in result["actions"]] == ["contact_customer", "block_and_reissue", "escalate"]
+    handoff = result["handoff"]
     assert handoff["kind"] == "fraud-case" and handoff["customerId"] == "dana-whitfield" and handoff["caseId"] == "cpp-orbit"
     assert handoff["disposition"] == "escalate" and handoff["runId"] == run_id and handoff["score"] == 0.74
     assert {"id", "createdAt", "title", "summary", "evidence", "transactions"} <= set(handoff)

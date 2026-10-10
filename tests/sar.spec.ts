@@ -34,7 +34,7 @@ const health = (model: object) => ({
 });
 
 const HANDOFF = {
-  id: "handoff-cpp-orbit-1", kind: "fraud-case", createdAt: "2026-10-09T15:04:00.000Z", customerId: "cust-dana-whitfield", caseId: "cpp-orbit",
+  id: "handoff-cpp-orbit-1", kind: "fraud-case", createdAt: "2026-10-09T15:04:00.000Z", customerId: "dana-whitfield", caseId: "cpp-orbit",
   title: "Orbit Digital Goods compromise · escalated", summary: "Cards bought at Orbit Digital Goods funded P2P pushes to a new account.",
   disposition: "escalate", score: 0.94, band: "High risk",
   evidence: [{ label: "Common point of purchase", value: "412 cards · 37 confirmed fraud", source: "Fraud triage" }],

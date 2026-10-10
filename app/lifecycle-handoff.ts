@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 
 export type HandoffEvidence = { label: string; value: string; source: string };
 
@@ -21,8 +21,29 @@ export type FraudCaseHandoff = {
   servedBy?: unknown;
 };
 
-export type LifecycleHandoff = FraudCaseHandoff;
+/**
+ * What the customer already knows about a resolved fraud case. Other teams (the advisor) may see this;
+ * it never carries the disposition, an escalation, or anything about a SAR (no tipping off).
+ */
+export type ServiceEventHandoff = {
+  id: string;
+  kind: "service-event";
+  createdAt: string;
+  customerId: string;
+  occurredAt: string;
+  title: string;
+  summary: string;
+  actions: string[];
+  cardLast4?: string;
+  merchant?: string;
+  amount?: number;
+  currency?: string;
+  provenance: "live" | "recorded";
+};
+
+export type LifecycleHandoff = FraudCaseHandoff | ServiceEventHandoff;
 export type HandoffKind = LifecycleHandoff["kind"];
+type HandoffOf<K extends HandoffKind> = Extract<LifecycleHandoff, { kind: K }>;
 
 export const HANDOFF_STORAGE_KEY = "fsi-studio.handoffs";
 export const HANDOFF_EVENT = "fsi-studio:handoffs";
@@ -37,27 +58,24 @@ function storage(): Storage | null {
 
 function isHandoff(value: unknown): value is LifecycleHandoff {
   if (!value || typeof value !== "object") return false;
-  const item = value as Partial<FraudCaseHandoff>;
-  return (
-    typeof item.id === "string" &&
-    item.kind === "fraud-case" &&
-    typeof item.createdAt === "string" &&
-    typeof item.customerId === "string" &&
-    typeof item.caseId === "string" &&
-    Array.isArray(item.evidence) &&
-    Array.isArray(item.transactions)
-  );
+  const item = value as Partial<FraudCaseHandoff> & Partial<ServiceEventHandoff>;
+  if (typeof item.id !== "string" || typeof item.createdAt !== "string" || typeof item.customerId !== "string") return false;
+  if (item.kind === "fraud-case") return typeof item.caseId === "string" && Array.isArray(item.evidence) && Array.isArray(item.transactions);
+  if (item.kind === "service-event") return typeof item.summary === "string" && typeof item.occurredAt === "string" && Array.isArray(item.actions);
+  return false;
 }
 
-function readAll(): LifecycleHandoff[] {
-  const store = storage();
-  if (!store) return [];
+function parse(raw: string | null): LifecycleHandoff[] {
   try {
-    const parsed = JSON.parse(store.getItem(HANDOFF_STORAGE_KEY) || "[]");
-    return Array.isArray(parsed) ? parsed.filter(isHandoff) : [];
+    const parsed = JSON.parse(raw || "[]");
+    return Array.isArray(parsed) ? parsed.filter(isHandoff).sort((a, b) => b.createdAt.localeCompare(a.createdAt)) : [];
   } catch {
     return [];
   }
+}
+
+function readAll(): LifecycleHandoff[] {
+  return parse(storage()?.getItem(HANDOFF_STORAGE_KEY) ?? null);
 }
 
 function writeAll(items: LifecycleHandoff[]) {
@@ -68,35 +86,40 @@ function writeAll(items: LifecycleHandoff[]) {
 }
 
 /** Saves (or replaces by id) a handoff; newest first. */
-export function saveHandoff(handoff: LifecycleHandoff): LifecycleHandoff {
+export function saveHandoff<T extends LifecycleHandoff>(handoff: T): T {
   const items = readAll().filter((item) => item.id !== handoff.id);
   writeAll([handoff, ...items]);
   return handoff;
 }
 
-export function listHandoffs(kind?: HandoffKind): LifecycleHandoff[] {
-  const items = readAll().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  return kind ? items.filter((item) => item.kind === kind) : items;
+export function listHandoffs<K extends HandoffKind>(kind?: K): HandoffOf<K>[] {
+  const items = readAll();
+  return (kind ? items.filter((item) => item.kind === kind) : items) as HandoffOf<K>[];
 }
 
 export function clearHandoff(id: string) {
   writeAll(readAll().filter((item) => item.id !== id));
 }
 
-export function useHandoffs(kind?: HandoffKind): LifecycleHandoff[] {
-  const [items, setItems] = useState<LifecycleHandoff[]>([]);
-  const refresh = useCallback(() => setItems(listHandoffs(kind)), [kind]);
-  useEffect(() => {
-    refresh();
-    const onStorage = (event: StorageEvent) => {
-      if (event.key === null || event.key === HANDOFF_STORAGE_KEY) refresh();
-    };
-    window.addEventListener("storage", onStorage);
-    window.addEventListener(HANDOFF_EVENT, refresh);
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener(HANDOFF_EVENT, refresh);
-    };
-  }, [refresh]);
-  return items;
+function subscribe(onChange: () => void) {
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === null || event.key === HANDOFF_STORAGE_KEY) onChange();
+  };
+  window.addEventListener("storage", onStorage);
+  window.addEventListener(HANDOFF_EVENT, onChange);
+  return () => {
+    window.removeEventListener("storage", onStorage);
+    window.removeEventListener(HANDOFF_EVENT, onChange);
+  };
+}
+
+const rawSnapshot = () => storage()?.getItem(HANDOFF_STORAGE_KEY) ?? "";
+const serverSnapshot = () => "";
+
+export function useHandoffs<K extends HandoffKind>(kind?: K): HandoffOf<K>[] {
+  const raw = useSyncExternalStore(subscribe, rawSnapshot, serverSnapshot);
+  return useMemo(() => {
+    const items = parse(raw);
+    return (kind ? items.filter((item) => item.kind === kind) : items) as HandoffOf<K>[];
+  }, [raw, kind]);
 }

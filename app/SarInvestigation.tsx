@@ -24,7 +24,7 @@ import {
   X,
 } from "lucide-react";
 import DemoStatusBanner from "./DemoStatusBanner";
-import { useHandoffs, type FraudCaseHandoff } from "./lifecycle-handoff";
+import { useHandoffs } from "./lifecycle-handoff";
 import RunStats, { startRun, useRunLedger, type ObservedRun } from "./RunStats";
 import { newRunId, type RunEvent } from "./run/events";
 import ProvenanceBadge, { type Provenance } from "./run/ProvenanceBadge";
@@ -140,7 +140,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
   const [mediaSource, setMediaSource] = useState("");
   const [selected, setSelected] = useState(MULE_SCENARIO);
   const [handoffId, setHandoffId] = useState<string | null>(null);
-  const handoffs = useHandoffs("fraud-case") as FraudCaseHandoff[];
+  const handoffs = useHandoffs("fraud-case");
   const handoff = handoffs.find((item) => item.id === handoffId) ?? null;
   const timeline = useRun({ pageUrl: (id, after) => `${SAR_API}/runs/${encodeURIComponent(id)}?after=${after}`, interval: 700 });
   const recordings = useRecordings(SAR_API);

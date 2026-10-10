@@ -77,11 +77,11 @@
       "actions": ["Card blocked", "Card reissued as ****7740", "Customer notified", "$286.40 refunded"],
       "refunded": true,
       "refund_date": "2026-10-04",
-      "fraud_demo_case": "txn-compromised-merchant",
-      "recorded_run": "services/fraud/data/recorded/cpp-orbit-sample.json",
+      "fraud_demo_case": "cpp-orbit",
+      "recorded_run": "services/fraud/data/recorded/cpp-orbit-scripted.json",
       "summary": "Card ending 1188 used at Orbit Digital Goods, a compromised merchant. Blocked and reissued; $286.40 refunded."
     }
   ],
   "alerts": [],
-  "alerts_note": "SAR placeholder: prior alerts and dispositions are added when the SAR demo goes live. Empty means no prior alerts on file."
+  "alerts_note": "No AML alerts on this customer. The SAR money-mule case (fixtures/sar/) concerns a different, fictional account holder whose inbound credits include this card's compromise; nothing about it belongs in this customer's advisory context."
 }

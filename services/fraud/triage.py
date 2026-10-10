@@ -299,8 +299,12 @@ async def start(run, payload: dict) -> dict:
 
         action = decision.get("decision") if decision.get("decision") in DISPOSITIONS else "contact_customer"
         actions = []
-        if action == "block_and_reissue":
+        # Escalating a compromised card still protects the cardholder; the referral concerns the ring, not them.
+        protect = action == "escalate" and case.get("scenario") == "cpp"
+        if action == "block_and_reissue" or protect:
             actions.append(await _act(ctx, "contact_customer", decision))
+        if protect:
+            actions.append(await _act(ctx, "block_and_reissue", decision))
         actions.append(await _act(ctx, action, decision))
         if action == "block_and_reissue" and case.get("scenario") == "cpp":
             if "flag_merchant" not in ctx.done:

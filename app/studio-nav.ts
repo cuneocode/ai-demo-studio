@@ -9,6 +9,8 @@ export type StudioNav = {
   links?: StudioStatus["links"] | null;
   /** Opens another use case by id, e.g. the fraud demo handing a case to "sar-support". */
   openUseCase?: (id: string) => void;
+  /** True while Present mode is on; presenter-only hints may render. */
+  presenting?: boolean;
 };
 
 export const StudioNavContext = createContext<StudioNav>({});

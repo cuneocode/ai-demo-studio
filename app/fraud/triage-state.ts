@@ -1,5 +1,5 @@
 import type { RunEvent, ServedBy } from "../run/events";
-import type { FraudCaseHandoff } from "../lifecycle-handoff";
+import type { FraudCaseHandoff, ServiceEventHandoff } from "../lifecycle-handoff";
 
 /** Shapes the fraud service (services/fraud/triage.py, tools.py) puts on the shared timeline. */
 export type FraudCase = {
@@ -31,7 +31,7 @@ export type ScoreEvidence = {
 };
 export type Verdict = { title: string; status: string; body?: string | null; data: Record<string, unknown>; id: string };
 export type HitlRequest = { id: string; requestId: string; title: string; body?: string | null; options: { id: string; label: string; policy?: string }[]; recommended?: string; data: Record<string, unknown> };
-export type ActionLog = { id: string; at: string; title: string; status: string; kind: string; body?: string | null };
+export type ActionLog = { id: string; at: string; title: string; status: string; kind: string; body?: string | null; action?: string };
 
 export type TriageState = {
   scenario?: Scenario;
@@ -92,7 +92,7 @@ export function triageState(events: RunEvent[]): TriageState {
       if (data.tool === "get_dispute") state.dispute = { text: event.body ?? "" };
       if (data.tool === "add_note") state.notes.push(verdict(event));
       if (data.handoff) state.handoff = data.handoff as FraudCaseHandoff;
-      if (data.tool === "take_action") state.audit.push({ id: event.id, at: event.at, title: event.title, status: event.status, kind: "action" });
+      if (data.tool === "take_action") state.audit.push({ id: event.id, at: event.at, title: event.title, status: event.status, kind: "action", action: String(data.action ?? "") });
     }
     if (event.kind === "guardrail") {
       state.guardrails.push(verdict(event));
@@ -135,4 +135,38 @@ export function triageState(events: RunEvent[]): TriageState {
   }
   state.pending = state.requests.filter((request) => !decided.has(request.requestId) && !state.result);
   return state;
+}
+
+const CUSTOMER_VISIBLE: Record<string, string> = {
+  contact_customer: "contacted the customer",
+  block_and_reissue: "blocked the card and issued a replacement with a new number",
+};
+
+/**
+ * The part of a fraud case the customer already knows: what happened to their card and what the bank did.
+ * Built only from customer-visible actions, so an escalation or SAR referral can never leak through it.
+ */
+export function serviceEventFrom(state: TriageState, provenance: ServiceEventHandoff["provenance"]): ServiceEventHandoff | null {
+  const opened = state.opened;
+  const done = state.audit.filter((item) => item.kind === "action" && item.action && CUSTOMER_VISIBLE[item.action]);
+  if (!opened?.customer_id || !state.result || !done.some((item) => item.action === "block_and_reissue")) return null;
+  const when = opened.at ?? opened.as_of ?? "";
+  const day = when ? new Date(when).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }) : "recently";
+  const last4 = opened.account.replace(/\D/g, "").slice(-4);
+  const actions = Object.keys(CUSTOMER_VISIBLE).reverse().filter((action) => done.some((item) => item.action === action));
+  return {
+    id: `service-${opened.customer_id}-${opened.id}`,
+    kind: "service-event",
+    createdAt: new Date().toISOString(),
+    customerId: opened.customer_id,
+    occurredAt: when,
+    title: `Card ending ${last4} compromised and reissued`,
+    summary: `Card ending ${last4} was used for an unauthorised online purchase at ${opened.merchant} (${opened.amount.toLocaleString("en-US", { style: "currency", currency: "USD" })}, ${day}). The bank ${actions.map((action) => CUSTOMER_VISIBLE[action]).join(", and ")}.`,
+    actions,
+    cardLast4: last4,
+    merchant: opened.merchant,
+    amount: opened.amount,
+    currency: "USD",
+    provenance,
+  };
 }

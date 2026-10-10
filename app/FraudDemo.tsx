@@ -11,10 +11,11 @@ import DemoStatusBanner from "./DemoStatusBanner";
 import FraudRuntimeDetails, { type FraudHealth } from "./FraudRuntimeDetails";
 import RunStats, { agentTraceIntegration, defenseFacts, defenseFrom, defenseIntegration, DEFENSE_TILES, startRun, traceFacts, useRunLedger, type ObservedRun, type StatsCard } from "./RunStats";
 import { saveHandoff } from "./lifecycle-handoff";
+import { fraudPresenterHints } from "./fraud-presenter-notes";
 import { useStudioNav } from "./studio-nav";
 import NetworkGraph from "./fraud/NetworkGraph";
 import { BacktestStrip, caughtShare, ComputeFooter, type ModelCardData } from "./fraud/ModelCard";
-import { triageState, type FraudCase, type QueueRow, type RiskBand, type Scenario, type TriageState } from "./fraud/triage-state";
+import { serviceEventFrom, triageState, type FraudCase, type QueueRow, type RiskBand, type Scenario, type TriageState } from "./fraud/triage-state";
 import type { RunEvent } from "./run/events";
 import ProvenanceBadge, { provenanceText, type Provenance } from "./run/ProvenanceBadge";
 import ReplayPicker, { loadRecording, useRecordings } from "./run/ReplayPicker";
@@ -90,6 +91,16 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
   const caseKey = `${steps.runId ?? ""}:${opened ?? ""}`;
   const showNetwork = networkKey === caseKey;
   const handedOff = handoffSaved?.key === caseKey ? handoffSaved.id : null;
+
+  // What the customer already knows (card blocked and reissued) is shared with the relationship team; the escalation is not.
+  const serviceEvent = useMemo(() => (steps.replaying ? null : serviceEventFrom(state, replay ? "recorded" : "live")), [state, replay, steps.replaying]);
+  const sharedKey = serviceEvent ? `${steps.runId ?? "replay"}:${serviceEvent.id}:${serviceEvent.provenance}` : "";
+  const sharedRef = useRef("");
+  useEffect(() => {
+    if (!serviceEvent || sharedRef.current === sharedKey) return;
+    sharedRef.current = sharedKey;
+    saveHandoff(serviceEvent);
+  }, [serviceEvent, sharedKey]);
 
   // The stats row follows the run's own counts: investigation first, then the disposition.
   useEffect(() => {
@@ -201,6 +212,7 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
         </section>
       </>}
 
+      {nav.presenting && fraudPresenterHints[scenarioId] && <p className="fx-presenter-hint" role="note"><b>Presenter</b> {fraudPresenterHints[scenarioId]}</p>}
       <BusinessBand card={card} state={state} />
       <FraudStatus health={health} failed={healthFailed} recording={recordingFor(scenarioId)?.name} onReplay={replayRecording} />
 
@@ -280,6 +292,11 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
             )}
             {state.opened && <NoteComposer key={`${steps.runId}-${scenarioId}`} runId={replay ? null : steps.runId} caseId={state.opened.id} initial={state.scenario?.analyst_note ?? ""} />}
             <AuditTrail state={state} />
+            {serviceEvent && (
+              <p className="fx-shared" data-testid="fraud-service-event">
+                <span className="fx-tag">Shared with the relationship team</span> {serviceEvent.title}. Investigation details stay with fraud and financial crimes.
+              </p>
+            )}
             {state.handoff && (
               <div className="fx-handoff">
                 <div><FileWarning size={16} aria-hidden="true" /><span><strong>SAR referral drafted</strong> · {state.handoff.evidence.length} evidence items · {state.handoff.transactions.length} transaction{state.handoff.transactions.length === 1 ? "" : "s"}{replay ? " · from a recorded run" : ""}</span></div>
