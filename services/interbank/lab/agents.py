@@ -44,6 +44,9 @@ def chat_model(backend: models.Backend) -> ChatOpenAI:
     return ChatOpenAI(**common, reasoning_effort="none" if backend.model.startswith("gpt-5") else None)
 
 
+_ANNOUNCED: dict[str, tuple | None] = {}
+
+
 class DeepAgent:
     """A Deep Agent rebuilt whenever the studio switches this lab's model backend."""
 
@@ -53,6 +56,15 @@ class DeepAgent:
         self._graph = None
         self._signature: tuple | None = None
         self.served_by: dict = {}
+
+    def announce(self, run_id: str) -> bool:
+        """True once per run for this service, and again only if the backend changes during that run."""
+        if _ANNOUNCED.get(run_id) == self._signature:
+            return False
+        if len(_ANNOUNCED) > 64:
+            _ANNOUNCED.pop(next(iter(_ANNOUNCED)))
+        _ANNOUNCED[run_id] = self._signature
+        return True
 
     def current(self):
         backend, self.served_by = models.select()
@@ -71,7 +83,7 @@ async def run_turn(agent: DeepAgent, *, prompt: str, thread_id: str, run_id: str
     answer = ""
     graph = agent.current()
     served = agent.served_by
-    if served.get("fallback"):
+    if served.get("fallback") and agent.announce(run_id):
         await emit(run_id, "model.failover", f"{SERVICE_NAME} on {served.get('label')}", body=served.get("reason"),
                    data={"served_by": served})
     stream = graph.astream(
