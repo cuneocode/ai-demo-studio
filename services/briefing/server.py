@@ -9,6 +9,7 @@ import hashlib
 import json
 import logging
 import os
+import sys
 import time
 import uuid
 from contextvars import Token
@@ -46,6 +47,11 @@ from telemetry import telemetry
 from tools import BriefingSession, apply_identity, write_meta
 from usage import ModelUsage, model_usage
 
+sys.path.append(str(Path(__file__).resolve().parents[1] / "common"))
+from runs import RunStore  # noqa: E402
+
+# Recorded extracts (scripts/record_golden.py); served read-only for replay.
+recordings = RunStore("briefing", component="company-briefing", recordings_dir=Path(__file__).resolve().parent / "data" / "recorded")
 app = FastAPI(docs_url=None, redoc_url=None)
 logger = logging.getLogger("briefing")
 startup_error = None
@@ -108,6 +114,19 @@ async def search(q: str = ""):
     except Exception:
         raise HTTPException(502, "The ticker catalog could not be searched.") from None
     return {"query": query, "candidates": candidates}
+
+
+@app.get("/api/briefing/recordings")
+async def list_recordings():
+    return {"recordings": recordings.recordings()}
+
+
+@app.get("/api/briefing/recordings/{name}")
+async def get_recording(name: str):
+    doc = recordings.recording(name)
+    if doc is None:
+        raise HTTPException(404, "Unknown recording.")
+    return doc
 
 
 def _briefing_cache_path(key: str) -> Path:

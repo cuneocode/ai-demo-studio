@@ -1,4 +1,5 @@
 import asyncio
+import json
 import importlib
 import sys
 from pathlib import Path
@@ -119,3 +120,19 @@ def test_chat_reports_graph_model_usage(client, monkeypatch):
     monkeypatch.setattr(server, "graph", Graph())
     body = client.post("/api/banking/chat", json={"message": "platinum"}).json()
     assert body["usage"] == {"llm_calls": 2, "input_tokens": 300, "output_tokens": 40}
+
+
+def test_recorded_scripted_prompts_are_served_read_only(client):
+    listed = client.get("/api/banking/recordings").json()["recordings"]
+    meta = next(item for item in listed if item["name"] == "scripted-prompts")
+    assert meta["synthetic"] is True and meta["recorded_at"]
+    doc = client.get("/api/banking/recordings/scripted-prompts").json()
+    turns = {turn["id"]: turn for turn in doc["result"]["turns"]}
+    scripted = json.loads((Path(server.__file__).resolve().parents[2] / "app" / "banking-scenarios.json").read_text())
+    assert set(turns) == {item["id"] for item in scripted}
+    assert all(turn["status"] == item["httpStatus"] for item in scripted for turn in [turns[item["id"]]])
+    assert turns["success"]["body"]["answer"] and turns["ai-defense"]["body"]["security"]["event_ids"]
+    assert turns["agent-controls"]["body"]["controls"]["status"] == "blocked"
+    assert "api_key" not in json.dumps(doc).lower()
+    assert client.get("/api/banking/recordings/missing-one").status_code == 404
+    assert client.get("/api/banking/recordings/Bad_Name").status_code == 404

@@ -17,7 +17,7 @@ from fastapi.testclient import TestClient
 ROOT = Path(__file__).resolve().parent
 ANALYST = "Maya (analyst)"
 
-# scenario, disposition, follow-up decisions, write an analyst note first
+# scenario, disposition, follow-up decisions, write an analyst note first[, recording name]
 SCRIPTED = [
     ("cpp-orbit", "block_and_reissue", {"bulk_reissue": "approve"}, False),
     ("card-testing", "block_and_reissue", {}, False),
@@ -29,7 +29,13 @@ SCRIPTED = [
 LIVE = [
     ("cpp-orbit", "block_and_reissue", {"bulk_reissue": "approve"}, False),
     ("attack-dispute-injection", "contact_customer", {}, False),
+    # Escalating protects the cardholder (block_and_reissue) and drafts the SAR referral handoff.
+    ("cpp-orbit", "escalate", {}, False, "cpp-orbit-escalate-live"),
 ]
+
+
+def plan_name(plan: tuple, live: bool) -> str:
+    return plan[4] if len(plan) > 4 else f"{plan[0]}-{'live' if live else 'scripted'}"
 
 
 def wait_for(client: TestClient, run_id: str, test, timeout: float = 300) -> dict:
@@ -57,7 +63,8 @@ def finished(page: dict):
     return page if page["run"]["status"] != "running" else None
 
 
-def record(client: TestClient, store, scenario: str, disposition: str, follow_up: dict, note: bool, live: bool) -> Path:
+def record(client: TestClient, store, scenario: str, disposition: str, follow_up: dict, note: bool, live: bool,
+           name: str) -> Path:
     mode = "agent" if live else "scripted"
     started = client.post("/api/fraud/runs", json={"scenario": scenario, "label": f"Triage · {scenario}",
                                                    "input": {"score_queue": True, "mode": mode}}).json()
@@ -90,7 +97,8 @@ def record(client: TestClient, store, scenario: str, disposition: str, follow_up
     result = page["run"].get("result") or {}
     served = (result.get("served_by") or {}).get("label") if isinstance(result.get("served_by"), dict) else None
     title = f"{case_file['scenario']['title']} · " + (f"live agent · {served}" if live else "scripted investigation")
-    name = f"{scenario}-{'live' if live else 'scripted'}"
+    if disposition == "escalate" and live:
+        title = f"{case_file['scenario']['title']} · escalated to SAR · live agent · {served}"
     return store.record_golden(run_id, name, title=title, synthetic=True)
 
 
@@ -98,6 +106,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--live", action="store_true", help="also record live-agent goldens on the Studio model chain")
     parser.add_argument("--only", nargs="*", help="scenario ids to record")
+    parser.add_argument("--name", nargs="*", help="recording names to record (e.g. cpp-orbit-escalate-live)")
     args = parser.parse_args()
     os.environ.setdefault("FRAUD_DECISION_TIMEOUT", "300")
 
@@ -107,10 +116,12 @@ def main() -> None:
     store.cache_dir = None
     plans = [(item, False) for item in SCRIPTED] + ([(item, True) for item in LIVE] if args.live else [])
     with TestClient(server.app) as client:
-        for (scenario, disposition, follow_up, note), live in plans:
-            if args.only and scenario not in args.only:
+        for plan, live in plans:
+            scenario, disposition, follow_up, note = plan[:4]
+            name = plan_name(plan, live)
+            if (args.only and scenario not in args.only) or (args.name and name not in args.name):
                 continue
-            path = record(client, store, scenario, disposition, follow_up, note, live)
+            path = record(client, store, scenario, disposition, follow_up, note, live, name)
             print(f"wrote {path.relative_to(ROOT)}")
 
 

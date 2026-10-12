@@ -188,3 +188,17 @@ def test_cached_replay_of_a_synthetic_upload_still_says_synthetic(client, monkey
     assert client.post("/api/briefing/analyze", files=upload).json()["cached"] is False
     replay = client.post("/api/briefing/analyze", files=upload).json()
     assert replay["cached"] is True and replay["source"]["synthetic"] is True and replay["recorded_at"]
+
+
+def test_recorded_halcyon_extract_is_served_read_only(client):
+    listed = client.get("/api/briefing/recordings").json()["recordings"]
+    meta = next(item for item in listed if item["name"] == "halcyon-annual-report")
+    assert meta["synthetic"] is True and meta["recorded_at"]
+    doc = client.get("/api/briefing/recordings/halcyon-annual-report").json()
+    result = doc["result"]
+    assert doc["recorded_at"] == result["recorded_at"] and result["cached"] is False
+    assert result["company"]["ticker"] == "HCYN" and result["source"]["synthetic"] is True
+    assert result["usage"]["llm_calls"] > 0 and doc["served_by"]["label"]
+    assert "api_key" not in json.dumps(doc).lower()
+    assert client.get("/api/briefing/recordings/missing-one").status_code == 404
+    assert client.get("/api/briefing/recordings/Bad_Name").status_code == 404

@@ -8,6 +8,7 @@ explicit destination. Neither health configuration nor export implies dashboard 
 import asyncio
 import os
 import re
+import sys
 import time
 import uuid
 import truststore
@@ -28,6 +29,10 @@ from telemetry import banking_telemetry
 from observability_status import stream_status
 from runtime_controls import runtime_controls, ControlRun, ControlsBlocked, ControlsUnavailable
 import model_backend
+sys.path.append(str(Path(__file__).resolve().parents[1] / "common"))
+from runs import RunStore  # noqa: E402
+# Recorded scripted-prompt turns (scripts/record_golden.py); served read-only for replay.
+recordings = RunStore("banking", component="brahe-bank", recordings_dir=Path(__file__).resolve().parent / "data" / "recorded")
 app = FastAPI(docs_url=None, redoc_url=None)
 graph = None
 graph_signature = None
@@ -122,6 +127,19 @@ async def health():
 @app.get("/api/banking/observability")
 async def observability():
     return {**await stream_status(), "controls": runtime_controls.health()}
+
+
+@app.get("/api/banking/recordings")
+async def list_recordings():
+    return {"recordings": recordings.recordings()}
+
+
+@app.get("/api/banking/recordings/{name}")
+async def get_recording(name: str):
+    doc = recordings.recording(name)
+    if doc is None:
+        raise HTTPException(404, "Unknown recording.")
+    return doc
 
 
 @app.post("/api/banking/chat")

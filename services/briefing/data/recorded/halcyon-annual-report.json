@@ -1,0 +1,523 @@
+{
+ "v": 1,
+ "name": "halcyon-annual-report",
+ "title": "Halcyon Interconnect \u00b7 uploaded annual report (synthetic)",
+ "scenario": "upload",
+ "recorded_at": "2026-10-12T14:46:17.505942+00:00",
+ "served_by": {
+  "provider": "openai",
+  "label": "OpenAI API",
+  "model": "gpt-5.6-luna",
+  "kind": "openai",
+  "private": false,
+  "external": true,
+  "fallback": true,
+  "reason": "Sparky vLLM unreachable (connection refused)",
+  "source": "saved"
+ },
+ "synthetic": true,
+ "note": "Recorded from a live extract by the briefing service. Fictional company, synthetic annual report.",
+ "run": null,
+ "events": [],
+ "result": {
+  "company": {
+   "name": "Halcyon Interconnect, Inc.",
+   "ticker": "HCYN",
+   "cik": null
+  },
+  "period": {
+   "form": "10-K",
+   "filedAt": null,
+   "periodOfReport": "2025-12-31",
+   "fiscalYear": 2025
+  },
+  "source": {
+   "kind": "upload",
+   "label": "Uploaded \u00b7 annual-report-fy2025.html",
+   "url": null,
+   "filename": "annual-report-fy2025.html",
+   "accession": null,
+   "synthetic": true
+  },
+  "objectives": {
+   "status": "extracted",
+   "facts": [
+    {
+     "text": "Halcyon\u2019s overarching objective is to become the leading independent supplier of optical and thermal infrastructure for accelerated-compute clusters.",
+     "item": "1",
+     "node_id": "item-1-our-strategy",
+     "excerpt": "Our objective is to be the leading independent supplier of the optical and thermal infrastructure that accelerated-compute clusters require.",
+     "source_url": "upload:annual-report-fy2025.html#item-1-our-strategy"
+    },
+    {
+     "text": "Lead each speed transition, including increasing 1.6T products to more than half of Optical Interconnect revenue by the end of 2026.",
+     "item": "1",
+     "node_id": "item-1-our-strategy",
+     "excerpt": "First, lead each speed transition. We began volume shipments of our HX-1600 1.6-terabit transceivers in the third quarter of 2025 and intend for 1.6T products to exceed half of Optical Interconnect revenue by the end of 2026.",
+     "source_url": "upload:annual-report-fy2025.html#item-1-our-strategy"
+    },
+    {
+     "text": "Extend from modules to co-packaged optics engines and participate in that transition rather than be displaced by it.",
+     "item": "1",
+     "node_id": "item-1-our-strategy",
+     "excerpt": "Second, extend from modules to engines. We are sampling our first co-packaged optics engine with two switch-silicon partners and expect qualification revenue in 2027. Co-packaged optics could reduce the market for pluggable modules over time, and we are investing so that we participate in that transition rather than being displaced by it.",
+     "source_url": "upload:annual-report-fy2025.html#item-1-our-strategy"
+    },
+    {
+     "text": "Sell integrated liquid-cooled racks rather than only individual parts, shortening customer deployment from weeks to days.",
+     "item": "1",
+     "node_id": "item-1-our-strategy",
+     "excerpt": "Third, sell the rack, not only the part. Our HR-series liquid-cooled rack systems combine our coolant distribution units, manifolds, and cold plates with our optical cabling into a factory-integrated rack, which shortens customer deployment from weeks to days.",
+     "source_url": "upload:annual-report-fy2025.html#item-1-our-strategy"
+    },
+    {
+     "text": "Diversify the customer base by reducing revenue concentration among the three largest customers below 50% by 2028.",
+     "item": "1",
+     "node_id": "item-1-our-strategy",
+     "excerpt": "Fourth, diversify our customer base. We aim to reduce the share of revenue from our three largest customers below 50% by 2028 by expanding with neocloud operators, sovereign AI programs, and enterprise private-AI deployments.",
+     "source_url": "upload:annual-report-fy2025.html#item-1-our-strategy"
+    },
+    {
+     "text": "Secure supply by qualifying a second indium phosphide laser supplier, expanding the Penang facility, and opening rack integration capacity in Guadalajara.",
+     "item": "1",
+     "node_id": "item-1-our-strategy",
+     "excerpt": "Fifth, secure supply. We are adding a second indium phosphide laser supplier qualification, expanding our Penang, Malaysia facility, and opening rack integration capacity in Guadalajara, Mexico.",
+     "source_url": "upload:annual-report-fy2025.html#item-1-our-strategy"
+    }
+   ]
+  },
+  "risks": {
+   "status": "extracted",
+   "facts": [
+    {
+     "text": "Dependence on a small number of hyperscale customers creates material revenue concentration risk; loss of or reduced orders from any could materially reduce revenue.",
+     "item": "1A",
+     "node_id": "item-1a-risks-related-to-our-customers-and-markets",
+     "excerpt": "We depend on a small number of hyperscale customers, and the loss of, or a reduction in orders from, any of them would materially reduce our revenue.",
+     "source_url": "upload:annual-report-fy2025.html#item-1a-risks-related-to-our-customers-and-markets"
+    },
+    {
+     "text": "A slowdown or reversal in AI infrastructure spending could sharply reduce product orders.",
+     "item": "1A",
+     "node_id": "item-1a-risks-related-to-our-customers-and-markets",
+     "excerpt": "Demand for our products depends on continued growth in artificial intelligence infrastructure spending, which may slow or reverse.",
+     "source_url": "upload:annual-report-fy2025.html#item-1a-risks-related-to-our-customers-and-markets"
+    },
+    {
+     "text": "Adoption of co-packaged or linear-drive optics could reduce demand for pluggable products before replacement products are qualified.",
+     "item": "1A",
+     "node_id": "item-1a-risks-related-to-our-customers-and-markets",
+     "excerpt": "If co-packaged optics are adopted faster than we expect, demand for pluggable transceivers, which represented most of Optical Interconnect revenue in fiscal 2025, could decline before our co-packaged engines are qualified.",
+     "source_url": "upload:annual-report-fy2025.html#item-1a-risks-related-to-our-customers-and-markets"
+    },
+    {
+     "text": "A shortage or disruption involving indium phosphide laser die could halt production of high-revenue optical products.",
+     "item": "1A",
+     "node_id": "item-1a-risks-related-to-our-supply-chain-and-manufactur",
+     "excerpt": "One supplier, located in Japan, provided approximately 70% of our fiscal 2025 laser die volume. A fire, earthquake, export restriction, quality failure, or allocation decision at that supplier could halt production of our highest-revenue products for months, because qualifying a new laser source typically takes nine to twelve months.",
+     "source_url": "upload:annual-report-fy2025.html#item-1a-risks-related-to-our-supply-chain-and-manufactur"
+    },
+    {
+     "text": "Manufacturing concentration in Malaysia exposes production to regional disruptions.",
+     "item": "1A",
+     "node_id": "item-1a-risks-related-to-our-supply-chain-and-manufactur",
+     "excerpt": "Most of our optical module production occurs in Penang, Malaysia. Natural disasters, power or water shortages, political events, public health crises, or changes in trade policy affecting Malaysia could disrupt production.",
+     "source_url": "upload:annual-report-fy2025.html#item-1a-risks-related-to-our-supply-chain-and-manufactur"
+    },
+    {
+     "text": "Defects in liquid-cooled rack systems could cause equipment damage, warranty claims, liability, and reputational harm.",
+     "item": "1A",
+     "node_id": "item-1a-risks-related-to-our-products",
+     "excerpt": "Defects in our liquid-cooled rack systems could cause coolant leaks and damage to customer equipment, resulting in warranty claims, liability, and reputational harm.",
+     "source_url": "upload:annual-report-fy2025.html#item-1a-risks-related-to-our-products"
+    },
+    {
+     "text": "Optical product defects discovered after deployment could cause costly link failures, replacement obligations, penalties, and lost business.",
+     "item": "1A",
+     "node_id": "item-1a-risks-related-to-our-products",
+     "excerpt": "Defects can cause link failures in large AI training jobs, which can be costly for customers. We could be required to replace large volumes of modules, pay penalties, or lose future business.",
+     "source_url": "upload:annual-report-fy2025.html#item-1a-risks-related-to-our-products"
+    },
+    {
+     "text": "Export controls and trade restrictions could prevent sales, require denied licenses, trigger retaliation, and result in penalties.",
+     "item": "1A",
+     "node_id": "item-1a-legal-regulatory-and-compliance-risks",
+     "excerpt": "U.S. export controls on advanced computing items and related technology, and any future restrictions on optical components, could prevent sales to customers in China and other countries, require licenses that may be denied, or prompt foreign governments to retaliate against U.S. suppliers. Violations of export control laws can result in significant penalties.",
+     "source_url": "upload:annual-report-fy2025.html#item-1a-legal-regulatory-and-compliance-risks"
+    },
+    {
+     "text": "Cybersecurity incidents could interrupt manufacturing, compromise data, or enable product firmware tampering.",
+     "item": "1A",
+     "node_id": "item-1a-legal-regulatory-and-compliance-risks",
+     "excerpt": "A cyberattack on us or our suppliers could interrupt manufacturing, compromise data, or allow tampering with product firmware.",
+     "source_url": "upload:annual-report-fy2025.html#item-1a-legal-regulatory-and-compliance-risks"
+    },
+    {
+     "text": "A patent infringement lawsuit presents an unquantified potential loss exposure.",
+     "item": "3",
+     "node_id": "item-3-legal-proceedings",
+     "excerpt": "We are not able to estimate a range of possible loss.",
+     "source_url": "upload:annual-report-fy2025.html#item-3-legal-proceedings"
+    }
+   ]
+  },
+  "regulatory": {
+   "status": "extracted",
+   "facts": [
+    {
+     "text": "Halcyon must screen customers against restricted-party lists and may need licenses to ship certain products under U.S. export controls.",
+     "item": "1",
+     "node_id": "item-1-government-regulation-and-export-controls",
+     "excerpt": "We must screen customers against the Entity List and other restricted-party lists, and we may need licenses to ship certain products.",
+     "source_url": "upload:annual-report-fy2025.html#item-1-government-regulation-and-export-controls"
+    },
+    {
+     "text": "Halcyon is subject to tariffs and customs rules in the countries where it manufactures.",
+     "item": "1",
+     "node_id": "item-1-government-regulation-and-export-controls",
+     "excerpt": "We are subject to tariffs on components imported from China and to customs rules in every country where we manufacture.",
+     "source_url": "upload:annual-report-fy2025.html#item-1-government-regulation-and-export-controls"
+    },
+    {
+     "text": "Halcyon\u2019s coolant fluids and refrigerants are subject to evolving environmental regulation, including PFAS restrictions and HFC phase-down rules.",
+     "item": "1",
+     "node_id": "item-1-government-regulation-and-export-controls",
+     "excerpt": "Our Rack Systems products use coolant fluids and refrigerants that are subject to evolving environmental regulation, including restrictions on per- and polyfluoroalkyl substances in the European Union and several U.S. states and phase-down rules for certain hydrofluorocarbon refrigerants.",
+     "source_url": "upload:annual-report-fy2025.html#item-1-government-regulation-and-export-controls"
+    },
+    {
+     "text": "Halcyon is subject to conflict-minerals disclosure rules, EU RoHS and REACH directives, and data privacy laws applicable to rack telemetry.",
+     "item": "1",
+     "node_id": "item-1-government-regulation-and-export-controls",
+     "excerpt": "We are also subject to conflict-minerals disclosure rules, the EU RoHS and REACH directives, and data privacy laws that apply to the telemetry our racks report.",
+     "source_url": "upload:annual-report-fy2025.html#item-1-government-regulation-and-export-controls"
+    },
+    {
+     "text": "Export-control restrictions may require licenses that can be denied, and violations can result in significant penalties.",
+     "item": "1A",
+     "node_id": "item-1a-legal-regulatory-and-compliance-risks",
+     "excerpt": "U.S. export controls on advanced computing items and related technology, and any future restrictions on optical components, could prevent sales to customers in China and other countries, require licenses that may be denied, or prompt foreign governments to retaliate against U.S. suppliers. Violations of export control laws can result in significant penalties.",
+     "source_url": "upload:annual-report-fy2025.html#item-1a-legal-regulatory-and-compliance-risks"
+    },
+    {
+     "text": "Halcyon has controls governing internal generative-AI use, including sensitive-data inspection, activity logging, and restrictions on data sent to hosted AI services.",
+     "item": "1C",
+     "node_id": "item-1c-risk-management-and-strategy",
+     "excerpt": "We have adopted controls for our internal use of generative AI, including inspection of prompts and responses for sensitive data on our private model endpoint, logging of AI assistant activity, and restrictions on the data that may be sent to hosted AI services.",
+     "source_url": "upload:annual-report-fy2025.html#item-1c-risk-management-and-strategy"
+    },
+    {
+     "text": "The Audit Committee oversees cybersecurity risk and receives quarterly reports from the CISO.",
+     "item": "1C",
+     "node_id": "item-1c-governance-of-cybersecurity-risk",
+     "excerpt": "The Audit Committee of our Board oversees cybersecurity risk and receives a report from the Chief Information Security Officer each quarter.",
+     "source_url": "upload:annual-report-fy2025.html#item-1c-governance-of-cybersecurity-risk"
+    }
+   ]
+  },
+  "ai_initiatives": {
+   "status": "extracted",
+   "facts": [
+    {
+     "text": "Halcyon Interconnect uses machine-learning vision models to inspect optical sub-assemblies on its Penang production lines; this raised first-pass yield on HX-1600 modules from 81% to 92% during 2025.",
+     "item": "1",
+     "node_id": "item-1-artificial-intelligence-in-our-business",
+     "excerpt": "We also use artificial intelligence in our own operations. Machine-learning vision models inspect optical sub-assemblies on our Penang production lines, which raised first-pass yield on HX-1600 modules from 81% to 92% during 2025.",
+     "source_url": "upload:annual-report-fy2025.html#item-1-artificial-intelligence-in-our-business"
+    },
+    {
+     "text": "Halcyon Interconnect uses machine-learning demand forecasting to plan laser die purchases.",
+     "item": "1",
+     "node_id": "item-1-artificial-intelligence-in-our-business",
+     "excerpt": "We use machine-learning demand forecasting to plan laser die purchases.",
+     "source_url": "upload:annual-report-fy2025.html#item-1-artificial-intelligence-in-our-business"
+    },
+    {
+     "text": "In 2025, Halcyon Interconnect deployed generative AI assistants for field service engineers on a private model endpoint in its own data center, under an Audit Committee-approved AI use policy prohibiting customer confidential data in public AI services.",
+     "item": "1",
+     "node_id": "item-1-artificial-intelligence-in-our-business",
+     "excerpt": "In 2025 we deployed generative AI assistants for field service engineers, running on a private model endpoint in our own data center, governed by an AI use policy approved by our Audit Committee that prohibits entering customer confidential data into public AI services.",
+     "source_url": "upload:annual-report-fy2025.html#item-1-artificial-intelligence-in-our-business"
+    },
+    {
+     "text": "Halcyon Interconnect aims to expand with sovereign AI programs and enterprise private-AI deployments as part of its customer diversification strategy.",
+     "item": "1",
+     "node_id": "item-1-our-strategy",
+     "excerpt": "Fourth, diversify our customer base. We aim to reduce the share of revenue from our three largest customers below 50% by 2028 by expanding with neocloud operators, sovereign AI programs, and enterprise private-AI deployments.",
+     "source_url": "upload:annual-report-fy2025.html#item-1-our-strategy"
+    }
+   ]
+  },
+  "metrics": [
+   {
+    "label": "Revenue",
+    "value": 4112.6,
+    "unit": "USD millions",
+    "period": "FY2025",
+    "origin": "verbatim-table",
+    "excerpt": "Revenue                                   $ 4,112.6    $ 2,980.1    $ 2,071.4"
+   },
+   {
+    "label": "Operating income",
+    "value": 954.1,
+    "unit": "USD millions",
+    "period": "FY2025",
+    "origin": "verbatim-table",
+    "excerpt": "Operating income                          $   954.1    $   569.2    $   319.0"
+   },
+   {
+    "label": "Net income",
+    "value": 802.5,
+    "unit": "USD millions",
+    "period": "FY2025",
+    "origin": "verbatim-table",
+    "excerpt": "Net income                                $   802.5    $   471.8    $   255.1"
+   },
+   {
+    "label": "Diluted EPS",
+    "value": 4.77,
+    "unit": "USD per share",
+    "period": "FY2025",
+    "origin": "verbatim-table",
+    "excerpt": "Diluted earnings per share                $    4.77    $    2.84    $    1.56"
+   }
+  ],
+  "grounding": {
+   "dropped_facts": 1,
+   "dropped_metrics": 0
+  },
+  "trail": {
+   "path": "upload",
+   "todos": [
+    {
+     "content": "Resolve issuer metadata and ingest the existing filing at /filings/source.html",
+     "status": "completed"
+    },
+    {
+     "content": "Build the filing table of contents",
+     "status": "completed"
+    },
+    {
+     "content": "Task objectives, risks, regulatory, AI initiatives, and metrics specialists",
+     "status": "completed"
+    },
+    {
+     "content": "Assemble CompanyBriefing from specialist notes and company facts",
+     "status": "completed"
+    }
+   ],
+   "nodes_read": [
+    {
+     "id": "item-1-overview",
+     "theme": "objectives",
+     "chars": 1411
+    },
+    {
+     "id": "item-1-products-and-technology",
+     "theme": "objectives",
+     "chars": 1272
+    },
+    {
+     "id": "item-1-customers",
+     "theme": "objectives",
+     "chars": 770
+    },
+    {
+     "id": "item-1-human-capital",
+     "theme": "objectives",
+     "chars": 592
+    },
+    {
+     "id": "item-1-manufacturing-and-supply-chain",
+     "theme": "objectives",
+     "chars": 826
+    },
+    {
+     "id": "item-1-our-strategy",
+     "theme": "objectives",
+     "chars": 1595
+    },
+    {
+     "id": "item-7-key-trends-affecting-our-business",
+     "theme": "objectives",
+     "chars": 916
+    },
+    {
+     "id": "item-7-overview-of-fiscal-2025",
+     "theme": "objectives",
+     "chars": 856
+    },
+    {
+     "id": "item-1c-risk-management-and-strategy",
+     "theme": "regulatory",
+     "chars": 1235
+    },
+    {
+     "id": "item-1-government-regulation-and-export-controls",
+     "theme": "regulatory",
+     "chars": 1323
+    },
+    {
+     "id": "item-1-products-and-technology",
+     "theme": "regulatory",
+     "chars": 1272
+    },
+    {
+     "id": "item-1a-legal-regulatory-and-compliance-risks",
+     "theme": "regulatory",
+     "chars": 1561
+    },
+    {
+     "id": "item-1c-governance-of-cybersecurity-risk",
+     "theme": "regulatory",
+     "chars": 521
+    },
+    {
+     "id": "item-7-key-trends-affecting-our-business",
+     "theme": "regulatory",
+     "chars": 916
+    },
+    {
+     "id": "item-1-overview",
+     "theme": "regulatory",
+     "chars": 1411
+    },
+    {
+     "id": "item-1-artificial-intelligence-in-our-business",
+     "theme": "regulatory",
+     "chars": 1090
+    },
+    {
+     "id": "item-1-our-strategy",
+     "theme": "ai_initiatives",
+     "chars": 1595
+    },
+    {
+     "id": "item-1-artificial-intelligence-in-our-business",
+     "theme": "ai_initiatives",
+     "chars": 1090
+    },
+    {
+     "id": "item-7-key-trends-affecting-our-business",
+     "theme": "ai_initiatives",
+     "chars": 916
+    },
+    {
+     "id": "item-1a-risks-related-to-our-customers-and-markets",
+     "theme": "ai_initiatives",
+     "chars": 2042
+    },
+    {
+     "id": "item-1-products-and-technology",
+     "theme": "ai_initiatives",
+     "chars": 1272
+    },
+    {
+     "id": "item-1a-risks-related-to-our-products",
+     "theme": "ai_initiatives",
+     "chars": 1406
+    },
+    {
+     "id": "item-1a-risks-related-to-our-customers-and-markets",
+     "theme": "risks",
+     "chars": 2042
+    },
+    {
+     "id": "item-1a-risks-related-to-our-products",
+     "theme": "risks",
+     "chars": 1406
+    },
+    {
+     "id": "item-1a-risks-related-to-our-supply-chain-and-manufactur",
+     "theme": "risks",
+     "chars": 1578
+    },
+    {
+     "id": "item-1a-risks-related-to-our-common-stock",
+     "theme": "risks",
+     "chars": 1718
+    },
+    {
+     "id": "item-1a-legal-regulatory-and-compliance-risks",
+     "theme": "risks",
+     "chars": 1561
+    },
+    {
+     "id": "item-3-legal-proceedings",
+     "theme": "risks",
+     "chars": 638
+    }
+   ],
+   "tools": [
+    "resolve_company",
+    "build_filing_toc",
+    "list_filing_toc",
+    "list_filing_toc",
+    "list_filing_toc",
+    "list_filing_toc",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node",
+    "read_filing_node"
+   ]
+  },
+  "security": {
+   "mode": "off",
+   "status": "disabled",
+   "checks": 0,
+   "blocked": 0,
+   "errors": 0,
+   "event_ids": [],
+   "fail_open": false
+  },
+  "usage": {
+   "llm_calls": 29,
+   "input_tokens": 167056,
+   "output_tokens": 9200
+  },
+  "served_by": {
+   "provider": "openai",
+   "label": "OpenAI API",
+   "model": "gpt-5.6-luna",
+   "kind": "openai",
+   "private": false,
+   "external": true,
+   "fallback": true,
+   "reason": "Sparky vLLM unreachable (connection refused)",
+   "source": "saved"
+  },
+  "telemetry": {
+   "splunk": {
+    "status": "missing_configuration"
+   }
+  },
+  "cached": false,
+  "recorded_at": "2026-10-12T14:46:17.505942+00:00",
+  "duration_ms": 56350,
+  "perimeter": "EDGAR + upload only"
+ }
+}
