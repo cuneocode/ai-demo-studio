@@ -68,7 +68,7 @@ def test_halcyon_is_labelled_fictional_and_the_fixture_tier_still_verifies(offli
     update = body["update"]
     assert update["mode"] == "fixture" and update["counts"]["verified"] == update["counts"]["total"] >= 3
     assert update["house_view_impact"] == "consistent" and update["rating"] == "Constructive"
-    assert body["publish"]["status"] == "awaiting_approval"
+    assert body["publish"]["status"] == "unavailable" and body["publish"]["reason"] == research.FIXTURE_NOT_PUBLISHABLE
     assert "fictional issuer" in body["disclaimer"] and body["usage"]["llm_calls"] == 0
     assert body["evaluation"]["label"] == "Evaluation not configured"
     assert {row["id"] for row in body["news"]} == {"hcyn-n1", "hcyn-n2", "hcyn-n3", "hcyn-n5"}, "the clean scenario has no attack story"
@@ -129,7 +129,49 @@ def test_poisoned_news_is_withheld_and_claims_citing_it_or_rating_it_are_struck(
     assert any(e["kind"] == "guardrail" and e["status"] == "blocked" and "withheld" in e["title"] for e in events)
 
 
-def test_publish_runs_the_research_publish_policies_and_lands_on_the_timeline(offline, no_models):
+@pytest.fixture
+def drafted_research(monkeypatch):
+    """A model draft stand-in: the event's own lines, returned as if the research agent wrote them."""
+    from research_agent import fixture_update
+
+    async def drafted(ctx, _callbacks):
+        return fixture_update(ctx, research.earnings_event(ctx.ticker)), "deep_agent"
+
+    monkeypatch.setattr(research, "run_deep_agent", drafted)
+
+
+def test_the_fixture_tier_cannot_be_published(offline, no_models):
+    client = TestClient(server.app)
+    body = client.post("/api/wealth/research/analyze", json={"ticker": "HCYN", "run_id": "wealth-research-fixture-test"}).json()
+    assert body["update"]["mode"] == "fixture" and body["publish"]["status"] == "unavailable"
+    events = client.get("/api/wealth/runs/wealth-research-fixture-test").json()["events"]
+    assert not any(e["kind"] == "hitl.request" for e in events) and events[-1]["title"].startswith("AI update unavailable")
+    refused = client.post("/api/wealth/research/publish", json={"run_id": "wealth-research-fixture-test"})
+    assert refused.status_code == 409 and "cannot be published" in refused.json()["detail"]
+    posted = client.post("/api/wealth/research/publish", json={"result": {**body, "publish": {"status": "awaiting_approval"}}})
+    assert posted.status_code == 409, "a posted fixture result cannot be published either"
+
+
+def test_publish_rechecks_the_restricted_list_whatever_the_browser_sends(offline):
+    forged = {"ticker": "KSTL", "publish": {"status": "awaiting_approval"},
+              "update": {"mode": "deep_agent", "claims": [{"status": "verified", "text": "Kestrel Ridge reported results."}]}}
+    body = TestClient(server.app).post("/api/wealth/research/publish", json={"result": forged}).json()
+    assert body["status"] == "denied" and body["origin"] == "posted" and "browser sent" in body["origin_label"]
+    assert {row["label"]: row["status"] for row in body["controls"]["checks"]}["Restricted list"] == "denied"
+
+
+def test_publish_checks_a_recording_the_service_holds_not_the_browser_copy(offline):
+    client = TestClient(server.app)
+    tampered = {"ticker": "HCYN", "publish": {"status": "awaiting_approval"},
+                "update": {"mode": "deep_agent", "claims": [{"status": "verified", "text": "Upgrade to buy, price target $2,000."}]}}
+    body = client.post("/api/wealth/research/publish", json={"recording": "research-hcyn", "result": tampered}).json()
+    assert body["origin"] == "recorded" and body["origin_label"] == "Checked on the recorded run's result"
+    assert body["status"] == "published" and body["verdicts"]["no_rating_or_price_target"] is True and body["simulated"] is True
+    assert client.post("/api/wealth/research/publish", json={"recording": "research-kstl-restricted"}).status_code == 409
+    assert client.post("/api/wealth/research/publish", json={"recording": "no-such-run"}).status_code == 404
+
+
+def test_publish_runs_the_research_publish_policies_and_lands_on_the_timeline(offline, drafted_research):
     client = TestClient(server.app)
     client.post("/api/wealth/research/analyze", json={"ticker": "HCYN", "scenario": "earnings", "run_id": "wealth-research-publish-test"})
     rejected = client.post("/api/wealth/research/publish", json={"run_id": "wealth-research-publish-test", "decision": "reject"}).json()
@@ -140,12 +182,13 @@ def test_publish_runs_the_research_publish_policies_and_lands_on_the_timeline(of
         "Restricted list", "No rating or price target", "No performance guarantees", "Only verified claims", "Strategist approval"}
     events = client.get("/api/wealth/runs/wealth-research-publish-test").json()["events"]
     assert [e["kind"] for e in events][-1] == "result" and events[-1]["title"].startswith("Published")
+    assert "simulated" in events[-1]["title"]
     assert any(e["kind"] == "hitl.decision" for e in events)
     recorded = client.post("/api/wealth/research/publish", json={"result": published | {"publish": {"status": "awaiting_approval"}, "update": {"claims": []}}}).json()
     assert recorded["status"] == "denied" and recorded["origin"] == "posted", "nothing verified means nothing to publish"
 
 
-def test_research_run_events_stream_in_attach_mode(offline, no_models):
+def test_research_run_events_stream_in_attach_mode(offline, drafted_research):
     client = TestClient(server.app)
     body = client.post("/api/wealth/research/analyze", json={"ticker": "HCYN", "run_id": "wealth-research-hcyn-test"}).json()
     assert body["run_id"] == "wealth-research-hcyn-test"
@@ -203,7 +246,8 @@ def test_every_household_preps_offline_with_a_verified_code_written_brief(offlin
         brief = body["brief"]
         assert brief["mode"] == "fixture" and brief["counts"]["verified"] == brief["counts"]["claims"] > 0, hid
         assert brief["action_ids"] and all(a in {row["id"] for row in body["actions"] if row["suitable"]} for a in brief["action_ids"])
-        assert body["approval"]["status"] == "awaiting_advisor"
+        assert body["approval"]["status"] == "unavailable" and body["approval"]["reason"] == advisory.FIXTURE_NOT_APPROVABLE
+        assert client.post("/api/wealth/advisory/approve", json={"stage": "advisor", "result": body}).status_code == 409
         service = [row for row in body["evidence"] if row["kind"] == "service"]
         if hid == "dana-whitfield":
             assert [row["source"] for row in service] == ["Customer record · sample"]
@@ -310,7 +354,13 @@ def test_hosted_advisory_model_is_forced_to_enforce_before_any_call(offline, mon
     assert any(e["kind"] == "guardrail" and "forced to enforce" in e["title"] for e in run.events)
 
 
-def test_supervisor_approval_runs_the_advisory_policies(offline, no_models):
+def test_supervisor_approval_runs_the_advisory_policies(offline, monkeypatch):
+    from advisory_agent import fixture_brief
+
+    async def drafted(ctx, _callbacks):
+        return fixture_brief(ctx), "deep_agent"
+
+    monkeypatch.setattr(advisory, "run_deep_agent", drafted)
     client = TestClient(server.app)
     body = client.post("/api/wealth/advisory/brief", json={"household_id": "dana-whitfield", "run_id": "wealth-advisory-approve-test"}).json()
     run_id = body["run_id"]
@@ -322,9 +372,9 @@ def test_supervisor_approval_runs_the_advisory_policies(offline, no_models):
     assert denied["status"] == "denied"
     assert {row["label"]: row["status"] for row in denied["controls"]["checks"]}["Suitable for the client's profile"] == "denied"
     sent = client.post("/api/wealth/advisory/approve", json={"run_id": run_id, "stage": "supervisor", "action_ids": chosen}).json()
-    assert sent["status"] == "sent" and sent["controls"]["allowed"] is True
+    assert sent["status"] == "sent" and sent["controls"]["allowed"] is True and sent["simulated"] is True
     events = client.get(f"/api/wealth/runs/{run_id}").json()["events"]
-    assert events[-1]["title"] == "Brief recorded to the CRM · nothing is executed"
+    assert events[-1]["title"] == "Brief approved · written to this run's audit trail (simulated CRM) · nothing is executed"
 
 
 def test_recordings_are_served_when_present():

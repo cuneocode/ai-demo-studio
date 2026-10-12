@@ -136,6 +136,8 @@ class WealthControls:
                     raise RuntimeError("Agent Control denied without naming a wealth control")
                 if result.is_safe and not set(policies) <= seen:
                     raise RuntimeError("Agent Control skipped a wealth control")
+                if result.is_safe and not all(verdicts.get(key) for _label, key, _step in policies.values()):
+                    raise RuntimeError("Agent Control allowed a failing verdict, so the local check decides")
                 source = "agent_control"
             except Exception as exc:
                 denied_names = None

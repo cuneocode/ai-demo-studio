@@ -36,6 +36,7 @@ from untrusted import screen_notes
 DISCLAIMER = "Synthetic client data for demonstration only. Not investment, tax, or legal advice."
 MODES = {"deep_agent": "Meeting-prep Deep Agent", "single_call": "Single drafting call (Deep Agent fallback)",
          "fixture": "Brief written by code from the rules · no model", "none": "No brief drafted"}
+FIXTURE_NOT_APPROVABLE = "AI brief unavailable · the code-written brief shows the rules and actions and cannot be submitted for supervision."
 NEUTRAL = {"agenda", "question"}
 
 
@@ -255,11 +256,16 @@ async def run_meeting_prep(record: dict, *, research: dict | None, briefing: dic
                  + (f" · {brief['counts']['policy']} blocked by policy" if brief["counts"]["policy"] else ""),
                  status="ok" if brief["counts"]["verified"] == brief["counts"]["claims"] else "flagged",
                  body="Statements, callouts, and the rationale are checked against the cited record; agenda lines and questions must not invent numbers.")
-    emit_current("hitl.request", "Advisor review, then supervisor approval", status="info", lane="human",
-                 body="Nothing is sent or executed until a supervisor approves; approval runs the advisory.recommendation policies.",
-                 data={"request_id": "advisor", "policy": "advisory.recommendation"})
-    emit_current("result", f"Meeting brief ready · {len(included)} actions · {brief['counts']['verified']} verified statements",
-                 status="ok" if brief["lines"] else "info")
+    approvable = mode != "fixture" and bool(brief["lines"])
+    if approvable:
+        emit_current("hitl.request", "Advisor review, then supervisor approval", status="info", lane="human",
+                     body="Nothing is sent or executed until a supervisor approves; approval runs the advisory.recommendation policies.",
+                     data={"request_id": "advisor", "policy": "advisory.recommendation"})
+        emit_current("result", f"Meeting brief ready · {len(included)} actions · {brief['counts']['verified']} verified statements",
+                     status="ok")
+    else:
+        emit_current("result", "AI brief unavailable · rules, actions, and a code-written brief only (not approvable)" if mode == "fixture"
+                     else "No brief drafted", status="info")
     return {
         "household": {"id": record["id"], "name": name, "synthetic": True, "risk_profile": record.get("risk_profile"),
                       "total_value": total, "headline": record.get("headline"), "age": record.get("age"),
@@ -271,7 +277,8 @@ async def run_meeting_prep(record: dict, *, research: dict | None, briefing: dic
         "brief": {**brief, "status": "ready" if brief["lines"] else "unavailable", "mode": mode, "mode_label": MODES[mode],
                   "reason": failure if mode == "fixture" else None, "refused": refused},
         "compliance": scan,
-        "approval": {"status": "awaiting_advisor", "request_id": "advisor"},
+        "approval": {"status": "awaiting_advisor", "request_id": "advisor"} if approvable else
+                    {"status": "unavailable", "reason": FIXTURE_NOT_APPROVABLE if mode == "fixture" else "No brief to approve."},
         "duration_ms": round((time.monotonic() - started) * 1000), "disclaimer": DISCLAIMER,
     }
 
@@ -341,4 +348,4 @@ async def supervise(result: dict, action_ids: list[str], decision: str) -> dict:
     return {"verdicts": verdicts, "controls": gate, "findings": scan["findings"], "actions": [a["id"] for a in chosen]}
 
 
-__all__ = ["DISCLAIMER", "MODES", "custom_findings", "run_meeting_prep", "supervise"]
+__all__ = ["DISCLAIMER", "FIXTURE_NOT_APPROVABLE", "MODES", "custom_findings", "run_meeting_prep", "supervise"]

@@ -340,7 +340,7 @@ async def run_deep_agent(ctx: ResearchContext, callbacks: list) -> tuple[dict, s
 async def run_single_call(ctx: ResearchContext, callbacks: list) -> tuple[dict, str]:
     """One structured call over the same evidence: the fallback when the Deep Agent fails."""
     system, _user = _messages(ctx)
-    system = system.split("Process:")[0] + "Claim rules" + system.split("Claim rules", 1)[1]
+    system = system.split("Process (")[0] + "Claim rules" + system.split("Claim rules", 1)[1]
     evidence = [_item(ctx, row["evidence_id"]) for row in ctx.evidence.compact()]
     result = await structured(RESEARCH, ResearchUpdateOut, [
         SystemMessage(content=system + "\nReturn JSON with house_view_impact and claims (6 to 9)."),

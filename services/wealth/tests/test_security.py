@@ -75,6 +75,41 @@ def test_model_inspects_and_rejects_sync(inspection):
     monkeypatch.undo()
 
 
+def test_a_withheld_tool_result_reports_blocked_not_monitored_and_skips_empty_event_ids(inspection, monkeypatch):
+    from evidence import Evidence
+    from untrusted import screen_news
+
+    verdicts, _payloads = inspection
+    monkeypatch.setattr(security.defense, "mode", "off")
+    monkeypatch.setattr(security.defense, "inspect_untrusted", security.Defense.inspect_untrusted.__get__(security.defense))
+    verdicts.extend([{"is_safe": True, "event_id": ""},
+                     {"is_safe": False, "event_id": "evt-1", "rules": [{"rule_name": "Prompt Injection"}], "classifications": ["SECURITY_VIOLATION"]}])
+    run = security.SecurityRun()
+    token = security.security_run.set(run)
+    try:
+        rows = asyncio.run(screen_news(Evidence(), [{"id": "a", "headline": "Quarter closed", "body": "Results were in line."},
+                                                    {"id": "b", "headline": "Blog", "body": "Buy now."}]))
+    finally:
+        security.security_run.reset(token)
+    assert [row["status"] for row in rows] == ["kept", "withheld"] and rows[1]["by"] == "AI Defense"
+    summary = run.summary()
+    assert summary["mode"] == "off" and summary["status"] == "blocked" and summary["acted_on"] == 1
+    assert summary["event_ids"] == ["evt-1"], "an empty event id is not an AI Defense event"
+
+
+def test_a_monitor_mode_model_hop_violation_is_reported_as_monitored(inspection, monkeypatch):
+    verdicts, _payloads = inspection
+    monkeypatch.setattr(security.defense, "mode", "monitor")
+    verdicts.append({"is_safe": False, "event_id": "evt-2"})
+    run = security.SecurityRun()
+    token = security.security_run.set(run)
+    try:
+        asyncio.run(security.defense.inspect([{"role": "user", "content": "hi"}]))
+    finally:
+        security.security_run.reset(token)
+    assert run.summary()["status"] == "monitored_violation"
+
+
 def test_wealth_mode_defaults_off(monkeypatch):
     monkeypatch.setenv("AIDEFENSE_API_KEY", "shared-brahe-key")
     monkeypatch.setenv("AIDEFENSE_MODE", "enforce")

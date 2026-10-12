@@ -30,7 +30,7 @@ type Props = {
   onBriefChange?: (brief: StoredAdvisoryBrief | null) => void;
 };
 
-type Origin = { kind: "live" } | { kind: "recorded"; recordedAt: string };
+type Origin = { kind: "live" } | { kind: "recorded"; recordedAt: string; name?: string };
 
 /** One row of the context panel. New sources (a recent fraud case, a SAR hold) add a row here. */
 type ContextItem = { id: string; label: string; detail: string; tone: "ok" | "info" | "missing"; action?: { label: string; open: () => void } };
@@ -92,13 +92,13 @@ function ApprovalBar({ approval, busy, canAct, onDecide }: {
     return (
       <section className="rx-publish is-done" aria-label="Approval">
         <ShieldCheck size={18} aria-hidden="true" />
-        <div><strong>Approved · brief recorded to the CRM</strong><span>Nothing is executed: no trade, transfer, or message leaves the studio. {stamp(approval.supervisor)}{approval.originLabel ? ` · ${approval.originLabel}` : ""}</span></div>
+        <div><strong>Approved · written to this run&apos;s audit trail</strong><span>Simulated CRM record. Nothing is executed: no trade, transfer, or message leaves the studio. {stamp(approval.supervisor)}{approval.originLabel ? ` · ${approval.originLabel}` : ""}</span></div>
       </section>
     );
   }
   const text = approval.status === "denied" ? "Not recorded · an advisory.recommendation policy denied it"
     : approval.status === "rejected" ? `Rejected by ${approval.supervisor?.by || "the supervisor"}`
-      : approval.status === "returned" ? `Returned by ${approval.advisor?.by || "the advisor"}` : "Nothing to approve";
+      : approval.status === "returned" ? `Returned by ${approval.advisor?.by || "the advisor"}` : approval.reason || "Nothing to approve";
   return (
     <section className="rx-publish is-denied" aria-label="Approval">
       <Ban size={18} aria-hidden="true" />
@@ -235,7 +235,7 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
       if (!next) throw new Error("The recorded run has no meeting brief.");
       timeline.play({ run: recording.run, events: recording.events });
       ledger.record(observeRecordedWealth(startRun("advisory", `${next.household?.name ?? householdId} · recorded`), recording.result, recording.recordedAt));
-      landed(next, recording.result as Record<string, unknown>, { kind: "recorded", recordedAt: recording.recordedAt });
+      landed(next, recording.result as Record<string, unknown>, { kind: "recorded", recordedAt: recording.recordedAt, name: recording.name });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The recorded run is unavailable.");
     } finally {
@@ -251,7 +251,7 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
       const posted = { ...raw, approval: { ...(raw.approval as object), ...(shownApproval ? { status: shownApproval.status } : {}) } };
       const response = await fetch("/api/wealth/advisory/approve", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ run_id: origin.kind === "live" ? prep.runId : undefined, stage, decision, action_ids: chosen, result: posted,
+        body: JSON.stringify({ run_id: origin.kind === "live" ? prep.runId : undefined, recording: origin.kind === "recorded" ? origin.name : undefined, stage, decision, action_ids: chosen, result: posted,
           by: stage === "advisor" ? ADVISOR : SUPERVISOR }),
         signal: AbortSignal.timeout(30000),
       });

@@ -23,6 +23,8 @@ export function observeWealth(run: ObservedRun, status: number, payload: unknown
   const telemetry = (body.telemetry ?? {}) as { galileo?: string; splunk?: { status?: string; trace_id?: string; span_count?: number } };
   const usage = usageFrom(body.usage);
   const toolCalls = (body.usage as { tool_calls?: unknown } | undefined)?.tool_calls;
+  // Recordings made before the service skipped empty event IDs still carry "".
+  const defense = defenseFrom(body.security);
   return {
     ...run,
     toolCalls: typeof toolCalls === "number" ? toolCalls : undefined,
@@ -33,7 +35,7 @@ export function observeWealth(run: ObservedRun, status: number, payload: unknown
     otlp: telemetry.splunk?.status,
     traceId: telemetry.splunk?.trace_id,
     spans: telemetry.splunk?.span_count,
-    defense: defenseFrom(body.security),
+    defense: defense && { ...defense, eventIds: defense.eventIds?.filter(Boolean) },
     // A refusal names the model it would have used; only a model that produced output "answered".
     servedBy: usage.llmCalls ? servedByFrom(body.served_by) ?? null : null,
     provenance: "live",

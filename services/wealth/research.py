@@ -41,6 +41,7 @@ REAL_DISCLAIMER = "Demonstration only, from public market data. Not investment a
 SCENARIOS = {"earnings", "restricted", "poisoned-news", "bank", "ticker"}
 MODES = {"deep_agent": "Research Deep Agent", "single_call": "Single drafting call (Deep Agent fallback)",
          "fixture": "Fixture summary · written by code, no model", "none": "No update drafted"}
+FIXTURE_NOT_PUBLISHABLE = "AI update unavailable · numbers and checks only. The code-written summary cannot be published."
 
 
 class ResearchFailed(Exception):
@@ -212,7 +213,7 @@ async def run_research(ticker: str, scenario: str, *, refresh: bool, callbacks: 
                      status="ok" if len(verified) == len(claims) else "flagged",
                      body="Each claim was checked against the cited tool output: field, value, unit, and every number in the sentence; quotes must appear verbatim.")
 
-    publishable = update["status"] == "ready" and bool(view)
+    publishable = update["status"] == "ready" and bool(view) and mode != "fixture"
     if publishable:
         emit_current("hitl.request", "Strategist approval to publish the update", status="info", lane="human",
                      body=f"House view stays {view.get('rating')}: only the CIO Office changes it. Publishing runs the research.publish policies.",
@@ -233,6 +234,7 @@ async def run_research(ticker: str, scenario: str, *, refresh: bool, callbacks: 
         "update": update,
         "publish": {"status": "awaiting_approval" if publishable else "unavailable", "request_id": "publish" if publishable else None,
                     "reason": None if publishable else ("No house view on file: the CIO Office covers this issuer first." if not view
+                                                        else FIXTURE_NOT_PUBLISHABLE if mode == "fixture"
                                                         else "No verified claims to publish.")},
         "one_year": one_year,
         "duration_ms": round((time.monotonic() - started) * 1000),
@@ -252,10 +254,12 @@ def _reason(exc: Exception) -> str:
 def _result_title(update: dict, view: dict | None) -> str:
     if update["status"] != "ready":
         return "No update drafted · the data panels still release"
+    if update["mode"] == "fixture":
+        return "AI update unavailable · numbers and checks only (fixture summary written by code)"
     counts = update["counts"]
     impact = {"consistent": "consistent with the house view", "needs_strategist_review": "needs strategist review",
               "no_house_view": "no house view on file"}[update["house_view_impact"]]
     return f"Update ready · {counts['verified']} verified claims · {impact}"
 
 
-__all__ = ["DISCLAIMER", "MODES", "ResearchFailed", "SCENARIOS", "news_items", "run_research"]
+__all__ = ["DISCLAIMER", "FIXTURE_NOT_PUBLISHABLE", "MODES", "ResearchFailed", "SCENARIOS", "news_items", "run_research"]

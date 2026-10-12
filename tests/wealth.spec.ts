@@ -145,8 +145,9 @@ test.describe("Market event → house-view update", () => {
     await expect(bar).toContainText("Strategist approval");
     await bar.getByRole("button", { name: "Publish update" }).click();
 
-    await expect(bar).toContainText("Published to the advisor desk");
-    expect(published).toMatchObject({ decision: "approve", by: "Sam Ortiz · CIO Office strategist" });
+    await expect(bar).toContainText("Published to meeting prep in this studio");
+    await expect(bar).toContainText("Simulated distribution · nothing is sent to real advisors");
+    expect(published).toMatchObject({ decision: "approve", by: "Sam Ortiz · CIO Office strategist", recording: "research-hcyn" });
     expect(published.run_id).toBeUndefined();
     expect((published.result as { ticker: string }).ticker).toBe("HCYN");
     const checks = result(page).locator(".rx-policies");
@@ -237,6 +238,7 @@ test.describe("Market event → house-view update", () => {
       analyze: (route) => route.fulfill({ json: {
         ...base, served_by: null, usage: { llm_calls: 0 },
         update: { ...base.update, mode: "fixture", mode_label: "Fixture summary · written by code" },
+        publish: { status: "unavailable", reason: "AI update unavailable · numbers and checks only. The code-written summary cannot be published." },
       } }),
     });
     await open(page, RESEARCH_TITLE);
@@ -244,6 +246,8 @@ test.describe("Market event → house-view update", () => {
     await page.locator("#research-run").click();
     await expect(badge(page)).toHaveAttribute("data-provenance", "sample");
     await expect(badge(page)).toHaveText("Sample data · Fixture summary · written by code, no model");
+    await expect(page.getByRole("region", { name: "Publication" })).toContainText("AI update unavailable · numbers and checks only");
+    await expect(page.getByRole("button", { name: "Publish update" })).toHaveCount(0);
   });
 
   test("the result and timeline survive a trip to the Architecture tab", async ({ page }) => {
@@ -319,9 +323,11 @@ test.describe("Advisor meeting prep", () => {
     await expect(bar).toContainText("Step 1 · Advisor review");
     await bar.getByRole("button", { name: "Submit for supervision" }).click();
     await bar.getByRole("button", { name: "Approve and record" }).click();
-    await expect(bar).toContainText("Approved · brief recorded to the CRM");
+    await expect(bar).toContainText("Approved · written to this run's audit trail");
+    await expect(bar).toContainText("Simulated CRM record");
     await expect(bar).toContainText("Nothing is executed");
     expect(posts[3].action_ids).not.toContain("NBA-EXCHANGE");
+    expect(posts.every((row) => row.recording === "advisory-dana-whitfield" && row.run_id === undefined)).toBe(true);
   });
 
   test("Priya's CRM notes: the injected instruction is withheld and PII is masked before any model call", async ({ page }) => {
@@ -347,6 +353,7 @@ test.describe("Advisor meeting prep", () => {
         ...base, served_by: { ...OPENAI_FALLBACK, egress: "require_ai_defense" }, usage: { llm_calls: 0 },
         security: { mode: "off", status: "disabled", checks: 0, blocked: 0, errors: 0, forced: false },
         brief: { ...base.brief, mode: "fixture", refused: true, reason: "Cisco AI Defense is not configured." },
+        approval: { status: "unavailable", reason: "AI brief unavailable · the code-written brief shows the rules and actions and cannot be submitted for supervision." },
       } }),
     });
     await open(page, ADVISORY_TITLE);
@@ -356,6 +363,8 @@ test.describe("Advisor meeting prep", () => {
     await expect(result(page).locator(".ax-refused")).toContainText("Client data stayed in the bank");
     await expect(badge(page)).toHaveText("Sample data · Brief written by code · client data stayed in the bank");
     await expect(result(page)).not.toContainText("AI Defense forced to enforce");
+    await expect(page.getByRole("region", { name: "Approval" })).toContainText("AI brief unavailable");
+    await expect(page.getByRole("button", { name: "Submit for supervision" })).toHaveCount(0);
   });
 
   test("a decision on a live run appends to the timeline without clearing it", async ({ page }) => {

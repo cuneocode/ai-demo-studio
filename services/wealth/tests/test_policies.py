@@ -38,6 +38,45 @@ def test_local_policy_check_is_labelled_and_denies_on_a_failed_verdict():
     assert all(e["title"].startswith("Local policy check") for e in run.events if e["kind"] == "control")
 
 
+def _hosted(monkeypatch, *, safe: bool, denied: set[str]):
+    """A stand-in for the agent_control SDK: the hosted engine's answer for one evaluation."""
+    import sys
+    from types import SimpleNamespace
+
+    from controls import POLICIES
+
+    async def evaluate_controls(step, **_kwargs):
+        names = [name for name, spec in POLICIES.items() if spec[2] == "research_publish"]
+        return SimpleNamespace(errors=None, is_safe=safe, matches=[SimpleNamespace(control_name=n) for n in names if n in denied],
+                               non_matches=[SimpleNamespace(control_name=n) for n in names if n not in denied])
+
+    async def ready():
+        return True
+
+    monkeypatch.setitem(sys.modules, "agent_control", SimpleNamespace(evaluate_controls=evaluate_controls))
+    monkeypatch.setattr(controls, "ensure", ready)
+
+
+PUBLISH_OK = {"issuer_not_restricted": True, "no_rating_or_price_target": True, "no_guarantee": True, "claims_verified": True,
+              "strategist_approved": True}
+
+
+def test_hosted_agent_control_can_deny(monkeypatch):
+    _hosted(monkeypatch, safe=False, denied={"fsi-wealth-research-no-rating-v1"})
+    result = asyncio.run(controls.evaluate("research_publish", {**PUBLISH_OK, "no_rating_or_price_target": False}, emit=False))
+    assert result["source"] == "agent_control" and result["allowed"] is False
+    assert {row["label"]: row["status"] for row in result["checks"]}["No rating or price target"] == "denied"
+
+
+def test_hosted_agent_control_allowing_a_failing_verdict_fails_closed_to_the_local_check(monkeypatch):
+    _hosted(monkeypatch, safe=True, denied=set())
+    result = asyncio.run(controls.evaluate("research_publish", {**PUBLISH_OK, "issuer_not_restricted": False}, emit=False))
+    assert result["source"] == "local" and result["allowed"] is False and "failing verdict" in result["detail"]
+    assert {row["label"]: row["status"] for row in result["checks"]}["Restricted list"] == "denied"
+    clean = asyncio.run(controls.evaluate("research_publish", PUBLISH_OK, emit=False))
+    assert clean["source"] == "agent_control" and clean["allowed"] is True
+
+
 def test_masking_uses_ai_defense_spans_then_local_rules():
     text = "Call +1 (415) 555-0199. SSN 000-00-1234; card 4111 1111 1111 1111; account 0000-4471-9902."
     start = text.index("+1")

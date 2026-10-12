@@ -34,7 +34,7 @@ import advisory
 import research
 from agentkit import galileo_current
 from cache import cache_root, get_snapshot, is_fresh, load_snapshot
-from compliance import scan_research
+from compliance import restricted_check, scan_research
 from controls import controls
 from fixtures import household, households
 from nim import ADVISORY, nim_health, nim_model, nim_reachable, served
@@ -127,6 +127,7 @@ class AnalyzeRequest(BaseModel):
 
 class PublishRequest(BaseModel):
     run_id: str | None = Field(default=None, max_length=90)
+    recording: str | None = Field(default=None, max_length=64)
     decision: Literal["approve", "reject"] = "approve"
     result: dict | None = None
     by: str = Field(default="Sam Ortiz · CIO Office strategist", max_length=80)
@@ -151,6 +152,7 @@ class AdvisoryRequest(BaseModel):
 
 class ApproveRequest(BaseModel):
     run_id: str | None = Field(default=None, max_length=90)
+    recording: str | None = Field(default=None, max_length=64)
     stage: Literal["advisor", "supervisor"]
     decision: Literal["approve", "reject"] = "approve"
     action_ids: list[str] = Field(default_factory=list, max_length=12)
@@ -275,11 +277,20 @@ async def analyze(request: AnalyzeRequest):
         return body
 
 
-def _stored(run_id: str | None, posted: dict | None, service: str) -> tuple[dict, str, str | None]:
-    """The run's own stored result, or a posted one (a recorded run replayed in the browser)."""
+ORIGIN_LABEL = {"run": "Checked on this run", "recorded": "Checked on the recorded run's result",
+                "posted": "Checked on a result the browser sent · not stored by this service"}
+
+
+def _stored(run_id: str | None, posted: dict | None, service: str, recording: str | None = None) -> tuple[dict, str, str | None]:
+    """The run's own stored result, a golden recording from data/recorded/, or (last) a result the browser posted."""
     run = store.get(run_id) if run_id else None
     if run and run.result:
         return run.result, "run", run.id
+    if recording:
+        result = (store.recording(recording) or {}).get("result")
+        if not isinstance(result, dict):
+            raise HTTPException(404, "No such recorded run.")
+        return result, "recorded", None
     if isinstance(posted, dict):
         return posted, "posted", None
     raise HTTPException(409, f"Nothing to {service}: run the scenario first.")
@@ -287,14 +298,17 @@ def _stored(run_id: str | None, posted: dict | None, service: str) -> tuple[dict
 
 @app.post("/api/wealth/research/publish")
 async def publish(request: PublishRequest):
-    result, origin, run_id = _stored(request.run_id, request.result, "publish")
+    result, origin, run_id = _stored(request.run_id, request.result, "publish", request.recording)
     update = result.get("update") or {}
+    if update.get("mode") == "fixture":
+        raise HTTPException(409, research.FIXTURE_NOT_PUBLISHABLE)
     if (result.get("publish") or {}).get("status") not in {"awaiting_approval", "published", "rejected"}:
         raise HTTPException(409, (result.get("publish") or {}).get("reason") or "This update cannot be published.")
     verified = [row for row in update.get("claims") or [] if row.get("status") == "verified"]
     scan = scan_research([row.get("text") or "" for row in verified])
+    stored_precheck = ((result.get("precheck") or {}).get("verdicts") or {}).get("issuer_not_restricted")
     verdicts = {
-        "issuer_not_restricted": bool(((result.get("precheck") or {}).get("verdicts") or {}).get("issuer_not_restricted", True)),
+        "issuer_not_restricted": restricted_check(str(result.get("ticker") or ""))["verdicts"]["issuer_not_restricted"] and stored_precheck is not False,
         "no_rating_or_price_target": scan["verdicts"]["no_rating_or_price_target"],
         "no_guarantee": scan["verdicts"]["no_guarantee"],
         "claims_verified": bool(verified),
@@ -311,7 +325,8 @@ async def publish(request: PublishRequest):
         with store.bind(run_id):
             outcome = await gate()
             published = outcome["allowed"]
-            emit_current("result", "Published to the advisor desk" if published else "Not published · a research.publish policy denied it",
+            emit_current("result", "Published to meeting prep in this studio · simulated advisor distribution" if published
+                         else "Not published · a research.publish policy denied it",
                          status="ok" if published else "denied",
                          body=f"{len(verified)} verified claims; the house view stays {((result.get('context') or {}).get('house_view') or {}).get('rating')}."
                          if published else "; ".join(f"{c['label']}: {c['status']}" for c in outcome["checks"] if c["status"] == "denied"))
@@ -321,7 +336,7 @@ async def publish(request: PublishRequest):
     stamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     status = "published" if published else "rejected" if request.decision == "reject" else "denied"
     record = {"status": status, "by": request.by, "at": stamp, "controls": outcome, "verdicts": verdicts, "origin": origin,
-              "origin_label": "Checked on this run" if origin == "run" else "Checked on the recorded run's result"}
+              "origin_label": ORIGIN_LABEL[origin], "simulated": True}
     if run_id and store.get(run_id).result is not None:
         store.get(run_id).result = {**store.get(run_id).result, "publish": {**(result.get("publish") or {}), **record}}
     return record
@@ -404,7 +419,9 @@ async def brief(request: AdvisoryRequest):
 
 @app.post("/api/wealth/advisory/approve")
 async def approve(request: ApproveRequest):
-    result, origin, run_id = _stored(request.run_id, request.result, "approve")
+    result, origin, run_id = _stored(request.run_id, request.result, "approve", request.recording)
+    if (result.get("brief") or {}).get("mode") == "fixture":
+        raise HTTPException(409, advisory.FIXTURE_NOT_APPROVABLE)
     if (result.get("brief") or {}).get("status") != "ready":
         raise HTTPException(409, "There is no brief to approve.")
     approval = dict(result.get("approval") or {})
@@ -434,7 +451,8 @@ async def approve(request: ApproveRequest):
                              data={"request_id": "supervisor", "actions": action_ids})
                 outcome = await advisory.supervise(result, action_ids, request.decision)
                 sent = outcome["controls"]["allowed"]
-                emit_current("result", "Brief recorded to the CRM · nothing is executed" if sent else "Brief not recorded · an advisory.recommendation policy denied it",
+                emit_current("result", "Brief approved · written to this run's audit trail (simulated CRM) · nothing is executed" if sent
+                             else "Brief not recorded · an advisory.recommendation policy denied it",
                              status="ok" if sent else "denied",
                              body=None if sent else "; ".join(f"{c['label']}: {c['status']}" for c in outcome["controls"]["checks"] if c["status"] == "denied"))
         else:
@@ -443,7 +461,8 @@ async def approve(request: ApproveRequest):
         approval.update({"status": "sent" if sent else "rejected" if request.decision == "reject" else "denied",
                          "supervisor": {"by": by, "at": stamp}, "action_ids": outcome["actions"], **outcome})
     approval["origin"] = origin
-    approval["origin_label"] = "Checked on this run" if origin == "run" else "Checked on the recorded run's result"
+    approval["origin_label"] = ORIGIN_LABEL[origin]
+    approval["simulated"] = True
     if run_id and store.get(run_id).result is not None:
         store.get(run_id).result = {**store.get(run_id).result, "approval": approval}
     return approval

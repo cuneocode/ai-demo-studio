@@ -318,7 +318,7 @@ async def run_deep_agent(ctx: AdvisoryContext, callbacks: list) -> tuple[dict, s
 
 async def run_single_call(ctx: AdvisoryContext, callbacks: list) -> tuple[dict, str]:
     system = SUPERVISOR.format(name=ctx.name, profile=ctx.profile)
-    system = system.split("Process:")[0] + "Return JSON with ranked_actions and lines.\nRules:" + system.split("Rules:", 1)[1]
+    system = system.split("Process (")[0] + "Return JSON with ranked_actions and lines.\nRules:" + system.split("Rules:", 1)[1]
     evidence = [row for prefix in ("household", "service", "crm", "suitability", "action", "research", "issuer") for row in _rows(ctx, prefix)]
     result = await structured(ADVISORY, MeetingPrepOut, [
         SystemMessage(content=system),

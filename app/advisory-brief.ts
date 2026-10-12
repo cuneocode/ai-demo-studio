@@ -41,7 +41,7 @@ export type MeetingBrief = {
 export type ApprovalState = {
   status: "awaiting_advisor" | "awaiting_supervisor" | "returned" | "sent" | "denied" | "rejected" | "unavailable" | string;
   advisor?: { by: string; at: string }; supervisor?: { by: string; at: string }; actionIds: string[]; controls?: PolicyResult;
-  findings: string[]; originLabel?: string;
+  findings: string[]; originLabel?: string; reason?: string; simulated?: boolean;
 };
 
 export type ResearchContextRef = { origin?: string; ticker?: string; rating?: string; impact?: string; claims?: number };
@@ -89,7 +89,7 @@ function normalizeApproval(value: unknown): ApprovalState {
   return {
     status: asString(value.status) || "unavailable", advisor: stamp(value.advisor), supervisor: stamp(value.supervisor),
     actionIds: strings(value.action_ids ?? value.actions), controls: normalizePolicy(value.controls), findings: strings(value.findings),
-    originLabel: asString(value.origin_label),
+    originLabel: asString(value.origin_label), reason: asString(value.reason), simulated: value.simulated === true,
   };
 }
 

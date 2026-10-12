@@ -30,7 +30,7 @@ type Props = {
   onNoteChange?: (note: StoredResearchNote | null) => void;
 };
 
-type Origin = { kind: "live" } | { kind: "recorded"; recordedAt: string };
+type Origin = { kind: "live" } | { kind: "recorded"; recordedAt: string; name?: string };
 
 const STRATEGIST = "Sam Ortiz · CIO Office strategist";
 const SECTIONS = ["what_changed", "impact", "talking_point"];
@@ -51,8 +51,9 @@ function PublishBar({ result, publish, busy, onDecide, onPrepare }: {
       <section className="rx-publish is-done" aria-label="Publication">
         <ShieldCheck size={18} aria-hidden="true" />
         <div>
-          <strong>Published to the advisor desk</strong>
+          <strong>Published to meeting prep in this studio</strong>
           <span>{publish.by} · {publish.at ? new Date(publish.at).toLocaleTimeString() : ""}{publish.originLabel ? ` · ${publish.originLabel}` : ""}</span>
+          <span className="rx-simulated">Simulated distribution · nothing is sent to real advisors</span>
         </div>
         <button type="button" className="primary" onClick={onPrepare}>Prepare client meeting <ArrowRight size={15} aria-hidden="true" /></button>
       </section>
@@ -182,7 +183,7 @@ export default function MarketResearch({ embedded = false, inStory = false, note
       if (!next) throw new Error("The recorded run has no result.");
       timeline.play({ run: recording.run, events: recording.events });
       ledger.record(observeRecordedWealth(startRun("research", `${pick.title} · recorded`), recording.result, recording.recordedAt));
-      landed(next, recording.result, { kind: "recorded", recordedAt: recording.recordedAt });
+      landed(next, recording.result, { kind: "recorded", recordedAt: recording.recordedAt, name: recording.name });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The recorded run is unavailable.");
     } finally {
@@ -197,7 +198,8 @@ export default function MarketResearch({ embedded = false, inStory = false, note
     try {
       const response = await fetch("/api/wealth/research/publish", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ run_id: origin.kind === "live" ? result.runId : undefined, decision, result: raw, by: STRATEGIST }),
+        body: JSON.stringify({ run_id: origin.kind === "live" ? result.runId : undefined, recording: origin.kind === "recorded" ? origin.name : undefined,
+          decision, result: raw, by: STRATEGIST }),
         signal: AbortSignal.timeout(30000),
       });
       const text = await response.text();

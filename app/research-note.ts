@@ -24,9 +24,9 @@ export const RESEARCH_SCENARIOS: readonly ResearchScenario[] = [
   { id: "earnings", ticker: "HCYN", kind: "Synthetic issuer", recording: "research-hcyn", title: "Earnings on a Focus List name",
     summary: "Halcyon beat and raised. Does the Constructive house view still hold?", moment: "Every claim is checked against its source" },
   { id: "restricted", ticker: "KSTL", kind: "Synthetic issuer", recording: "research-kstl-restricted", title: "Restricted issuer",
-    summary: "Kestrel Ridge is on the restricted list during a pending deal.", moment: "Agent Control stops it before any data or model call" },
+    summary: "Kestrel Ridge is on the restricted list during a pending deal.", moment: "The research.precheck policy stops it before any data or model call" },
   { id: "poisoned-news", ticker: "HCYN", kind: "Attack", recording: "research-hcyn-poisoned", title: "Poisoned news story",
-    summary: "A blog post in the feed tells the agent to push a $2,000 target.", moment: "AI Defense inspects tool results and withholds it" },
+    summary: "A blog post in the feed tells the agent to push a $2,000 target.", moment: "The post is screened as a tool result and withheld" },
   { id: "bank", ticker: "JPM", kind: "Real data", recording: "research-jpm-bank", title: "A bank, from public data",
     summary: "JPMorgan from cached market data. Banks are read on P/B and ROE.", moment: "Sector-appropriate metrics, no house view on file" },
 ];

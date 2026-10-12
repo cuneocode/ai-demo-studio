@@ -14,7 +14,7 @@ from agentkit import record_tool
 from compliance import instruction_screen
 from evidence import Evidence, add_news
 from runlog import emit_current
-from security import defense
+from security import defense, security_run
 
 LOCAL_MASKS = (
     (re.compile(r"\b\d{3}-\d{2}-\d{4}\b"), "SSN"),
@@ -51,6 +51,13 @@ async def _screen(text: str, label: str) -> tuple[dict, list[str]]:
     return verdict, local
 
 
+def _acted() -> None:
+    """An AI Defense verdict on this item changed what the model sees, so the run reports it as blocked, not monitored."""
+    run = security_run.get()
+    if run:
+        run.acted += 1
+
+
 async def screen_news(ev: Evidence, items: list[dict], *, agent: str = "news_feed") -> list[dict]:
     rows = []
     results = await asyncio.gather(*(_screen(f"{item.get('headline')}. {item.get('body')}", f"news:{item['id']}") for item in items))
@@ -65,6 +72,8 @@ async def screen_news(ev: Evidence, items: list[dict], *, agent: str = "news_fee
             reason = (f"AI Defense flagged {', '.join(verdict.get('rules') or verdict.get('classifications') or ['it'])}"
                       if by_aid else f"instruction-like text ({'; '.join(local[:2])})")
             row.update(status="withheld", reason=reason, by=who)
+            if by_aid:
+                _acted()
             ev.withhold(item_id, item.get("headline") or item["id"], reason)
             emit_current("guardrail", f"{who} · news item withheld · {item.get('publisher')}", status="blocked",
                          body=f"\"{item.get('headline')}\" carried {reason}. It never reaches the research agent.",
@@ -95,6 +104,8 @@ async def screen_notes(notes: list[dict]) -> list[dict]:
         row = {"index": index, "date": note.get("date"), "author": note.get("author"), "text": masked_text, "masked": masked,
                "status": "withheld" if injected else "masked" if masked else "kept", "ai_defense": verdict.get("status"),
                "ai_defense_rules": verdict.get("rules") or [], "local": local, "event_id": verdict.get("event_id")}
+        if _injection(verdict) or any(item["by"] == "AI Defense" for item in masked):
+            _acted()
         if injected:
             who = " and ".join(part for part in ("AI Defense" if _injection(verdict) else "", "local screen" if local else "") if part)
             row["reason"] = (f"{who} flagged an injected instruction" + (f" ({', '.join(verdict.get('rules') or [])})" if verdict.get("rules") else ""))

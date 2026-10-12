@@ -31,6 +31,7 @@ class SecurityRun:
     errors: int = 0
     event_ids: list[str] = field(default_factory=list)
     forced: bool = False  # enforce was forced because client data went to a hosted model
+    acted: int = 0  # unsafe tool-result verdicts the service acted on (item withheld or masked), whatever the model-hop mode
 
     def summary(self):
         mode = "enforce" if self.forced else defense.mode
@@ -38,7 +39,7 @@ class SecurityRun:
         if self.checks:
             status = "allowed"
         if self.blocked:
-            status = "blocked" if mode == "enforce" else "monitored_violation"
+            status = "blocked" if mode == "enforce" or self.acted else "monitored_violation"
         if self.errors:
             status = "inspection_unavailable"
         return {
@@ -50,6 +51,7 @@ class SecurityRun:
             "event_ids": self.event_ids,
             "fail_open": False,
             "forced": self.forced,
+            "acted_on": self.acted,
         }
 
 
@@ -128,7 +130,7 @@ class Defense:
             emit_current("guardrail", f"AI Defense · {STAGE_LABEL.get(stage, stage)} · inspection unavailable", status="error",
                          body="No verdict came back, so the request failed closed.", data={"stage": stage, "mode": mode})
             raise DefenseUnavailable("AI Defense inspection is unavailable. Note or brief omitted.") from None
-        event_id = verdict.get("event_id") if isinstance(verdict.get("event_id"), str) else None
+        event_id = verdict.get("event_id") if isinstance(verdict.get("event_id"), str) and verdict.get("event_id") else None
         if run:
             run.checks += 1
             if event_id and event_id not in run.event_ids:
@@ -176,7 +178,7 @@ class Defense:
             if not verdict["is_safe"]:
                 run.blocked += 1
             event_id = verdict.get("event_id")
-            if isinstance(event_id, str) and event_id not in run.event_ids:
+            if isinstance(event_id, str) and event_id and event_id not in run.event_ids:
                 run.event_ids.append(event_id)
         spans = []
         for row in verdict.get("detected_spans") or verdict.get("detected_pii") or []:
@@ -195,7 +197,7 @@ class Defense:
             "classifications": [str(item) for item in verdict.get("classifications") or [] if item],
             "rules": sorted({str(rule.get("rule_name")) for rule in verdict.get("rules") or [] if isinstance(rule, dict) and rule.get("rule_name")}),
             "spans": spans,
-            "event_id": verdict.get("event_id") if isinstance(verdict.get("event_id"), str) else None,
+            "event_id": verdict.get("event_id") if isinstance(verdict.get("event_id"), str) and verdict.get("event_id") else None,
         }
 
 
