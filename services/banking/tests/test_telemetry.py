@@ -28,4 +28,4 @@ def test_export_failure_is_not_reported_as_delivery():
 
 
 def test_unconfigured_export_never_claims_delivery():
-    assert BankingTelemetry().delivery("local-trace")["status"] == "not_configured"
+    assert BankingTelemetry().delivery("local-trace") == {"status": "not_configured"}

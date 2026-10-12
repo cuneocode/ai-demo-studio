@@ -187,7 +187,7 @@ class RuntimeControls:
             # The hosted engine may short-circuit after a denying match. That is
             # a real block, not a missing-check error. Do not fabricate later checks.
             run.status = "blocked"
-            raise ControlsBlocked("Agent Observability blocked this response under the banking quality policy.")
+            raise ControlsBlocked("Agent Control blocked this response under the banking quality policy.")
         if not expected.issubset(seen):
             raise ControlsUnavailable("Agent Control did not complete all required checks.")
         run.status = "allowed"
@@ -207,7 +207,7 @@ class RuntimeControls:
             raise
         except Exception:
             run.status = "unavailable"
-            raise ControlsUnavailable("Agent Observability quality checks are unavailable. No answer was released.") from None
+            raise ControlsUnavailable("Agent Control quality checks are unavailable. No answer was released.") from None
 
 
 runtime_controls = RuntimeControls()

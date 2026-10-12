@@ -43,6 +43,7 @@ class BriefingSession:
     period_of_report: str | None = None
     fiscal_year: int | None = None
     source_url: str | None = None
+    synthetic: bool = False
     current_theme: str | None = None
     nodes_read: list[dict] = field(default_factory=list)
     reads_by_theme: dict[str, int] = field(default_factory=dict)

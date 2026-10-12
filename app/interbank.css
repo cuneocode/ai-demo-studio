@@ -12,6 +12,7 @@
 .ib-controls-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}
 .ib-controls h3{margin:8px 0 6px;font-size:20px;font-weight:600;line-height:1.3}
 .ib-controls p{margin:0;max-width:880px;color:var(--muted);font-size:var(--font-body);line-height:1.55}
+.ib-controls p.ib-synthetic-note{margin-top:6px;color:#e4c48a;font-size:var(--font-meta)}
 .ib-lab-state{flex:none;display:flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid #29384b;border-radius:7px;background:#101a27;color:#c8d3e0;font-size:var(--font-meta)}
 .ib-scenarios{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
 .ib-scenarios button{display:grid;gap:3px;text-align:left;padding:11px 13px;border:1px solid #344358;border-radius:8px;background:#121c2a;color:var(--text);cursor:pointer}

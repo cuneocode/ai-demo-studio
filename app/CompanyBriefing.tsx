@@ -103,6 +103,7 @@ export default function CompanyBriefing({
   const [candidates, setCandidates] = useState<IssuerCandidate[] | null>(null);
   const [draft, setDraft] = useState<CompanyBriefingRecord | null>(null);
   const [servedBy, setServedBy] = useState<ServedBy | null>(null);
+  const [replay, setReplay] = useState<{ recordedAt: string; servedBy: ServedBy | null } | null>(null);
   const [service, setService] = useState<ServiceHealth | null>(null);
   const ledger = useRunLedger();
   const stats = useMemo(() => briefingStats(service), [service]);
@@ -200,8 +201,9 @@ export default function CompanyBriefing({
       settled = true;
       const briefing = normalizeAnalyzeResponse(payload, { query: options.query, filename: options.file?.name });
       if (!briefing) throw new Error("The briefing service returned an empty extract.");
-      const answered = payload as { cached?: boolean; served_by?: unknown };
+      const answered = payload as { cached?: boolean; served_by?: unknown; recorded_at?: string };
       setServedBy(answered.cached ? null : servedByFrom(answered.served_by) ?? null);
+      setReplay(answered.cached ? { recordedAt: answered.recorded_at ?? "", servedBy: servedByFrom(answered.served_by) ?? null } : null);
       setDraft(briefing);
     } catch (cause) {
       if (!settled) ledger.record({ ...run, status: "failed" });
@@ -423,6 +425,11 @@ export default function CompanyBriefing({
                   {displayed.company.cik ? ` · CIK ${formatCik(displayed.company.cik)}` : ""}
                 </p>
                 {draft && servedBy && <ProvenanceBadge provenance={{ kind: "live", servedBy }} />}
+                {draft && replay && <>
+                  <ProvenanceBadge provenance={{ kind: "recorded", recordedAt: replay.recordedAt, servedBy: replay.servedBy }} />
+                  <span className="briefing-replay-note">Cached result for this filing · no model ran this time · Refresh reruns the agent</span>
+                </>}
+                {displayed.source.synthetic && <span className="briefing-synthetic-chip">Synthetic document · fictional issuer · not an SEC filing</span>}
                 <span className="briefing-source-chip">
                   {displayed.source.url
                     ? <a href={displayed.source.url} target="_blank" rel="noreferrer">{displayed.source.label}</a>
@@ -502,7 +509,7 @@ export default function CompanyBriefing({
               {displayed.security && (
                 <p className="briefing-security">
                   <ShieldCheck size={14} />
-                  AI Defense: {displayed.security.verdict || displayed.security.status || "Not reported"}
+                  {draft && replay ? "AI Defense (original run): " : "AI Defense: "}{displayed.security.verdict || displayed.security.status || "Not reported"}
                   {displayed.security.mode ? ` · ${displayed.security.mode}` : ""}
                   {displayed.security.checks != null ? ` · ${displayed.security.checks} checks` : ""}
                   {displayed.security.blocked != null ? ` · ${displayed.security.blocked} blocked` : ""}
@@ -534,7 +541,8 @@ function observeBriefing(run: ObservedRun, status: number, payload: unknown): Ob
     status: cached ? "cached" : status < 300 ? "completed" : status === 403 ? "blocked" : "failed",
     durationMs: typeof body.duration_ms === "number" ? body.duration_ms : undefined,
     ...usageFrom(body.usage),
-    servedBy: cached ? undefined : servedByFrom(body.served_by),
+    servedBy: servedByFrom(body.served_by),
+    ...(cached ? { provenance: "recorded" as const, recordedAt: typeof body.recorded_at === "string" ? body.recorded_at : undefined } : {}),
     // A replay's trail belongs to the original run; nothing was called or read this time.
     toolCalls: cached ? 0 : list(trail.tools),
     counts: { nodes: cached ? 0 : list(trail.nodes_read) },

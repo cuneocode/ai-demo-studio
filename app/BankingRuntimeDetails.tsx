@@ -42,7 +42,7 @@ export default function BankingRuntimeDetails({ health }: { health: BankingHealt
   return <div className="proof-card runtime-details">
     <div className="proof-card-title"><span><Server size={15} /> Runtime details</span></div>
     <dl>
-      <div><dt><Server size={16} /> Model</dt><dd>{health?.model || "Not reported"}</dd></div>
+      <div><dt><Server size={16} /> Model</dt><dd>{health?.model || (health ? "No model reachable" : "Not reported")}</dd></div>
       <div><dt><Search size={16} /> Retrieval</dt><dd>{health?.retrieval || "Not reported"}</dd></div>
       <div><dt><ShieldCheck size={16} /> AI Defense</dt><dd className={security?.status === "configured" ? "status-confirmed" : ""}>{defense}</dd>{security?.status === "configured" && <dd className="runtime-note">{security.fail_open ? "Fail open" : "Fail closed"} · model input and output</dd>}</div>
       <div><dt><ShieldCheck size={16} /> Agent Controls</dt><dd className={controls?.status === "enforcing" ? "status-confirmed" : ""}>{controlStatus(controls?.status)}</dd>

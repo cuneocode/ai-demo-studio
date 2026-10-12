@@ -33,7 +33,7 @@ export default function CompanyBriefingRuntime({
     <section className="briefing-runtime" aria-label="Briefing runtime">
       <div>
         <span><Server size={15} /> Model</span>
-        <strong>{health?.model || "Not reported"}</strong>
+        <strong>{health?.model || (health ? "No model reachable" : "Not reported")}</strong>
       </div>
       <div>
         <span><Landmark size={15} /> SEC</span>

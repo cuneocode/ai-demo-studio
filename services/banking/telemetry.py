@@ -102,9 +102,10 @@ class BankingTelemetry:
         return provider.get_tracer("fsi.banking").start_as_current_span("brahe-bank.request", record_exception=False, set_status_on_exception=False)
 
     def delivery(self, trace_id):
-        result = {"status": "not_configured", "trace_id": trace_id}
+        # A trace ID that went nowhere cannot be looked up, so it is not reported.
         if not self.exporter:
-            return result
+            return {"status": "not_configured"}
+        result = {"status": "not_configured", "trace_id": trace_id}
         flushed = self.provider.force_flush(timeout_millis=6000)
         with self.exporter.lock:
             item = dict(self.exporter.deliveries.get(trace_id, {}))

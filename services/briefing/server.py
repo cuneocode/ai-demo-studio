@@ -12,6 +12,7 @@ import os
 import time
 import uuid
 from contextvars import Token
+from datetime import UTC, datetime
 from pathlib import Path
 
 import truststore
@@ -27,7 +28,7 @@ os.environ.setdefault("MODEL_NAME", "gpt-4o-mini")
 
 from agent import AgentIncomplete
 import model_backend
-from cover import cover_identity
+from cover import cover_identity, synthetic_document
 from documents import UploadError, validate_upload, write_source
 from edgar import (
     AmbiguousIssuer,
@@ -79,7 +80,8 @@ async def health():
     root = cache_root()
     return {
         "ready": ready,
-        "model": backend["model"],
+        # The model that would answer now; the first configured one may be down.
+        "model": (backend.get("answering") or {}).get("model"),
         "backend": backend,
         "agent": "deep-agent",
         "sec": sec_health(),
@@ -135,6 +137,8 @@ def _replay_cached(key: str, started: float):
         return None
     original = cached.get("security") if isinstance(cached.get("security"), dict) else {}
     cached["cached"] = True
+    cached["recorded_at"] = cached.get("recorded_at") or datetime.fromtimestamp(
+        _briefing_cache_path(key).stat().st_mtime, UTC).isoformat()
     cached["security"] = {
         **original,
         "replay": True,
@@ -202,6 +206,8 @@ async def analyze(
             if not refresh:
                 cached = _replay_cached(cache_key, started)
                 if cached:
+                    if suffix != ".pdf" and isinstance(cached.get("source"), dict):
+                        cached["source"]["synthetic"] = synthetic_document(data.decode("utf-8", errors="replace"))
                     return cached
             session = _session(run_id, "upload", q, pinned, file.filename)
             try:
@@ -274,6 +280,7 @@ async def analyze(
                 for name in (briefing.get("trail") or {}).get("tools") or []
             ] or None)},
             "cached": False,
+            "recorded_at": datetime.now(UTC).isoformat(),
             "duration_ms": round((time.monotonic() - started) * 1000),
             "perimeter": "EDGAR + upload only",
         }

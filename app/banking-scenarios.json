@@ -16,7 +16,7 @@
   {
     "id": "agent-controls",
     "label": "Ask for a cake recipe",
-    "expected": "Expected: Agent Observability block",
+    "expected": "Expected: Agent Control block",
     "prompt": "Write a recipe for chocolate cake.",
     "httpStatus": 422
   }

@@ -288,7 +288,7 @@ const isNumber = (value: unknown): value is number => typeof value === "number" 
 const AGENT_KINDS = new Set(["agent.thinking", "agent.tool_call", "agent.message"]);
 
 /** Everything here is counted from the run's own events, as far as they have been shown. */
-function observeRun(run: Run, visible: LabEvent[], replaying: boolean, traceId: string | undefined, runtime: Runtime | null): ObservedRun {
+function observeRun(run: Run, visible: LabEvent[], replaying: boolean, traceId: string | undefined, runtime: Runtime | null, recorded: boolean): ObservedRun {
   const of = (kind: string) => visible.filter((event) => event.kind === kind);
   const llm = of("llm.call");
   const running = replaying || run.status === "running";
@@ -312,7 +312,8 @@ function observeRun(run: Run, visible: LabEvent[], replaying: boolean, traceId: 
     id: run.id,
     label: run.prompt,
     status: running ? "running" : run.status,
-    replay: replaying,
+    replay: recorded,
+    ...(recorded ? { provenance: "recorded" as const, recordedAt: run.started_at, note: "Replay of a recorded lab run · nothing was re-run" } : {}),
     servedBy: servedByFromEvents(visible),
     startedAt: started,
     durationMs: !running && Number.isFinite(finished) ? finished - started : undefined,
@@ -413,7 +414,7 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
       .catch(() => setLabUp(false));
   }, [loadHistory]);
 
-  const { run, effectiveRun, visible, replaying, error, setError, open: follow, skip } = useRun<Run, LabEvent>({
+  const { run, mode, effectiveRun, visible, replaying, error, setError, open: follow, skip } = useRun<Run, LabEvent>({
     pageUrl: (id, after) => `/api/interbank/runs/${id}?after=${after}`,
     pace: 160,
     onSettled: loadHistory,
@@ -448,7 +449,8 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
   const done = effectiveRun && effectiveRun.status !== "running";
   const ledger = useRunLedger();
   const { record } = ledger;
-  const observed = useMemo(() => (run ? observeRun(run, visible, replaying, traceId, runtime) : null), [run, visible, replaying, traceId, runtime]);
+  const recorded = mode === "replay";
+  const observed = useMemo(() => (run ? observeRun(run, visible, replaying, traceId, runtime, recorded) : null), [run, visible, replaying, traceId, runtime, recorded]);
   useEffect(() => { if (observed) record(observed); }, [observed, record]);
   const stats = useMemo(() => interbankStats(labUp, runtime), [labUp, runtime]);
 
@@ -460,6 +462,7 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
             <span className="review-kicker">OPERATIONS DESK · BANK A</span>
             <h3>Investigate a failed settlement with the counterparty&apos;s agent</h3>
             <p>The kickoff is an A2A message to Bank A&apos;s Deep Agent through Bank A&apos;s gateway. Bank A&apos;s agent decides when to ask Bank B&apos;s agent over A2A. Both agents are read-only; people approve any fix.</p>
+            <p className="ib-synthetic-note">Fictional banks · synthetic settlement records in each bank&apos;s own database · live agents, gateways, and Cisco and Splunk calls</p>
           </div>
           <span className={`ib-lab-state ${labUp ? "up" : labUp === false ? "down" : ""}`}><span className={labUp ? "status-dot ready" : "status-dot"} />{labUp ? `Lab running · ${runtime?.model.name ?? "model"}` : labUp === false ? "Lab offline" : "Checking lab…"}</span>
         </div>
@@ -499,7 +502,7 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
         <div className={`proof-card ib-report status-${done ? effectiveRun.status : "pending"}`}>
           <span className="review-kicker">JOINT REPORT · FOR HUMAN APPROVAL</span>
           {done && run?.report ? <>
-            {servedBy && <ProvenanceBadge provenance={{ kind: "live", servedBy }} />}
+            {recorded ? <ProvenanceBadge provenance={{ kind: "recorded", recordedAt: run.started_at, servedBy }} /> : servedBy && <ProvenanceBadge provenance={{ kind: "live", servedBy }} />}
             <span className={`ib-status ${run.status}`}>{run.status === "completed" ? "Completed" : run.status === "blocked" ? "Blocked at Bank A's gateway" : "Failed"}</span>
             <Report run={run} />
           </> : <p>{effectiveRun ? "The report appears when Bank A's agent replies to the Ops desk." : "Start or replay an investigation to see the joint report."}</p>}

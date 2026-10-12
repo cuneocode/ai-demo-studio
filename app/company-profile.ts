@@ -48,6 +48,8 @@ export type BriefingSource = {
   filedAt?: string;
   periodOfReport?: string;
   accession?: string;
+  /** The document's own cover says it is synthetic or not an SEC filing. */
+  synthetic?: boolean;
 };
 
 export type AgentTodo = {
@@ -397,6 +399,7 @@ function normalizeSource(value: unknown, filename?: string): BriefingSource | nu
     filedAt: asString(value.filedAt) || asString(value.filed_at),
     periodOfReport: asString(value.periodOfReport) || asString(value.period_of_report),
     accession,
+    ...(value.synthetic === true ? { synthetic: true } : {}),
   };
 }
 

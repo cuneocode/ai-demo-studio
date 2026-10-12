@@ -24,6 +24,7 @@ from lab.telemetry import set_output, setup_telemetry, span
 
 STEP_NAME = f"{ORGANIZATION}.send_a2a_message"
 AGENT_NAME = f"interbank-{ORGANIZATION}-agent"
+CONTROL_NAME = f"interbank-{ORGANIZATION}-outbound-confidentiality-v1"
 
 
 class ControlBlocked(RuntimeError):
@@ -114,6 +115,9 @@ class OutboundControls:
             if not result.is_safe:
                 names = ", ".join(c["control"] for c in checks if c["matched"])
                 raise ControlBlocked(f"Splunk Agent Control denied the outbound message ({names})")
+            # An unbound or mis-scoped control evaluates nothing and reports safe; that is not an allow.
+            if not any(c["control"] == CONTROL_NAME for c in checks):
+                raise ControlBlocked(f"Splunk Agent Control did not evaluate {CONTROL_NAME}; message not sent")
             return checks
 
 

@@ -1,6 +1,7 @@
 """Deterministic cite-or-abstain verifier. Not an LLM."""
 from __future__ import annotations
 
+import math
 import re
 from pathlib import Path
 
@@ -22,9 +23,16 @@ def _values_equal(left, right) -> bool:
     if left is None or right is None:
         return False
     try:
-        return abs(float(left) - float(right)) <= max(1.0, abs(float(left)) * 1e-6)
+        # Half a cent absolute, so a per-share figure cannot round to a different value and still pass.
+        return math.isclose(float(left), float(right), rel_tol=1e-6, abs_tol=0.005)
     except (TypeError, ValueError):
         return str(left) == str(right)
+
+
+def value_in_excerpt(value, excerpt: str | None) -> bool:
+    """A table metric's value must be one of the numbers on the line it cites."""
+    numbers = re.findall(r"\d[\d,]*(?:\.\d+)?", excerpt or "")
+    return any(_values_equal(value, number.replace(",", "")) for number in numbers)
 
 
 def _node_text(run_dir: Path, node_id: str | None) -> str:
@@ -99,7 +107,7 @@ def ground_briefing(briefing: dict, run_dir: Path, xbrl_facts: list[dict] | None
         if origin == "verbatim-table":
             excerpt = metric.get("excerpt") or ""
             haystack = _node_text(run_dir, metric.get("node_id")) or corpus
-            if excerpt_in_text(excerpt, haystack):
+            if excerpt_in_text(excerpt, haystack) and value_in_excerpt(metric.get("value"), excerpt):
                 metrics.append(metric)
             else:
                 dropped_metrics += 1

@@ -7,6 +7,7 @@ explicit destination. Neither health configuration nor export implies dashboard 
 """
 import asyncio
 import os
+import re
 import time
 import uuid
 import truststore
@@ -32,6 +33,7 @@ graph = None
 graph_signature = None
 sessions = {}
 startup_error = None
+RETRIEVED_DOCUMENT = re.compile(r"^Document \d+ — (.+?):\n", re.M)
 
 
 class Request(BaseModel):
@@ -43,6 +45,7 @@ class ExecutionTrace(AsyncCallbackHandler):
     def __init__(self):
         self.events = []
         self.sources = []
+        self.tool_runs = {}
         self.llm_calls = 0
         self.tokens = None
 
@@ -59,16 +62,18 @@ class ExecutionTrace(AsyncCallbackHandler):
     def usage(self):
         return {"llm_calls": self.llm_calls, **(self.tokens or {"input_tokens": None, "output_tokens": None})}
 
-    async def on_tool_start(self, serialized, input_str, **kwargs):
+    async def on_tool_start(self, serialized, input_str, *, run_id=None, **kwargs):
         name = serialized.get("name", "tool")
+        self.tool_runs[run_id] = name
         self.events.append({"name": name, "kind": "handoff" if "transfer" in name else "tool"})
 
-    async def on_tool_end(self, output, **kwargs):
-        content = str(getattr(output, "content", output))
-        if "Document 1" in content:
-            for part in content.split("Document ")[1:]:
-                title, _, body = part.partition("\n")
-                self.sources.append({"title": title.split(" — ")[-1].rstrip(":"), "text": body.strip()[:1600]})
+    async def on_tool_end(self, output, *, run_id=None, **kwargs):
+        # Only retrieval results are sources; handoff outputs carry whole conversations that quote them.
+        if self.tool_runs.pop(run_id, None) != "pinecone_retrieval":
+            return
+        parts = RETRIEVED_DOCUMENT.split(str(getattr(output, "content", output)))
+        for title, body in zip(parts[1::2], parts[2::2]):
+            self.sources.append({"title": title.strip(), "text": body.strip()[:1600]})
 
 
 def ensure_graph():
@@ -107,7 +112,8 @@ async def shutdown():
 
 @app.get("/api/banking/health")
 async def health():
-    return {"ready": graph is not None, "model": model_backend.describe()["model"], "backend": model_backend.describe(),
+    backend = model_backend.describe()
+    return {"ready": graph is not None, "model": (backend.get("answering") or {}).get("model"), "backend": backend,
             "retrieval": "Pinecone" if os.getenv("PINECONE_API_KEY") else "Local document search", "galileo": "configured" if os.getenv("GALILEO_API_KEY") else "disabled",
             "security": defense.health(), "splunk": banking_telemetry.health(), "controls": runtime_controls.health(),
             "error": "Banking dependencies are unavailable." if startup_error else None}
@@ -186,9 +192,9 @@ async def chat(request: Request):
                 except DefenseUnavailable:
                     failure = (503, "AI Defense inspection is unavailable. No answer was released.")
                 except ControlsBlocked:
-                    failure = (422, "Agent Observability blocked this response: " + ", ".join(c["name"] for c in controls.checks if c["status"] == "blocked") + ". Ask about Brahe products, mock scores, or illustrative eligibility.")
+                    failure = (422, "Agent Control blocked this response: " + ", ".join(c["name"] for c in controls.checks if c["status"] == "blocked") + ". Ask about Brahe products, mock scores, or illustrative eligibility.")
                 except ControlsUnavailable:
-                    failure = (503, "Agent Observability quality checks are unavailable. No answer was released.")
+                    failure = (503, "Agent Control quality checks are unavailable. No answer was released.")
                 except asyncio.TimeoutError:
                     failure = (504, "The assistant timed out. Please try again.")
                 except Exception as exc:

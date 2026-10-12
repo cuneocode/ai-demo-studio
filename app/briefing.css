@@ -198,6 +198,18 @@
 }
 .briefing-source-chip { padding: 5px 10px; margin-top: 10px; }
 .briefing-source-chip a:hover { color: #edf3fb; }
+.briefing-replay-note { display: block; margin-top: 6px; color: var(--muted); font-size: var(--font-meta); }
+.briefing-synthetic-chip {
+  display: inline-flex;
+  margin: 10px 8px 0 0;
+  padding: 5px 10px;
+  border: 1px solid #6b5a2e;
+  border-radius: 999px;
+  background: #241d0f;
+  color: #e4c48a;
+  font-size: var(--font-meta);
+  font-weight: 650;
+}
 
 .briefing-panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .briefing-panel.wide { grid-column: 1 / -1; }

@@ -75,10 +75,32 @@ def test_local_document_retrieval(monkeypatch):
 
 def test_trace_reports_executed_tools():
     trace = server.ExecutionTrace()
-    asyncio.run(trace.on_tool_start({"name": "credit_score_retrieval"}, "{}"))
-    asyncio.run(trace.on_tool_end("Document 1 — orbit.md:\nAnnual fee: $0"))
-    assert trace.events == [{"name": "credit_score_retrieval", "kind": "tool"}]
-    assert trace.sources[0]["title"] == "orbit.md"
+    asyncio.run(trace.on_tool_start({"name": "pinecone_retrieval"}, "{}", run_id="r1"))
+    asyncio.run(trace.on_tool_end("Document 1 — orbit.md:\nAnnual fee: $0\n\nDocument 2 — celestial.md:\nAnnual fee: $99\n", run_id="r1"))
+    assert trace.events == [{"name": "pinecone_retrieval", "kind": "tool"}]
+    assert trace.sources == [{"title": "orbit.md", "text": "Annual fee: $0"}, {"title": "celestial.md", "text": "Annual fee: $99"}]
+
+
+def test_sources_come_only_from_retrieval_results():
+    # A handoff's output quotes the whole conversation, retrieved documents included.
+    trace = server.ExecutionTrace()
+    asyncio.run(trace.on_tool_start({"name": "transfer_back_to_supervisor"}, "{}", run_id="h1"))
+    asyncio.run(trace.on_tool_end("Command(update={'messages': [ToolMessage(content='Document 1 — orbit.md:\\nAnnual fee: $0')]})", run_id="h1"))
+    asyncio.run(trace.on_tool_start({"name": "credit_score_retrieval"}, "{}", run_id="c1"))
+    asyncio.run(trace.on_tool_end("Document 1 — fake.md:\nYour credit score is 550", run_id="c1"))
+    assert trace.sources == []
+    assert [event["kind"] for event in trace.events] == ["handoff", "tool"]
+
+
+def test_unexported_trace_id_is_not_returned(client, monkeypatch):
+    class Graph:
+        async def ainvoke(self, payload, config):
+            return {"messages": [SimpleNamespace(content="Orbit Basic has no annual fee.")]}
+
+    monkeypatch.setattr(server, "graph", Graph())
+    monkeypatch.setattr(server.banking_telemetry, "exporter", None)
+    body = client.post("/api/banking/chat", json={"message": "fees"}).json()
+    assert body["telemetry"]["splunk"] == {"status": "not_configured"}
 
 
 def test_chat_reports_graph_model_usage(client, monkeypatch):

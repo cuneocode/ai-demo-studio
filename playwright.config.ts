@@ -4,7 +4,7 @@ const chrome = process.env.CHROME_PATH ?? "/home/cuneocode/.cache/ms-playwright/
 
 export default defineConfig({
   testDir: "tests",
-  testMatch: ["explorer.spec.ts", "settings.spec.ts", "shell.spec.ts", "stats.spec.ts", "models.spec.ts", "fraud.spec.ts", "wealth.spec.ts", "header.spec.ts", "sar.spec.ts", "lifecycle.spec.ts"],
+  testMatch: ["explorer.spec.ts", "settings.spec.ts", "shell.spec.ts", "stats.spec.ts", "models.spec.ts", "fraud.spec.ts", "wealth.spec.ts", "header.spec.ts", "sar.spec.ts", "lifecycle.spec.ts", "banking.spec.ts", "briefing.spec.ts", "interbank.spec.ts"],
   timeout: 90_000,
   expect: { timeout: 15_000 },
   outputDir: "artifacts/explorer/test-output",

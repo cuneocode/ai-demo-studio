@@ -325,6 +325,7 @@ def assemble_briefing(session, structured=None) -> dict:
             "url": None,
             "filename": session.filename,
             "accession": None,
+            "synthetic": session.synthetic,
         }
     else:
         data["source"] = {

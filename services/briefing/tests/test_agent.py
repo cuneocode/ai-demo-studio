@@ -152,3 +152,12 @@ def test_uploaded_annual_report_yields_period_ticker_and_table_metrics(tmp_path)
         "Revenue": 4112.6, "Operating income": 954.1, "Net income": 802.5, "Diluted EPS": 4.77}
     assert all(row["origin"] == "verbatim-table" and row["period"] == "FY2025" for row in metrics.values())
     assert metrics["Revenue"]["excerpt"].startswith("Revenue") and briefing["grounding"]["dropped_metrics"] == 0
+    # The fixture's cover says it is synthetic, so the briefing must say so too.
+    assert briefing["source"]["synthetic"] is True
+
+
+def test_a_real_filing_is_not_flagged_synthetic(tmp_path):
+    from cover import cover_identity
+
+    (tmp_path / "source.html").write_text((Path(__file__).parent / "fixtures" / "filing.html").read_text(encoding="utf-8"), encoding="utf-8")
+    assert "synthetic" not in cover_identity(tmp_path)

@@ -17,6 +17,7 @@ FORM = re.compile(r"\bFORM\s+(10-K|20-F|40-F)\b", re.I)
 PERIOD = re.compile(r"FISCAL\s+YEAR\s+ENDED\s+([A-Za-z]+\s+\d{1,2},\s+\d{4})", re.I)
 SYMBOL = re.compile(r"Trading\s+symbol(?:\(s\))?\s*[:·]?\s*([A-Z][A-Z.]{0,5})\b")
 REGISTRANT = re.compile(r"\b([A-Z][\w&.,' -]{2,70}?(?:,\s*Inc\.|\s+Inc\.|\s+Corporation|\s+Corp\.|\s+Company|\s+Ltd\.|\s+plc|\s+N\.A\.))")
+SYNTHETIC = re.compile(r"\bNOT\s+AN\s+SEC\s+FILING\b|\bSYNTHETIC\b[^.]{0,40}\bFICTIONAL\s+COMPANY\b", re.I)
 UNITS = re.compile(r"\(\$\s+in\s+millions(?:,\s*except\s+per[- ]share\s+data)?\)\s+(FY\s?\d{4})", re.I)
 NUMBER = r"\$?\s*\(?([\d,]+\.\d+)\)?"
 ROWS = (
@@ -40,10 +41,18 @@ def _plain(raw: str) -> str:
     return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", text))).strip()
 
 
+def synthetic_document(raw: str) -> bool:
+    """The cover page says the document is synthetic or not an SEC filing."""
+    return bool(SYNTHETIC.search(_plain(raw)[:12000]))
+
+
 def cover_identity(run_dir: Path) -> dict:
-    """Form, fiscal year end, trading symbol, and registrant from the cover page; empty keys when absent."""
-    text = _plain(_raw(run_dir))[:12000]
+    """Form, fiscal year end, trading symbol, registrant, and a synthetic flag from the cover page; empty keys when absent."""
+    raw = _raw(run_dir)
+    text = _plain(raw)[:12000]
     out: dict = {}
+    if synthetic_document(raw):
+        out["synthetic"] = True
     if match := FORM.search(text):
         out["form"] = match.group(1).upper()
     if match := PERIOD.search(text):
@@ -81,4 +90,4 @@ def table_metrics(run_dir: Path) -> list[dict]:
     return metrics
 
 
-__all__ = ["cover_identity", "table_metrics"]
+__all__ = ["cover_identity", "synthetic_document", "table_metrics"]

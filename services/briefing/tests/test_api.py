@@ -142,6 +142,9 @@ def test_analyze_upload_and_edgar_paths(client, monkeypatch):
     cached = client.post("/api/briefing/analyze", data={"query": "JPM"})
     assert cached.json()["cached"] is True
     assert cached.json()["usage"] == {"llm_calls": 0, "input_tokens": 0, "output_tokens": 0}
+    # A replay carries the date of the run it came from, so the UI can label it as recorded.
+    assert cached.json()["recorded_at"] == auto.json()["recorded_at"]
+    assert cached.json()["telemetry"]["splunk"]["status"] == "not_reexported"
 
 
 def test_defense_blocks_briefing(client, monkeypatch):
@@ -171,3 +174,17 @@ def test_defense_blocks_briefing(client, monkeypatch):
     assert response.status_code == 403
     assert "briefing" in response.json()["detail"].lower()
     assert "answer" not in response.json()
+
+
+def test_cached_replay_of_a_synthetic_upload_still_says_synthetic(client, monkeypatch):
+    async def fake_execute(session, message):
+        assert session.synthetic is True
+        return {"company": {"name": "Halcyon Interconnect, Inc."}, "source": {"kind": "upload", "label": "Uploaded"},
+                "metrics": [], "trail": {"path": "upload", "todos": [], "nodes_read": [], "tools": []}}
+
+    monkeypatch.setattr(server, "execute_briefing", fake_execute)
+    report = Path(__file__).resolve().parents[3] / "fixtures" / "halcyon" / "annual-report-fy2025.html"
+    upload = {"file": ("annual-report-fy2025.html", report.read_bytes(), "text/html")}
+    assert client.post("/api/briefing/analyze", files=upload).json()["cached"] is False
+    replay = client.post("/api/briefing/analyze", files=upload).json()
+    assert replay["cached"] is True and replay["source"]["synthetic"] is True and replay["recorded_at"]
