@@ -75,7 +75,7 @@ export const fraudTour: Tour = {
       id: "fraud.reasons", kind: "wait", targets: ["fraud.reasons"],
       waitFor: { state: { stage: ["reasons"] } }, waitingText: "Explaining the score…",
       title: "Why, in plain English",
-      body: "Exact XGBoost TreeSHAP contributions become reason codes, signed in log-odds; positive raises risk. No language model touches the score or its explanation.",
+      body: "With live graph scores, exact XGBoost TreeSHAP contributions become these reason codes; positive raises risk. Until Sparky scores, they are labelled sample. No language model touches the score.",
     },
     {
       id: "fraud.agent", kind: "wait", targets: ["fraud.summary", "fraud.timeline"],
