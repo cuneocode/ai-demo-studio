@@ -213,7 +213,7 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
       </>}
 
       {nav.presenting && fraudPresenterHints[scenarioId] && <p className="fx-presenter-hint" role="note"><b>Presenter</b> {fraudPresenterHints[scenarioId]}</p>}
-      <BusinessBand card={card} state={state} />
+      <BusinessBand card={card} state={state} replay={replay} />
       <FraudStatus health={health} failed={healthFailed} recording={recordingFor(scenarioId)?.name} onReplay={replayRecording} />
 
       <section className="fx-scenarios" aria-label="Scenarios">
@@ -322,7 +322,7 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
 }
 
 /** Act 1: Maya's queue and the KPIs that hurt; "this run" values replace the illustrative ones when measured. */
-function BusinessBand({ card, state }: { card: ModelCardData | null; state: TriageState }) {
+function BusinessBand({ card, state, replay }: { card: ModelCardData | null; state: TriageState; replay: boolean }) {
   const measured = card && card.status !== "not_measured";
   const rules = caughtShare(card, "rules");
   const graph = caughtShare(card, "gnn_xgboost");
@@ -334,7 +334,7 @@ function BusinessBand({ card, state }: { card: ModelCardData | null; state: Tria
       ? { label: "Fraud $ caught at a 0.5% alert rate", value: `${rules} → ${graph}`, sub: "rules → graph model", tag: card.tag ?? "Measured" }
       : { label: "Fraud $ caught at a 0.5% alert rate", value: "Not measured yet", sub: "run the backtest on Sparky", tag: "Not measured" },
     run
-      ? { label: "Time to disposition", value: seconds(run)!, sub: "this run · investigation + analyst decision", tag: "Measured · this run" }
+      ? { label: "Time to disposition", value: seconds(run)!, sub: `${replay ? "recorded run" : "this run"} · investigation + analyst decision`, tag: replay ? "Recorded run" : "Measured · this run" }
       : { label: "Average handle time", value: "11 min", sub: "per alert today · target 4 min", tag: "Illustrative" },
   ];
   return (
@@ -363,7 +363,7 @@ function QueueTable({ cases, state, replay, recordedAt }: { cases: FraudCase[]; 
     <section className="fx-queue" aria-labelledby="fx-queue-title">
       <header>
         <h3 id="fx-queue-title">Alert queue · {rows.length || 5} flagged payments</h3>
-        {first ? <ProvenanceBadge provenance={replay ? { kind: "recorded", recordedAt: recordedAt ?? "" } : scoreProvenance(first.backend)} label={replay ? undefined : `Scores · ${first.label}`} /> : <span className="fx-muted">Scores fill in as the run streams.</span>}
+        {first ? <ProvenanceBadge provenance={replay ? { kind: "recorded", recordedAt: recordedAt ?? "" } : scoreProvenance(first.backend)} label={replay ? `${provenanceText({ kind: "recorded", recordedAt: recordedAt ?? "" })} · scores: ${first.label}` : `Scores · ${first.label}`} /> : <span className="fx-muted">Scores fill in as the run streams.</span>}
       </header>
       <div className="fx-table-wrap">
         <table>
@@ -422,7 +422,7 @@ function Verdicts({ state, threshold }: { state: TriageState; threshold: number 
         {rules ? <Gauge title="Rules engine · one payment at a time" value={rules.score} max={rules.max || 999} decision={`${RULE_LABEL[rules.decision] ?? rules.decision} · ${rules.score}/${rules.max || 999}`}
           tone={rules.decision === "approve" ? "ok" : rules.decision === "review" ? "warn" : "deny"} marks={[{ at: rules.thresholds.review, label: "Review" }, { at: rules.thresholds.decline, label: "Decline" }]}
           detail={rules.fired.filter((item) => item.rule !== "BASE").map((item) => item.text).join(" · ") || "No risk rule fired"} /> : <div className="fx-gauge pending">Rules engine…</div>}
-        {score ? <Gauge title="Graph model · GraphSAGE + XGBoost" value={score.probability} max={1} decision={`${score.risk_band === "high" ? "High risk" : score.risk_band === "elevated" ? "Elevated risk" : "Low risk"} · ${score.probability.toFixed(2)}`}
+        {score ? <Gauge title={score.backend === "fixture" ? "Graph model · sample score, no model ran" : "Graph model · GraphSAGE + XGBoost"} value={score.probability} max={1} decision={`${score.risk_band === "high" ? "High risk" : score.risk_band === "elevated" ? "Elevated risk" : "Low risk"} · ${score.probability.toFixed(2)}`}
           tone={tone[score.risk_band]} marks={[{ at: threshold, label: `Alert threshold ${threshold.toFixed(2)}` }]}
           detail={`${score.label}${score.model_ms != null ? ` · ${score.model_ms.toFixed(1)} ms on ${(score.device ?? "?").toUpperCase()}` : ""}${opened?.scoreable_by_model === false ? " · cannot see device or address events" : ""}`} /> : <div className="fx-gauge pending">Graph model…</div>}
       </div>
@@ -433,9 +433,10 @@ function Verdicts({ state, threshold }: { state: TriageState; threshold: number 
 
 function Reasons({ state }: { state: TriageState }) {
   const reasons = state.reasons?.reasons ?? [];
+  const sample = state.score?.backend === "fixture";
   return (
     <div className="fx-reasons">
-      <h4>Why the graph model scored it this way</h4>
+      <h4>{sample ? <>Sample reasons <span className="fx-tag illustrative">Illustrative · not model output</span></> : "Why the graph model scored it this way"}</h4>
       <ul>{reasons.slice(0, 6).map((item) => (
         <li key={item.code + item.feature} className={item.direction}><span>{item.text}</span><b>{item.value >= 0 ? "+" : ""}{item.value.toFixed(2)}</b></li>
       ))}</ul>
@@ -460,10 +461,11 @@ function SummaryCard({ state, replay, recordedAt }: { state: TriageState; replay
   const summary = state.summary;
   if (!summary) return null;
   const output = state.guardrails.find((item) => item.data.stage === "agent_output");
-  const scripted = summary.mode === "scripted";
+  const scripted = summary.mode !== "agent";
+  const template = summary.mode === "agent+template" ? "Template · the agent's own summary was withheld or empty" : "Scripted · no model call";
   const provenance: Provenance = replay
     ? { kind: "recorded", recordedAt: recordedAt ?? "", servedBy: summary.servedBy }
-    : scripted ? { kind: "none", detail: "Scripted · no model reachable" } : { kind: "live", servedBy: summary.servedBy };
+    : scripted ? { kind: "none", detail: template } : { kind: "live", servedBy: summary.servedBy };
   return (
     <section className="fx-summary" aria-labelledby="fx-summary-title">
       <header>
@@ -472,7 +474,7 @@ function SummaryCard({ state, replay, recordedAt }: { state: TriageState; replay
       </header>
       <RichText text={summary.text} />
       <div className="fx-badges">
-        {state.citations && <span className={`fx-chip ${state.citations.cited === state.citations.total ? "ok" : "warn"}`}>Citations · {state.citations.cited}/{state.citations.total} points cite tool evidence</span>}
+        {state.citations && <span className={`fx-chip ${state.citations.cited === state.citations.total ? "ok" : "warn"}`}>Citations · {state.citations.cited}/{state.citations.total} points backed by the evidence they cite{state.citations.unsupported.length ? ` · not found: ${state.citations.unsupported.join(", ")}` : ""}</span>}
         {output ? <span className={`fx-chip ${output.status === "allowed" ? "ok" : "deny"}`}><ShieldCheck size={12} /> AI Defense · summary {output.status === "allowed" ? "inspected · clean" : output.status}</span>
           : !scripted && <span className="fx-chip">AI Defense · summary not inspected</span>}
       </div>

@@ -120,13 +120,17 @@ test("the CPP scenario: rules approve, the graph model flags, the network and re
   await expect(panel.locator(".fx-aha")).toContainText("Rules approve what the graph model flags");
   await expect(panel.locator(".fx-gauge").first()).toContainText("Approve");
   await expect(panel.locator(".fx-gauge").nth(1)).toContainText("High risk");
+  await expect(panel.locator(".fx-gauge").nth(1)).toContainText("sample score, no model ran");
+  await expect(panel.locator(".fx-gauge").nth(1)).not.toContainText("GraphSAGE");
   await expect(panel.locator(".fx-reasons li").first()).toBeVisible();
   await expect(panel.locator(".fx-reasons")).toContainText("log-odds");
+  await expect(panel.locator(".fx-reasons h4")).toContainText("Illustrative · not model output");
   await expect(panel).not.toContainText(/Captum|Shapley/);
 
   await panel.locator("#show-network").click();
   await expect(panel.getByRole("img", { name: /Network of Orbit Digital Goods/ })).toBeVisible();
   await expect(panel.locator(".fx-network")).toContainText("only payments before this one count");
+  await expect(panel.locator(".fx-network")).toContainText("Illustrative layout");
   await expect(panel.locator(".fx-summary")).toContainText("Citations");
   await expect(panel.locator(".fx-backtest")).toContainText("Not measured yet");
   await expect(panel).not.toContainText(/tabformer_label|Label reveal/);
@@ -208,6 +212,7 @@ test("never dead: a replay is labelled recorded and cannot decide; a down servic
   await panel.locator(".rt-replay select").selectOption("cpp-orbit-live");
   await expect(panel.locator(".fx-summary")).toContainText("Recorded run", { timeout: 15000 });
   await expect(panel.locator(".fx-summary")).toContainText("OpenAI API");
+  await expect(panel.locator(".fx-queue")).toContainText("scores: Sample scores");
   await expect(panel.locator(".fx-decision")).toContainText("as recorded");
   await expect(panel.getByRole("group", { name: "Analyst disposition" }).locator("button:enabled")).toHaveCount(0);
 

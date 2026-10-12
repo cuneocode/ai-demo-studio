@@ -21,7 +21,7 @@ export type Graph = {
   nodes: GraphNode[]; edges: { source: string; target: string; kind: string }[]; merchant: string; cards_seen: number;
   cards_confirmed_fraud: number; fraud_share?: number | null; dispute_ratio?: number | null; window_days?: number | null;
   as_of?: string; small_auths?: number | null; other_cards_to_reissue?: number | null; shown?: { fraud: number; clean: number; clean_total: number };
-  source: string; temporal_filter?: boolean;
+  source: string; temporal_filter?: boolean; layout?: "illustrative" | "data"; layout_note?: string;
 };
 export type Reason = { code: string; text: string; value: number; feature: string; label: string; direction: "risk" | "protective"; network?: boolean };
 export type RulesResult = { score: number; max: number; decision: string; fired: { rule: string; text: string; points: number }[]; thresholds: { review: number; decline: number } };
@@ -48,7 +48,7 @@ export type TriageState = {
   guardrails: Verdict[];
   controls: Verdict[];
   summary?: { text: string; servedBy?: ServedBy | null; mode?: string };
-  citations?: { total: number; cited: number };
+  citations?: { total: number; cited: number; unsupported: string[] };
   servedBy?: ServedBy | null;
   pending: HitlRequest[];
   requests: HitlRequest[];
@@ -108,7 +108,9 @@ export function triageState(events: RunEvent[]): TriageState {
     if (event.kind === "agent.message") state.summary = { text: event.body ?? "", servedBy: (data.served_by as ServedBy) ?? null, mode: data.mode as string };
     if (event.kind === "claim.verdict") {
       const citations = record(data.citations);
-      state.citations = { total: Number(citations.total ?? 0), cited: Number(citations.cited ?? 0) };
+      const items = Array.isArray(citations.items) ? citations.items.map(record) : [];
+      const unsupported = items.flatMap((item) => Array.isArray(item.unsupported) ? item.unsupported.map(String) : []);
+      state.citations = { total: Number(citations.total ?? 0), cited: Number(citations.cited ?? 0), unsupported };
     }
     if (event.kind === "hitl.request") {
       const request: HitlRequest = {

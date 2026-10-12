@@ -4,6 +4,9 @@ Fixture cases: a deterministic synthetic subgraph built from the case's network 
 every confirmed-fraud card with its date, a sample of clean cards). TabFormer cases: the same layout
 from the point-in-time counts select_studio_cases.py recorded (cards seen before the payment and how
 many had fraud-labelled payments before it). Only payments strictly before the scored one count.
+
+The counts are data; the individual card dots (last 4, purchase and confirmation dates) are generated
+from a seed to match them, and the response says so (`layout`).
 """
 import hashlib
 import random
@@ -78,4 +81,6 @@ def get_neighborhood(case: dict) -> dict:
         "edges": edges,
         "temporal_filter": True,
         "source": "TabFormer point-in-time counts" if case.get("source") == "tabformer" else "Synthetic neighborhood",
+        "layout": "illustrative",
+        "layout_note": "The counts are data; the card dots, last-4s, and dates are generated to match them.",
     }

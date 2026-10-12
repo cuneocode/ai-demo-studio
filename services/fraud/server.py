@@ -127,7 +127,7 @@ async def save_note(request: NoteRequest):
     if run is None:
         run = store.open(None, label=f"Case note · {request.case_id}", scenario="case-note", prefix="fraud",
                          meta={"case_id": request.case_id, "synthetic": True})
-    security = SecurityRun()
+    security = triage.RUN_SECURITY.get(run.id) or SecurityRun()
     token: Token = security_run.set(security)
     try:
         with store.bind(run.id):

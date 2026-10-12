@@ -151,7 +151,8 @@ export function observeSar(run: ObservedRun, pkg: SarPackage, finalStatus?: stri
 }
 
 export function observeRecordedSar(run: ObservedRun, pkg: SarPackage, recordedAt: string): ObservedRun {
-  return { ...observeSar(run, pkg), replay: true, provenance: "recorded", recordedAt, servedBy: servedByFrom(pkg.served_by) ?? null, note: "Recorded run: figures are from the recording, not a call made now." };
+  return { ...observeSar(run, pkg), agentTrace: undefined, otlp: undefined, traceId: undefined, spans: undefined,
+    replay: true, provenance: "recorded", recordedAt, servedBy: servedByFrom(pkg.served_by) ?? null, note: "Recorded run: figures are from the recording, not a call made now." };
 }
 
 export function sarStats(health: SarHealth | null, reachable: boolean, link?: string | null): { observability: StatsCard; defense: StatsCard } {

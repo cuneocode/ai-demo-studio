@@ -24,6 +24,8 @@ from telemetry import AgentTrace
 DECISION_TIMEOUT = float(os.getenv("FRAUD_DECISION_TIMEOUT", "900"))
 DISPOSITIONS = ("contact_customer", "block_and_reissue", "false_positive", "escalate")
 PERSONA = "Maya · card-fraud operations analyst · post-authorization queue (synthetic data)"
+# A run's AI Defense tally, so case notes saved while it waits for the analyst count toward its security summary.
+RUN_SECURITY: dict[str, SecurityRun] = {}
 
 
 def agent_mode() -> str:
@@ -44,7 +46,7 @@ def _scripted_summary(ctx: tools.TriageContext) -> str:
     ev = ctx.evidence
     score, rules, graph, reasons = ev.get("score") or {}, ev.get("rules") or {}, ev.get("neighborhood") or {}, ev.get("reasons") or {}
     lines = [f"- Rules engine says **{rules.get('decision', '?')}** ({rules.get('score', '?')}/999); the graph model says "
-             f"**{score.get('risk_label', '?')}** ({score.get('probability', 0):.2f}). [score]"]
+             f"**{score.get('risk_label', '?')}** ({score.get('probability', 0):.2f}). [rules] [score]"]
     if graph.get("cards_seen"):
         lines.append(f"- {graph['merchant']}: {graph['cards_confirmed_fraud']} of {graph['cards_seen']:,} cards seen before this payment "
                      f"had confirmed fraud. [neighborhood]")
@@ -188,6 +190,7 @@ async def start(run, payload: dict) -> dict:
         return {}
     scenario, case = found
     security = SecurityRun()
+    RUN_SECURITY[run.id] = security
     token = security_run.set(security)
     trace = AgentTrace(f"Fraud triage · {scenario['title']}", f"{case['label']} · {case['account']}",
                        {"run_id": run.id, "scenario": scenario["id"], "case_id": case["id"]})
@@ -270,12 +273,15 @@ async def start(run, payload: dict) -> dict:
                 summary = None
         if not summary:
             summary, mode = _scripted_summary(ctx), "scripted" if mode == "scripted" else "agent+template"
-        citations = triage_agent.citation_check(summary, ctx.evidence)
-        store.emit(run.id, "claim.verdict", f"Citation check · {citations['cited']}/{citations['total']} points cite tool evidence",
+        citations = triage_agent.citation_check(summary, ctx.evidence, ctx.case)
+        unsupported = [f"“{item['text'][:60]}” states {', '.join(item['unsupported'])}" for item in citations["items"] if item["unsupported"]]
+        store.emit(run.id, "claim.verdict", f"Citation check · {citations['cited']}/{citations['total']} points cite evidence that states their figures",
                    status="ok" if citations["cited"] == citations["total"] else "flagged",
-                   body="Each point must end on an evidence id this run produced. A format check, not a fact check.",
+                   body="Each point must end on an evidence id this run produced, and its figures must appear in that evidence or the alert. "
+                        "Wording is not checked." + (f" Not found in the cited evidence: {'; '.join(unsupported)}." if unsupported else ""),
                    data={"citations": citations})
-        store.emit(run.id, "agent.message", "Analyst summary · AI draft" if mode == "agent" else "Analyst summary · scripted (no model)",
+        title = {"agent": "Analyst summary · AI draft", "agent+template": "Analyst summary · template (the agent's own summary was withheld or empty)"}
+        store.emit(run.id, "agent.message", title.get(mode, "Analyst summary · scripted (no model)"),
                    body=summary, data={"served_by": served_by if mode == "agent" else None, "mode": mode})
         agent_trace = await trace.finish(summary)
         investigated_ms = round((time.monotonic() - started) * 1000)
@@ -345,4 +351,5 @@ async def start(run, payload: dict) -> dict:
         store.finish(run.id, "completed", result)
         return result
     finally:
+        RUN_SECURITY.pop(run.id, None)
         security_run.reset(token)

@@ -73,6 +73,7 @@ def test_neighborhood_is_point_in_time_and_deterministic():
     fraud = [node for node in graph["nodes"] if node["kind"] == "fraud"]
     assert fraud and all(node["confirmed_at"] < paid_at for node in fraud)
     assert graph["temporal_filter"] is True and graph["source"] == "Synthetic neighborhood"
+    assert graph["layout"] == "illustrative" and "generated" in graph["layout_note"]
 
 
 def test_reasons_are_plain_english_and_sorted():
@@ -226,6 +227,19 @@ def test_citation_check_counts_points_that_cite_known_evidence():
     assert (result["cited"], result["total"]) == (2, 3)
 
 
+def test_citation_check_fails_a_figure_the_cited_evidence_does_not_state():
+    evidence = {"rules": {"score": 120, "max": 999, "decision": "approve"}, "score": {"probability": 0.74},
+                "neighborhood": {"cards_seen": 412, "cards_confirmed_fraud": 37, "window_days": 21}}
+    summary = ("- Rules say approve (120/999); the graph says 0.74. [rules] [score]\n"
+               "- Graph probability 0.74. [rules]\n"
+               "- 37 of 412 cards had fraud in 21 days. [neighborhood]\n"
+               "- 58 cards had fraud. [neighborhood]\n"
+               "- $286.40 on card ****1188 on 2026-10-02. [score]")
+    result = agent.citation_check(summary, evidence, {"amount": 286.4, "account": "****1188", "at": "2026-10-02T21:14:00Z"})
+    assert [item["ok"] for item in result["items"]] == [True, False, True, False, True]
+    assert result["items"][1]["unsupported"] == ["0.74"] and result["items"][3]["unsupported"] == ["58"]
+
+
 # -------------------------------------------------------------------------- triage runs ----
 
 def test_triage_run_waits_for_the_analyst_then_acts_under_policy(client):
@@ -253,6 +267,31 @@ def test_triage_run_waits_for_the_analyst_then_acts_under_policy(client):
     result = client.get(f"/api/fraud/runs/{run_id}").json()["run"]["result"]
     assert result["disposition"] == "block_and_reissue" and result["handoff"] is None
     assert [a["action"] for a in result["actions"]] == ["contact_customer", "block_and_reissue", "flag_merchant"]
+    verdict = next(e for e in events if e["kind"] == "claim.verdict")
+    assert verdict["status"] == "ok", verdict["body"]
+    summary = next(e for e in events if e["kind"] == "agent.message")
+    assert summary["title"] == "Analyst summary · scripted (no model)" and summary["data"]["served_by"] is None
+
+
+def test_a_case_note_checked_during_a_run_counts_in_its_security_summary(client, monkeypatch):
+    async def clean(self, messages, stage):
+        return {"is_safe": True, "event_id": "", "classifications": []}
+
+    monkeypatch.setattr(security.defense, "mode", "enforce")
+    monkeypatch.setattr(security.defense, "key", "test-only-placeholder")
+    monkeypatch.setattr(security.defense, "valid", True)
+    monkeypatch.setattr(security.Defense, "_call", clean)
+
+    def checks(note: str | None) -> int:
+        run_id = client.post("/api/fraud/runs", json={"scenario": "cpp-orbit", "input": {}}).json()["run_id"]
+        wait_for(client, run_id, "hitl.request")
+        if note:
+            assert client.post("/api/fraud/notes", json={"case_id": "cpp-orbit", "run_id": run_id, "note": note}).json()["saved"] is True
+        client.post(f"/api/fraud/runs/{run_id}/decision", json={"request_id": "disposition", "decision": "contact_customer", "by": "Maya (analyst)"})
+        wait_for(client, run_id, "result")
+        return client.get(f"/api/fraud/runs/{run_id}").json()["run"]["result"]["security"]["checks"]
+
+    assert checks("Customer confirms the purchase.") == checks(None) + 1
 
 
 def test_escalation_builds_the_sar_handoff(client):

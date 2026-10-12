@@ -374,7 +374,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
         <div>
           <span>Investigator time per SAR</span>
           <strong>4–6 h → &lt; 1 h review</strong>
-          <small>{pkg?.duration_ms !== undefined && !replaying ? `Measured now: reviewable draft in ${(pkg.duration_ms / 1000).toFixed(1)} s` : "Illustrative · this run measures time to draft"}</small>
+          <small>{pkg?.duration_ms !== undefined && !replaying && pkg.mode !== "sample" ? `Measured now: reviewable draft in ${(pkg.duration_ms / 1000).toFixed(1)} s` : "Illustrative · this run measures time to draft"}</small>
         </div>
         <div>
           <span>Case backlog</span>
@@ -389,7 +389,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
         <div>
           <span>Narrative quality</span>
           <strong>~20% QA returns → every sentence cited</strong>
-          <small>{verification ? `Measured now: ${verification.kept} of ${verification.total} sentences verified${draft?.dropped.length ? ` · ${draft.dropped.length} dropped` : ""}` : "Illustrative · this run measures the cited share"}</small>
+          <small>{verification ? `${replaying ? "Recorded run" : pkg?.mode === "sample" ? "Sample narrative, verified now" : "Measured now"}: ${verification.kept} of ${verification.total} sentences verified${draft?.dropped.length ? ` · ${draft.dropped.length} dropped` : ""}` : "Illustrative · this run measures the cited share"}</small>
         </div>
       </section>
 

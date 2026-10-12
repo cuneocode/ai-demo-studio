@@ -5,6 +5,7 @@ import type { Graph, GraphNode } from "./triage-state";
 
 const SIZE = 340;
 const CENTER = SIZE / 2;
+const ILLUSTRATIVE_LAYOUT = "The counts are data; the card dots, last-4s, and dates are generated to match them.";
 
 const day = (iso?: string) => {
   const date = iso ? new Date(iso) : null;
@@ -21,7 +22,7 @@ export default function NetworkGraph({ graph }: { graph: Graph }) {
   const clean = placed.filter((node) => node.kind === "clean").length;
   const center = placed.find((node) => node.kind === "merchant");
   const caption = focus
-    ? `${focus.label} · ${focus.detail ?? ""}${focus.kind === "fraud" && focus.confirmed_at ? ` · confirmed ${day(focus.confirmed_at)}` : ""}`
+    ? `${focus.label} · ${focus.detail ?? ""}${focus.kind === "fraud" && focus.confirmed_at ? ` · confirmed ${day(focus.confirmed_at)}` : ""}${graph.layout !== "data" && (focus.kind === "fraud" || focus.kind === "clean") ? " · illustrative" : ""}`
     : `${graph.cards_confirmed_fraud} of ${graph.cards_seen.toLocaleString("en-US")} cards seen at ${graph.merchant} had confirmed fraud before this payment.`;
   return (
     <figure className="fx-graph">
@@ -56,6 +57,7 @@ export default function NetworkGraph({ graph }: { graph: Graph }) {
           <span><i className="dot scored" /> This card</span>
         </span>
         <small>{graph.source} · only payments before this one count{graph.window_days ? ` · last ${graph.window_days} days` : ""}</small>
+        {graph.layout !== "data" && <small className="fx-graph-layout"><span className="fx-tag illustrative">Illustrative layout</span> {graph.layout_note ?? ILLUSTRATIVE_LAYOUT}</small>}
       </figcaption>
     </figure>
   );
