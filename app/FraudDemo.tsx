@@ -21,6 +21,8 @@ import ProvenanceBadge, { provenanceText, type Provenance } from "./run/Provenan
 import ReplayPicker, { loadRecording, useRecordings } from "./run/ReplayPicker";
 import RunTimeline, { RichText } from "./run/RunTimeline";
 import { useRun } from "./run/useRun";
+import { guideAnchor, guideSafeAnchor } from "./guide/anchors";
+import { useGuideActions } from "./guide/GuidedTour";
 
 type FraudDemoProps = { onBack: () => void; onAdd: () => void; inStory: boolean; embedded?: boolean };
 type NoteResult = { saved: boolean; masked?: string | null; ai_defense: { status: string; rules: string[] }; policy: { decision: string; reason: string; engine_label: string; entities?: string[] } };
@@ -192,8 +194,29 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
   const busy = starting || (runLive && !state.pending.length);
   const primaryLabel = starting ? "Starting…" : busy ? "Triaging…" : runLive && state.pending.length ? "Waiting for the analyst" : state.result || steps.run ? "Triage again" : "Triage queue";
 
+  useGuideActions("fraud-modeling", {
+    replay: (name) => {
+      const pick = name && recordings.some((item) => item.name === name) ? name : recordingFor(scenarioId)?.name;
+      if (pick) void replayRecording(pick);
+    },
+    skipReplay: steps.skip,
+    selectScenario: setScenarioId,
+  });
+  const guideRun = starting ? "starting" : steps.replaying ? "running" : runLive ? (state.pending.length ? "awaiting-human" : "running")
+    : steps.run?.status === "failed" ? "failed" : state.result || steps.run ? "done" : "idle";
+  const guideStage = [
+    state.queue.length && "scored", state.rules && state.score && "verdicts", state.graph && "network", state.reasons && "reasons", state.summary && "summary",
+    state.dispute && "dispute", state.dispute?.verdict && "dispute-checked", state.result && "decided", state.handoff && "handoff",
+  ].filter(Boolean).join(" ");
+
   return (
-    <div className={`banking-demo fraud-demo ${embedded ? "banking-embedded" : ""}`}>
+    <div
+      className={`banking-demo fraud-demo ${embedded ? "banking-embedded" : ""}`}
+      data-guide-run={guideRun}
+      data-guide-source={replay ? "recorded" : steps.runId ? (state.summary && state.summary.mode !== "agent" ? "scripted" : "live") : "none"}
+      data-guide-recorded-at={replay ? steps.run?.finished_at ?? steps.run?.started_at ?? undefined : undefined}
+      data-guide-stage={guideStage}
+    >
       {!embedded && <>
         <div className="banking-topline">
           <button className="banking-back" onClick={onBack}><ArrowLeft size={15} /> Back to library</button>
@@ -216,13 +239,14 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
       <BusinessBand card={card} state={state} replay={replay} />
       <FraudStatus health={health} failed={healthFailed} recording={recordingFor(scenarioId)?.name} onReplay={replayRecording} />
 
-      <section className="fx-scenarios" aria-label="Scenarios">
+      <section className="fx-scenarios" aria-label="Scenarios" {...guideAnchor("fraud.scenarios")}>
         {(scenarios.length ? scenarios : []).map((item) => (
           <button
             key={item.id}
             className={`fx-scenario ${item.kind}${item.id === scenarioId ? " selected" : ""}`}
             aria-pressed={item.id === scenarioId}
             onClick={() => setScenarioId(item.id)}
+            {...guideSafeAnchor(`fraud.scenario.${item.id}`)}
           >
             <span className="fx-scenario-kind">{item.kind === "attack" ? <ShieldAlert size={13} aria-hidden="true" /> : null}{KIND_LABEL[item.kind]}</span>
             <strong>{item.title}</strong>
@@ -234,11 +258,11 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
       </section>
 
       <div className="fx-actions">
-        <button id="triage-queue" className="fx-primary" onClick={() => triage()} disabled={starting || busy}>
+        <button id="triage-queue" className="fx-primary" onClick={() => triage()} disabled={starting || busy} {...guideAnchor("fraud.run")}>
           {starting || busy ? <Loader2 size={16} className="spin" /> : <Play size={16} />} {primaryLabel}
         </button>
         <span className="fx-actions-scenario">{scenario ? <>Scenario: <strong>{scenario.title}</strong></> : null}</span>
-        <ReplayPicker recordings={recordings} onPick={replayRecording} disabled={starting} />
+        <ReplayPicker recordings={recordings} onPick={replayRecording} disabled={starting} anchor="fraud.replay" />
         {steps.replaying && <button className="fx-secondary" onClick={steps.skip}><FastForward size={14} /> Skip replay</button>}
       </div>
       {error && <div className="banking-error fx-error" role="alert"><CircleAlert size={14} /><div>{error}</div><button aria-label="Dismiss error" onClick={() => setError("")}><X size={14} /></button></div>}
@@ -255,8 +279,8 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
             {state.opened && <p className="fx-muted">{state.opened.customer ? `${state.opened.customer}${/fictional/i.test(state.opened.customer) ? "" : " (fictional)"} · ` : ""}{CHANNEL[state.opened.channel] ?? state.opened.channel}{state.opened.mcc_label ? ` · ${state.opened.mcc_label}` : ""}{state.opened.at ? ` · ${new Date(state.opened.at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}` : ""}</p>}
             <Verdicts state={state} threshold={health?.threshold ?? 0.5} />
             {state.graph && (
-              <div className="fx-network">
-                <button className="fx-secondary" id="show-network" onClick={() => setNetworkKey(showNetwork ? null : caseKey)} aria-expanded={showNetwork}>
+              <div className="fx-network" {...guideAnchor("fraud.network")}>
+                <button className="fx-secondary" id="show-network" onClick={() => setNetworkKey(showNetwork ? null : caseKey)} aria-expanded={showNetwork} {...guideSafeAnchor("fraud.show-network")}>
                   <Network size={14} /> {showNetwork ? "Hide network" : "Show network"}
                 </button>
                 {showNetwork && <NetworkGraph graph={state.graph} />}
@@ -272,7 +296,7 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
           </div>
 
           <div className="fx-case-right">
-            <section className="fx-timeline" aria-labelledby="fx-steps-title">
+            <section className="fx-timeline" aria-labelledby="fx-steps-title" {...guideAnchor("fraud.timeline")}>
               <h4 id="fx-steps-title">Triage steps {replay && <ProvenanceBadge provenance={{ kind: "recorded", recordedAt: steps.run?.finished_at ?? steps.run?.started_at ?? "", servedBy: state.servedBy }} />}</h4>
               <RunTimeline label="Fraud triage steps" events={steps.visible} start={steps.run?.started_at} className="boxed" showLane empty="Waiting for the first step…" />
             </section>
@@ -283,7 +307,7 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
               onDecide={(decision) => disposition && decide(disposition.requestId, decision)}
             />
             {bulk && (
-              <div className="fx-approval" role="group" aria-label="Approve proactive reissue">
+              <div className="fx-approval" role="group" aria-label="Approve proactive reissue" {...guideAnchor("fraud.bulk")}>
                 <strong>{bulk.title}</strong><p>{bulk.body}</p>
                 <div>{bulk.options.map((option) => (
                   <button key={option.id} className={option.id === "approve" ? "fx-primary small" : "fx-secondary"} disabled={!canDecide || deciding !== null} onClick={() => decide(bulk.requestId, option.id)}>{option.label}</button>
@@ -293,14 +317,14 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
             {state.opened && <NoteComposer key={`${steps.runId}-${scenarioId}`} runId={replay ? null : steps.runId} caseId={state.opened.id} initial={state.scenario?.analyst_note ?? ""} />}
             <AuditTrail state={state} />
             {serviceEvent && (
-              <p className="fx-shared" data-testid="fraud-service-event">
+              <p className="fx-shared" data-testid="fraud-service-event" {...guideAnchor("fraud.shared")}>
                 <span className="fx-tag">Shared with the relationship team</span> {serviceEvent.title}. Investigation details stay with fraud and financial crimes.
               </p>
             )}
             {state.handoff && (
-              <div className="fx-handoff">
+              <div className="fx-handoff" {...guideAnchor("fraud.handoff")}>
                 <div><FileWarning size={16} aria-hidden="true" /><span><strong>SAR referral drafted</strong> · {state.handoff.evidence.length} evidence items · {state.handoff.transactions.length} transaction{state.handoff.transactions.length === 1 ? "" : "s"}{replay ? " · from a recorded run" : ""}</span></div>
-                <button id="escalate-to-sar" className="fx-primary small" onClick={escalateToSar}>Escalate to SAR <ArrowRight size={14} /></button>
+                <button id="escalate-to-sar" className="fx-primary small" onClick={escalateToSar} {...guideAnchor("fraud.escalate")}>Escalate to SAR <ArrowRight size={14} /></button>
                 {handedOff && !nav.openUseCase && <small>Saved for the SAR team. Open “SAR investigation” to continue.</small>}
               </div>
             )}
@@ -312,7 +336,7 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
       <BacktestStrip card={card} />
       <ComputeFooter card={card} run={state.score ? { backend: state.score.backend, device: state.score.device, model_ms: state.score.model_ms } : undefined} />
       <RunStats ledger={ledger} {...fraudStats(health, healthFailed)} empty="Triage the queue. The agent's model calls, tool spans, and AI Defense verdicts land here." />
-      <details className="fx-hood">
+      <details className="fx-hood" {...guideSafeAnchor("fraud.hood")}>
         <summary>Under the hood</summary>
         <FraudRuntimeDetails health={health} />
       </details>
@@ -338,7 +362,7 @@ function BusinessBand({ card, state, replay }: { card: ModelCardData | null; sta
       : { label: "Average handle time", value: "11 min", sub: "per alert today · target 4 min", tag: "Illustrative" },
   ];
   return (
-    <section className="fx-band" aria-label="Business problem">
+    <section className="fx-band" aria-label="Business problem" {...guideAnchor("fraud.band")}>
       <div className="fx-persona">
         <span className="fx-avatar"><UserRound size={18} aria-hidden="true" /></span>
         <div>
@@ -360,7 +384,7 @@ function QueueTable({ cases, state, replay, recordedAt }: { cases: FraudCase[]; 
   const rows: (QueueRow | { case: FraudCase })[] = state.queue.length ? state.queue : cases.map((item) => ({ case: item }));
   const first = state.queue[0];
   return (
-    <section className="fx-queue" aria-labelledby="fx-queue-title">
+    <section className="fx-queue" aria-labelledby="fx-queue-title" {...guideAnchor("fraud.queue")}>
       <header>
         <h3 id="fx-queue-title">Alert queue · {rows.length || 5} flagged payments</h3>
         {first ? <ProvenanceBadge provenance={replay ? { kind: "recorded", recordedAt: recordedAt ?? "" } : scoreProvenance(first.backend)} label={replay ? `${provenanceText({ kind: "recorded", recordedAt: recordedAt ?? "" })} · scores: ${first.label}` : `Scores · ${first.label}`} /> : <span className="fx-muted">Scores fill in as the run streams.</span>}
@@ -417,7 +441,7 @@ function Verdicts({ state, threshold }: { state: TriageState; threshold: number 
         : null
     : null;
   return (
-    <div className="fx-verdicts">
+    <div className="fx-verdicts" {...guideAnchor("fraud.verdicts")}>
       <div className="fx-gauges">
         {rules ? <Gauge title="Rules engine · one payment at a time" value={rules.score} max={rules.max || 999} decision={`${RULE_LABEL[rules.decision] ?? rules.decision} · ${rules.score}/${rules.max || 999}`}
           tone={rules.decision === "approve" ? "ok" : rules.decision === "review" ? "warn" : "deny"} marks={[{ at: rules.thresholds.review, label: "Review" }, { at: rules.thresholds.decline, label: "Decline" }]}
@@ -435,7 +459,7 @@ function Reasons({ state }: { state: TriageState }) {
   const reasons = state.reasons?.reasons ?? [];
   const sample = state.score?.backend === "fixture";
   return (
-    <div className="fx-reasons">
+    <div className="fx-reasons" {...guideAnchor("fraud.reasons")}>
       <h4>{sample ? <>Sample reasons <span className="fx-tag illustrative">Illustrative · not model output</span></> : "Why the graph model scored it this way"}</h4>
       <ul>{reasons.slice(0, 6).map((item) => (
         <li key={item.code + item.feature} className={item.direction}><span>{item.text}</span><b>{item.value >= 0 ? "+" : ""}{item.value.toFixed(2)}</b></li>
@@ -449,7 +473,7 @@ function DisputeCard({ state }: { state: TriageState }) {
   const verdict = state.dispute?.verdict;
   const blocked = verdict?.status === "blocked";
   return (
-    <div className={`fx-dispute ${blocked ? "blocked" : ""}`}>
+    <div className={`fx-dispute ${blocked ? "blocked" : ""}`} {...guideAnchor("fraud.dispute")}>
       <span className="fx-tag illustrative">Untrusted input · cardholder dispute note</span>
       <blockquote>{state.dispute?.text}</blockquote>
       {verdict ? <p>{blocked ? <ShieldAlert size={14} /> : <ShieldCheck size={14} />} {verdict.title}{blocked ? " · the agent never sees it" : ""}</p> : <p className="fx-muted">AI Defense is inspecting the note…</p>}
@@ -467,7 +491,7 @@ function SummaryCard({ state, replay, recordedAt }: { state: TriageState; replay
     ? { kind: "recorded", recordedAt: recordedAt ?? "", servedBy: summary.servedBy }
     : scripted ? { kind: "none", detail: template } : { kind: "live", servedBy: summary.servedBy };
   return (
-    <section className="fx-summary" aria-labelledby="fx-summary-title">
+    <section className="fx-summary" aria-labelledby="fx-summary-title" {...guideAnchor("fraud.summary")}>
       <header>
         <h4 id="fx-summary-title"><Bot size={15} aria-hidden="true" /> Analyst summary · {scripted ? "scripted template" : "AI draft"}</h4>
         <ProvenanceBadge provenance={provenance} label={replay && scripted ? `${provenanceText(provenance)} · scripted` : undefined} />
@@ -490,7 +514,7 @@ function DecisionBar({ state, request, canDecide, deciding, replay, onDecide }: 
   const decided = state.result?.disposition;
   const options = request?.options ?? Object.keys(ACTION_LABEL).map((id) => ({ id, label: ACTION_LABEL[id], policy: id === "contact_customer" || id === "escalate" ? "reversible" : "requires analyst approval" }));
   return (
-    <section className="fx-decision" aria-labelledby="fx-decision-title">
+    <section className="fx-decision" aria-labelledby="fx-decision-title" {...guideAnchor("fraud.decision")}>
       <h4 id="fx-decision-title"><Gavel size={15} aria-hidden="true" /> Disposition {replay ? "· as recorded" : request ? "· your decision" : ""}</h4>
       {proposals.length > 0 && <p className="fx-muted">Agent proposed: {proposals.map((item) => `${item.label}${item.policy === "deny" ? " (denied until you approve)" : ""}`).join(" · ")}</p>}
       <div className="fx-decision-buttons" role="group" aria-label="Analyst disposition">
@@ -536,7 +560,7 @@ function NoteComposer({ runId, caseId, initial }: { runId: string | null; caseId
   }
   const defense = result?.ai_defense;
   return (
-    <section className="fx-note" aria-labelledby="fx-note-title">
+    <section className="fx-note" aria-labelledby="fx-note-title" {...guideAnchor("fraud.note")}>
       <h4 id="fx-note-title"><NotebookPen size={15} aria-hidden="true" /> Case note</h4>
       <textarea id="fx-note-text" value={note} maxLength={2000} rows={3} placeholder="Add a case note. Last 4 digits only, never a full card number or SSN." onChange={(event) => { setNote(event.target.value); setResult(null); }} />
       <div className="fx-note-actions">
@@ -561,7 +585,7 @@ function NoteComposer({ runId, caseId, initial }: { runId: string | null; caseId
 function AuditTrail({ state }: { state: TriageState }) {
   if (!state.audit.length) return null;
   return (
-    <section className="fx-audit" aria-labelledby="fx-audit-title">
+    <section className="fx-audit" aria-labelledby="fx-audit-title" {...guideAnchor("fraud.audit")}>
       <h4 id="fx-audit-title"><History size={15} aria-hidden="true" /> Audit trail</h4>
       <ol>{state.audit.map((item) => (
         <li key={item.id} className={`status-${item.status}`}>

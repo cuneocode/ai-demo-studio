@@ -51,6 +51,7 @@ import {
 import { frameScene, panBoundsIntoView, sceneBounds, type Bounds, type Viewport } from "./viewport.ts";
 import "./map.css";
 import { useTheme, type Theme } from "../theme.ts";
+import { guideAnchor, guideSafeAnchor } from "../guide/anchors";
 
 type EdgePalette = { kinds: Record<RelationshipKind, string>; secondary: string; active: string; dots: string };
 
@@ -891,6 +892,7 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
       className={`map-explorer ${expanded ? "is-expanded" : ""} ${localTransition ? "is-local-transition" : ""}`}
       aria-label={`${title} architecture explorer`}
       data-testid="architecture-explorer"
+      {...guideAnchor("arch.explorer")}
       data-scene-id={scene.id}
       data-selected-id={nav.selectedId ?? ""}
       data-phase={nav.phase}
@@ -934,11 +936,11 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
         <h2>{title}</h2>
         <div className="map-actions">
           {bothModes ? (
-            <div className="diagram-toggle" role="group" aria-label="System implementation">
+            <div className="diagram-toggle" role="group" aria-label="System implementation" {...guideAnchor("arch.mode")}>
               <button type="button" className={mode === "implemented" ? "active" : ""} aria-pressed={mode === "implemented"} onClick={() => changeMode("implemented")}>Implemented</button>
               <button type="button" className={mode === "proposed" ? "active" : ""} aria-pressed={mode === "proposed"} onClick={() => changeMode("proposed")}>Proposed</button>
             </div>
-          ) : <span className={`map-mode-status is-${mode}`}>{mode === "implemented" ? "Implemented" : "Proposed"}</span>}
+          ) : <span className={`map-mode-status is-${mode}`} {...guideAnchor("arch.mode")}>{mode === "implemented" ? "Implemented" : "Proposed"}</span>}
           <button type="button" onClick={onUp} disabled={(continuous ? nav.interactionHistory.length : nav.history.length) < 1 && !nav.sourceSelection && !environmentOpen}>{continuous ? "Back" : "Up a level"}</button>
           <button type="button" onClick={() => frame(laid, scene.guides)}>Fit</button>
           {selected && sourceActionsForNode(catalog, selected, mode).length ? <button type="button" onClick={() => openSource(selected.instanceId)}>View source</button> : null}
@@ -952,7 +954,7 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
             <p>{title}</p>
           </div>
         ) : null}
-        <ol className="map-rail" aria-label={isOverview || !system ? "Business journey" : system.railLabel}>
+        <ol className="map-rail" {...guideAnchor("arch.rail")} aria-label={isOverview || !system ? "Business journey" : system.railLabel}>
           {(isOverview || !system
             ? journey.nodes.filter((step) => step.role === "activity")
             : system.stages
@@ -995,14 +997,14 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
           </nav>
         ) : null}
         {catalog.environment.length > 0 ? (
-          <button type="button" className="map-env-trigger" aria-expanded={environmentOpen} onClick={environmentOpen ? closeEnvironment : openEnvironment}>
+          <button type="button" className="map-env-trigger" {...guideAnchor("arch.env")} aria-expanded={environmentOpen} onClick={environmentOpen ? closeEnvironment : openEnvironment}>
             Environment details
           </button>
         ) : null}
       </div>
       {!isOverview && catalog.platforms?.length ? (
         <div className="map-focus-row">
-          <div className="map-focus-select" role="radiogroup" aria-label="Platform focus">
+          <div className="map-focus-select" role="radiogroup" aria-label="Platform focus" {...guideSafeAnchor("arch.focus")}>
             <button type="button" role="radio" aria-checked={!platformFocus} onClick={() => dispatch({ type: "setFocus", platformFocus: null })}>All platforms</button>
             {catalog.platforms.map((platform) => (
               <button
@@ -1027,7 +1029,7 @@ function Canvas({ catalog, title }: { catalog: Catalog; title: string }) {
         </div>
       ) : <p className="map-purpose">{scene.purpose}</p>}
       <div ref={stageRef} className="map-stage">
-        <div ref={canvasRef} className={`map-canvas is-${veil}`}>
+        <div ref={canvasRef} className={`map-canvas is-${veil}`} {...guideAnchor("arch.canvas")}>
           <ReactFlow
             nodes={graph.nodes}
             edges={graph.edges}

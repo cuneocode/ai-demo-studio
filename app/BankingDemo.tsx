@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   Bot,
@@ -12,6 +12,7 @@ import {
   CreditCard,
   Gauge,
   GitBranch,
+  History,
   Loader2,
   MessageSquareText,
   Plus,
@@ -26,8 +27,11 @@ import "./banking.css";
 import BankingRuntimeDetails from "./BankingRuntimeDetails";
 import RunStats, { agentTraceIntegration, defenseFacts, defenseFrom, defenseIntegration, DEFENSE_TILES, servedByFrom, traceFacts, usageFrom, startRun, useRunLedger, type ObservedRun, type StatsCard } from "./RunStats";
 import ProvenanceBadge from "./run/ProvenanceBadge";
+import { loadRecording, useRecordings } from "./run/ReplayPicker";
 import type { ServedBy } from "./run/events";
 import { useStudioNav } from "./studio-nav";
+import { guideAnchor } from "./guide/anchors";
+import { useGuideActions } from "./guide/GuidedTour";
 import suggestions from "./banking-scenarios.json";
 
 type TraceStep = { name: string; kind: string };
@@ -38,7 +42,7 @@ type ResponseControls = { status: "allowed" | "blocked" | "unavailable" | "not_c
 type ControlConfig = { status: "enforcing" | "unavailable" | "not_configured"; names: string[]; judge_model: string; execution: string; fail_open: boolean };
 type Health = { ready: boolean; model: string; retrieval: string; galileo: string; security?: IntegrationStatus; controls?: ControlConfig; splunk?: IntegrationStatus };
 type ResponseTelemetry = { security?: { status: string; mode?: string; checks?: number; blocked?: number; errors?: number; event_ids?: string[] }; controls?: ResponseControls; splunk?: { status: string; trace_id?: string; span_count?: number; dashboard_url?: string }; galileo?: string };
-type Message = { role: "user" | "assistant"; text: string; sources?: Source[]; trace?: TraceStep[]; duration?: number; telemetry?: ResponseTelemetry; servedBy?: ServedBy };
+type Message = { role: "user" | "assistant"; text: string; sources?: Source[]; trace?: TraceStep[]; duration?: number; telemetry?: ResponseTelemetry; servedBy?: ServedBy; recordedAt?: string };
 type ErrorMeta = { security?: IntegrationStatus; controls?: ResponseControls; splunk?: { status: string; trace_id?: string; span_count?: number; dashboard_url?: string } };
 function displayStatus(value?: string) { return value ? value.replaceAll("_", " ") : "not reported"; }
 function controlStatus(value?: string) { return value === "allowed" || value === "blocked" ? value : displayStatus(value); }
@@ -54,6 +58,19 @@ function answerText(text: string) {
 
 export type BankingDemoProps = { onBack: () => void; onAdd: () => void; inStory: boolean; embedded?: boolean };
 
+const BANKING_API = "/api/banking";
+/** One scripted prompt as services/banking/scripts/record_golden.py captured it from the live service. */
+type RecordedBody = Omit<TurnBody, "telemetry" | "security"> & { telemetry?: ResponseTelemetry; security?: NonNullable<ResponseTelemetry["security"]>; answer?: string; detail?: string; sources?: Source[] };
+type RecordedTurn = { id: string; label: string; prompt: string; expected?: string; status: number; body: RecordedBody };
+type ReplayTurn = { key: string; recordedAt: string; turn: RecordedTurn };
+const REPLAY_DELAY_MS = 900;
+
+function recordedOutcome({ status, body }: RecordedTurn) {
+  if (body.security?.status === "blocked") return "AI Defense blocked";
+  if (body.controls?.status === "blocked") return "Agent Control blocked";
+  return status < 300 ? "answered" : `HTTP ${status}`;
+}
+
 // Shared with the live scenario test. Expectations are labels only: every click
 // uses the real API, AI Defense, and Agent Controls; never simulate a verdict.
 
@@ -68,6 +85,11 @@ export default function BankingDemo({ onBack, onAdd, inStory, embedded = false }
   const [healthFailed, setHealthFailed] = useState(false);
   const [showSystem, setShowSystem] = useState(false);
   const [showTrace, setShowTrace] = useState(false);
+  const [source, setSource] = useState<"none" | "live" | "recorded">("none");
+  const [errorRecordedAt, setErrorRecordedAt] = useState<string>();
+  const [recordedTurns, setRecordedTurns] = useState<ReplayTurn[]>([]);
+  const replayTimer = useRef<number | undefined>(undefined);
+  const recordings = useRecordings(BANKING_API);
   const ledger = useRunLedger();
   const { links } = useStudioNav();
   const stats = useMemo(() => bankingStats(health, healthFailed, links?.agentObservability), [health, healthFailed, links?.agentObservability]);
@@ -79,21 +101,37 @@ export default function BankingDemo({ onBack, onAdd, inStory, embedded = false }
       .catch(() => setHealthFailed(true));
   }, []);
 
+  useEffect(() => {
+    let live = true;
+    Promise.all(recordings.map((meta) => loadRecording<{ turns?: RecordedTurn[] }>(BANKING_API, meta.name).catch(() => null)))
+      .then((docs) => {
+        if (!live) return;
+        setRecordedTurns(docs.flatMap((doc) => doc?.result?.turns?.map((turn) => ({ key: `${doc.name}:${turn.id}`, recordedAt: doc.recorded_at, turn })) ?? []));
+      });
+    return () => { live = false; };
+  }, [recordings]);
+
+  useEffect(() => () => window.clearTimeout(replayTimer.current), []);
+
   const statusLabel = useMemo(() => health?.ready ? "Ready" : health ? "Unavailable" : healthFailed ? "Unavailable" : "Health check pending", [health, healthFailed]);
 
   async function sendMessage(event?: FormEvent, preset?: string) {
     event?.preventDefault();
     const message = (preset ?? input).trim();
     if (!message || loading) return;
-    setInput(""); setError(""); setErrorMeta(undefined); setLoading(true);
-    setMessages((current) => [...current, { role: "user", text: message }]);
+    setInput(""); setError(""); setErrorMeta(undefined); setErrorRecordedAt(undefined); setLoading(true);
+    // A recorded turn has no server session behind it, so a live message starts a fresh conversation.
+    const afterReplay = source === "recorded";
+    if (afterReplay) setSessionId(undefined);
+    setSource("live");
+    setMessages((current) => [...(afterReplay ? [] : current), { role: "user", text: message }]);
     const run = startRun("turn", message);
     ledger.record(run);
     let settled = false;
     try {
       const response = await fetch("/api/banking/chat", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, ...(sessionId ? { session_id: sessionId } : {}) }),
+        body: JSON.stringify({ message, ...(sessionId && !afterReplay ? { session_id: sessionId } : {}) }),
         signal: AbortSignal.timeout(155000),
       });
       if (!response.ok) { const detail = await response.text().catch(() => ""); let body: { detail?: string; message?: string; session_reset?: boolean; security?: IntegrationStatus; controls?: ResponseControls; telemetry?: { splunk?: ErrorMeta["splunk"] } } = {}; try { body = JSON.parse(detail); } catch { /* non-JSON error body */ } if (body.session_reset) setSessionId(undefined); ledger.record(observeTurn(run, response.status, body)); settled = true; setErrorMeta({ security: body.security, controls: body.controls, splunk: body.telemetry?.splunk }); throw new Error(body.detail || body.message || `Brahe Bank could not respond (${response.status}).`); }
@@ -107,11 +145,51 @@ export default function BankingDemo({ onBack, onAdd, inStory, embedded = false }
     } finally { setLoading(false); }
   }
 
-  function newConversation() { setMessages([]); setSessionId(undefined); setInput(""); setError(""); setErrorMeta(undefined); }
+  function newConversation() { window.clearTimeout(replayTimer.current); setMessages([]); setSessionId(undefined); setInput(""); setError(""); setErrorMeta(undefined); setErrorRecordedAt(undefined); setSource("none"); }
+
+  /** Replays one recorded turn: the prompt, then the answer or refusal the live service returned when it was recorded. */
+  function replayTurn(key: string) {
+    const item = recordedTurns.find((entry) => entry.key === key);
+    if (!item || loading) return;
+    const { turn, recordedAt } = item;
+    newConversation();
+    setSource("recorded");
+    setLoading(true);
+    setMessages([{ role: "user", text: turn.prompt }]);
+    const recorded = { replay: true, provenance: "recorded" as const, recordedAt };
+    const run = { ...startRun("turn", `${turn.label} · recorded`), ...recorded };
+    ledger.record(run);
+    replayTimer.current = window.setTimeout(() => {
+      const body = turn.body;
+      ledger.record({ ...observeTurn(run, turn.status, body), ...recorded });
+      if (turn.status < 300) {
+        setMessages((current) => [...current, { role: "assistant", text: body.answer || "No answer was recorded.", sources: body.sources, trace: body.trace, duration: body.duration_ms, telemetry: { ...body.telemetry, security: body.security, controls: body.controls }, servedBy: servedByFrom(body.served_by), recordedAt }]);
+      } else {
+        setErrorMeta({ security: body.security, controls: body.controls, splunk: body.telemetry?.splunk });
+        setErrorRecordedAt(recordedAt);
+        setError(body.detail || `Brahe Bank did not answer (${turn.status}).`);
+      }
+      setLoading(false);
+    }, REPLAY_DELAY_MS);
+  }
   async function copyTrace(traceId: string) { await navigator.clipboard?.writeText(traceId); }
+  useGuideActions("brahe-bank", {
+    replay: (turnId) => {
+      const item = recordedTurns.find((entry) => (turnId ? entry.key.endsWith(`:${turnId}`) : true));
+      if (item) replayTurn(item.key);
+    },
+  });
+  const lastAssistant = messages.reduce((found, message, index) => (message.role === "assistant" ? index : found), -1);
+  const guideRun = loading ? "running" : error ? (errorMeta?.security?.status === "blocked" || errorMeta?.controls?.status === "blocked" ? "blocked" : "failed") : lastAssistant >= 0 ? "done" : "idle";
+  const guideStage = [
+    lastAssistant >= 0 && !loading && "answered",
+    errorMeta?.security?.status === "blocked" && "blocked-defense",
+    errorMeta?.controls?.status === "blocked" && "blocked-control",
+  ].filter(Boolean).join(" ");
+  const guideRecordedAt = source === "recorded" ? (errorRecordedAt ?? messages[lastAssistant]?.recordedAt) : undefined;
   return (
     /* Theme intentionally follows the studio's ink/navy/slate/cobalt/violet design contract. */
-    <div className={`banking-demo ${embedded ? "banking-embedded" : ""}`}>
+    <div className={`banking-demo ${embedded ? "banking-embedded" : ""}`} data-guide-run={guideRun} data-guide-source={source} data-guide-stage={guideStage} data-guide-recorded-at={guideRecordedAt}>
       {!embedded && <>
       <div className="banking-topline">
         <button className="banking-back" onClick={onBack}><ArrowLeft size={15} /> Back to library</button>
@@ -123,15 +201,15 @@ export default function BankingDemo({ onBack, onAdd, inStory, embedded = false }
       </section>
       </>}
       <section className="banking-layout">
-        <div className="chat-card">
-          <div className="chat-card-head"><div className="assistant-identity"><span className="assistant-avatar"><Bot size={18} /></span><div><strong>Brahe Bank assistant</strong><span>Fictional bank · mock score 550</span></div></div><button className="new-chat" disabled={loading} onClick={newConversation}><Plus size={14} /> New conversation</button></div>
+        <div className="chat-card" {...guideAnchor("banking.chat")}>
+          <div className="chat-card-head"><div className="assistant-identity"><span className="assistant-avatar"><Bot size={18} /></span><div><strong>Brahe Bank assistant</strong><span>Fictional bank · mock score 550</span></div></div><div className="chat-card-actions">{recordedTurns.length > 0 && <label className="rt-replay banking-replay" {...guideAnchor("banking.replay")}><History size={15} aria-hidden="true" /><span>Replay a recorded turn</span><select id="banking-replay" value="" disabled={loading} onChange={(event) => { if (event.target.value) replayTurn(event.target.value); }}><option value="">Choose…</option>{recordedTurns.map(({ key, recordedAt, turn }) => <option key={key} value={key}>{turn.label} · {recordedOutcome(turn)} · {new Date(recordedAt).toLocaleDateString()}</option>)}</select></label>}<button className="new-chat" disabled={loading} onClick={newConversation}><Plus size={14} /> New conversation</button></div></div>
           <div className="chat-feed" aria-live="polite">
-            {messages.length === 0 && <div className="chat-empty"><span className="empty-icon"><Sparkles size={20} /></span><h2>How can I help today?</h2><p>Try a banking question or test the guardrails.</p><div className="suggestion-grid">{suggestions.map((item) => <button key={item.id} title={item.prompt} disabled={loading} onClick={() => sendMessage(undefined, item.prompt)}><MessageSquareText size={16} /><span className="suggestion-copy"><strong>{item.label}</strong><small>{item.expected}</small></span><ChevronRight size={16} /></button>)}</div></div>}
-            {messages.map((message, index) => <div className={`chat-message ${message.role}`} key={`${message.role}-${index}`}><span className="message-avatar">{message.role === "user" ? "JC" : <Bot size={14} />}</span><div className="message-body"><div className="message-bubble">{answerText(message.text)}</div>{message.role === "assistant" && <>{message.servedBy && <ProvenanceBadge provenance={{ kind: "live", servedBy: message.servedBy }} className="response-meta" />}{message.duration && <small className="response-meta"><Clock3 size={11} /> {message.duration} ms</small>}{message.telemetry?.security && <small className="response-meta security-meta"><ShieldCheck size={11} /> AI Defense: {displayStatus(message.telemetry.security.status)} · {message.telemetry.security.checks ?? 0} checks · {message.telemetry.security.blocked ?? 0} blocked</small>}{message.telemetry?.controls && <div className="response-meta security-meta"><ShieldCheck size={11} /> Agent Controls: {displayStatus(message.telemetry.controls.status)}{message.telemetry.controls.checks.map((check) => <span key={`${check.control_id}-${check.name}`}> · {check.name}: {controlStatus(check.status)}</span>)}</div>}{message.telemetry?.galileo && <small className="response-meta">Agent tracing (Galileo SDK): {message.telemetry.galileo}</small>}{message.telemetry?.splunk && <div className="response-meta splunk-meta"><Server size={11} /> Additional OTLP export: {displayStatus(message.telemetry.splunk.status)}{exportedTrace(message.telemetry.splunk) ? <><span>· Trace {exportedTrace(message.telemetry.splunk)}</span><button onClick={() => copyTrace(exportedTrace(message.telemetry?.splunk)!)} className="copy-trace">Copy</button></> : null}{message.telemetry.splunk.dashboard_url ? <a href={message.telemetry.splunk.dashboard_url} target="_blank" rel="noreferrer">Open dashboard</a> : null}</div>}{message.sources?.length ? <div className="sources"><strong><Search size={12} /> Sources</strong>{message.sources.map((source, sourceIndex) => <details key={`${source.title}-${sourceIndex}`}><summary>{source.title}</summary><p>{source.text}</p></details>)}</div> : null}{message.trace?.length ? <button className="trace-toggle" onClick={() => setShowTrace((value) => !value)}><GitBranch size={12} /> {showTrace ? "Hide" : "Show"} executed trace</button> : null}</>}</div></div>)}
-            {loading && <div className="chat-message assistant"><span className="message-avatar"><Bot size={14} /></span><div className="message-bubble loading-bubble"><Loader2 size={15} className="spin" /> Brahe Bank is thinking…</div></div>}
+            {messages.length === 0 && <div className="chat-empty"><span className="empty-icon"><Sparkles size={20} /></span><h2>How can I help today?</h2><p>Try a banking question or test the guardrails.</p><div className="suggestion-grid" {...guideAnchor("banking.suggestions")}>{suggestions.map((item) => <button key={item.id} {...guideAnchor(`banking.suggestion.${item.id}`)} title={item.prompt} disabled={loading} onClick={() => sendMessage(undefined, item.prompt)}><MessageSquareText size={16} /><span className="suggestion-copy"><strong>{item.label}</strong><small>{item.expected}</small></span><ChevronRight size={16} /></button>)}</div></div>}
+            {messages.map((message, index) => <div className={`chat-message ${message.role}`} key={`${message.role}-${index}`}><span className="message-avatar">{message.role === "user" ? "JC" : <Bot size={14} />}</span><div className="message-body" {...(index === lastAssistant ? guideAnchor("banking.answer") : {})}><div className="message-bubble">{answerText(message.text)}</div>{message.role === "assistant" && <>{message.recordedAt ? <ProvenanceBadge provenance={{ kind: "recorded", recordedAt: message.recordedAt, servedBy: message.servedBy }} className="response-meta" /> : message.servedBy && <ProvenanceBadge provenance={{ kind: "live", servedBy: message.servedBy }} className="response-meta" />}{message.duration && <small className="response-meta"><Clock3 size={11} /> {message.duration} ms{message.recordedAt ? " (original run)" : ""}</small>}{message.telemetry?.security && <small className="response-meta security-meta"><ShieldCheck size={11} /> AI Defense{message.recordedAt ? " (original run)" : ""}: {displayStatus(message.telemetry.security.status)} · {message.telemetry.security.checks ?? 0} checks · {message.telemetry.security.blocked ?? 0} blocked</small>}{message.telemetry?.controls && <div className="response-meta security-meta"><ShieldCheck size={11} /> Agent Controls{message.recordedAt ? " (original run)" : ""}: {displayStatus(message.telemetry.controls.status)}{message.telemetry.controls.checks.map((check) => <span key={`${check.control_id}-${check.name}`}> · {check.name}: {controlStatus(check.status)}</span>)}</div>}{message.telemetry?.galileo && <small className="response-meta">Agent tracing (Galileo SDK{message.recordedAt ? ", original run" : ""}): {message.telemetry.galileo}</small>}{message.telemetry?.splunk && <div className="response-meta splunk-meta"><Server size={11} /> Additional OTLP export{message.recordedAt ? " (original run)" : ""}: {displayStatus(message.telemetry.splunk.status)}{exportedTrace(message.telemetry.splunk) ? <><span>· Trace {exportedTrace(message.telemetry.splunk)}</span><button onClick={() => copyTrace(exportedTrace(message.telemetry?.splunk)!)} className="copy-trace">Copy</button></> : null}{message.telemetry.splunk.dashboard_url ? <a href={message.telemetry.splunk.dashboard_url} target="_blank" rel="noreferrer">Open dashboard</a> : null}</div>}{message.sources?.length ? <div className="sources"><strong><Search size={12} /> Sources</strong>{message.sources.map((source, sourceIndex) => <details key={`${source.title}-${sourceIndex}`}><summary>{source.title}</summary><p>{source.text}</p></details>)}</div> : null}{message.trace?.length ? <button className="trace-toggle" onClick={() => setShowTrace((value) => !value)}><GitBranch size={12} /> {showTrace ? "Hide" : "Show"} executed trace</button> : null}</>}</div></div>)}
+            {loading && <div className="chat-message assistant"><span className="message-avatar"><Bot size={14} /></span><div className="message-bubble loading-bubble"><Loader2 size={15} className="spin" /> {source === "recorded" ? "Replaying the recorded answer…" : "Brahe Bank is thinking…"}</div></div>}
           </div>
-          {error && <div className="banking-error"><CircleAlert size={14} /><div><div>{error}</div>{errorMeta?.security && <small>AI Defense: {displayStatus(errorMeta.security.status)}</small>}{errorMeta?.security?.event_ids?.map((id) => <small key={id}>Cisco event: {id}</small>)}{errorMeta?.controls && <small>Agent Controls: {displayStatus(errorMeta.controls.status)}</small>}{errorMeta?.splunk && <small>Additional OTLP export: {displayStatus(errorMeta.splunk.status)}</small>}{exportedTrace(errorMeta?.splunk) && <small>Trace ID: {exportedTrace(errorMeta?.splunk)}</small>}</div><button onClick={() => setError("")}><X size={14} /></button></div>}
-          <form className="chat-composer" onSubmit={sendMessage}><input maxLength={4000} value={input} onChange={(event) => setInput(event.target.value)} placeholder="Ask a question about Brahe Bank…" aria-label="Message Brahe Bank" disabled={loading} /><button className="send-button" disabled={loading || !input.trim()}>Send</button></form>
+          {error && <div className="banking-error" {...guideAnchor("banking.error")} data-provenance={errorRecordedAt ? "recorded" : undefined}><CircleAlert size={14} /><div>{errorRecordedAt && <ProvenanceBadge provenance={{ kind: "recorded", recordedAt: errorRecordedAt }} />}<div>{error}</div>{errorMeta?.security && <small>AI Defense{errorRecordedAt ? " (original run)" : ""}: {displayStatus(errorMeta.security.status)}</small>}{errorMeta?.security?.event_ids?.map((id) => <small key={id}>Cisco event: {id}</small>)}{errorMeta?.controls && <small>Agent Controls{errorRecordedAt ? " (original run)" : ""}: {displayStatus(errorMeta.controls.status)}{errorRecordedAt && errorMeta.controls.checks.map((check) => <span key={`${check.control_id}-${check.name}`}> · {check.name}: {controlStatus(check.status)}</span>)}</small>}{errorMeta?.splunk && <small>Additional OTLP export: {displayStatus(errorMeta.splunk.status)}</small>}{exportedTrace(errorMeta?.splunk) && <small>Trace ID: {exportedTrace(errorMeta?.splunk)}</small>}</div><button onClick={() => setError("")}><X size={14} /></button></div>}
+          <form className="chat-composer" onSubmit={sendMessage} {...guideAnchor("banking.composer")}><input maxLength={4000} value={input} onChange={(event) => setInput(event.target.value)} placeholder="Ask a question about Brahe Bank…" aria-label="Message Brahe Bank" disabled={loading} /><button className="send-button" disabled={loading || !input.trim()}>Send</button></form>
         </div>
         <aside className="banking-side">
           <BankingRuntimeDetails health={health} />

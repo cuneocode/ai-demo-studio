@@ -18,6 +18,8 @@ import ProvenanceBadge, { type Provenance } from "./run/ProvenanceBadge";
 import RunTimeline from "./run/RunTimeline";
 import { useRun } from "./run/useRun";
 import { useStudioNav } from "./studio-nav";
+import { guideAnchor, guideSafeAnchor } from "./guide/anchors";
+import { useGuideActions } from "./guide/GuidedTour";
 import { ClaimRow, EvidenceCard, PolicyList, type Focus } from "./wealth-evidence";
 import { observeRecordedWealth, observeWealth, wealthService, wealthStats, type WealthService } from "./wealth-stats";
 import "./research.css";
@@ -48,7 +50,7 @@ function PublishBar({ result, publish, busy, onDecide, onPrepare }: {
 }) {
   if (publish.status === "published") {
     return (
-      <section className="rx-publish is-done" aria-label="Publication">
+      <section className="rx-publish is-done" aria-label="Publication" {...guideAnchor("research.publish")}>
         <ShieldCheck size={18} aria-hidden="true" />
         <div>
           <strong>Published to meeting prep in this studio</strong>
@@ -61,7 +63,7 @@ function PublishBar({ result, publish, busy, onDecide, onPrepare }: {
   }
   if (publish.status === "awaiting_approval") {
     return (
-      <section className="rx-publish" aria-label="Publication">
+      <section className="rx-publish" aria-label="Publication" {...guideAnchor("research.publish")}>
         <Users size={18} aria-hidden="true" />
         <div>
           <strong>Strategist approval</strong>
@@ -80,7 +82,7 @@ function PublishBar({ result, publish, busy, onDecide, onPrepare }: {
       : publish.status === "blocked" ? "Nothing to publish · restricted issuer"
         : `Nothing to publish${publish.reason ? ` · ${publish.reason}` : ""}`;
   return (
-    <section className={`rx-publish ${tone}`} aria-label="Publication">
+    <section className={`rx-publish ${tone}`} aria-label="Publication" {...guideAnchor("research.publish")}>
       <Ban size={18} aria-hidden="true" />
       <div><strong>{text}</strong></div>
     </section>
@@ -227,16 +229,38 @@ export default function MarketResearch({ embedded = false, inStory = false, note
     void runLive(null, ticker);
   }
 
-  const replayAction = (
-    <button type="button" className="secondary" disabled={loading} onClick={() => replay(scenario)}>
+  const replayButton = (anchor?: "research.replay") => (
+    <button type="button" className="secondary" disabled={loading} onClick={() => replay(scenario)} data-guide={anchor}>
       <History size={15} aria-hidden="true" /> Replay recorded run
     </button>
   );
+  const replayAction = replayButton();
+
+  useGuideActions("market-research", {
+    replay: (id) => {
+      const pick = RESEARCH_SCENARIOS.find((item) => item.id === id) ?? scenario;
+      setScenario(pick);
+      void replay(pick);
+    },
+    skipReplay: timeline.skip,
+    selectScenario: (id) => { const pick = RESEARCH_SCENARIOS.find((item) => item.id === id); if (pick) setScenario(pick); },
+  });
+  const guideRun = loading || timeline.replaying ? "running" : result ? (result.status === "blocked" ? "blocked" : "done") : error ? "failed" : "idle";
+  const guideStage = [
+    shown && "result", shown?.status === "blocked" && "blocked", timeline.visible.length && "events",
+    shown?.news.some((row) => row.status === "withheld") && "withheld", shownPublish?.status && `publish-${shownPublish.status}`,
+  ].filter(Boolean).join(" ");
 
   return (
-    <div className={`research-demo ${embedded ? "research-embedded" : ""}`}>
+    <div
+      className={`research-demo ${embedded ? "research-embedded" : ""}`}
+      data-guide-run={guideRun}
+      data-guide-source={result ? (origin.kind === "recorded" ? "recorded" : result.update.mode === "fixture" ? "sample" : "live") : "none"}
+      data-guide-recorded-at={result && origin.kind === "recorded" ? origin.recordedAt : undefined}
+      data-guide-stage={guideStage}
+    >
       {!inStory && (
-        <p className="rx-intro">
+        <p className="rx-intro" {...guideAnchor("research.intro")}>
           <strong>Sam, CIO-office strategist.</strong> An earnings event lands on a name the house view covers. A research Deep Agent drafts
           what changed and whether it moves the house view; every claim is checked against its source before Sam decides what advisors see.
         </p>
@@ -251,10 +275,10 @@ export default function MarketResearch({ embedded = false, inStory = false, note
           stillWorks="Market research carries no client data, so the hosted fallback is allowed here" />
       ) : null}
 
-      <section className="rx-scenarios" aria-label="Scenarios">
+      <section className="rx-scenarios" aria-label="Scenarios" {...guideAnchor("research.scenarios")}>
         {RESEARCH_SCENARIOS.map((item) => (
           <button key={item.id} type="button" className={`rx-scenario ${scenario.id === item.id ? "selected" : ""}`} aria-pressed={scenario.id === item.id}
-            onClick={() => setScenario(item)}>
+            onClick={() => setScenario(item)} {...guideSafeAnchor(`research.scenario.${item.id}`)}>
             <span className={`rx-kind ${item.kind === "Attack" ? "is-attack" : ""}`}>{item.kind} · {item.ticker}</span>
             <strong>{item.title}</strong>
             <span>{item.summary}</span>
@@ -263,10 +287,10 @@ export default function MarketResearch({ embedded = false, inStory = false, note
         ))}
       </section>
       <div className="rx-actions">
-        <button type="button" id="research-run" className="primary" disabled={loading || serviceDown} onClick={() => runLive(scenario)}>
+        <button type="button" id="research-run" className="primary" disabled={loading || serviceDown} onClick={() => runLive(scenario)} {...guideAnchor("research.run")}>
           {loading ? <Loader2 size={15} className="spin" aria-hidden="true" /> : <Play size={15} aria-hidden="true" />} Run live
         </button>
-        {replayAction}
+        {replayButton("research.replay")}
         <form className="rx-ticker" onSubmit={submitTicker} aria-label="Any cached ticker">
           <Search size={15} aria-hidden="true" />
           <input value={ticker} onChange={(event) => setTicker(event.target.value.toUpperCase())} placeholder="Or a real ticker" aria-label="Real ticker" maxLength={8} />
@@ -288,7 +312,7 @@ export default function MarketResearch({ embedded = false, inStory = false, note
         <p className="rx-empty">Pick a scenario and run it live, or replay the recorded run.</p>
       )}
 
-      <RunTimeline label="Agent timeline" events={timeline.visible} start={timeline.run?.started_at} showLane
+      <RunTimeline label="Agent timeline" anchor="research.timeline" events={timeline.visible} start={timeline.run?.started_at} showLane
         onSource={(ids) => ids[0] && setFocus({ id: ids[0] })}
         empty={loading ? "Waiting for the first event…" : "The supervisor, its subagents, tools, policy checks, and the strategist's decision stream here."} />
 
@@ -316,7 +340,7 @@ function ResultView({ result, origin, publish, focus, onCite, evidence, headingR
   const bank = result.company.metricFamily === "bank";
 
   return (
-    <section className="rx-result" aria-label="House-view update">
+    <section className="rx-result" aria-label="House-view update" {...guideAnchor("research.result")}>
       <header className="rx-result-head">
         <div>
           <span className="rx-eyebrow">{blocked ? "RESTRICTED-LIST PRE-CHECK" : "HOUSE-VIEW UPDATE"}</span>
@@ -332,7 +356,7 @@ function ResultView({ result, origin, publish, focus, onCite, evidence, headingR
       </header>
 
       {blocked ? (
-        <div className="rx-blocked">
+        <div className="rx-blocked" {...guideAnchor("research.blocked")}>
           <ShieldAlert size={22} aria-hidden="true" />
           <div>
             <strong>Blocked before any data or model call</strong>
@@ -344,7 +368,7 @@ function ResultView({ result, origin, publish, focus, onCite, evidence, headingR
         <div className="rx-grid">
           <div className="rx-main">
             {update.impact && (
-              <div className={`rx-impact is-${update.impact}`}>
+              <div className={`rx-impact is-${update.impact}`} {...guideAnchor("research.impact")}>
                 <Landmark size={18} aria-hidden="true" />
                 <div>
                   <strong>{IMPACT_LABEL[update.impact] ?? update.impact}</strong>
@@ -360,7 +384,7 @@ function ResultView({ result, origin, publish, focus, onCite, evidence, headingR
               const rows = kept.filter((claim) => claim.section === section);
               if (!rows.length) return null;
               return (
-                <div key={section} className="rx-section">
+                <div key={section} className="rx-section" {...guideAnchor("research.claims")}>
                   <h3>{SECTION_LABEL[section]}</h3>
                   <ul>{rows.map((claim, index) => (
                     <ClaimRow key={index} claim={claim} item={claim.evidenceId ? evidence.get(claim.evidenceId) : undefined} onCite={onCite} focus={focus} />
@@ -368,7 +392,7 @@ function ResultView({ result, origin, publish, focus, onCite, evidence, headingR
                 </div>
               );
             })}
-            <p className="rx-count">
+            <p className="rx-count" {...guideAnchor("research.count")}>
               <Check size={14} aria-hidden="true" /> {update.counts.verified} verified
               {struck.length > 0 && <> · <X size={14} aria-hidden="true" /> {struck.length} struck before anyone saw them</>}
               {result.evaluation && <> · {result.evaluation.label}</>}
@@ -383,7 +407,7 @@ function ResultView({ result, origin, publish, focus, onCite, evidence, headingR
             )}
 
             {result.news.length > 0 && (
-              <div className="rx-section">
+              <div className="rx-section" {...guideAnchor("research.news")}>
                 <h3><Newspaper size={15} aria-hidden="true" /> News feed · allowlisted sources, inspected as tool results</h3>
                 <ul className="rx-news">
                   {result.news.map((row) => (
@@ -409,7 +433,7 @@ function ResultView({ result, origin, publish, focus, onCite, evidence, headingR
               </div>
             )}
 
-            <div className="rx-policies">
+            <div className="rx-policies" {...guideAnchor("research.policies")}>
               <PolicyList title="Pre-check · research.precheck" result={result.precheck?.controls} />
               <PolicyList title="Publish · research.publish" result={publish?.controls} />
             </div>
@@ -419,7 +443,7 @@ function ResultView({ result, origin, publish, focus, onCite, evidence, headingR
           <aside className="rx-side" aria-label="Evidence">
             <h3><FileText size={15} aria-hidden="true" /> Evidence {focus ? <button type="button" className="rx-clear" onClick={() => onCite(null)}>Clear highlight</button> : <small>Click a citation to highlight it</small>}</h3>
             {affected && (
-              <div className="rx-affected">
+              <div className="rx-affected" {...guideAnchor("research.affected")}>
                 <Users size={16} aria-hidden="true" />
                 <span><strong>{affected.count ?? 0}</strong> of {affected.households} households hold {result.ticker}; <strong>{affected.concentrated ?? 0}</strong> above {affected.thresholdPct}%, {affected.executives ?? 0} executives</span>
               </div>

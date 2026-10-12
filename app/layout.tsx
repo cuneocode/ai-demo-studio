@@ -15,6 +15,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Browsers raise this benign notice when a resize settles across two frames. Registered ahead of the
+// dev error overlay so it cannot cover a demo mid-presentation.
+const QUIET_RESIZE_NOTICE = `window.addEventListener("error",function(e){if(/^ResizeObserver loop/.test(e.message||""))e.stopImmediatePropagation();});`;
+
 const title = "FSI AI Demo Studio";
 const description =
   "A modular financial services AI demo platform showing how Cisco secures, observes, and scales AI-powered business workflows.";
@@ -60,6 +64,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: QUIET_RESIZE_NOTICE }} />
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
       </head>
       <body

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CircleAlert,
   CodeXml,
+  History,
   Landmark,
   Loader2,
   Play,
@@ -15,10 +16,12 @@ import {
 import { SourceInspector } from "./map/inspector.tsx";
 import { interbankEvidence } from "./map/interbank-evidence.ts";
 import RunStats, { defenseFacts, useRunLedger, type Integration, type ObservedRun, type StatsCard } from "./RunStats";
-import { servedByFromEvents, type RunEvent } from "./run/events";
+import { servedByFromEvents, type Recording, type RecordingMeta, type RunEvent } from "./run/events";
 import { useRun, useStickToBottom } from "./run/useRun";
 import { RichText, TimelineItem, defaultLine, useExpanded, type TimelineLine } from "./run/RunTimeline";
 import ProvenanceBadge from "./run/ProvenanceBadge";
+import { guideAnchor } from "./guide/anchors";
+import { useGuideActions } from "./guide/GuidedTour";
 import "./banking.css";
 import "./interbank.css";
 
@@ -35,6 +38,9 @@ type Runtime = {
 type Lane = "a" | "wire" | "b";
 type Line = TimelineLine & { event: LabEvent; sources: string[] };
 type InterbankDemoProps = { onBack: () => void; onAdd: () => void; inStory: boolean; embedded?: boolean };
+
+/** Committed lab runs (services/interbank/recorded), served by the studio itself so they replay with the lab down. */
+const RECORDINGS_API = "/api/studio/recordings/interbank";
 
 const BANKS = {
   a: { name: "Bank A", org: "Harbor Point Bank", role: "Coordinator · owns the case", agent: "bank-a-agent", gateway: "bank-a-gateway", records: "bank-a-records" },
@@ -251,7 +257,7 @@ function Terminal({ lane, lines, run, active, expanded, toggle, onSource }: { la
   const running = run?.status === "running";
   const { ref, onScroll } = useStickToBottom(lines.length);
   return (
-    <section className={`ib-terminal ${active ? "active" : ""}`} aria-label={`${bank.name} agent terminal`}>
+    <section className={`ib-terminal ${active ? "active" : ""}`} aria-label={`${bank.name} agent terminal`} {...guideAnchor(lane === "a" ? "interbank.bank-a" : "interbank.bank-b")}>
       <header>
         <span className="ib-terminal-icon"><Landmark size={17} /></span>
         <div><strong>{bank.name} · {bank.org}</strong><span className="ib-sub"><small>{bank.role}</small><span className={`ib-agent-state ${running && active ? "busy" : ""}`}>{running && active && <Loader2 size={13} className="ib-spin" />}{agentStatus(lines, !!running)}</span></span></div>
@@ -270,7 +276,7 @@ function Terminal({ lane, lines, run, active, expanded, toggle, onSource }: { la
 function Wire({ lines, run, expanded, toggle, onSource }: { lines: Line[]; run: Run | null; expanded: Set<string>; toggle: (id: string) => void; onSource: (ids: string[]) => void }) {
   const { ref, onScroll } = useStickToBottom(lines.length);
   return (
-    <section className="ib-wire" aria-label="Gateways and AI Defense">
+    <section className="ib-wire" aria-label="Gateways and AI Defense" {...guideAnchor("interbank.wire")}>
       <header>
         <span className="ib-terminal-icon"><ShieldCheck size={17} /></span>
         <div><strong>Gateways · Cisco AI Defense</strong><small>Every A2A hop, request and response</small></div>
@@ -339,7 +345,7 @@ function observeRun(run: Run, visible: LabEvent[], replaying: boolean, traceId: 
 
 function interbankStats(labUp: boolean | null, runtime: Runtime | null): { observability: StatsCard; defense: StatsCard } {
   const offline: Integration | null = labUp === false
-    ? { state: "unknown", summary: "Lab offline", notice: "The interbank lab is not running. Start it with npm run interbank:up, then reload." }
+    ? { state: "unknown", summary: "Lab offline", notice: "The interbank lab is not running. Start it with npm run interbank:up, then reload. Recorded runs still replay." }
     : !runtime ? { state: "unknown", summary: "Checking the lab…" } : null;
   const ao: Integration = offline ?? (runtime!.observability.project
     ? { state: "on", summary: `Project ${runtime!.observability.project} · stream ${runtime!.observability.agent_stream}`,
@@ -392,6 +398,7 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
   const [scenario, setScenario] = useState("allowed");
   const [prompt, setPrompt] = useState("");
   const [history, setHistory] = useState<Run[]>([]);
+  const [recordings, setRecordings] = useState<RecordingMeta[]>([]);
   const { expanded, toggle, reset: resetExpanded } = useExpanded();
   const [starting, setStarting] = useState(false);
   const [viewer, setViewer] = useState<Viewer | null>(null);
@@ -414,13 +421,34 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
       .catch(() => setLabUp(false));
   }, [loadHistory]);
 
-  const { run, mode, effectiveRun, visible, replaying, error, setError, open: follow, skip } = useRun<Run, LabEvent>({
+  useEffect(() => {
+    fetch(RECORDINGS_API, { signal: AbortSignal.timeout(6000) })
+      .then((response) => (response.ok ? response.json() : { recordings: [] }))
+      .then((body: { recordings?: RecordingMeta[] }) => { if (Array.isArray(body.recordings)) setRecordings(body.recordings); })
+      .catch(() => undefined);
+  }, []);
+
+  const { run, mode, effectiveRun, visible, replaying, error, setError, open: follow, play, skip } = useRun<Run, LabEvent>({
     pageUrl: (id, after) => `/api/interbank/runs/${id}?after=${after}`,
     pace: 160,
     onSettled: loadHistory,
     lostContact: "Lost contact with the interbank lab. Check npm run interbank:status.",
   });
   const open = (id: string, replay: boolean) => { resetExpanded(); follow(id, replay); };
+
+  /** Plays a committed recording of a real lab run; the lab is not called. */
+  async function playRecording(name: string) {
+    setError("");
+    try {
+      const response = await fetch(`${RECORDINGS_API}/${encodeURIComponent(name)}`, { signal: AbortSignal.timeout(8000) });
+      if (!response.ok) throw new Error(`Recording ${name} is unavailable (${response.status}).`);
+      const recording = await response.json() as Recording & { run?: Run; events: LabEvent[] };
+      resetExpanded();
+      play({ run: recording.run ?? null, events: recording.events });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "That recording is unavailable.");
+    }
+  }
 
   async function start() {
     if (!prompt.trim() || starting) return;
@@ -449,14 +477,25 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
   const done = effectiveRun && effectiveRun.status !== "running";
   const ledger = useRunLedger();
   const { record } = ledger;
-  const recorded = mode === "replay";
+  // Lab-history replays and committed recordings both show a finished run; nothing is re-run.
+  const recorded = mode === "replay" || mode === "recorded";
   const observed = useMemo(() => (run ? observeRun(run, visible, replaying, traceId, runtime, recorded) : null), [run, visible, replaying, traceId, runtime, recorded]);
   useEffect(() => { if (observed) record(observed); }, [observed, record]);
   const stats = useMemo(() => interbankStats(labUp, runtime), [labUp, runtime]);
+  useGuideActions("interbank-a2a", { replay: (name) => { if (name) void playRecording(name); }, skipReplay: skip });
+  const guideRun = starting ? "starting" : replaying || effectiveRun?.status === "running" ? "running"
+    : effectiveRun?.status === "completed" ? "done" : effectiveRun?.status === "blocked" ? "blocked" : effectiveRun?.status === "failed" ? "failed" : "idle";
+  const guideStage = [lanes.a.length && "bank-a", lanes.wire.length && "wire", lanes.b.length && "bank-b", done && run?.report && "report"].filter(Boolean).join(" ");
 
   return (
-    <div className={`banking-demo interbank-demo ${embedded ? "banking-embedded" : ""}`}>
-      <section className="ib-controls proof-card">
+    <div
+      className={`banking-demo interbank-demo ${embedded ? "banking-embedded" : ""}`}
+      data-guide-run={guideRun}
+      data-guide-source={run ? (recorded ? "recorded" : "live") : "none"}
+      data-guide-recorded-at={run && recorded ? run.started_at : undefined}
+      data-guide-stage={guideStage}
+    >
+      <section className="ib-controls proof-card" {...guideAnchor("interbank.controls")}>
         <div className="ib-controls-head">
           <div>
             <span className="review-kicker">OPERATIONS DESK · BANK A</span>
@@ -466,21 +505,27 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
           </div>
           <span className={`ib-lab-state ${labUp ? "up" : labUp === false ? "down" : ""}`}><span className={labUp ? "status-dot ready" : "status-dot"} />{labUp ? `Lab running · ${runtime?.model.name ?? "model"}` : labUp === false ? "Lab offline" : "Checking lab…"}</span>
         </div>
-        {labUp === false && <div className="banking-error"><CircleAlert size={14} /><div>The interbank lab runs in Docker and is not running. Start it with <code>npm run interbank:up</code>, then reload. The source and configuration viewer below still works.</div></div>}
-        <div className="ib-scenarios" role="group" aria-label="Scenario">
+        {labUp === false && <div className="banking-error" {...guideAnchor("interbank.offline")}><CircleAlert size={14} /><div>The interbank lab runs in Docker and is not running. Start it with <code>npm run interbank:up</code>, then reload. Recorded runs still replay, and the source and configuration viewer below still works.</div></div>}
+        <div className="ib-scenarios" role="group" aria-label="Scenario" {...guideAnchor("interbank.scenarios")}>
           {[["allowed", "Allowed investigation", "TRD-847 · both banks investigate"], ["blocked", "Prompt-injection kickoff", "AI Defense blocks it at Bank A's gateway"]].map(([key, label, detail]) => (
             <button key={key} className={scenario === key ? "active" : ""} aria-pressed={scenario === key} disabled={!examples[key]} onClick={() => { setScenario(key); setPrompt(examples[key] ?? ""); }}>
               <strong>{label}</strong><small>{detail}</small>
             </button>
           ))}
         </div>
-        <label className="ib-prompt"><span>Kickoff message</span>
+        <label className="ib-prompt" {...guideAnchor("interbank.kickoff")}><span>Kickoff message</span>
           <textarea id="interbank-kickoff" rows={2} value={prompt} onChange={(event) => { setPrompt(event.target.value); setScenario("custom"); }} disabled={!labUp} />
         </label>
         <div className="ib-actions">
-          <button className="ib-primary" onClick={start} disabled={!labUp || starting || !prompt.trim() || effectiveRun?.status === "running"}>
+          <button className="ib-primary" {...guideAnchor("interbank.start")} onClick={start} disabled={!labUp || starting || !prompt.trim() || effectiveRun?.status === "running"}>
             {starting ? <><Loader2 size={15} className="ib-spin" /> Starting…</> : effectiveRun?.status === "running" && !replaying ? <><Loader2 size={15} className="ib-spin" /> Investigation running…</> : <><Play size={15} /> Start investigation</>}
           </button>
+          {recordings.length > 0 && <label className="ib-recorded" {...guideAnchor("interbank.replay")}><History size={14} aria-hidden="true" /><span>Replay a recorded run</span>
+            <select id="interbank-replay" value="" onChange={(event) => { if (event.target.value) playRecording(event.target.value); }}>
+              <option value="">Choose a recording…</option>
+              {recordings.map((item) => <option key={item.name} value={item.name}>{item.title} · {new Date(item.recorded_at).toLocaleDateString()}</option>)}
+            </select>
+          </label>}
           {history.length > 0 && <label className="ib-history"><span>Replay a recent run</span>
             <select value="" onChange={(event) => { if (event.target.value) open(event.target.value, true); }}>
               <option value="">Choose a run…</option>
@@ -499,7 +544,7 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
       </section>
 
       <section className="ib-results">
-        <div className={`proof-card ib-report status-${done ? effectiveRun.status : "pending"}`}>
+        <div className={`proof-card ib-report status-${done ? effectiveRun.status : "pending"}`} {...guideAnchor("interbank.report")}>
           <span className="review-kicker">JOINT REPORT · FOR HUMAN APPROVAL</span>
           {done && run?.report ? <>
             {recorded ? <ProvenanceBadge provenance={{ kind: "recorded", recordedAt: run.started_at, servedBy }} /> : servedBy && <ProvenanceBadge provenance={{ kind: "live", servedBy }} />}
@@ -508,7 +553,7 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
           </> : <p>{effectiveRun ? "The report appears when Bank A's agent replies to the Ops desk." : "Start or replay an investigation to see the joint report."}</p>}
         </div>
         <aside className="ib-side">
-          {runtime && <div className="proof-card ib-runtime">
+          {runtime && <div className="proof-card ib-runtime" {...guideAnchor("interbank.runtime")}>
             <span className="review-kicker">RUNTIME</span>
             <dl className="fact-grid">
               <div><dt>Model</dt><dd>{runtime.model.label ? `${runtime.model.label} · ` : ""}{runtime.model.name} · {runtime.model.api}{runtime.model.fallback ? " (fallback)" : ""}</dd></div>
@@ -525,7 +570,7 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
 
       <RunStats ledger={ledger} {...stats} empty="Start or replay an investigation. Counts fill in as each event arrives." />
 
-      <section className="proof-card ib-integrations" aria-label="Integration points">
+      <section className="proof-card ib-integrations" aria-label="Integration points" {...guideAnchor("interbank.integrations")}>
         <div className="ib-integrations-head">
           <span className="review-kicker"><SquareTerminal size={13} /> INTEGRATION POINTS · SOURCE AND CONFIGURATION</span>
           <p>Every <CodeXml size={13} /> button opens the same captured excerpt the architecture map cites, and says when the file has changed since.</p>

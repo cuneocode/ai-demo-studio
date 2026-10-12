@@ -9,7 +9,7 @@ export const presenterNotes: Record<string, PresenterNote> = {
   "kyc-processing": {
     problem: "Onboarding and periodic KYC refreshes queue behind manual document, registry, and screening checks.",
     ai: "Illustrative prototype, no live service: document extraction, entity resolution, and exception routing are proposed. Say Illustrative out loud.",
-    cisco: "Proposed: AI Defense on document text and model hops; Cisco AI infrastructure for the document models.",
+    cisco: "Proposed: AI Defense on document text and model hops; Splunk Agent Observability traces; Cisco AI infrastructure for the document models.",
     lifecycle: "Meet Dana Whitfield (fictional): SVP at Halcyon Interconnect (HCYN), a Section 16 officer, risk rating Medium, sanctions clear. The story follows her.",
   },
   "fraud-modeling": {
@@ -21,7 +21,7 @@ export const presenterNotes: Record<string, PresenterNote> = {
   "sar-support": {
     problem: "A SAR narrative takes an investigator hours, and quality varies by author. The fraud referral points at a mule account receiving card-funded P2P credits, including Dana's card.",
     ai: "An investigation agent assembles the case, deterministic typology rules flag indicators, and the agent drafts a FinCEN-style narrative where every sentence cites evidence. The investigator decides file or no SAR; a separate QA reviewer approves.",
-    cisco: "AI Defense inspects untrusted memos and documents (the injected explanation letter) and every model hop. Agent Control enforces cited narratives, no tipping off, and approval before filing. A hosted model runs only with AI Defense forced to enforce. E-filing is simulated.",
+    cisco: "AI Defense inspects untrusted memos and documents (the injected explanation letter) and every model hop. Agent Control enforces cited narratives, no tipping off, and approval before filing. A hosted model runs only with AI Defense forced to enforce. Splunk Agent Observability traces each live investigation. E-filing is simulated.",
     lifecycle: "Open the fraud referral from the inbox. The subject is never contacted, and nothing about this case reaches the advisor.",
   },
   "client-advisory": {

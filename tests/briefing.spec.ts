@@ -1,4 +1,8 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
+
+const RECORDED = JSON.parse(readFileSync(resolve("services/briefing/data/recorded/halcyon-annual-report.json"), "utf8"));
 
 const STATUS = {
   checkedAt: "2026-10-12T12:00:00.000Z",
@@ -83,4 +87,30 @@ test("a synthetic upload is labelled synthetic", async ({ page }) => {
 test("a real filing carries no synthetic label", async ({ page }) => {
   const review = await extract(page, briefing());
   await expect(review.locator(".briefing-synthetic-chip")).toHaveCount(0);
+});
+
+test("the committed recorded extract replays as recorded, runs no model, and can still be accepted", async ({ page }) => {
+  await page.route("**/api/studio/status", (route) => route.fulfill({ json: STATUS }));
+  await page.route("**/api/briefing/health", (route) => route.fulfill({ json: {
+    ready: true, model: "gpt-test", sec: { status: "configured", user_agent_set: true }, security: { status: "disabled", mode: "off", fail_open: false },
+    splunk: { status: "missing_configuration" }, perimeter: "EDGAR + upload only",
+  } }));
+  await page.route("**/api/briefing/recordings", (route) => route.fulfill({ json: { recordings: [{ name: RECORDED.name, title: RECORDED.title, recorded_at: RECORDED.recorded_at, served_by: RECORDED.served_by, events: 0, synthetic: true }] } }));
+  await page.route(`**/api/briefing/recordings/${RECORDED.name}`, (route) => route.fulfill({ json: RECORDED }));
+  let analyzed = 0;
+  await page.route("**/api/briefing/analyze", (route) => { analyzed += 1; return route.fulfill({ status: 500, json: { detail: "not expected" } }); });
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Open Company briefing experience" }).first().click();
+  await expect(page.locator(".briefing-demo")).toHaveAttribute("data-guide-source", "none");
+  await page.locator("#briefing-replay").click();
+  const review = page.locator(".briefing-review-head");
+  await expect(review.locator("h2")).toContainText("Halcyon Interconnect");
+  await expect(review.locator("[data-provenance='recorded']")).toContainText(/Recorded run · Oct \d+, 2026 · OpenAI API/);
+  await expect(review.locator("[data-provenance='live']")).toHaveCount(0);
+  await expect(review).toContainText("no model ran this time");
+  await expect(page.locator(".briefing-trail")).toContainText("AI Defense (original run): disabled");
+  await expect(page.locator(".briefing-demo")).toHaveAttribute("data-guide-source", "recorded");
+  await review.getByRole("button", { name: "Use this company" }).click();
+  await expect(review.locator(".briefing-accepted")).toContainText("Using this company");
+  expect(analyzed).toBe(0);
 });

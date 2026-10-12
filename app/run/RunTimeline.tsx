@@ -2,6 +2,7 @@
 
 import { Fragment, useState, type ReactNode } from "react";
 import { CodeXml } from "lucide-react";
+import type { AnchorId } from "../guide/anchors";
 import { laneOf, offset, type RunEvent, type RunLane, type ServedBy } from "./events";
 import { useStickToBottom } from "./useRun";
 import "./run.css";
@@ -101,6 +102,7 @@ export function useExpanded() {
 export type RunTimelineProps = {
   /** Accessible name of the list, e.g. "Fraud triage steps". */
   label: string;
+  anchor?: AnchorId;
   events: RunEvent[];
   /** The run's started_at, for "+1.2s" offsets. */
   start?: string;
@@ -117,14 +119,14 @@ export type RunTimelineProps = {
 };
 
 /** A streamed run timeline: one line per event, newest pinned at the bottom, announced politely. */
-export default function RunTimeline({ label, events, start, toLine = defaultLine, lanes, showLane = false, empty, onSource, className = "", expanded: controlled, onToggle }: RunTimelineProps) {
+export default function RunTimeline({ label, anchor, events, start, toLine = defaultLine, lanes, showLane = false, empty, onSource, className = "", expanded: controlled, onToggle }: RunTimelineProps) {
   const own = useExpanded();
   const expanded = controlled ?? own.expanded;
   const toggle = onToggle ?? own.toggle;
   const lines = events.filter((event) => !lanes || lanes.includes(laneOf(event))).map(toLine).filter((line): line is TimelineLine => line !== null);
   const { ref, onScroll } = useStickToBottom(lines.length);
   return (
-    <ol ref={ref} onScroll={onScroll} className={`rt-list ${className}`} aria-label={label} aria-live="polite" aria-relevant="additions">
+    <ol ref={ref} onScroll={onScroll} className={`rt-list ${className}`} aria-label={label} aria-live="polite" aria-relevant="additions" data-guide={anchor}>
       {lines.length ? lines.map((line) => <TimelineItem key={line.event.id} line={line} start={start} expanded={expanded.has(line.event.id)} onToggle={() => toggle(line.event.id)} onSource={onSource} showLane={showLane} />)
         : <li className="rt-empty">{empty ?? "Steps appear here as the run proceeds."}</li>}
     </ol>

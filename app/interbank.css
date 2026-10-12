@@ -25,8 +25,9 @@
 .ib-actions{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;margin-top:12px}
 .ib-primary{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border:1px solid #6d8fe0;border-radius:8px;background:#2b4c95;color:#fff;font-size:var(--font-control);font-weight:600;cursor:pointer}
 .ib-primary:disabled{opacity:.6;cursor:not-allowed}
-.ib-history{display:grid;gap:5px;font-size:var(--font-meta);color:var(--muted)}
-.ib-history select{min-width:300px;padding:9px 10px;border:1px solid #344358;border-radius:8px;background:#121c2a;color:var(--text);font-size:var(--font-meta)}
+.ib-history,.ib-recorded{display:grid;gap:5px;font-size:var(--font-meta);color:var(--muted)}
+.ib-recorded{grid-template-columns:auto 1fr;align-items:center}.ib-recorded select{grid-column:1/-1}
+.ib-history select,.ib-recorded select{min-width:300px;padding:9px 10px;border:1px solid #344358;border-radius:8px;background:#121c2a;color:var(--text);font-size:var(--font-meta)}
 
 .ib-stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,.72fr) minmax(0,1fr);gap:12px;align-items:stretch}
 .ib-terminal,.ib-wire{display:flex;flex-direction:column;height:680px;border:1px solid #2c3a4f;border-radius:10px;background:#0a1018;overflow:hidden;transition:border-color .2s,box-shadow .2s}
@@ -98,6 +99,6 @@
   .ib-terminal{height:540px}
   .ib-controls-head{flex-direction:column}
   .ib-scenarios{grid-template-columns:1fr}
-  .ib-history select{min-width:0;width:100%}
+  .ib-history select,.ib-recorded select{min-width:0;width:100%}
   .interbank-demo .fact-grid{grid-template-columns:1fr}
 }

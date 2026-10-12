@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { History } from "lucide-react";
+import type { AnchorId } from "../guide/anchors";
 import type { Recording, RecordingMeta } from "./events";
 import "./run.css";
 
@@ -26,12 +27,12 @@ export async function loadRecording<R = unknown>(base: string, name: string): Pr
 }
 
 /** "Replay a recorded run": the never-dead path when the live service or model is down. */
-export default function ReplayPicker({ recordings, onPick, label = "Replay a recorded run", disabled = false }: {
-  recordings: RecordingMeta[]; onPick: (name: string) => void; label?: string; disabled?: boolean;
+export default function ReplayPicker({ recordings, onPick, label = "Replay a recorded run", disabled = false, anchor }: {
+  recordings: RecordingMeta[]; onPick: (name: string) => void; label?: string; disabled?: boolean; anchor?: AnchorId;
 }) {
   if (!recordings.length) return null;
   return (
-    <label className="rt-replay">
+    <label className="rt-replay" data-guide={anchor}>
       <History size={15} aria-hidden="true" /><span>{label}</span>
       <select value="" disabled={disabled} onChange={(event) => { if (event.target.value) onPick(event.target.value); }}>
         <option value="">Choose…</option>

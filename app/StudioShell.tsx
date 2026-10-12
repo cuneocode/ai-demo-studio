@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Activity, ArrowLeft, ArrowRight, ArrowUpRight, Bell, CircleAlert, CircleCheck, Copy, KeyRound, ShieldCheck, Terminal, X } from "lucide-react";
+import { Activity, ArrowLeft, ArrowRight, ArrowUpRight, Bell, CircleAlert, CircleCheck, Compass, Copy, KeyRound, ShieldCheck, Terminal, X } from "lucide-react";
+import { guideAnchor } from "./guide/anchors";
 import { MODEL_USE_CASES } from "./studio-models";
 import { USE_CASE_SERVICE, humanize, serviceRows, type StudioStatus, type UseCaseHealth } from "./studio-status";
 import "./studio-settings.css";
@@ -91,6 +92,7 @@ export function HelpDrawer({ status, onClose, onOpenSettings }: { status: Studio
           <dl className="shell-commands">
             <dt><kbd>⌘ K</kbd> / <kbd>Ctrl K</kbd></dt><dd>Search use cases and pages.</dd>
             <dt>Story builder → <strong>Present story</strong></dt><dd>Full screen, one moment at a time. <kbd>←</kbd> <kbd>→</kbd> step, <kbd>Esc</kbd> exits.</dd>
+            <dt><strong>Guided tour</strong> · <kbd>G</kbd></dt><dd>A spotlight walks through the open demo on a recorded run, labelled as such. <kbd>→</kbd> or <kbd>Enter</kbd> next, <kbd>←</kbd> back, <kbd>Home</kbd> first step, <kbd>Esc</kbd> exits. In Present mode, <strong>Guide this moment</strong> plays the moment&apos;s short cut.</dd>
             <dt>Controls and Telemetry</dt><dd>Live AI Defense, Agent Control, and tracing status for each use case.</dd>
           </dl>
         </section>
@@ -224,11 +226,14 @@ export function TelemetryPage({ status, onOpenCase, onOpenSettings }: { status: 
 }
 
 /** Present mode: one story moment at a time, full screen. */
-export function PresenterBar({ index, total, title, talk, onPrev, onNext, onExit }: {
+export function PresenterBar({ index, total, title, talk, onPrev, onNext, onExit, guiding = false, onGuide }: {
   index: number; total: number; title: string; talk: { label: string; text: string }[]; onPrev: () => void; onNext: () => void; onExit: () => void;
+  /** A guided tour is running: the card renders in the notes slot and the tour owns the arrow keys. */
+  guiding?: boolean; onGuide?: () => void;
 }) {
   const [notes, setNotes] = useState(true);
   useEffect(() => {
+    if (guiding) return;
     const onKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (target?.closest("input, textarea, select, [contenteditable='true'], [role='tab']")) return;
@@ -238,13 +243,14 @@ export function PresenterBar({ index, total, title, talk, onPrev, onNext, onExit
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [onNext, onPrev, onExit]);
+  }, [onNext, onPrev, onExit, guiding]);
   return (
-    <div className="presenter-bar" role="region" aria-label="Presenter controls">
-      {notes && <ul className="presenter-notes" aria-label="Talk track">{talk.map((line) => <li key={line.label}><b>{line.label}</b>{line.text}</li>)}</ul>}
+    <div className={`presenter-bar${guiding ? " guiding" : ""}`} role="region" aria-label="Presenter controls" {...guideAnchor("present.bar")}>
+      {guiding ? <div id="presenter-guide-slot" /> : notes && <ul className="presenter-notes" aria-label="Talk track">{talk.map((line) => <li key={line.label}><b>{line.label}</b>{line.text}</li>)}</ul>}
       <div className="presenter-controls">
         <span className="presenter-step"><small>MOMENT {index + 1} OF {total}</small><strong>{title}</strong></span>
-        <button className="secondary-button" onClick={() => setNotes(!notes)} aria-pressed={notes}><Terminal size={15} /> Talk track</button>
+        {onGuide ? <button className="secondary-button presenter-guide" onClick={onGuide} aria-pressed={guiding} {...guideAnchor("present.guide")}><Compass size={15} /> {guiding ? "End guide" : "Guide this moment"}</button> : null}
+        {guiding ? null : <button className="secondary-button" onClick={() => setNotes(!notes)} aria-pressed={notes}><Terminal size={15} /> Talk track</button>}
         <button className="secondary-button" onClick={onPrev} disabled={index === 0}><ArrowLeft size={15} /> Previous</button>
         <button className="primary-button" onClick={onNext}>{index === total - 1 ? "Finish" : "Next"} <ArrowRight size={15} /></button>
         <button className="st-icon" aria-label="Exit presenting" onClick={onExit}><X size={17} /></button>

@@ -1,4 +1,9 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
+
+const recording = (name: string) => JSON.parse(readFileSync(resolve(`services/interbank/recorded/${name}.json`), "utf8"));
+const RECORDED = { "trd-847-allowed": recording("trd-847-allowed"), "trd-847-blocked": recording("trd-847-blocked") } as Record<string, { name: string; title: string; recorded_at: string; events: unknown[]; run: { report: string } }>;
 
 const STATUS = {
   checkedAt: "2026-10-12T12:00:00.000Z",
@@ -75,4 +80,27 @@ test("a live run shows the model that answered", async ({ page }) => {
   const report = page.locator(".ib-report");
   await expect(report.locator("[data-provenance='live']")).toContainText("Answered by OpenAI API · gpt-test (hosted, fallback)");
   await expect(report.locator("[data-provenance='recorded']")).toHaveCount(0);
+});
+
+test("with the lab down a committed recording still replays, labelled recorded", async ({ page }) => {
+  await page.route("**/api/studio/status", (route) => route.fulfill({ json: { ...STATUS, interbank: { ...STATUS.interbank, up: false } } }));
+  await page.route("**/api/interbank/**", (route) => route.fulfill({ status: 503, body: "" }));
+  await page.route("**/api/studio/recordings/interbank", (route) => route.fulfill({ json: { recordings: Object.values(RECORDED).map((doc) => ({ name: doc.name, title: doc.title, recorded_at: doc.recorded_at, events: doc.events.length, synthetic: true })) } }));
+  await page.route("**/api/studio/recordings/interbank/*", (route) => {
+    const name = new URL(route.request().url()).pathname.split("/").pop() ?? "";
+    return RECORDED[name] ? route.fulfill({ json: RECORDED[name] }) : route.fulfill({ status: 404, json: { error: "Unknown recording." } });
+  });
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Open Interbank settlement investigation experience" }).first().click();
+  await expect(page.locator(".ib-lab-state")).toContainText("Lab offline");
+  await expect(page.locator(".ib-controls .banking-error").first()).toContainText("Recorded runs still replay");
+  const demo = page.locator(".interbank-demo");
+  await expect(demo).toHaveAttribute("data-guide-source", "none");
+  await page.locator("#interbank-replay").selectOption("trd-847-blocked");
+  const report = page.locator(".ib-report");
+  await expect(report).toContainText("Blocked at Bank A's gateway", { timeout: 15_000 });
+  await expect(report).toContainText(JSON.parse(RECORDED["trd-847-blocked"].run.report).event_id);
+  await expect(report.locator("[data-provenance='recorded']")).toContainText(/Recorded run · Oct \d+, 2026/);
+  await expect(report.locator("[data-provenance='live']")).toHaveCount(0);
+  await expect(demo).toHaveAttribute("data-guide-source", "recorded");
 });

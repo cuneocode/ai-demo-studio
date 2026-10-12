@@ -52,6 +52,8 @@ import {
   type Section,
 } from "./sar-case";
 import { useStudioNav } from "./studio-nav";
+import { guideAnchor, guideSafeAnchor } from "./guide/anchors";
+import { useGuideActions } from "./guide/GuidedTour";
 import "./sar.css";
 
 type Origin = { kind: "live" | "sample" } | { kind: "recorded"; recordedAt: string };
@@ -368,9 +370,31 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
   const isAttack = (card?.kind ?? caseHeader?.kind) === "attack";
   const hosted = pkg?.served_by && !pkg.served_by.private && pkg.usage?.llm_calls ? pkg.served_by.label : null;
 
+  useGuideActions("sar-support", {
+    replay: (name) => {
+      const pick = recordings.find((item) => item.name === name) ?? recordings.find((item) => item.scenario === selected) ?? recordings[0];
+      if (pick) void replay(pick.name);
+    },
+    skipReplay: timeline.skip,
+    selectScenario: (id) => pickScenario(id),
+  });
+  const guideRun = starting ? "starting" : timeline.replaying ? "running" : replaying ? "done"
+    : runStatus === "running" ? (pending ? "awaiting-human" : "running") : runStatus === "failed" ? "failed" : timeline.run || pkg?.outcome ? "done" : "idle";
+  const guideStage = [
+    handoffs.length && "inbox", timeline.visible.length && "events", pkg && "package", draft && "drafted", withheld.length && "withheld",
+    pending?.stage === "investigator" && "investigator", pending?.stage === "qa" && "qa",
+    pkg?.outcome === "filed_simulated" && "filed", pkg?.outcome === "closed_no_sar" && "closed",
+  ].filter(Boolean).join(" ");
+
   return (
-    <div className={`sar-demo ${embedded ? "sar-embedded" : ""}`}>
-      <section className="sar-band" aria-label="Business outcomes">
+    <div
+      className={`sar-demo ${embedded ? "sar-embedded" : ""}`}
+      data-guide-run={guideRun}
+      data-guide-source={origin.kind === "recorded" ? "recorded" : origin.kind === "sample" ? "sample" : timeline.runId ? "live" : "none"}
+      data-guide-recorded-at={origin.kind === "recorded" ? origin.recordedAt : undefined}
+      data-guide-stage={guideStage}
+    >
+      <section className="sar-band" aria-label="Business outcomes" {...guideAnchor("sar.band")}>
         <div>
           <span>Investigator time per SAR</span>
           <strong>4–6 h → &lt; 1 h review</strong>
@@ -393,7 +417,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
         </div>
       </section>
 
-      <section className="sar-runtime" aria-label="SAR runtime">
+      <section className="sar-runtime" aria-label="SAR runtime" {...guideAnchor("sar.runtime")}>
         <div><span><Server size={15} /> Model</span><strong className={!reachable || modelDown ? "is-down" : health ? "is-ready" : undefined}>{modelLabel(health, reachable)}</strong></div>
         <div><span><ShieldCheck size={15} /> Case data</span><strong className={willRefuse(health) ? "is-down" : undefined}>{reachable ? egressLabel(health) : "—"}</strong></div>
         <div><span><ShieldAlert size={15} /> AI Defense</span><strong className={health?.security?.status === "configured" ? "is-ready" : undefined}>{defenseLabel(health)}</strong></div>
@@ -422,7 +446,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
         )}
 
         {handoffs.length > 0 && (
-          <section className="sar-card sar-inbox" aria-labelledby="sar-inbox-heading">
+          <section className="sar-card sar-inbox" aria-labelledby="sar-inbox-heading" {...guideAnchor("sar.inbox")}>
             <div className="sar-kicker"><span><Inbox size={14} /> INBOX · FROM FRAUD OPERATIONS</span><span className="sar-tag">{handoffs.length} referral{handoffs.length === 1 ? "" : "s"}</span></div>
             <h2 id="sar-inbox-heading">Escalated from card fraud triage</h2>
             <ul>
@@ -433,7 +457,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
                     <p>{item.summary}</p>
                     <small>Fraud case {item.caseId} · {item.disposition} · {new Date(item.createdAt).toLocaleString()}</small>
                   </div>
-                  <button type="button" className="sar-secondary" disabled={busy} aria-pressed={handoffId === item.id} onClick={() => pickScenario(MULE_SCENARIO, handoffId === item.id ? null : item.id)}>
+                  <button type="button" className="sar-secondary" disabled={busy} aria-pressed={handoffId === item.id} onClick={() => pickScenario(MULE_SCENARIO, handoffId === item.id ? null : item.id)} {...(item.caseId === LINKED_FRAUD_CASE ? guideSafeAnchor("sar.inbox.open") : {})}>
                     {handoffId === item.id ? "Attached to the money-mule case" : item.caseId === LINKED_FRAUD_CASE ? "Open the linked money-mule case" : "Attach to the money-mule case"}
                   </button>
                 </li>
@@ -446,9 +470,9 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
         <section className="sar-card" aria-labelledby="sar-cases-heading">
           <div className="sar-kicker"><span>ALERT QUEUE · FIU</span><span className="sar-tag">Synthetic</span></div>
           <h2 id="sar-cases-heading">Pick a case</h2>
-          <div className="sar-scenarios" role="group" aria-label="SAR scenarios">
+          <div className="sar-scenarios" role="group" aria-label="SAR scenarios" {...guideAnchor("sar.scenarios")}>
             {cards.map((item) => (
-              <button key={item.id} type="button" className={`sar-scenario kind-${item.kind} ${selected === item.id ? "is-selected" : ""}`} aria-pressed={selected === item.id} disabled={busy} onClick={() => pickScenario(item.id)}>
+              <button key={item.id} type="button" className={`sar-scenario kind-${item.kind} ${selected === item.id ? "is-selected" : ""}`} aria-pressed={selected === item.id} disabled={busy} onClick={() => pickScenario(item.id)} {...guideSafeAnchor(`sar.scenario.${item.id}`)}>
                 <span className="sar-scenario-kind">{item.kind === "attack" ? <><ShieldAlert size={13} /> Attack</> : item.kind === "control" ? "Control case" : item.alert.priority === "high" ? "High priority" : "Case"}</span>
                 <strong>{item.kind === "attack" ? item.title.replace(/^Attack · /, "") : item.label}</strong>
                 <span className="sar-scenario-meta">{item.subject.name} · {item.alert.id}</span>
@@ -461,7 +485,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
         </section>
 
         {card && (
-          <section className={`sar-card sar-case ${isAttack ? "is-attack" : ""}`} aria-labelledby="sar-case-heading">
+          <section className={`sar-card sar-case ${isAttack ? "is-attack" : ""}`} aria-labelledby="sar-case-heading" {...guideAnchor("sar.case")}>
             <div className="sar-case-head">
               <div>
                 <div className="sar-kicker"><span>CASE · {card.alert.id}</span>{handoff && card.id === MULE_SCENARIO && <span className="sar-tag referral">Fraud referral attached</span>}</div>
@@ -470,7 +494,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
                 {caseHeader && <p className="sar-subject">{caseHeader.subject.detail} · {caseHeader.subject.location} · SSN {caseHeader.subject.ssn_masked} · accounts {caseHeader.accounts.join(", ")}</p>}
               </div>
               {deadline && (
-                <div className="sar-clock" aria-label={`Filing deadline ${shortDate(deadline.due)}, day ${deadline.day} of ${deadline.of}`}>
+                <div className="sar-clock" {...guideAnchor("sar.clock")} aria-label={`Filing deadline ${shortDate(deadline.due)}, day ${deadline.day} of ${deadline.of}`}>
                   <span><AlarmClock size={14} /> Filing deadline</span>
                   <strong>Due {shortDate(deadline.due)}</strong>
                   <div className="sar-clock-bar"><i style={{ width: `${Math.min(100, (deadline.day / deadline.of) * 100)}%` }} /></div>
@@ -479,11 +503,11 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
               )}
             </div>
             <div className="sar-actions">
-              <button id="sar-investigate" className="sar-primary" type="button" disabled={busy || !reachable || modelDown || willRefuse(health)} onClick={() => investigate("live")}>
+              <button id="sar-investigate" className="sar-primary" type="button" {...guideAnchor("sar.investigate")} disabled={busy || !reachable || modelDown || willRefuse(health)} onClick={() => investigate("live")}>
                 {busy ? <><Loader2 size={15} className="spin" /> Investigating…</> : <><Sparkles size={15} /> Investigate</>}
               </button>
               <button className="sar-secondary" type="button" disabled={busy || !reachable} onClick={() => investigate("sample")}><Play size={15} /> Run with sample narrative</button>
-              <ReplayPicker recordings={recordings} onPick={replay} disabled={busy} />
+              <ReplayPicker recordings={recordings} onPick={replay} disabled={busy} anchor="sar.replay" />
               {timeline.replaying && <button className="sar-secondary" type="button" onClick={timeline.skip}><FastForward size={15} /> Skip replay</button>}
             </div>
             <p className="sar-note">Investigate runs the Deep Agent on the Studio model chain{health?.model?.label && health.model.status !== "down" ? ` (${health.model.label})` : ""}. The sample narrative is pre-written and cited, with no model call; tools, AI Defense screening, typology rules, the citation check, policies, and approvals still run live.</p>
@@ -496,7 +520,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
         {pkg && (
           <div className="sar-results">
             <div className="sar-col">
-              <section className="sar-card sar-narrative" aria-labelledby="sar-narrative-heading">
+              <section className="sar-card sar-narrative" aria-labelledby="sar-narrative-heading" {...guideAnchor("sar.narrative")}>
                 <div className="sar-kicker">
                   <span>DRAFT SAR NARRATIVE · FINCEN ORDER</span>
                   {replaying && <span className="sar-tag">Recorded run</span>}
@@ -542,7 +566,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
                         <ul>{draft.dropped.map((item, index) => <li key={index}><span>{item.text}</span><small>{(item.problems ?? []).join("; ")}</small></li>)}</ul>
                       </details>
                     )}
-                    <div className={`sar-recommendation ${draft.recommendation}`}>
+                    <div className={`sar-recommendation ${draft.recommendation}`} {...guideAnchor("sar.recommendation")}>
                       <div>
                         <span>Agent recommendation</span>
                         <strong>{draft.recommendation === "file" ? "File a SAR" : "No SAR · close with rationale"}</strong>
@@ -562,7 +586,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
               </section>
 
               {draft && (
-                <section className="sar-card sar-decision" aria-labelledby="sar-decision-heading">
+                <section className="sar-card sar-decision" aria-labelledby="sar-decision-heading" {...guideAnchor("sar.decision")}>
                   <div className="sar-kicker"><span><UserRound size={14} /> HUMAN DECISION</span>
                     <div className="sar-roles" role="group" aria-label="Acting as">
                       <button type="button" aria-pressed={role === "investigator"} onClick={() => setRole("investigator")}>Investigator</button>
@@ -625,7 +649,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
                   {contact && <p className="sar-denied" role="status"><MessageSquareOff size={14} /> {contact}</p>}
 
                   {policies.length > 0 && (
-                    <ul className="sar-policies" aria-label="Policy verdicts">
+                    <ul className="sar-policies" aria-label="Policy verdicts" {...guideAnchor("sar.policies")}>
                       {policies.slice(-6).map((item) => <li key={item.id} className={item.allowed ? "allow" : "deny"}><span>{item.allowed ? "allow" : "deny"}</span>{item.title.replace(/ · (allow|deny).*$/, "")}{item.body ? <small>{item.body}</small> : null}</li>)}
                     </ul>
                   )}
@@ -634,7 +658,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
             </div>
 
             <div className="sar-col">
-              <section className="sar-card" aria-labelledby="sar-typology-heading">
+              <section className="sar-card" aria-labelledby="sar-typology-heading" {...guideAnchor("sar.typologies")}>
                 <div className="sar-kicker"><span>TYPOLOGY INDICATORS · DETERMINISTIC RULES</span></div>
                 <h2 id="sar-typology-heading">Typologies</h2>
                 {pkg.typologies.map((typology) => (
@@ -659,7 +683,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
                 ))}
               </section>
 
-              <section className="sar-card" aria-labelledby="sar-evidence-heading">
+              <section className="sar-card" aria-labelledby="sar-evidence-heading" {...guideAnchor("sar.evidence")}>
                 <div className="sar-kicker"><span>EVIDENCE · {pkg.evidence.length} ITEMS</span><span className="sar-tag">Synthetic</span></div>
                 <h2 id="sar-evidence-heading">Case evidence</h2>
                 <label className="sar-filter">Show
@@ -687,7 +711,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
                 </ol>
               </section>
 
-              <section className="sar-card sar-run" aria-label="How this case was assembled">
+              <section className="sar-card sar-run" aria-label="How this case was assembled" {...guideAnchor("sar.timeline")}>
                 <div className="sar-kicker"><span>RUN STEPS</span>{replaying && <span className="sar-tag">Recorded run</span>}</div>
                 <RunTimeline label="SAR investigation steps" events={timeline.visible} start={timeline.run?.started_at} toLine={sarLine} className="boxed" showLane />
               </section>
@@ -696,14 +720,14 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
         )}
 
         {!pkg && timeline.visible.length > 0 && (
-          <section className="sar-card sar-run" aria-label="How this case is being assembled">
+          <section className="sar-card sar-run" aria-label="How this case is being assembled" {...guideAnchor("sar.timeline")}>
             <div className="sar-kicker"><span>RUN STEPS</span></div>
             <RunTimeline label="SAR investigation steps" events={timeline.visible} start={timeline.run?.started_at} toLine={sarLine} className="boxed" showLane />
           </section>
         )}
 
         {audit.length > 0 && (
-          <section className="sar-card sar-audit" aria-labelledby="sar-audit-heading">
+          <section className="sar-card sar-audit" aria-labelledby="sar-audit-heading" {...guideAnchor("sar.audit")}>
             <div className="sar-kicker"><span>AUDIT TRAIL</span></div>
             <h2 id="sar-audit-heading">Who did what</h2>
             <table>

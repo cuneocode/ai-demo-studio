@@ -6,6 +6,7 @@ import {
   Check,
   CircleAlert,
   FileText,
+  History,
   Loader2,
   Quote,
   ShieldCheck,
@@ -35,6 +36,9 @@ import {
   type StoredCompanyProfile,
 } from "./company-profile";
 import ProvenanceBadge from "./run/ProvenanceBadge";
+import { guideAnchor } from "./guide/anchors";
+import { useGuideActions } from "./guide/GuidedTour";
+import { loadRecording, useRecordings } from "./run/ReplayPicker";
 import type { ServedBy } from "./run/events";
 import RunStats, { defenseFacts, defenseFrom, defenseIntegration, DEFENSE_TILES, servedByFrom, traceFacts, usageFrom, startRun, useRunLedger, type ObservedRun, type StatsCard } from "./RunStats";
 import "./briefing.css";
@@ -47,6 +51,8 @@ type CompanyBriefingProps = {
   profile?: StoredCompanyProfile | null;
   onProfileChange?: (profile: StoredCompanyProfile | null) => void;
 };
+
+const BRIEFING_API = "/api/briefing";
 
 const THEME_ORDER: Array<keyof Pick<CompanyBriefingRecord, "objectives" | "risks" | "regulatory" | "aiInitiatives">> = [
   "objectives",
@@ -103,7 +109,8 @@ export default function CompanyBriefing({
   const [candidates, setCandidates] = useState<IssuerCandidate[] | null>(null);
   const [draft, setDraft] = useState<CompanyBriefingRecord | null>(null);
   const [servedBy, setServedBy] = useState<ServedBy | null>(null);
-  const [replay, setReplay] = useState<{ recordedAt: string; servedBy: ServedBy | null } | null>(null);
+  const [replay, setReplay] = useState<{ recordedAt: string; servedBy: ServedBy | null; committed?: boolean } | null>(null);
+  const recordings = useRecordings(BRIEFING_API);
   const [service, setService] = useState<ServiceHealth | null>(null);
   const ledger = useRunLedger();
   const stats = useMemo(() => briefingStats(service), [service]);
@@ -270,6 +277,27 @@ export default function CompanyBriefing({
     await analyze({ query: term || undefined, file: upload });
   }
 
+  /** Shows the committed recording of a real extract as the draft; nothing is called now. */
+  async function replayRecorded() {
+    const meta = recordings[0];
+    if (!meta || loading) return;
+    setError("");
+    setCandidates(null);
+    try {
+      const recording = await loadRecording<Record<string, unknown>>(BRIEFING_API, meta.name);
+      const source = (recording.result?.source ?? {}) as { filename?: string };
+      const briefing = normalizeAnalyzeResponse(recording.result, { filename: source.filename });
+      if (!briefing) throw new Error("That recording has no extract.");
+      ledger.record(observeRecordedBriefing(startRun("briefing", `${recording.title} · recorded`), recording.result, recording.recorded_at));
+      lastRequest.current = {};
+      setServedBy(null);
+      setReplay({ recordedAt: recording.recorded_at, servedBy: servedByFrom(recording.served_by) ?? null, committed: true });
+      setDraft(briefing);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "That recording is unavailable.");
+    }
+  }
+
   function acceptCompany() {
     if (!displayed) return;
     const next: StoredCompanyProfile = {
@@ -295,6 +323,8 @@ export default function CompanyBriefing({
     notify(null);
   }
 
+  useGuideActions("company-briefing", { replay: () => { void replayRecorded(); } });
+
   function refreshBriefing() {
     const previous = lastRequest.current;
     const term = previous.query || query.trim() || displayed?.company.ticker || displayed?.company.name;
@@ -307,7 +337,13 @@ export default function CompanyBriefing({
   }
 
   return (
-    <div className={`briefing-demo ${embedded ? "briefing-embedded" : ""}`}>
+    <div
+      className={`briefing-demo ${embedded ? "briefing-embedded" : ""}`}
+      data-guide-run={loading ? "running" : error && !displayed ? "failed" : displayed ? "done" : "idle"}
+      data-guide-source={draft ? (replay ? "recorded" : "live") : "none"}
+      data-guide-recorded-at={draft && replay ? replay.recordedAt : undefined}
+      data-guide-stage={[displayed && "review", isAccepted && "accepted"].filter(Boolean).join(" ")}
+    >
       <CompanyBriefingRuntime
         health={health}
         security={displayed?.security}
@@ -315,7 +351,7 @@ export default function CompanyBriefing({
       />
 
       <div className="briefing-layout">
-        <section className="briefing-card">
+        <section className="briefing-card" {...guideAnchor("briefing.intake")}>
           <div className="briefing-kicker">
             <span><Building2 size={14} /> ISSUER INTAKE</span>
             <span className="briefing-perimeter">EDGAR + upload only</span>
@@ -336,7 +372,7 @@ export default function CompanyBriefing({
                 autoComplete="off"
               />
             </label>
-            <div className="briefing-chips" aria-label="Example issuers">
+            <div className="briefing-chips" aria-label="Example issuers" {...guideAnchor("briefing.examples")}>
               {EXAMPLE_TICKERS.map((ticker) => (
                 <button key={ticker} type="button" disabled={loading} onClick={() => startExtract(undefined, ticker)}>{ticker}</button>
               ))}
@@ -366,11 +402,16 @@ export default function CompanyBriefing({
               </div>
             )}
             <div className="briefing-actions">
-              <button className="primary" disabled={loading || !canExtract}>
+              <button className="primary" disabled={loading || !canExtract} {...guideAnchor("briefing.extract")}>
                 {loading ? <><Loader2 size={15} className="spin" /> Extracting…</> : <><Sparkles size={15} /> Extract briefing</>}
               </button>
               <button type="button" className="secondary" disabled={!displayed || loading} onClick={refreshBriefing}>Refresh</button>
               <button type="button" className="secondary" disabled={!accepted && !draft && !file && !query} onClick={clearCompany}>Clear</button>
+              {recordings.length > 0 && (
+                <button id="briefing-replay" {...guideAnchor("briefing.replay")} type="button" className="secondary" disabled={loading} onClick={replayRecorded} title={`${recordings[0].title} · recorded ${new Date(recordings[0].recorded_at).toLocaleDateString()}`}>
+                  <History size={15} /> Replay the recorded extract
+                </button>
+              )}
             </div>
             <p className="briefing-disclaimer">Public filings and uploaded text only. This is not investment advice, and the agent does not browse the open web or IR sites.</p>
           </form>
@@ -413,7 +454,7 @@ export default function CompanyBriefing({
 
         {displayed && (
           <>
-            <section className="briefing-card briefing-review-head">
+            <section className="briefing-card briefing-review-head" {...guideAnchor("briefing.review")}>
               <div>
                 <div className="briefing-kicker">
                   <span>REVIEW</span>
@@ -427,7 +468,9 @@ export default function CompanyBriefing({
                 {draft && servedBy && <ProvenanceBadge provenance={{ kind: "live", servedBy }} />}
                 {draft && replay && <>
                   <ProvenanceBadge provenance={{ kind: "recorded", recordedAt: replay.recordedAt, servedBy: replay.servedBy }} />
-                  <span className="briefing-replay-note">Cached result for this filing · no model ran this time · Refresh reruns the agent</span>
+                  <span className="briefing-replay-note">{replay.committed
+                    ? "Recorded run · no model ran this time · upload the report and extract to rerun the agent"
+                    : "Cached result for this filing · no model ran this time · Refresh reruns the agent"}</span>
                 </>}
                 {displayed.source.synthetic && <span className="briefing-synthetic-chip">Synthetic document · fictional issuer · not an SEC filing</span>}
                 <span className="briefing-source-chip">
@@ -437,7 +480,7 @@ export default function CompanyBriefing({
                 </span>
               </div>
               <div className="briefing-review-actions">
-                <button className="primary" type="button" disabled={isAccepted} onClick={acceptCompany}>
+                <button className="primary" type="button" disabled={isAccepted} onClick={acceptCompany} {...guideAnchor("briefing.accept")}>
                   {isAccepted ? <><Check size={15} /> Using this company</> : "Use this company"}
                 </button>
                 <button className="secondary" type="button" disabled={loading} onClick={refreshBriefing}>Refresh</button>
@@ -445,9 +488,9 @@ export default function CompanyBriefing({
               </div>
             </section>
 
-            <div className="briefing-panels">
+            <div className="briefing-panels" {...guideAnchor("briefing.themes")}>
               {THEME_ORDER.map((key) => <ThemePanel key={key} theme={displayed[key]} />)}
-              <article className="briefing-panel wide">
+              <article className="briefing-panel wide" {...guideAnchor("briefing.metrics")}>
                 <h3>Key metrics<span className="briefing-theme-status">{displayed.metrics.length ? "ready" : "abstain"}</span></h3>
                 {displayed.metrics.length === 0 ? (
                   <p className="briefing-empty">No XBRL or verbatim table metric survived grounding.</p>
@@ -473,7 +516,7 @@ export default function CompanyBriefing({
               </article>
             </div>
 
-            <section className="briefing-trail">
+            <section className="briefing-trail" {...guideAnchor("briefing.trail")}>
               <h3>Deep Agent trail</h3>
               {displayed.todos.length > 0 && (
                 <ul className="briefing-todos">
@@ -551,6 +594,23 @@ function observeBriefing(run: ObservedRun, status: number, payload: unknown): Ob
     spans: splunk.span_count,
     defense: cached ? { mode: defense?.mode, status: "cached_replay", checks: 0, blocked: 0, errors: 0, eventIds: [] } : defense,
     note: cached ? "Cached replay · no model calls, inspections, or export" : undefined,
+  };
+}
+
+/** A committed recording shown now: no model calls, inspections, or export happened in this session. */
+function observeRecordedBriefing(run: ObservedRun, payload: unknown, recordedAt: string): ObservedRun {
+  const original = usageFrom((payload as Record<string, unknown> | null)?.usage);
+  return {
+    ...observeBriefing(run, 200, { ...(payload as Record<string, unknown>), cached: true, usage: { llm_calls: 0, input_tokens: 0, output_tokens: 0 } }),
+    status: "completed",
+    durationMs: undefined,
+    otlp: undefined,
+    traceId: undefined,
+    spans: undefined,
+    replay: true,
+    provenance: "recorded",
+    recordedAt,
+    note: `Recorded run · no model calls, inspections, or export now${original.llmCalls != null ? ` (the original run made ${original.llmCalls} model calls)` : ""}`,
   };
 }
 

@@ -66,3 +66,12 @@ html:root[data-theme="light"] .rt-badge.hosted { color: #1e3a73; background: #ee
 html:root[data-theme="light"] .rt-badge.fallback, html:root[data-theme="light"] .rt-badge.sample { color: #6f4a0b; background: #fdf6e7; border-color: #e6cf9c; }
 html:root[data-theme="light"] .rt-badge.recorded { color: #4b2f8f; background: #f2eefc; border-color: #cfc2f0; }
 html:root[data-theme="light"] .rt-badge.none { color: #8a1c2b; background: #fdf0f2; border-color: #f0bcc4; }
+
+/* Guided tour: keep a navy scrim (a derived white wash would flatten the spotlight's edges) and white text on filled buttons. */
+html:root[data-theme="light"] .guide-dim { fill: rgba(15, 23, 42, 0.45); }
+html:root[data-theme="light"] .guide-card,
+html:root[data-theme="light"] .guide-toast { box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28); }
+html:root[data-theme="light"] .guide-card.mode-presenter { box-shadow: none; }
+html:root[data-theme="light"] .guide-card button.primary,
+html:root[data-theme="light"] .guide-toast button.primary { color: #ffffff; border-color: #2563eb; background: #2563eb; }
+html:root[data-theme="light"] .guide-ring { box-shadow: 0 0 0 3px #2563eb, 0 0 0 7px rgba(255, 255, 255, 0.55); }

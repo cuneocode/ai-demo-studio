@@ -19,6 +19,9 @@ import { setTheme, useTheme } from "./theme";
 import { loadCompanyProfile, type StoredCompanyProfile } from "./company-profile";
 import { loadResearchNote, switcherContextLabel, type StoredResearchNote } from "./research-note";
 import { loadAdvisoryBrief, type StoredAdvisoryBrief } from "./advisory-brief";
+import { GuidedTourProvider, useGuide, useGuideControls, useGuideHost, type GuideControl } from "./guide/GuidedTour";
+import { guideAnchor } from "./guide/anchors";
+import { LIFECYCLE_TOUR_ID, TOURS, mainTourFor } from "./guide/tours";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
@@ -34,6 +37,7 @@ import {
   ChevronDown,
   CircleGauge,
   CircleHelp,
+  Compass,
   Eye,
   FileSearch,
   Fingerprint,
@@ -588,8 +592,11 @@ function StatusDot({ tone = "mint" }: { tone?: "mint" | "blue" | "violet" | "amb
 function UseCaseCard({ useCase, onOpen }: { useCase: UseCase; onOpen: (item: UseCase) => void }) {
   const Icon = useCase.icon;
   const inDevelopment = !useCaseFrames[useCase.id]?.liveExperience;
+  const guide = useGuideControls();
+  const tour = mainTourFor(useCase.id);
 
   return (
+    <div className="use-case-card-wrap">
     <article
       className={`use-case-card accent-${useCase.accent}${inDevelopment ? " in-development" : ""}`}
       role="button"
@@ -625,6 +632,12 @@ function UseCaseCard({ useCase, onOpen }: { useCase: UseCase; onOpen: (item: Use
       <div className="card-action">Explore AI experience <ArrowRight size={16} /></div>
       {inDevelopment && <div className="card-dev-overlay"><span>In development</span></div>}
     </article>
+    {tour && guide ? (
+      <button type="button" className="card-guide" aria-label={`Guided tour: ${useCase.title}`} {...guideAnchor(`library.guide.${useCase.id}`)} onClick={() => guide.start(tour.id)}>
+        <Compass size={14} aria-hidden="true" /> Guided tour
+      </button>
+    ) : null}
+    </div>
   );
 }
 
@@ -803,6 +816,7 @@ function UseCaseWorkspace({
     selectTab(next);
     document.getElementById(`case-tab-${next}`)?.focus({ preventScroll: true });
   };
+  useGuideHost(useCase.id, tab, (next) => selectTab(next));
   const startPrimaryAction = () => {
     const run = () => (frame.liveExperience ? focusLiveExperience(frame.liveExperience) : scrollTo("illustrative-experience"));
     if (tab === "demo") { run(); return; }
@@ -824,13 +838,14 @@ function UseCaseWorkspace({
           </div>
         </div>
         <div className="heading-actions">
-          <span className="prototype-chip live-status-chip" title={liveStatus.title}><StatusDot tone={liveStatus.tone} /> {liveStatus.label}</span>
+          <span className="prototype-chip live-status-chip" title={liveStatus.title} {...guideAnchor("case.status")}><StatusDot tone={liveStatus.tone} /> {liveStatus.label}</span>
           <ModelChip experience={frame.liveExperience} onOpen={onOpenModels} />
           <button className="secondary-button" onClick={onAdd}>{inStory ? <><Check size={16} /> In story</> : <><Plus size={16} /> Add to story</>}</button>
           <button className="primary-button" onClick={startPrimaryAction}>{frame.primaryAction} <ArrowRight size={16} /></button>
         </div>
       </header>
 
+      <div className="case-tab-row" {...guideAnchor("case.tabs")}>
       <div className="case-tabs" role="tablist" aria-label={`${useCase.title} views`} ref={tablistRef}>
         {([["demo", "Use case demo"], ["architecture", "Architecture"]] as const).map(([id, label]) => (
           <button
@@ -843,10 +858,13 @@ function UseCaseWorkspace({
             tabIndex={tab === id ? 0 : -1}
             onClick={() => selectTab(id)}
             onKeyDown={onTabKeyDown}
+            {...(id === "architecture" ? guideAnchor("case.tab.architecture") : {})}
           >
             {label}
           </button>
         ))}
+      </div>
+      <CaseGuideActions caseId={useCase.id} />
       </div>
 
       <div className="case-tabpanel" id="case-panel-demo" role="tabpanel" aria-labelledby="case-tab-demo" hidden={tab !== "demo"}>
@@ -874,12 +892,12 @@ function UseCaseWorkspace({
       </section> : null}
 
       {!frame.liveExperience ? <>
-      <div className="experience-label" id="illustrative-experience">
+      <div className="experience-label" id="illustrative-experience" {...guideAnchor("kyc.label")}>
         <div><span className="eyebrow">ILLUSTRATIVE EXPERIENCE</span><h2>How the use case could appear</h2></div>
         <span>Frontend and data are prototype-only</span>
       </div>
 
-      <section className="case-metrics" aria-label={`${useCase.title} summary metrics`}>
+      <section className="case-metrics" aria-label={`${useCase.title} summary metrics`} {...guideAnchor("kyc.metrics")}>
         {frame.metrics.map((metric, index) => (
           <article key={metric.label}>
             <span>0{index + 1}</span>
@@ -891,7 +909,7 @@ function UseCaseWorkspace({
       </section>
 
       <div className="case-workspace-grid">
-        <section className="case-queue-panel">
+        <section className="case-queue-panel" {...guideAnchor("kyc.queue")}>
           <div className="case-panel-heading">
             <div><span className="eyebrow">WORK QUEUE</span><h2>Priority items</h2></div>
           </div>
@@ -912,7 +930,7 @@ function UseCaseWorkspace({
           <div className="queue-footer"><span>Showing highest-priority items · select one to review it</span></div>
         </section>
 
-        <aside className="ai-workbench-panel">
+        <aside className="ai-workbench-panel" {...guideAnchor("kyc.workbench")}>
           <div className="workbench-heading">
             <span className="workbench-icon"><BrainCircuit size={19} /></span>
             <div><span className="eyebrow">AI-ASSISTED REVIEW</span><h2>{frame.workbenchLabel}</h2></div>
@@ -940,6 +958,37 @@ function UseCaseWorkspace({
         {architectureOpened && <div id="architecture-explorer"><ArchitectureMap key={useCase.id} caseId={useCase.id} title={useCase.title} frame={frame} /></div>}
       </div>
     </div>
+  );
+}
+
+/** The workspace's tour launcher; kept apart so a step change re-renders only these buttons. */
+function CaseGuideActions({ caseId }: { caseId: string }) {
+  const guide = useGuide();
+  const caseTour = mainTourFor(caseId);
+  if (!caseTour || !guide) return null;
+  const resumable = guide.saved?.tourId === caseTour.id && !guide.active
+    ? caseTour.steps.findIndex((step) => step.id === guide.saved?.stepId) : -1;
+  return (
+    <div className="case-guide-actions">
+      {resumable > 0 ? <button type="button" className="case-guide-resume" onClick={() => guide.start(caseTour.id, { stepId: guide.saved?.stepId, resume: true })}>Resume at step {resumable + 1}</button> : null}
+      <button type="button" className="case-guide-button" {...guideAnchor("guide.launch")} aria-keyshortcuts="G" onClick={() => guide.start(caseTour.id)}>
+        <Compass size={16} aria-hidden="true" /> Guided tour
+      </button>
+    </div>
+  );
+}
+
+/** The presenter bar, with "Guide this moment" when the moment has a tour. */
+function GuidedPresenterBar({ caseId, ...props }: Parameters<typeof PresenterBar>[0] & { caseId: string }) {
+  const guide = useGuide();
+  const tour = mainTourFor(caseId);
+  const guiding = Boolean(guide?.active);
+  return (
+    <PresenterBar
+      {...props}
+      guiding={guiding}
+      onGuide={tour && guide ? () => (guiding ? guide.exit() : guide.start(tour.id, { cut: true })) : undefined}
+    />
   );
 }
 
@@ -1050,6 +1099,17 @@ export default function HomePage() {
     if (document.fullscreenElement) document.exitFullscreen().catch(() => undefined);
     switchView("stories");
   }, [switchView]);
+  const presenterNext = () => {
+    if (presenting === null) return;
+    if (presenting === story.length - 1) stopPresenting();
+    else present(presenting + 1);
+  };
+  const openCaseForGuide = useCallback((id: string) => {
+    const item = useCases.find((candidate) => candidate.id === id);
+    if (!item) return;
+    setSidebarOpen(false);
+    openUseCase(item);
+  }, [openUseCase]);
 
   const moveStoryItem = (id: string, to: number) => setStoryItems((items) => {
     const from = items.indexOf(id);
@@ -1059,11 +1119,20 @@ export default function HomePage() {
     return next;
   });
 
+  const [guideControl, setGuideControl] = useState<GuideControl | null>(null);
+  const startGuide = useCallback((tourId: string) => guideControl?.start(tourId), [guideControl]);
   const launcherResults = useMemo(() => {
     const normalized = launcherQuery.trim().toLowerCase();
     if (!normalized) return [];
     const pages = [...navItems, ...shellPages].map((item) => ({ key: `view-${item.id}`, icon: item.icon, title: item.label, detail: "Page", open: () => switchView(item.id) }));
     const cases = useCases.map((item) => ({ key: `case-${item.id}`, icon: item.icon, title: item.title, detail: `${item.category} · ${liveExperienceStatus(item.id, useCaseFrames[item.id]?.liveExperience, status).label}`, open: () => openUseCase(item), text: `${item.description} ${item.solutions.join(" ")}` }));
+    const guides = [
+      ...useCases.flatMap((item) => {
+        const tour = mainTourFor(item.id);
+        return tour ? [{ key: `guide-${tour.id}`, icon: Compass, title: `Guide: ${item.title}`, detail: `Guided tour${tour.label ? ` · ${tour.label}` : " · recorded run"}`, open: () => startGuide(tour.id), text: "guided tour walkthrough" }] : [];
+      }),
+      { key: `guide-${LIFECYCLE_TOUR_ID}`, icon: Compass, title: `Guide: ${TOURS[LIFECYCLE_TOUR_ID].title}`, detail: "Guided tour across four demos · recorded runs", open: () => startGuide(LIFECYCLE_TOUR_ID), text: "guided tour walkthrough story lifecycle" },
+    ];
     const rank = (item: (typeof pages)[number] | (typeof cases)[number]) => {
       const title = item.title.toLowerCase();
       if (title.startsWith(normalized)) return 0;
@@ -1071,13 +1140,13 @@ export default function HomePage() {
       if (title.includes(normalized)) return 2;
       return `${title} ${item.detail} ${"text" in item ? item.text : ""}`.toLowerCase().includes(normalized) ? 3 : -1;
     };
-    return [...pages, ...cases]
+    return [...pages, ...cases, ...guides]
       .map((item, order) => ({ item, order, score: rank(item) }))
       .filter((entry) => entry.score >= 0)
       .sort((a, b) => a.score - b.score || a.order - b.order)
       .slice(0, 8)
       .map((entry) => entry.item);
-  }, [launcherQuery, switchView, openUseCase, status]);
+  }, [launcherQuery, switchView, openUseCase, status, startGuide]);
   const closeLauncher = () => { setLauncherOpen(false); setLauncherQuery(""); };
   const links = status?.links ?? null;
   const openCaseRef = useRef(openCaseById);
@@ -1088,6 +1157,15 @@ export default function HomePage() {
 
   return (
     <StudioNavContext.Provider value={studioNav}>
+    <GuidedTourProvider
+      currentCase={selectedCase?.id ?? null}
+      openCase={openCaseForGuide}
+      presenting={presenting !== null}
+      paused={helpOpen || launcherOpen}
+      status={status}
+      onPresenterNext={presenterNext}
+      onControl={setGuideControl}
+    >
     <div className={`app-shell${collapsed ? " sidebar-collapsed" : ""}${presenting !== null ? " presenting" : ""}`}>
       <header className="topbar">
         <div className="brand-lockup">
@@ -1275,7 +1353,10 @@ export default function HomePage() {
                   <h1>Build a demo story</h1>
                   <p>Sequence use cases and choose where to show the supporting technology.</p>
                 </div>
-                <div className="heading-actions"><button className="primary-button" disabled={!story.length} onClick={startPresenting}><Play size={16} fill="currentColor" /> Present story</button></div>
+                <div className="heading-actions">
+                  <button className="secondary-button" onClick={() => startGuide(LIFECYCLE_TOUR_ID)}><Compass size={16} /> Guided story</button>
+                  <button className="primary-button" disabled={!story.length} onClick={startPresenting}><Play size={16} fill="currentColor" /> Present story</button>
+                </div>
               </div>
 
               <section className="story-builder-panel">
@@ -1377,18 +1458,20 @@ export default function HomePage() {
       {helpOpen && <HelpDrawer status={status} onClose={() => setHelpOpen(false)} onOpenSettings={() => openSettings()} />}
 
       {presenting !== null && story[presenting] && (
-        <PresenterBar
+        <GuidedPresenterBar
+          caseId={story[presenting].id}
           index={presenting}
           total={story.length}
           title={story[presenting].title}
           talk={presenterTalk(story[presenting], status)}
           onPrev={() => present(presenting - 1)}
-          onNext={() => (presenting === story.length - 1 ? stopPresenting() : present(presenting + 1))}
+          onNext={presenterNext}
           onExit={stopPresenting}
         />
       )}
 
     </div>
+    </GuidedTourProvider>
     </StudioNavContext.Provider>
   );
 }

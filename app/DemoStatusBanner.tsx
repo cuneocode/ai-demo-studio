@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { CircleAlert, Info, Settings2, TriangleAlert } from "lucide-react";
 import { useStudioNav } from "./studio-nav";
+import { guideAnchor } from "./guide/anchors";
 import "./run/run.css";
 
 export type DemoStatusBannerProps = {
@@ -32,7 +33,7 @@ export default function DemoStatusBanner({
   const { openSettings } = useStudioNav();
   const Icon = tone === "down" ? CircleAlert : tone === "degraded" ? TriangleAlert : Info;
   return (
-    <div className={`demo-status ${tone === "degraded" ? "" : tone} ${className}`} role={tone === "info" ? "note" : "status"}>
+    <div className={`demo-status ${tone === "degraded" ? "" : tone} ${className}`} role={tone === "info" ? "note" : "status"} {...guideAnchor("status-banner")}>
       <Icon size={18} aria-hidden="true" />
       <div>
         <strong>{title}</strong>

@@ -1,4 +1,8 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
+
+const RECORDED = JSON.parse(readFileSync(resolve("services/banking/data/recorded/scripted-prompts.json"), "utf8"));
 
 const STATUS = {
   checkedAt: "2026-10-12T12:00:00.000Z",
@@ -91,4 +95,27 @@ test("an off-topic request is refused by Agent Control, by name", async ({ page 
 test("with no model reachable the runtime card says so instead of naming one", async ({ page }) => {
   await openBank(page, { ...HEALTH, model: null });
   await expect(page.locator(".runtime-details")).toContainText("No model reachable");
+});
+
+test("a recorded turn replays with its date and the refusal's Cisco evidence, never as live", async ({ page }) => {
+  await page.route("**/api/banking/recordings", (route) => route.fulfill({ json: { recordings: [{ name: "scripted-prompts", title: RECORDED.title, recorded_at: RECORDED.recorded_at, served_by: RECORDED.served_by, events: 0, synthetic: true }] } }));
+  await page.route("**/api/banking/recordings/scripted-prompts", (route) => route.fulfill({ json: RECORDED }));
+  let chats = 0;
+  await page.route("**/api/banking/chat", (route) => { chats += 1; return route.fulfill({ status: 500, json: { detail: "not expected" } }); });
+  await openBank(page);
+  const demo = page.locator(".banking-demo");
+  await expect(demo).toHaveAttribute("data-guide-source", "none");
+  await page.locator("#banking-replay").selectOption("scripted-prompts:success");
+  const reply = page.locator(".chat-message.assistant").last();
+  await expect(reply.locator("[data-provenance='recorded']")).toContainText(/Recorded run · Oct \d+, 2026 · OpenAI API/);
+  await expect(reply.locator("[data-provenance='live']")).toHaveCount(0);
+  await expect(reply).toContainText("AI Defense (original run): allowed");
+  await expect(demo).toHaveAttribute("data-guide-source", "recorded");
+  const blocked = RECORDED.result.turns.find((turn: { id: string }) => turn.id === "ai-defense");
+  await page.locator("#banking-replay").selectOption("scripted-prompts:ai-defense");
+  const refusal = page.locator(".banking-error");
+  await expect(refusal.locator("[data-provenance='recorded']")).toContainText("Recorded run");
+  await expect(refusal).toContainText(`Cisco event: ${blocked.body.security.event_ids[0]}`);
+  await expect(page.getByRole("region", { name: "Live run stats" }).locator("[data-provenance='recorded']").first()).toBeVisible();
+  expect(chats).toBe(0);
 });

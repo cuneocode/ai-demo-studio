@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Activity, ArrowUpRight, Loader2, RotateCcw, Settings2, ShieldCheck } from "lucide-react";
 import { useStudioNav } from "./studio-nav";
+import { guideAnchor } from "./guide/anchors";
 import type { ServedBy } from "./run/events";
 import ProvenanceBadge, { type Provenance } from "./run/ProvenanceBadge";
 import "./run-stats.css";
@@ -262,7 +263,7 @@ function Card({ kind, card, runs, last }: { kind: "observability" | "defense"; c
   const notLive = integration.state === "on" && (last?.provenance === "recorded" || last?.provenance === "sample") ? last.provenance : null;
   const chip = running && integration.state === "on" && !notLive ? "running" : notLive ?? integration.state;
   return (
-    <article className={`run-stats-card ${kind} state-${integration.state}`} aria-label={`${title} stats`}>
+    <article className={`run-stats-card ${kind} state-${integration.state}`} aria-label={`${title} stats`} {...guideAnchor(kind === "observability" ? "stats.observability" : "stats.defense")}>
       <header>
         <span className="run-stats-icon"><Icon size={17} /></span>
         <div><strong>{title}</strong><small>{integration.summary}</small></div>
@@ -323,7 +324,7 @@ export default function RunStats({ ledger, observability, defense, empty = "Stat
   const duration = elapsed ?? last?.durationMs;
   const provenance = last ? runProvenance(last) : null;
   return (
-    <section className="run-stats" aria-label="Live run stats" data-runs={runs.length}>
+    <section className="run-stats" aria-label="Live run stats" data-runs={runs.length} {...guideAnchor("stats")}>
       <header className="run-stats-head">
         <span className="run-stats-kicker">{last?.provenance === "recorded" ? "RUN STATS · RECORDED RUN" : last?.provenance === "sample" ? "RUN STATS · SAMPLE DATA" : "LIVE RUN STATS"}</span>
         <div className="run-stats-last" aria-live="polite">
@@ -371,7 +372,7 @@ export function IllustrativeRunStats({ observability, defense }: {
     );
   };
   return (
-    <section className="run-stats illustrative" aria-label="Illustrative run stats">
+    <section className="run-stats illustrative" aria-label="Illustrative run stats" {...guideAnchor("stats")}>
       <header className="run-stats-head">
         <span className="run-stats-kicker">RUN STATS · ILLUSTRATIVE</span>
         <div className="run-stats-last"><span className="run-stats-empty">Prototype only: these are example figures, not a live run.</span></div>
