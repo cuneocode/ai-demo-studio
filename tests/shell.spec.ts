@@ -96,7 +96,7 @@ test("Cmd-K searches use cases and pages, and library filters narrow the grid", 
 
   await page.keyboard.press("ControlOrMeta+k");
   await page.getByLabel("Search demos and pages").fill("settlement");
-  await page.getByRole("listitem").filter({ hasText: "Interbank settlement investigation" }).click();
+  await page.getByRole("listitem").filter({ hasText: "Interbank settlement investigation", hasNotText: "Guide:" }).click();
   await expect(page.getByRole("heading", { name: "Interbank settlement investigation", level: 1 })).toBeVisible();
 
   await page.locator(".side-nav").getByRole("button", { name: "Use case library" }).click();
