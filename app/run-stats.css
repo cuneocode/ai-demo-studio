@@ -28,7 +28,7 @@
 .run-stats-chip.state-on{border-color:#2f6a52;background:#11281f;color:#a6e3c6}
 .run-stats-chip.state-running{border-color:#3f5f9f;background:#16264a;color:#c4d6ff}
 .run-stats-chip.state-off,.run-stats-chip.state-missing,.run-stats-chip.state-unknown,.run-stats-chip.state-not_instrumented{border-color:#4a5568;background:#171f2b;color:#c6cfdb}
-.run-stats-chip.state-illustrative{border-color:#6b5a2e;background:#272010;color:#ead29c}
+.run-stats-chip.state-illustrative,.run-stats-chip.state-recorded,.run-stats-chip.state-sample{border-color:#6b5a2e;background:#272010;color:#ead29c}
 .run-stats-notice{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;padding:10px 12px;border:1px dashed #3a4a60;border-radius:8px;color:#d3dbe7;font-size:var(--font-meta);line-height:1.45}
 .run-stats-notice button{display:inline-flex;align-items:center;gap:5px;min-height:30px;padding:0 10px;border:1px solid #3f5f9f;border-radius:7px;background:#16264a;color:#c4d6ff;font:inherit;font-size:13px;font-weight:650;cursor:pointer}
 .run-stats-notice button:hover{border-color:#5f8ff2;color:#fff}

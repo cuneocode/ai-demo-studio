@@ -93,8 +93,10 @@ test("Present mode steps through KYC, fraud, SAR, and meeting prep with a three-
     await expect(bar).toContainText(`MOMENT ${index + 1} OF 4`);
     await expect(bar.locator(".presenter-step strong")).toHaveText(step.title);
     await expect(page.getByRole("heading", { name: step.heading, level: 1 })).toBeVisible();
-    await expect(talk.locator("b")).toHaveText(["Problem", "AI changes", "Cisco value", "In the story"]);
+    await expect(talk.locator("b")).toHaveText(["Problem", "AI changes", "Cisco value", "In the story", "Right now"]);
     await expect(talk).toContainText(step.cue);
+    if (step.title === "KYC processing") await expect(talk.locator("li").last()).toContainText("Illustrative prototype, no live service");
+    else await expect(talk.locator("li").last()).not.toContainText("Illustrative prototype");
     if (step.title === "Card fraud triage") await expect(page.locator(".fx-presenter-hint")).toContainText("Escalate to SAR");
     if (step.title === "KYC processing") await expect(page.locator(".workbench-body h3")).toHaveText("Dana Whitfield (fictional)");
     if (index < steps.length - 1) await bar.getByRole("button", { name: "Next" }).click();

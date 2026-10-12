@@ -543,7 +543,7 @@ export function researchKnowledge():Diagram {
   n('registry','Evidence registry','Ids, fields with units, text',56,624,'service','Every field has a value, a unit, and a display string the verifier checks against.'),
   n('ground','Claim verifier','Field or quote · per claim',436,624,'service','✓ or ✗ per claim with the reason; struck claims stay visible.'),
   n('policy','Policy verdicts','research.precheck / publish',816,624,'service','Agent Control evaluates; the local policy check is labelled when used.'),
-  n('consumer','Published update','Verified claims only',1196,624,'service','What the advisor desk receives.'),
+  n('consumer','Published update','Verified claims only',1196,624,'service','What meeting prep receives (simulated distribution).'),
  ],
  edges:[
   e('view','registry','house_view',{ports:'down',via:[[176,250],[90,250],[90,624]]}),
@@ -676,7 +676,7 @@ export function advisoryRuntime():Diagram {
 }
 
 export function advisoryKnowledge():Diagram {
- return {title:'Advisor meeting prep · implemented client context',note:'Three synthetic households in fixtures/households. No household CRM catalog beyond them, no vector index, and no Tavily. The published house-view update and the company briefing reference arrive from the studio. Fraud and SAR context are not wired in. This map does not assert live Yahoo or model availability.',width:1520,height:860,
+ return {title:'Advisor meeting prep · implemented client context',note:'Three synthetic households in fixtures/households. No household CRM catalog beyond them, no vector index, and no Tavily. The published house-view update and the company briefing reference arrive from the studio. A fraud case arrives only as a customer-visible service event (card reissued); SAR context never does. This map does not assert live Yahoo or model availability.',width:1520,height:860,
  boundaries:[
   {title:'Synthetic households · test PII only',x:28,y:16,width:1464,height:220},
   {title:'Studio context · screened notes',x:28,y:280,width:1464,height:220},

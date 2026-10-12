@@ -33,7 +33,7 @@ POLICIES = ("allow", "require_ai_defense", "deny")
 # Use cases that send client data to the model. A hosted model needs AI Defense enforce.
 CLIENT_DATA_POLICY = {"client-advisory": "require_ai_defense", "sar-support": "require_ai_defense"}
 
-PROBE_TIMEOUT = 1.5
+PROBE_TIMEOUT = 3.0
 HEALTHY_TTL = 15.0
 CIRCUIT_OPEN = 30.0
 

@@ -72,22 +72,27 @@ function defenseInterior(hops: string, never: string): ZoomInterior {
   };
 }
 
-function observeInterior(incoming: string, controls: boolean): ZoomInterior {
+function observeInterior(incoming: string, controls: boolean | string[]): ZoomInterior {
+  const policies = Array.isArray(controls) ? controls : [];
   return {
     title: "Splunk Agent Observability",
-    note: controls
+    note: controls === true
       ? "Brahe records Agent Control verdicts on the same trace. Evaluators are not verified."
-      : "Traces only. This use case does not run Agent Control or eval models.",
+      : policies.length
+        ? "The service computes each verdict in code; hosted Agent Control enforces it when the controls are bound, otherwise the same rule runs in-process and is labelled a local check. No eval models."
+        : "Traces only. This use case does not run Agent Control or eval models.",
     entities: [
       box("in", "Incoming traces", "From the workload", incoming, "service"),
-      box("controls", "Control models", controls ? "Agent Control" : "Not used here", controls
+      box("controls", "Control models", controls === true ? "Agent Control" : policies.length ? "Agent Control · hosted when bound" : "Not used here", controls === true
         ? "Hosted controls enforce brahe-banking-scope, evidence grounding, and no-approval claims. These are not Luna evaluators."
-        : "No control models are drawn because this use case does not call Agent Control.", controls ? "cisco" : "service", {
-        chips: controls ? [
+        : policies.length
+          ? "Only verdict booleans reach Agent Control, never client or case data. A deny from either side denies."
+          : "No control models are drawn because this use case does not call Agent Control.", controls === true || policies.length ? "cisco" : "service", {
+        chips: controls === true ? [
           chip("scope", "Banking scope", "Step brahe-banking-scope"),
           chip("ground", "Evidence grounding", "brahe-bank-evidence-grounding-v1"),
           chip("approval", "No approval claims", "brahe-bank-no-approval-claims-v1"),
-        ] : [chip("none", "No control models", "Traces only")],
+        ] : policies.length ? policies.map((name) => chip(name.replace(/\W/g, "-"), name, "Deterministic verdict")) : [chip("none", "No control models", "Traces only")],
       }),
       box("otlp", "OTLP export", "Only when configured", "A separate exporter sends spans only when SPLUNK_REALM and SPLUNK_ACCESS_TOKEN, or an OTLP endpoint, are set.", "service"),
     ],
@@ -230,7 +235,7 @@ export const zoomMaps: Record<string, ZoomMap> = {
         stubs: [box("defense", "Cisco AI Defense", "Inspect prompt", "The agent prompt is inspected before it leaves for a hosted model, and the summary before the analyst sees it.")],
       },
       defense: defenseInterior("the dispute note, the agent prompt and summary, and case notes", "The GNN and XGBoost score never enter Inspection."),
-      observe: observeInterior("The triage agent trace with tool spans. OTLP export only when configured.", false),
+      observe: observeInterior("The triage agent trace with tool spans. OTLP export only when configured.", ["fraud.take_action", "fraud.note_pii"]),
     },
   },
   "company-briefing": {
@@ -350,7 +355,7 @@ export const zoomMaps: Record<string, ZoomMap> = {
         stubs: [box("defense", "Cisco AI Defense", "Inspect hop", "Model hops and news items.")],
       },
       defense: defenseInterior("research model hops and each news item as a tool result", "Calc tools, the claim verifier, and policy checks never enter Inspection."),
-      observe: observeInterior("Galileo tool and model spans when GALILEO_API_KEY is set. OTLP only when configured.", false),
+      observe: observeInterior("Galileo tool and model spans when GALILEO_API_KEY is set. OTLP only when configured.", ["research.precheck", "research.publish"]),
     },
   },
   "client-advisory": {
@@ -373,7 +378,7 @@ export const zoomMaps: Record<string, ZoomMap> = {
     interiors: {
       context: {
         title: "Client context",
-        note: "Three synthetic households with test PII only. Fraud and SAR context are not wired in.",
+        note: "Three synthetic households with test PII only. A fraud case arrives only as a customer-visible service event (card reissued); SAR context never does.",
         entities: [
           box("household", "Household record", "Profile and holdings", "Risk profile, horizon, goals, holdings.", "store"),
           box("notes", "CRM notes", "Screened", "Kept, masked, or withheld before any model call.", "store"),
@@ -408,7 +413,7 @@ export const zoomMaps: Record<string, ZoomMap> = {
         stubs: [box("defense", "Cisco AI Defense", "Inspect hop", "Model hops and notes.")],
       },
       defense: defenseInterior("the meeting-prep model hops and each CRM note as a tool result", "Suitability rules, actions, and the verifier never enter Inspection."),
-      observe: observeInterior("Optional tool and model spans when Galileo is configured.", false),
+      observe: observeInterior("Optional tool and model spans when Galileo is configured.", ["advisory.recommendation"]),
     },
   },
   "kyc-processing": {

@@ -76,6 +76,7 @@ async def health():
         "controls": controls.health(),
         "security": defense.health(),
         "splunk": telemetry.health(),
+        "galileo": telemetry.galileo,
         "model_card": _model_card()["status"],
     }
 

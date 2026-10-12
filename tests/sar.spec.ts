@@ -207,6 +207,13 @@ test("never dead: service down, model down, sample narrative, and a labelled rec
   await expect(narrative.locator(".sar-tag")).toHaveText("Recorded run");
   await expect(narrative.locator('.rt-badge[data-provenance="recorded"]')).toContainText("Recorded run");
   await expect(panel.locator(".sar-decision .sar-filed")).toContainText("SIM-BSA-", { timeout: 30000 });
+  await expect(panel.locator(".sar-band")).not.toContainText("Measured now");
+  const stats = page.getByRole("region", { name: "Live run stats" });
+  await expect(stats).not.toContainText(/Recorded in Splunk AO|OTLP export/);
+  await expect(stats.locator(".run-stats-kicker")).toHaveText("RUN STATS · RECORDED RUN");
+  await expect(stats.locator(".run-stats-chip").filter({ hasText: /^Live$/ })).toHaveCount(0);
+  await expect(stats.locator(".run-stats-chip").filter({ hasText: /^Recorded$/ }).first()).toBeVisible();
+  await expect(stats.getByRole("article", { name: "Splunk Agent Observability stats" })).toContainText("Not traced now (recorded run)");
 });
 
 test("an investigation in progress survives a switch to the Architecture tab", async ({ page }) => {

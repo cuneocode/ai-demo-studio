@@ -364,5 +364,6 @@ def test_health_reports_agent_controls_and_model_card(client):
     assert health["agent"]["status"] == "disabled"
     assert health["controls"]["status"] == "local"
     assert health["model_card"] in {"not_measured", "partial", "measured"}
+    assert health["galileo"] == health["splunk"]["galileo"]
     scenarios = client.get("/api/fraud/scenarios").json()
     assert scenarios["synthetic"] is True and len(scenarios["scenarios"]) >= 6

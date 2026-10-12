@@ -78,6 +78,8 @@ export function serviceRows(status: StudioStatus) {
 }
 
 const defenseOn = (mode?: string) => Boolean(mode && mode !== "off");
+/** Tracing states that mean a service has Agent Observability configured, not that a trace was delivered. */
+const TRACED = new Set(["configured", "traces_present", "recorded"]);
 
 /** One line per Cisco capability for the sidebar and launcher. */
 export function platformSummary(status: StudioStatus | null) {
@@ -86,17 +88,42 @@ export function platformSummary(status: StudioStatus | null) {
     return { defense: unknown, observability: unknown, infrastructure: unknown };
   }
   const running = status.services.filter((service) => service.up);
-  const protectedCount = running.filter((service) => defenseOn(service.aiDefense?.mode)).length + (status.interbank.aiDefense ? 1 : 0);
-  const traced = running.filter((service) => service.tracing && service.tracing !== "missing_configuration" && service.tracing !== "disabled").length + (status.interbank.up && status.interbank.project ? 1 : 0);
+  const protectedCount = running.filter((service) => service.aiDefense?.status === "configured" && defenseOn(service.aiDefense.mode)).length + (status.interbank.up && status.interbank.aiDefense ? 1 : 0);
+  const traced = running.filter((service) => service.tracing && TRACED.has(service.tracing)).length + (status.interbank.up && status.interbank.project ? 1 : 0);
   const modelsUp = status.models.filter((model) => model.up).length;
   return {
     defense: { tone: (protectedCount ? "mint" : "amber") as Tone, detail: protectedCount ? `${protectedCount} protected` : "No service protected" },
-    observability: { tone: (traced ? "violet" : "amber") as Tone, detail: traced ? `${traced} tracing` : "No traces configured" },
+    observability: { tone: (traced ? "violet" : "amber") as Tone, detail: traced ? `${traced} configured to trace` : "No traces configured" },
     infrastructure: {
       tone: (status.models.length && !modelsUp ? "amber" : "blue") as Tone,
       detail: status.models.length ? `${modelsUp} of ${status.models.length} endpoints up` : "Hosted models only",
     },
   };
+}
+
+/** Present mode's "Right now" line: what this moment can honestly claim as live at this moment. */
+export function presenterStatus(status: StudioStatus | null, useCaseId: string, live: boolean): string {
+  if (!live) return "Illustrative prototype, no live service: nothing on screen is measured.";
+  if (!status) return "Studio status unavailable: check the service before claiming anything live.";
+  const serviceId = USE_CASE_SERVICE[useCaseId];
+  if (serviceId === "interbank") {
+    const lab = status.interbank;
+    if (!lab.up) return "The interbank lab is not running: start it before presenting this moment.";
+    return [lab.aiDefense ? `AI Defense ${lab.aiDefense.mode} at the gateways` : "AI Defense not reported by the lab", lab.project ? `traces to ${lab.project}` : "no trace project reported"].join(" · ");
+  }
+  const service = status.services.find((item) => item.id === serviceId);
+  if (!service?.up) return `${service?.label ?? "The service"} is not running: present a recorded run, labelled, or start it.`;
+  const parts: string[] = [];
+  if (!service.ready) parts.push(`Not ready: ${service.detail}`);
+  const mode = service.aiDefense?.mode;
+  parts.push(!mode || mode === "off" || service.aiDefense?.status !== "configured" ? "AI Defense is off here, so don't claim inspections" : `AI Defense ${mode}`);
+  const control = service.agentControl?.status;
+  if (control === "enforcing") parts.push("Agent Control hosted");
+  else if (control === "local" || control === "local_checks") parts.push("Agent Control as local checks (not hosted)");
+  else if (control === "not_started") parts.push("Agent Control binds on the first run; local checks until then");
+  else if (control) parts.push(`Agent Control ${humanize(control)}`);
+  parts.push(service.tracing && TRACED.has(service.tracing) ? "Agent Observability configured" : "no Agent Observability trace, so don't claim one");
+  return parts.join(" · ");
 }
 
 /** Whether a story moment can be shown live right now; prototypes always can. */

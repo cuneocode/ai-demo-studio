@@ -163,7 +163,7 @@ export function ControlsPage({ status, onOpenCase, onOpenSettings }: { status: S
               );
             })}
           </div>
-          <p className="shell-muted shell-note"><ShieldCheck size={15} /><span>Modes come from Studio settings: Brahe Bank and the fraud narrative follow <code>AIDEFENSE_MODE</code>; briefing and wealth have their own modes; interbank always enforces at its gateways.</span></p>
+          <p className="shell-muted shell-note"><ShieldCheck size={15} /><span>Modes come from Studio settings: Brahe Bank, fraud triage, and SAR follow <code>AIDEFENSE_MODE</code>; briefing and wealth have their own modes; interbank always enforces at its gateways. Agent Control reads &ldquo;enforcing&rdquo; only when the hosted controls are bound; &ldquo;local&rdquo; means the same rules ran in-process.</span></p>
         </section>
       )}
     </div>
@@ -195,8 +195,8 @@ export function TelemetryPage({ status, onOpenCase, onOpenSettings }: { status: 
               return (
                 <div className="st-row shell-row" role="row" key={useCase.id}>
                   <strong role="cell">{useCase.title}</strong>
-                  <span role="cell">{!up ? <Pill value={null} label="Not running" /> : useCase.service === "interbank" ? <><Pill value="configured" />{lab.project && <small>{lab.project} · {lab.stream}</small>}</> : <Pill value={health?.tracing} label={health?.tracing ? undefined : "Not traced"} />}</span>
-                  <span role="cell">{!up ? <Pill value={null} label="Not running" /> : useCase.service === "interbank" ? <Pill value="configured" label="Gateway collector" /> : <Pill value={health?.otel} />}</span>
+                  <span role="cell">{!up ? <Pill value={null} label="Not running" /> : useCase.service === "interbank" ? (lab.project ? <><Pill value="configured" /><small>{lab.project} · {lab.stream}</small></> : <Pill value={null} />) : <Pill value={health?.tracing} label={health?.tracing ? undefined : "Not traced"} />}</span>
+                  <span role="cell">{!up ? <Pill value={null} label="Not running" /> : useCase.service === "interbank" ? (lab.project ? <Pill value="configured" label="Gateway collector" /> : <Pill value={null} />) : <Pill value={health?.otel} />}</span>
                   <span role="cell"><button className="text-button" onClick={() => onOpenCase(useCase.id)}>Open <ArrowRight size={14} /></button></span>
                 </div>
               );

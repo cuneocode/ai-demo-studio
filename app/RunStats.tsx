@@ -108,7 +108,7 @@ export function defenseFrom(raw: unknown): DefenseCounts | undefined {
   return {
     mode: text(value.mode), status: text(value.status),
     checks: number(value.checks), blocked: number(value.blocked), errors: number(value.errors),
-    eventIds: Array.isArray(value.event_ids) ? value.event_ids.filter((id): id is string => typeof id === "string") : undefined,
+    eventIds: Array.isArray(value.event_ids) ? value.event_ids.filter((id): id is string => typeof id === "string" && id !== "") : undefined,
   };
 }
 
@@ -200,6 +200,8 @@ const EXPORTED = new Set(["accepted_by_endpoint", "exported", "delivery_pending"
 /** Agent trace and OTLP delivery facts. A trace ID is only shown when it was exported somewhere it can be looked up. */
 export function traceFacts(run: ObservedRun | undefined): Fact[] {
   if (!run || run.status === "running") return [];
+  // A replay's delivery status belongs to the original run; nothing was traced or exported now.
+  if (run.replay || run.provenance === "recorded") return [{ label: "Agent trace", value: "Not traced now (recorded run)" }];
   const exported = run.otlp !== undefined && EXPORTED.has(run.otlp);
   return [
     ...(run.agentTrace !== undefined ? [{ label: "Agent trace", value: AGENT_TRACE[run.agentTrace] ?? readable(run.agentTrace) }] : []),
@@ -215,7 +217,7 @@ export function agentTraceIntegration(galileo: string | undefined, reachable: bo
   if (galileo !== "configured") {
     return { state: "missing", summary: "Not configured", notice: "Splunk Agent Observability is off for this service. Add the API key in Studio settings.", settings: "st-splunk-ao" };
   }
-  return { state: "on", summary: "Agent Observability SDK · every graph step traced", link: link ? { label: "Open Splunk Agent Observability", href: link } : undefined };
+  return { state: "on", summary: "Agent Observability SDK · each run reports whether its trace was recorded", link: link ? { label: "Open Splunk Agent Observability", href: link } : undefined };
 }
 
 function format(value: number | undefined, kind: Tile["format"] = "count") {
@@ -233,6 +235,7 @@ function sessionTotal(tile: Tile, runs: ObservedRun[]) {
 }
 
 const STATE_LABEL: Record<Integration["state"], string> = { on: "Live", off: "Off", missing: "Not configured", not_instrumented: "Not instrumented", unknown: "Unknown" };
+const NOT_LIVE_LABEL = { recorded: "Recorded", sample: "Sample" } as const;
 const RUN_LABEL: Record<RunStatus, string> = { running: "Running", completed: "Completed", blocked: "Blocked", failed: "Failed", cached: "Cached replay" };
 
 function useElapsed(run: ObservedRun | undefined) {
@@ -255,13 +258,16 @@ function Card({ kind, card, runs, last }: { kind: "observability" | "defense"; c
   const tiles = kind === "defense" && integration.state !== "on" ? [] : card.tiles;
   const running = last?.status === "running";
   const facts = tiles.length ? card.facts?.(last).filter((fact) => fact.value !== undefined && fact.value !== "") ?? [] : [];
+  // A replayed or sample run's figures are not from this session's service calls.
+  const notLive = integration.state === "on" && (last?.provenance === "recorded" || last?.provenance === "sample") ? last.provenance : null;
+  const chip = running && integration.state === "on" && !notLive ? "running" : notLive ?? integration.state;
   return (
     <article className={`run-stats-card ${kind} state-${integration.state}`} aria-label={`${title} stats`}>
       <header>
         <span className="run-stats-icon"><Icon size={17} /></span>
         <div><strong>{title}</strong><small>{integration.summary}</small></div>
-        <span className={`run-stats-chip state-${running && integration.state === "on" ? "running" : integration.state}`}>
-          {running && integration.state === "on" ? <><Loader2 size={12} className="run-stats-spin" /> In flight</> : STATE_LABEL[integration.state]}
+        <span className={`run-stats-chip state-${chip}`}>
+          {chip === "running" ? <><Loader2 size={12} className="run-stats-spin" /> In flight</> : notLive ? NOT_LIVE_LABEL[notLive] : STATE_LABEL[integration.state]}
         </span>
       </header>
       {integration.notice && (
@@ -319,7 +325,7 @@ export default function RunStats({ ledger, observability, defense, empty = "Stat
   return (
     <section className="run-stats" aria-label="Live run stats" data-runs={runs.length}>
       <header className="run-stats-head">
-        <span className="run-stats-kicker">LIVE RUN STATS</span>
+        <span className="run-stats-kicker">{last?.provenance === "recorded" ? "RUN STATS · RECORDED RUN" : last?.provenance === "sample" ? "RUN STATS · SAMPLE DATA" : "LIVE RUN STATS"}</span>
         <div className="run-stats-last" aria-live="polite">
           {last ? <>
             <span className={`run-stats-status status-${last.status}`}>{last.status === "running" && <Loader2 size={12} className="run-stats-spin" />}{last.replay && last.status === "running" ? "Replaying" : RUN_LABEL[last.status]}</span>

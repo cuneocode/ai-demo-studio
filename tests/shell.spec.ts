@@ -73,6 +73,7 @@ test("Cisco platform rows navigate and the sidebar collapse persists", async ({ 
   await open(page);
   const platform = page.locator(".sidebar-platform");
   await expect(platform.getByRole("button", { name: /AI Defense/ })).toContainText("3 protected");
+  await expect(platform.getByRole("button", { name: /Agent Observability/ })).toContainText("3 configured to trace");
   await platform.getByRole("button", { name: /Agent Observability/ }).click();
   await expect(page.getByRole("heading", { name: "Telemetry", level: 1 })).toBeVisible();
   await platform.getByRole("button", { name: /AI Defense/ }).click();
@@ -139,6 +140,10 @@ test("the story is reordered, scored from live readiness, and presented full scr
   await page.keyboard.press("ArrowRight");
   await expect(bar).toContainText("MOMENT 2 OF 2");
   await expect(page.getByRole("heading", { name: "SAR investigation", level: 1 })).toBeVisible();
+  const now = bar.getByRole("list", { name: "Talk track" }).locator("li").last();
+  await expect(now).toContainText("Right now");
+  await expect(now).toContainText("AI Defense is off here, so don't claim inspections");
+  await expect(now).toContainText("no Agent Observability trace, so don't claim one");
   await expect(page.getByRole("tab", { name: "Use case demo" })).toHaveAttribute("aria-selected", "true");
   await bar.getByRole("button", { name: "Finish" }).click();
   await expect(page.getByRole("heading", { name: "Build a demo story", level: 1 })).toBeVisible();
@@ -147,7 +152,12 @@ test("the story is reordered, scored from live readiness, and presented full scr
 test("prototype queue rows select the workbench item", async ({ page }) => {
   await open(page);
   await page.locator(".side-nav").getByRole("button", { name: "Use case library" }).click();
-  await page.getByRole("button", { name: /Open KYC processing/ }).click();
+  const card = page.getByRole("button", { name: /Open KYC processing/ });
+  await expect(card.locator(".stage-label")).toHaveText("Prototype");
+  await expect(card).toContainText("In development");
+  await card.click();
+  await expect(page.locator(".live-status-chip")).toContainText("Illustrative prototype · no live service");
+  await expect(page.locator(".case-metrics small")).toHaveText([/Illustrative$/, /Illustrative$/, /Illustrative$/]);
   await expect(page.locator(".workbench-body h3")).toHaveText("Dana Whitfield (fictional)");
   await page.getByRole("row", { name: /Avery Chen/ }).click();
   await expect(page.getByRole("row", { name: /Avery Chen/ })).toHaveAttribute("aria-selected", "true");

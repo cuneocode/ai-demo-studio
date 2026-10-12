@@ -12,7 +12,7 @@ import ArchitectureMap from "./ArchitectureMap";
 import StudioSettings, { ModelChip } from "./StudioSettings";
 import { ControlsPage, HelpDrawer, PresenterBar, ServiceBell, TelemetryPage } from "./StudioShell";
 import { presenterNotes } from "./presenter-notes";
-import { momentReady, platformSummary, useStudioStatus, type StudioStatus, type Tone } from "./studio-status";
+import { momentReady, platformSummary, presenterStatus, useStudioStatus, type StudioStatus, type Tone } from "./studio-status";
 import { StudioNavContext } from "./studio-nav";
 import { IllustrativeRunStats } from "./RunStats";
 import { setTheme, useTheme } from "./theme";
@@ -173,7 +173,7 @@ const useCases: UseCase[] = [
     accent: "blue",
     solutions: ["AI Defense", "AI Infrastructure"],
     signal: "Document intake",
-    stage: "Ready",
+    stage: "Prototype",
   },
   {
     id: "sar-support",
@@ -377,7 +377,7 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
     metrics: [], rows: [], evidence: [],
     workbenchLabel: "House-view update",
     workbenchTitle: "Earnings event to a published update",
-    workbenchSummary: "Run a scenario, check each claim against its evidence, then publish to the advisor desk.",
+    workbenchSummary: "Run a scenario, check each claim against its evidence, then publish to meeting prep (simulated distribution).",
     primaryAction: "Run the scenario",
   },
   "transaction-llm": {
@@ -470,21 +470,22 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
 };
 
 const storySteps = [
-  { title: "KYC review", label: "Know the client", icon: Fingerprint, color: "blue" },
+  { title: "KYC review", label: "Know the client · illustrative prototype", icon: Fingerprint, color: "blue" },
   { title: "Fraud monitoring", label: "Catch the fraud", icon: ReceiptText, color: "violet" },
   { title: "SAR investigation", label: "Investigate & report", icon: FileSearch, color: "mint" },
   { title: "Advisor meeting prep", label: "Serve with context", icon: WalletCards, color: "amber" },
 ];
 
-/** Present mode's three acts for a moment, falling back to the frame's copy. */
-function presenterTalk(item: UseCase) {
+/** Present mode's three acts for a moment, falling back to the frame's copy, then what is live right now. */
+function presenterTalk(item: UseCase, status: StudioStatus | null) {
   const note = presenterNotes[item.id];
-  const frame = useCaseFrames[item.id].transformation;
+  const frame = useCaseFrames[item.id];
   return [
-    { label: "Problem", text: note?.problem ?? frame.friction },
-    { label: "AI changes", text: note?.ai ?? frame.aiShift },
-    { label: "Cisco value", text: note?.cisco ?? frame.humanControl },
+    { label: "Problem", text: note?.problem ?? frame.transformation.friction },
+    { label: "AI changes", text: note?.ai ?? frame.transformation.aiShift },
+    { label: "Cisco value", text: note?.cisco ?? frame.transformation.humanControl },
     ...(note?.lifecycle ? [{ label: "In the story", text: note.lifecycle }] : []),
+    { label: "Right now", text: presenterStatus(status, item.id, Boolean(frame.liveExperience)) },
   ];
 }
 
@@ -526,7 +527,7 @@ const HAS_RECORDED_RUNS = new Set<LiveExperience>(["fraud", "research", "advisor
 
 /** The header chip: "Live" only when the studio status says this use case's service is up and ready. */
 function liveExperienceStatus(useCaseId: string, experience: UseCaseFrame["liveExperience"], status: StudioStatus | null): { label: string; tone: Tone; title: string } {
-  if (!experience) return { label: "Prototype data", tone: "amber", title: "Illustrative frontend and data" };
+  if (!experience) return { label: "Illustrative prototype · no live service", tone: "amber", title: "Illustrative frontend and data; nothing on this page is measured" };
   if (!status) return { label: "Checking live service", tone: "blue", title: "Studio status unavailable" };
   const { ready, reason } = momentReady(status, useCaseId, true);
   if (ready) return { label: `Live · ${LIVE_SUBJECT[experience]}`, tone: "mint", title: reason };
@@ -604,7 +605,7 @@ function UseCaseCard({ useCase, onOpen }: { useCase: UseCase; onOpen: (item: Use
     >
       <div className="card-topline">
         <span className="category-label">{useCase.category}</span>
-        <span className="stage-label"><StatusDot tone={useCase.stage === "Ready" ? "mint" : "amber"} />{useCase.stage}</span>
+        <span className="stage-label"><StatusDot tone={inDevelopment ? "amber" : "mint"} />{useCase.stage}</span>
       </div>
       <div className="use-case-heading">
         <span className="use-case-icon"><Icon size={21} strokeWidth={1.8} /></span>
@@ -718,10 +719,6 @@ const ILLUSTRATIVE_STATS: Record<string, ExampleStats> = {
   "kyc-processing": {
     observability: [{ label: "LLM calls", value: "6" }, { label: "Tool calls", value: "9" }, { label: "Input tokens", value: "14.2k" }, { label: "Output tokens", value: "1.8k" }, { label: "Latency", value: "18 s" }],
     defense: exampleDefense(4, 0),
-  },
-  "sar-support": {
-    observability: [{ label: "LLM calls", value: "8" }, { label: "Tool calls", value: "12" }, { label: "Input tokens", value: "21.5k" }, { label: "Output tokens", value: "3.1k" }, { label: "Latency", value: "26 s" }],
-    defense: exampleDefense(6, 1),
   },
   "transaction-llm": {
     observability: [{ label: "LLM calls", value: "3" }, { label: "Tool calls", value: "4" }, { label: "Input tokens", value: "5.6k" }, { label: "Output tokens", value: "620" }, { label: "Latency", value: "7 s" }],
@@ -888,7 +885,7 @@ function UseCaseWorkspace({
             <span>0{index + 1}</span>
             <p>{metric.label}</p>
             <strong>{metric.value}</strong>
-            <small>{metric.detail}</small>
+            <small>{metric.detail} · Illustrative</small>
           </article>
         ))}
       </section>
@@ -1066,7 +1063,7 @@ export default function HomePage() {
     const normalized = launcherQuery.trim().toLowerCase();
     if (!normalized) return [];
     const pages = [...navItems, ...shellPages].map((item) => ({ key: `view-${item.id}`, icon: item.icon, title: item.label, detail: "Page", open: () => switchView(item.id) }));
-    const cases = useCases.map((item) => ({ key: `case-${item.id}`, icon: item.icon, title: item.title, detail: `${item.category} · ${useCaseFrames[item.id]?.liveExperience ? "Live" : "Prototype"}`, open: () => openUseCase(item), text: `${item.description} ${item.solutions.join(" ")}` }));
+    const cases = useCases.map((item) => ({ key: `case-${item.id}`, icon: item.icon, title: item.title, detail: `${item.category} · ${liveExperienceStatus(item.id, useCaseFrames[item.id]?.liveExperience, status).label}`, open: () => openUseCase(item), text: `${item.description} ${item.solutions.join(" ")}` }));
     const rank = (item: (typeof pages)[number] | (typeof cases)[number]) => {
       const title = item.title.toLowerCase();
       if (title.startsWith(normalized)) return 0;
@@ -1080,7 +1077,7 @@ export default function HomePage() {
       .sort((a, b) => a.score - b.score || a.order - b.order)
       .slice(0, 8)
       .map((entry) => entry.item);
-  }, [launcherQuery, switchView, openUseCase]);
+  }, [launcherQuery, switchView, openUseCase, status]);
   const closeLauncher = () => { setLauncherOpen(false); setLauncherQuery(""); };
   const links = status?.links ?? null;
   const openCaseRef = useRef(openCaseById);
@@ -1202,7 +1199,7 @@ export default function HomePage() {
                 <div className="hero-copy">
                   <span className="eyebrow"><Sparkles size={13} /> FEATURED DEMO NARRATIVE</span>
                   <h2>Client lifecycle</h2>
-                  <p>Follow one fictional customer, Dana Whitfield, from a KYC review to card fraud triage, a SAR investigation, and her advisor&apos;s meeting prep. Each module also works alone.</p>
+                  <p>Follow one fictional customer, Dana Whitfield, from a KYC review (an illustrative prototype) to live card fraud triage, a SAR investigation, and her advisor&apos;s meeting prep. Each module also works alone.</p>
                   <div className="hero-meta">
                     <span><Workflow size={15} /> 4 connected moments</span>
                     <span><CircleGauge size={15} /> 18–22 minutes</span>
@@ -1384,7 +1381,7 @@ export default function HomePage() {
           index={presenting}
           total={story.length}
           title={story[presenting].title}
-          talk={presenterTalk(story[presenting])}
+          talk={presenterTalk(story[presenting], status)}
           onPrev={() => present(presenting - 1)}
           onNext={() => (presenting === story.length - 1 ? stopPresenting() : present(presenting + 1))}
           onExit={stopPresenting}

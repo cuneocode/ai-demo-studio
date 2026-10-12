@@ -298,6 +298,14 @@ test('Zoom altitudes keep the live perimeters', () => {
   assert.equal(zoomMaps['client-advisory'].coreEdges.some(edge => edge.from === 'workload' && edge.to === 'defense'), false);
   assert.equal(zoomMaps['transaction-llm'].coreEdges.some(edge => edge.from === 'pipeline' && edge.to === 'defense'), false);
   assert.equal(zoomMaps['fraud-modeling'].interiors.observe.entities.some(entity => /eval model/i.test(entity.title)), false);
+  // Services that evaluate Agent Control policies must not be drawn as "traces only".
+  for (const [id, policy] of [['fraud-modeling', 'fraud.take_action'], ['market-research', 'research.publish'], ['client-advisory', 'advisory.recommendation']]) {
+    const observe = zoomText({ cores: [], coreEdges: [], interiors: { observe: zoomMaps[id].interiors.observe } });
+    assert.doesNotMatch(observe, /does not (run|call) Agent Control/, id);
+    assert.match(observe, new RegExp(policy.replace('.', '\\.')), id);
+    assert.match(observe, /local check/, id);
+  }
+  assert.doesNotMatch(zoomText(zoomMaps['client-advisory']), /Fraud and SAR context are not wired in/);
   assert.equal(zoomMaps['kyc-processing'].implemented, false);
 
   const sar = zoomText(zoomMaps['sar-support']);
