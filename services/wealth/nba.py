@@ -63,7 +63,7 @@ def candidates(household: dict, findings: list[dict]) -> list[dict]:
             "NBA-EXCHANGE", "exchange-fund", f"Exchange fund for low-basis {ticker} shares",
             "Swap concentrated shares into a diversified fund without an immediate taxable sale.",
             dollars=excess, dollars_label="Shares that could be contributed", rules=["R-CONC-01"], suitable=fits,
-            fit=(f"Not suitable: a {EXCHANGE_FUND_LOCKUP_YEARS}-year lock-up exceeds the {horizon:.0f}-year horizon to retirement."
+            fit=(f"Not suitable: a {EXCHANGE_FUND_LOCKUP_YEARS}-year lock-up exceeds the {horizon:.0f}-year planning horizon."
                  if not fits else "The lock-up fits the horizon."),
             cautions=[f"Typical {EXCHANGE_FUND_LOCKUP_YEARS}-year lock-up; accredited investors only."]))
         gain = f.get("unrealized_gain")

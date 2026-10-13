@@ -19,7 +19,7 @@
     },
     {
       "path": "fixtures/customers/lifecycle-customer.json",
-      "description": "Shared lifecycle customer Dana Whitfield: fake PII, KYC, accounts (checking, card ****1188, brokerage linked to household dana-whitfield), the cpp-orbit fraud event, and an empty SAR alerts list.",
+      "description": "Shared lifecycle customer Chuck Robbins: fake PII, KYC, accounts (checking, card ****1188, brokerage linked to household chuck-robbins), the cpp-orbit fraud event, and an empty SAR alerts list.",
       "owner": "shell",
       "demos": ["fraud-modeling", "sar", "company-briefing", "market-research", "client-advisory"],
       "synthetic": true
@@ -67,8 +67,8 @@
       "synthetic": true
     },
     {
-      "path": "fixtures/households/dana-whitfield.json",
-      "description": "Advisory household for Dana Whitfield: holdings, accounts, IPS, estate, goals, CRM notes, service events.",
+      "path": "fixtures/households/chuck-robbins.json",
+      "description": "Advisory household for Chuck Robbins: holdings, accounts, IPS, estate, goals, CRM notes, service events.",
       "owner": "wealth",
       "demos": ["client-advisory"],
       "synthetic": true

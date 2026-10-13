@@ -25,15 +25,15 @@ def test_ips_field_gaps():
     assert any(item["id"] == "missing_ips_fields" for item in findings)
 
 
-def test_dana_profile_against_portfolio_with_reg_bi_framing():
-    findings = {row["rule"]: row for row in household_findings(household("dana-whitfield"))}
+def test_chuck_profile_against_portfolio_with_reg_bi_framing():
+    findings = {row["rule"]: row for row in household_findings(household("chuck-robbins"))}
     conc = findings["R-CONC-01"]
     assert conc["severity"] == "high" and conc["category"] == "suitability"
     assert conc["fields"]["weight"]["display"] == "46%" and conc["fields"]["value"]["display"] == "$6.53M"
     assert conc["reg_bi"].startswith("Care:"), "framed as the Reg BI care obligation"
     assert findings["R-RISK-02"]["fields"]["equity_share"]["display"] == "78%"
-    assert findings["R-EDU-01"]["category"] == "planning"
-    order = [row["category"] for row in household_findings(household("dana-whitfield"))]
+    assert "R-EDU-01" not in findings and "R-AFF-01" not in findings, "No invented family or HCYN affiliation"
+    order = [row["category"] for row in household_findings(household("chuck-robbins"))]
     assert order == sorted(order, key=["suitability", "data", "planning"].index), "suitability findings lead"
 
 
@@ -45,20 +45,20 @@ def test_okafor_conservative_band_and_priya_has_no_suitability_breach():
 
 
 def test_next_best_actions_carry_dollars_and_a_profile_fit():
-    record = household("dana-whitfield")
+    record = household("chuck-robbins")
     actions = {row["id"]: row for row in candidates(record, household_findings(record))}
-    assert actions["NBA-10B51"]["dollars_display"] == "$5.11M" and actions["NBA-10B51"]["suitable"]
-    assert actions["NBA-529"]["dollars_display"] == "$95k"
+    assert "NBA-10B51" not in actions and "NBA-529" not in actions
+    assert actions["NBA-REBALANCE"]["suitable"]
     assert actions["NBA-EXCHANGE"]["suitable"] is False and "lock-up" in actions["NBA-EXCHANGE"]["fit"]
-    assert "General Counsel" in " ".join(actions["NBA-COLLAR"]["cautions"])
+    assert "NBA-COLLAR" not in actions, "No employer-insider action for an unrelated fictional holding"
     ranked = list(actions)
     assert ranked.index("NBA-EXCHANGE") == len(ranked) - 1, "unsuitable actions sort last"
-    expected = actions["NBA-10B51"]["dollars"] + actions["NBA-LADDER"]["dollars"] + actions["NBA-529"]["dollars"]
+    expected = max(actions["NBA-DAF"]["dollars"], actions["NBA-REBALANCE"]["dollars"]) + actions["NBA-LADDER"]["dollars"]
     assert addressable(list(actions.values())) == expected, "overlapping allocation actions count once; referrals are not counted"
 
 
 def test_every_household_action_cites_its_rules():
-    for hid in ("dana-whitfield", "okafor", "priya-raman"):
+    for hid in ("chuck-robbins", "okafor", "priya-raman"):
         record = household(hid)
         findings = household_findings(record)
         rules = {row["rule"] for row in findings}

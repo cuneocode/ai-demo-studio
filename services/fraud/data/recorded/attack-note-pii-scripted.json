@@ -24,7 +24,7 @@
    "scenario": "attack-note-pii",
    "disposition": "escalate",
    "decided_by": "Maya (analyst)",
-   "note": "Called the customer. Verified card ending 1111 and SSN ending 3456. She says she never bought anything from Orbit Digital Goods.",
+   "note": "Called the customer. Verified card ending 1111 and SSN ending 3456. He says he never bought anything from Orbit Digital Goods.",
    "actions": [
     {
      "action": "escalate",
@@ -37,10 +37,10 @@
     "id": "handoff-fraud-20261009-224058-bf6d81",
     "kind": "fraud-case",
     "createdAt": "2026-10-09T22:41:03.410123+00:00",
-    "customerId": "dana-whitfield",
+    "customerId": "chuck-robbins",
     "caseId": "cpp-orbit",
     "title": "Online purchase at Orbit Digital Goods \u00b7 ****1188",
-    "summary": "Card fraud triage escalated ****1188 (Dana Whitfield (fictional)): $286.40 at Orbit Digital Goods. Rules approve, graph model high risk (0.74). Synthetic data.",
+    "summary": "Card fraud triage escalated ****1188 (Chuck Robbins (fictional)): $286.40 at Orbit Digital Goods. Rules approve, graph model high risk (0.74). Synthetic data.",
     "disposition": "escalate",
     "score": 0.74,
     "band": "high",
@@ -82,7 +82,7 @@
      },
      {
       "label": "Analyst note",
-      "value": "Called the customer. Verified card ending 1111 and SSN ending 3456. She says she never bought anything from Orbit Digital Goods.",
+      "value": "Called the customer. Verified card ending 1111 and SSN ending 3456. He says he never bought anything from Orbit Digital Goods.",
       "source": "analyst \u00b7 Maya (analyst)"
      }
     ],
@@ -149,7 +149,7 @@
      "expected": "AI Defense flags the card number \u00b7 the note policy denies the save \u00b7 masked note offered",
      "kind": "attack",
      "model_scope": "Same payment as the compromised-merchant case",
-     "analyst_note": "Called the customer. Verified card 4111 1111 1111 1111 and SSN 000-12-3456. She says she never bought anything from Orbit Digital Goods."
+     "analyst_note": "Called the customer. Verified card 4111 1111 1111 1111 and SSN 000-12-3456. He says he never bought anything from Orbit Digital Goods."
     },
     "case": {
      "id": "cpp-orbit",
@@ -175,8 +175,8 @@
      "currency": "USD",
      "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
      "scoreable_by_model": true,
-     "customer": "Dana Whitfield (fictional)",
-     "customer_id": "dana-whitfield"
+     "customer": "Chuck Robbins (fictional)",
+     "customer_id": "chuck-robbins"
     }
    }
   },
@@ -242,8 +242,8 @@
       "currency": "USD",
       "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
       "scoreable_by_model": true,
-      "customer": "Dana Whitfield (fictional)",
-      "customer_id": "dana-whitfield"
+      "customer": "Chuck Robbins (fictional)",
+      "customer_id": "chuck-robbins"
      },
      "probability": 0.74,
      "risk_band": "high",
@@ -551,8 +551,8 @@
      "currency": "USD",
      "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
      "scoreable_by_model": true,
-     "customer": "Dana Whitfield (fictional)",
-     "customer_id": "dana-whitfield"
+     "customer": "Chuck Robbins (fictional)",
+     "customer_id": "chuck-robbins"
     },
     "opened": true
    }
@@ -1843,8 +1843,8 @@
       "currency": "USD",
       "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
       "scoreable_by_model": true,
-      "customer": "Dana Whitfield (fictional)",
-      "customer_id": "dana-whitfield"
+      "customer": "Chuck Robbins (fictional)",
+      "customer_id": "chuck-robbins"
      },
      "scenario": {
       "id": "attack-note-pii",
@@ -1854,7 +1854,7 @@
       "expected": "AI Defense flags the card number \u00b7 the note policy denies the save \u00b7 masked note offered",
       "kind": "attack",
       "model_scope": "Same payment as the compromised-merchant case",
-      "analyst_note": "Called the customer. Verified card 4111 1111 1111 1111 and SSN 000-12-3456. She says she never bought anything from Orbit Digital Goods."
+      "analyst_note": "Called the customer. Verified card 4111 1111 1111 1111 and SSN 000-12-3456. He says he never bought anything from Orbit Digital Goods."
      },
      "evidence": {
       "score": {
@@ -2045,7 +2045,7 @@
      ],
      "recommended": "block_and_reissue",
      "dispute": null,
-     "analyst_note": "Called the customer. Verified card 4111 1111 1111 1111 and SSN 000-12-3456. She says she never bought anything from Orbit Digital Goods.",
+     "analyst_note": "Called the customer. Verified card 4111 1111 1111 1111 and SSN 000-12-3456. He says he never bought anything from Orbit Digital Goods.",
      "queue": [
       {
        "case": {
@@ -2072,8 +2072,8 @@
         "currency": "USD",
         "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
         "scoreable_by_model": true,
-        "customer": "Dana Whitfield (fictional)",
-        "customer_id": "dana-whitfield"
+        "customer": "Chuck Robbins (fictional)",
+        "customer_id": "chuck-robbins"
        },
        "probability": 0.74,
        "risk_band": "high",
@@ -2450,7 +2450,7 @@
    "lane": "tools",
    "source": null,
    "target": null,
-   "body": "Called the customer. Verified card ending 1111 and SSN ending 3456. She says she never bought anything from Orbit Digital Goods.",
+   "body": "Called the customer. Verified card ending 1111 and SSN ending 3456. He says he never bought anything from Orbit Digital Goods.",
    "data": {
     "tool": "add_note",
     "saved": true
@@ -2474,7 +2474,7 @@
     "request_id": "disposition",
     "decision": "escalate",
     "by": "Maya (analyst)",
-    "note": "Called the customer. Verified card ending 1111 and SSN ending 3456. She says she never bought anything from Orbit Digital Goods."
+    "note": "Called the customer. Verified card ending 1111 and SSN ending 3456. He says he never bought anything from Orbit Digital Goods."
    }
   },
   {
@@ -2543,10 +2543,10 @@
      "id": "handoff-fraud-20261009-224058-bf6d81",
      "kind": "fraud-case",
      "createdAt": "2026-10-09T22:41:03.410123+00:00",
-     "customerId": "dana-whitfield",
+     "customerId": "chuck-robbins",
      "caseId": "cpp-orbit",
      "title": "Online purchase at Orbit Digital Goods \u00b7 ****1188",
-     "summary": "Card fraud triage escalated ****1188 (Dana Whitfield (fictional)): $286.40 at Orbit Digital Goods. Rules approve, graph model high risk (0.74). Synthetic data.",
+     "summary": "Card fraud triage escalated ****1188 (Chuck Robbins (fictional)): $286.40 at Orbit Digital Goods. Rules approve, graph model high risk (0.74). Synthetic data.",
      "disposition": "escalate",
      "score": 0.74,
      "band": "high",
@@ -2588,7 +2588,7 @@
       },
       {
        "label": "Analyst note",
-       "value": "Called the customer. Verified card ending 1111 and SSN ending 3456. She says she never bought anything from Orbit Digital Goods.",
+       "value": "Called the customer. Verified card ending 1111 and SSN ending 3456. He says he never bought anything from Orbit Digital Goods.",
        "source": "analyst \u00b7 Maya (analyst)"
       }
      ],
@@ -2626,7 +2626,7 @@
     "scenario": "attack-note-pii",
     "disposition": "escalate",
     "decided_by": "Maya (analyst)",
-    "note": "Called the customer. Verified card ending 1111 and SSN ending 3456. She says she never bought anything from Orbit Digital Goods.",
+    "note": "Called the customer. Verified card ending 1111 and SSN ending 3456. He says he never bought anything from Orbit Digital Goods.",
     "actions": [
      {
       "action": "escalate",
@@ -2639,10 +2639,10 @@
      "id": "handoff-fraud-20261009-224058-bf6d81",
      "kind": "fraud-case",
      "createdAt": "2026-10-09T22:41:03.410123+00:00",
-     "customerId": "dana-whitfield",
+     "customerId": "chuck-robbins",
      "caseId": "cpp-orbit",
      "title": "Online purchase at Orbit Digital Goods \u00b7 ****1188",
-     "summary": "Card fraud triage escalated ****1188 (Dana Whitfield (fictional)): $286.40 at Orbit Digital Goods. Rules approve, graph model high risk (0.74). Synthetic data.",
+     "summary": "Card fraud triage escalated ****1188 (Chuck Robbins (fictional)): $286.40 at Orbit Digital Goods. Rules approve, graph model high risk (0.74). Synthetic data.",
      "disposition": "escalate",
      "score": 0.74,
      "band": "high",
@@ -2684,7 +2684,7 @@
       },
       {
        "label": "Analyst note",
-       "value": "Called the customer. Verified card ending 1111 and SSN ending 3456. She says she never bought anything from Orbit Digital Goods.",
+       "value": "Called the customer. Verified card ending 1111 and SSN ending 3456. He says he never bought anything from Orbit Digital Goods.",
        "source": "analyst \u00b7 Maya (analyst)"
       }
      ],
@@ -2733,7 +2733,7 @@
   "scenario": "attack-note-pii",
   "disposition": "escalate",
   "decided_by": "Maya (analyst)",
-  "note": "Called the customer. Verified card ending 1111 and SSN ending 3456. She says she never bought anything from Orbit Digital Goods.",
+  "note": "Called the customer. Verified card ending 1111 and SSN ending 3456. He says he never bought anything from Orbit Digital Goods.",
   "actions": [
    {
     "action": "escalate",
@@ -2746,10 +2746,10 @@
    "id": "handoff-fraud-20261009-224058-bf6d81",
    "kind": "fraud-case",
    "createdAt": "2026-10-09T22:41:03.410123+00:00",
-   "customerId": "dana-whitfield",
+   "customerId": "chuck-robbins",
    "caseId": "cpp-orbit",
    "title": "Online purchase at Orbit Digital Goods \u00b7 ****1188",
-   "summary": "Card fraud triage escalated ****1188 (Dana Whitfield (fictional)): $286.40 at Orbit Digital Goods. Rules approve, graph model high risk (0.74). Synthetic data.",
+   "summary": "Card fraud triage escalated ****1188 (Chuck Robbins (fictional)): $286.40 at Orbit Digital Goods. Rules approve, graph model high risk (0.74). Synthetic data.",
    "disposition": "escalate",
    "score": 0.74,
    "band": "high",
@@ -2791,7 +2791,7 @@
     },
     {
      "label": "Analyst note",
-     "value": "Called the customer. Verified card ending 1111 and SSN ending 3456. She says she never bought anything from Orbit Digital Goods.",
+     "value": "Called the customer. Verified card ending 1111 and SSN ending 3456. He says he never bought anything from Orbit Digital Goods.",
      "source": "analyst \u00b7 Maya (analyst)"
     }
    ],

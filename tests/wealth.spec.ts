@@ -12,9 +12,9 @@ const STATUS = {
 };
 
 const json = (path: string) => JSON.parse(readFileSync(resolve(path), "utf8"));
-const RECORDINGS = ["research-hcyn", "research-kstl-restricted", "research-hcyn-poisoned", "research-jpm-bank", "advisory-dana-whitfield", "advisory-okafor", "advisory-priya-raman"];
+const RECORDINGS = ["research-hcyn", "research-kstl-restricted", "research-hcyn-poisoned", "research-jpm-bank", "advisory-chuck-robbins", "advisory-okafor", "advisory-priya-raman"];
 const RECORDED = Object.fromEntries(RECORDINGS.map((name) => [name, json(`services/wealth/data/recorded/${name}.json`)]));
-const HOUSEHOLDS = ["dana-whitfield", "okafor", "priya-raman"].map((id) => json(`fixtures/households/${id}.json`));
+const HOUSEHOLDS = ["chuck-robbins", "okafor", "priya-raman"].map((id) => json(`fixtures/households/${id}.json`));
 
 const OPENAI_FALLBACK = {
   provider: "openai", label: "OpenAI API", model: "gpt-5.6-luna", kind: "openai", private: false, external: true,
@@ -39,6 +39,14 @@ const card = (record: Record<string, unknown>) => ({
 const policy = (name: string, allowed: boolean, checks: [string, string][]) => ({
   policy: name, allowed, source: "agent_control", checks: checks.map(([label, status]) => ({ label, status, source: "agent_control" })),
 });
+
+// Explicit test-only model response: the committed Chuck example is code-written and not approvable.
+function mockedModelBrief(runId?: string) {
+  const sample = RECORDED["advisory-chuck-robbins"].result;
+  return { ...sample, run_id: runId, served_by: OPENAI_FALLBACK,
+    brief: { ...sample.brief, mode: "deep_agent", mode_label: "Mocked model brief", reason: null },
+    approval: { status: "awaiting_advisor", request_id: "advisor" } };
+}
 
 type Routes = {
   health?: object | null;
@@ -136,7 +144,7 @@ test.describe("Market event → house-view update", () => {
       },
       brief: (route) => {
         briefBody = route.request().postDataJSON();
-        return route.fulfill({ json: { ...RECORDED["advisory-dana-whitfield"].result, served_by: OPENAI_FALLBACK } });
+        return route.fulfill({ json: mockedModelBrief(briefBody.run_id as string) });
       },
     });
     await open(page, RESEARCH_TITLE);
@@ -162,8 +170,8 @@ test.describe("Market event → house-view update", () => {
     await expect(context).toContainText("Published by Sam Ortiz");
 
     await page.locator("#advisory-run").click();
-    await expect(result(page).getByRole("heading", { name: "Dana Whitfield", level: 2 })).toBeVisible();
-    expect(briefBody).toMatchObject({ household_id: "dana-whitfield" });
+    await expect(result(page).getByRole("heading", { name: "Chuck Robbins", level: 2 })).toBeVisible();
+    expect(briefBody).toMatchObject({ household_id: "chuck-robbins" });
     expect((briefBody.research as { publish: { status: string } }).publish.status).toBe("published");
     await expect(badge(page)).toHaveText("Answered by OpenAI API · gpt-5.6-luna (hosted, fallback)");
   });
@@ -265,12 +273,12 @@ test.describe("Market event → house-view update", () => {
 });
 
 test.describe("Advisor meeting prep", () => {
-  test("the household picker defaults to Dana and the context panel says what is loaded", async ({ page }) => {
+  test("the household picker defaults to Chuck and the context panel says what is loaded", async ({ page }) => {
     await mockWealth(page);
     await open(page, ADVISORY_TITLE);
     const radios = page.locator("input[name='advisory-household']");
     await expect(radios).toHaveCount(3);
-    await expect(page.getByRole("radio", { name: /Dana Whitfield/ })).toBeChecked();
+    await expect(page.getByRole("radio", { name: /Chuck Robbins/ })).toBeChecked();
     const context = page.getByRole("region", { name: "Meeting context" });
     await expect(context).toContainText("House-view update · none published this session");
     await expect(context).toContainText("Company briefing · not loaded");
@@ -280,6 +288,7 @@ test.describe("Advisor meeting prep", () => {
   test("advisor submits, supervisor approves; an unsuitable action is denied by the supervisor's policy", async ({ page }) => {
     const posts: Record<string, unknown>[] = [];
     await mockWealth(page, {
+      brief: (route) => route.fulfill({ json: mockedModelBrief(route.request().postDataJSON().run_id) }),
       approve: (route) => {
         const body = route.request().postDataJSON();
         posts.push(body);
@@ -296,14 +305,14 @@ test.describe("Advisor meeting prep", () => {
       },
     });
     await open(page, ADVISORY_TITLE);
-    await page.locator(".rx-actions").getByRole("button", { name: "Replay recorded run" }).click();
-    await expect(result(page).getByRole("heading", { name: "Dana Whitfield", level: 2 })).toBeFocused();
+    await page.locator("#advisory-run").click();
+    await expect(result(page).getByRole("heading", { name: "Chuck Robbins", level: 2 })).toBeFocused();
     await expect(result(page)).toContainText("Reg BI care obligation");
     await expect(result(page).locator(".ax-findings li").first()).toContainText("Single issuer above policy");
 
     const exchange = page.getByRole("checkbox", { name: "Include Exchange fund for low-basis HCYN shares" });
     await expect(exchange).not.toBeChecked();
-    await expect(page.getByRole("checkbox", { name: /Include 10b5-1 sale plan/ })).toBeChecked();
+    await expect(page.getByRole("checkbox", { name: /Include Rebalance back/ })).toBeChecked();
     await exchange.check();
     await expect(result(page).locator(".ax-action.is-unsuitable")).toContainText("the supervisor's policy check will deny it");
 
@@ -319,7 +328,7 @@ test.describe("Advisor meeting prep", () => {
     expect(posts[1].action_ids).toContain("NBA-EXCHANGE");
     expect(posts[1].by).toBe("Morgan Patel · supervising principal");
 
-    await page.locator(".rx-actions").getByRole("button", { name: "Replay recorded run" }).click();
+    await page.locator("#advisory-run").click();
     await expect(bar).toContainText("Step 1 · Advisor review");
     await bar.getByRole("button", { name: "Submit for supervision" }).click();
     await bar.getByRole("button", { name: "Approve and record" }).click();
@@ -327,7 +336,7 @@ test.describe("Advisor meeting prep", () => {
     await expect(bar).toContainText("Simulated CRM record");
     await expect(bar).toContainText("Nothing is executed");
     expect(posts[3].action_ids).not.toContain("NBA-EXCHANGE");
-    expect(posts.every((row) => row.recording === "advisory-dana-whitfield" && row.run_id === undefined)).toBe(true);
+    expect(posts.every((row) => row.recording === undefined && typeof row.run_id === "string")).toBe(true);
   });
 
   test("Priya's CRM notes: the injected instruction is withheld and PII is masked before any model call", async ({ page }) => {
@@ -370,7 +379,7 @@ test.describe("Advisor meeting prep", () => {
   test("a decision on a live run appends to the timeline without clearing it", async ({ page }) => {
     let decided = false;
     await mockWealth(page, {
-      brief: (route) => route.fulfill({ json: { ...RECORDED["advisory-dana-whitfield"].result, run_id: route.request().postDataJSON().run_id, served_by: OPENAI_FALLBACK } }),
+      brief: (route) => route.fulfill({ json: mockedModelBrief(route.request().postDataJSON().run_id) }),
       approve: (route) => {
         decided = true;
         return route.fulfill({ json: { status: "awaiting_supervisor", advisor: { by: "Jordan Lee · advisor", at: "2026-10-09T12:10:00Z" }, action_ids: [] } });
@@ -389,10 +398,10 @@ test.describe("Advisor meeting prep", () => {
     await mockWealth(page);
     await open(page, ADVISORY_TITLE);
     await page.locator(".rx-actions").getByRole("button", { name: "Replay recorded run" }).click();
-    await expect(result(page).getByRole("heading", { name: "Dana Whitfield", level: 2 })).toBeVisible();
+    await expect(result(page).getByRole("heading", { name: "Chuck Robbins", level: 2 })).toBeVisible();
     await page.getByRole("tab", { name: "Architecture" }).click();
     await page.getByRole("tab", { name: "Use case demo" }).click();
-    await expect(result(page).getByRole("heading", { name: "Dana Whitfield", level: 2 })).toBeVisible();
+    await expect(result(page).getByRole("heading", { name: "Chuck Robbins", level: 2 })).toBeVisible();
     await expect(timeline(page).getByRole("listitem").first()).toBeVisible();
   });
 });

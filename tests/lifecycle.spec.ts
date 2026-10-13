@@ -4,12 +4,12 @@ import { expect, test, type Page } from "@playwright/test";
 
 /*
  * The client lifecycle story against the running studio: card fraud triage (the real service, scripted so no model
- * is called) escalates Dana Whitfield's case, the SAR inbox receives the referral, and advisor meeting prep sees only
- * what Dana already knows: her card was compromised and reissued. Nothing about the SAR reaches the advisor.
+ * is called) escalates Chuck Robbins's case, the SAR inbox receives the referral, and advisor meeting prep sees only
+ * what Chuck already knows: his card was compromised and reissued. Nothing about the SAR reaches the advisor.
  */
 
 const TIPPING_OFF = /\bSARs?\b|suspicious activity|escalat|investigat|referral|FinCEN|money mule/i;
-const ADVISORY_RECORDING = JSON.parse(readFileSync(join(process.cwd(), "services/wealth/data/recorded/advisory-dana-whitfield.json"), "utf8"));
+const ADVISORY_RECORDING = JSON.parse(readFileSync(join(process.cwd(), "services/wealth/data/recorded/advisory-chuck-robbins.json"), "utf8"));
 
 async function freshStudio(page: Page) {
   await page.goto("/", { waitUntil: "networkidle" });
@@ -50,7 +50,7 @@ test("fraud escalation reaches the SAR inbox, and meeting prep sees only the rei
   await expect(fraud.getByTestId("fraud-service-event")).toContainText("Card ending 1188 compromised and reissued");
   const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("fsi-studio.handoffs") ?? "[]"));
   const service = stored.find((item: { kind: string }) => item.kind === "service-event");
-  expect(service).toMatchObject({ customerId: "dana-whitfield", cardLast4: "1188", provenance: "live" });
+  expect(service).toMatchObject({ customerId: "chuck-robbins", cardLast4: "1188", provenance: "live" });
   expect(JSON.stringify(service)).not.toMatch(TIPPING_OFF);
 
   await fraud.locator("#escalate-to-sar").click();
@@ -59,7 +59,7 @@ test("fraud escalation reaches the SAR inbox, and meeting prep sees only the rei
   await expect(inbox).toContainText("Fraud case cpp-orbit");
   const referral = (await page.evaluate(() => JSON.parse(localStorage.getItem("fsi-studio.handoffs") ?? "[]")))
     .find((item: { kind: string }) => item.kind === "fraud-case");
-  expect(referral).toMatchObject({ customerId: "dana-whitfield", caseId: "cpp-orbit", disposition: "escalate" });
+  expect(referral).toMatchObject({ customerId: "chuck-robbins", caseId: "cpp-orbit", disposition: "escalate" });
 
   await openFromLibrary(page, "Advisor meeting prep");
   const context = page.getByRole("region", { name: "Meeting context" });
@@ -71,7 +71,7 @@ test("fraud escalation reaches the SAR inbox, and meeting prep sees only the rei
   await expect.poll(() => briefs.length).toBe(1);
   const sent = briefs[0].service_events as Record<string, unknown>[];
   expect(sent).toHaveLength(1);
-  expect(sent[0]).toMatchObject({ kind: "service-event", customerId: "dana-whitfield", actions: ["block_and_reissue", "contact_customer"] });
+  expect(sent[0]).toMatchObject({ kind: "service-event", customerId: "chuck-robbins", actions: ["block_and_reissue", "contact_customer"] });
   expect(JSON.stringify(briefs[0])).not.toMatch(TIPPING_OFF);
 });
 
@@ -84,10 +84,10 @@ test("Present mode steps through KYC, fraud, SAR, and meeting prep with a three-
   const bar = page.getByRole("region", { name: "Presenter controls" });
   const talk = bar.getByRole("list", { name: "Talk track" });
   const steps = [
-    { title: "KYC processing", heading: "KYC processing", cue: "Meet Dana Whitfield" },
+    { title: "KYC processing", heading: "KYC processing", cue: "Meet Chuck Robbins" },
     { title: "Card fraud triage", heading: "Card fraud triage", cue: "Escalate to investigations" },
-    { title: "SAR investigation", heading: "SAR investigation", cue: "nothing about this case reaches the advisor" },
-    { title: "Advisor meeting prep", heading: "Advisor meeting prep", cue: "never shows the SAR referral" },
+    { title: "SAR investigation", heading: "SAR investigation", cue: "Chuck is the hypothetical victim" },
+    { title: "Advisor meeting prep", heading: "Advisor meeting prep", cue: "only the customer-visible card replacement" },
   ];
   for (const [index, step] of steps.entries()) {
     await expect(bar).toContainText(`MOMENT ${index + 1} OF 4`);
@@ -98,7 +98,7 @@ test("Present mode steps through KYC, fraud, SAR, and meeting prep with a three-
     if (step.title === "KYC processing") await expect(talk.locator("li").last()).toContainText("Illustrative prototype, no live service");
     else await expect(talk.locator("li").last()).not.toContainText("Illustrative prototype");
     if (step.title === "Card fraud triage") await expect(page.locator(".fx-presenter-hint")).toContainText("Escalate to SAR");
-    if (step.title === "KYC processing") await expect(page.locator(".workbench-body h3")).toHaveText("Dana Whitfield (fictional)");
+    if (step.title === "KYC processing") await expect(page.locator(".workbench-body h3")).toHaveText("Chuck Robbins (fictional demo profile)");
     if (index < steps.length - 1) await bar.getByRole("button", { name: "Next" }).click();
   }
   await bar.getByRole("button", { name: "Finish" }).click();

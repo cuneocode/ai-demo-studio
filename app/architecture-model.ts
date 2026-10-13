@@ -617,7 +617,7 @@ export function advisoryRuntime():Diagram {
   {title:'Run timeline · optional observability · dev model host',x:28,y:1196,width:1464,height:220},
  ],
  nodes:[
-  wn('user','Advisor / studio','Household + published update',0,0,'human','Jordan, advisor. Dana Whitfield, the Okafors, and Priya Raman are synthetic.'),
+  wn('user','Advisor / studio','Household + published update',0,0,'human','Jordan, advisor. Chuck Robbins’s public Cisco role is real; all demo financial profiles are hypothetical.'),
   wn('api','FastAPI /advisory/brief','POST /api/wealth/advisory/brief',1,0,'service','127.0.0.1:8014 behind the studio proxy. Entered holdings get rules only; a brief needs a household.'),
   wn('household','Household record','fixtures/households · synthetic',2,0,'store','Profile, horizon, goals, holdings, CRM notes. Test PII only.'),
   wn('posted','Posted context','House-view update · briefing',3,0,'store','The published update from research, or the recorded HCYN update when the client holds HCYN.'),
@@ -684,7 +684,7 @@ export function advisoryKnowledge():Diagram {
  ],
  nodes:[
   n('profile','Profile + IPS','Risk, horizon, goals',56,72,'store','Moderate, conservative, and aggressive profiles across the three households.'),
-  n('holdings','Holdings','Weights · values · accounts',436,72,'store','Dana holds 46% in her employer HCYN; the Okafors hold growth funds against a conservative profile.'),
+  n('holdings','Holdings','Weights · values · accounts',436,72,'store','The hypothetical Chuck portfolio holds 46% in fictional HCYN, not employer stock; the Okafors hold growth funds against a conservative profile.'),
   n('crm','CRM notes','Screened before use',816,72,'store','Priya’s notes carry test PII and an injected wire instruction.'),
   n('yahoo','Snapshots','Same as research',1196,72,'store','Holding returns and sector from the snapshot cache.'),
   n('research','House-view update','Published by the strategist',56,360,'store','Verified claims only; the recorded HCYN update when none was published this session.'),

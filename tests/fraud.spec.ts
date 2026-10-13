@@ -189,7 +189,7 @@ test("a full card number in the case note is blocked by AI Defense and the polic
   expect(mock.notes).toHaveLength(2);
 });
 
-test("escalating saves a SAR handoff for Dana and opens SAR investigation", async ({ page }) => {
+test("escalating saves a SAR handoff for Chuck and opens SAR investigation", async ({ page }) => {
   const mock = await mockFraud(page);
   const panel = await openFraud(page);
   await triage(page, /card number in a case note/);
@@ -198,7 +198,7 @@ test("escalating saves a SAR handoff for Dana and opens SAR investigation", asyn
   await expect(panel.locator(".fx-handoff")).toContainText("SAR referral drafted", { timeout: 10000 });
   await panel.locator("#escalate-to-sar").click();
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("fsi-studio.handoffs") ?? "[]"));
-  expect(saved[0]).toMatchObject({ kind: "fraud-case", customerId: "dana-whitfield", caseId: "cpp-orbit", disposition: "escalate" });
+  expect(saved[0]).toMatchObject({ kind: "fraud-case", customerId: "chuck-robbins", caseId: "cpp-orbit", disposition: "escalate" });
   expect(saved[0].evidence.length).toBeGreaterThan(2);
   expect(JSON.stringify(saved[0])).not.toMatch(/4111 1111 1111 1111|000-12-3456/);
   await expect(page.locator("#sar-experience")).toBeVisible();

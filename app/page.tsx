@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import BankingDemo from "./BankingDemo";
 import FraudDemo from "./FraudDemo";
+import DemoCustomerContext from "./DemoCustomerContext";
 import CompanyBriefing from "./CompanyBriefing";
 import MarketResearch from "./MarketResearch";
 import ClientAdvisory from "./ClientAdvisory";
@@ -269,14 +270,14 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
       { label: "Auto-verified", value: "71%", detail: "Within policy threshold" },
     ],
     rows: [
-      { name: "Dana Whitfield (fictional)", stage: "Periodic KYC refresh", signal: "Section 16 officer of HCYN · sanctions clear", status: "Review", tone: "review" },
+      { name: "Chuck Robbins (fictional demo profile)", stage: "Periodic KYC refresh", signal: "Cisco Chair and CEO · sample screening clear", status: "Review", tone: "review" },
       { name: "Northstar Imports LLC", stage: "Business verification", signal: "2 documents missing", status: "Review", tone: "review" },
       { name: "Avery Chen", stage: "Identity match", signal: "Selfie mismatch", status: "Review", tone: "review" },
       { name: "Morrow Family Trust", stage: "Beneficial ownership", signal: "1 owner unverified", status: "Pending", tone: "pending" },
     ],
     workbenchLabel: "Next case",
-    workbenchTitle: "Dana Whitfield (fictional)",
-    workbenchSummary: "Periodic refresh of the lifecycle customer. Sanctions, PEP, and adverse media are clear. Risk stays Medium: concentrated wealth in her employer, Halcyon Interconnect (HCYN, fictional), where she is a Section 16 officer, so her HCYN trades need pre-clearance and respect blackout windows. Illustrative prototype; the same customer appears in fraud triage and advisor meeting prep.",
+    workbenchTitle: "Chuck Robbins (fictional demo profile)",
+    workbenchSummary: "Chuck Robbins is Cisco’s Chair and CEO. This hypothetical banking profile uses sample screening results and a Medium risk rating; neither describes a real assessment. KYC is an illustrative prototype. The next demo shows a separate hypothetical card incident, not an outcome of this review.",
     evidence: ["Sanctions clear", "Section 16 officer · HCYN", "Risk rating: Medium"],
     primaryAction: "Review next case",
   },
@@ -1277,7 +1278,8 @@ export default function HomePage() {
                 <div className="hero-copy">
                   <span className="eyebrow"><Sparkles size={13} /> FEATURED DEMO NARRATIVE</span>
                   <h2>Client lifecycle</h2>
-                  <p>Follow one fictional customer, Dana Whitfield, from a KYC review (an illustrative prototype) to live card fraud triage, a SAR investigation, and her advisor&apos;s meeting prep. Each module also works alone.</p>
+                  <DemoCustomerContext />
+                  <p>Chuck Robbins, Cisco’s Chair and CEO, is the example customer in this hypothetical banking scenario. Follow an illustrative KYC review, recorded card protection, an investigation of a separate account holder, and a sample advisor review. Each module also works alone.</p>
                   <div className="hero-meta">
                     <span><Workflow size={15} /> 4 connected moments</span>
                     <span><CircleGauge size={15} /> 18–22 minutes</span>
@@ -1361,7 +1363,8 @@ export default function HomePage() {
 
               <section className="story-builder-panel">
                 <div className="story-builder-top">
-                  <div><span className="eyebrow">GUIDED STORY 01</span><h2>Client lifecycle</h2><p>From onboarding to personalized advice.</p></div>
+                  <div><span className="eyebrow">GUIDED STORY 01</span><h2>Client lifecycle</h2>
+                  <DemoCustomerContext /><p>From onboarding to personalized advice.</p></div>
                   <div className="story-score" title={storyStates.filter((state) => !state.ready).map((state) => state.reason).join("; ") || "Every moment is ready"}><span>Demo readiness</span><strong>{storyReady}%</strong><div><i style={{ width: `${storyReady}%` }} /></div><small>{storyStates.filter((state) => state.ready).length} of {story.length} moments ready</small></div>
                 </div>
                 <StoryMap />
@@ -1407,7 +1410,7 @@ export default function HomePage() {
                 <section className="presenter-panel">
                   <span className="eyebrow">PRESENTER VIEW</span>
                   <h2>Talk track</h2>
-                  <div className="presenter-card"><span className="presenter-tag">OPENING</span><p>One customer, four teams, one governed AI foundation. Dana Whitfield is fictional; every record is synthetic.</p></div>
+                  <div className="presenter-card"><span className="presenter-tag">OPENING</span><p>One customer, four teams, one governed AI foundation. Chuck Robbins is Cisco’s Chair and CEO. The banking relationship, portfolio, and incidents are hypothetical. KYC is illustrative; guided runs use saved examples, not a continuous live transaction.</p></div>
                   <div className="talk-track"><span><Check size={15} /> Each moment: the business problem, what AI changes, where Cisco adds value</span><span><Check size={15} /> Fraud hands the case to SAR; the advisor sees only the reissued card</span><span><Check size={15} /> Call out live, recorded, or sample, and which model answered</span></div>
                   <button className="secondary-button" disabled={!story.length} onClick={startPresenting}><Play size={16} fill="currentColor" /> Present from moment 1</button>
                 </section>

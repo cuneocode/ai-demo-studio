@@ -7,7 +7,7 @@ export const advisoryTour: Tour = {
   id: "client-advisory",
   useCaseId: "client-advisory",
   title: "Advisor meeting prep",
-  recording: "advisory-dana-whitfield",
+  recording: "advisory-chuck-robbins",
   encores: ["client-advisory.attack-priya"],
   steps: [
     {
@@ -17,10 +17,10 @@ export const advisoryTour: Tour = {
       variants: [{ when: { anchor: "advisory.intro", present: false }, patch: { targets: ["advisory.households"] } }],
     },
     {
-      id: "advisory.household", kind: "auto", story: true, targets: ["advisory.household.dana-whitfield"],
-      action: { type: "selectScenario", value: "dana-whitfield" },
-      title: "Dana Whitfield's review",
-      body: "A synthetic executive client with concentrated employer stock. Every identifier is a test value.",
+      id: "advisory.household", kind: "auto", story: true, targets: ["advisory.household.chuck-robbins"],
+      action: { type: "selectScenario", value: "chuck-robbins" },
+      title: "Chuck Robbins's review",
+      body: "Chuck Robbins is Cisco’s Chair and CEO. This hypothetical portfolio concentrates in fictional HCYN, an unrelated investment. Its financial figures and banking events are invented.",
     },
     {
       id: "advisory.context", kind: "observe", story: true, targets: ["advisory.context"],
@@ -32,28 +32,14 @@ export const advisoryTour: Tour = {
       replay: {}, waitFor: RUN_STARTED,
       waitingText: "Choose Replay the recorded run.",
       title: "Replay the meeting prep",
-      body: "This tour replays a real recorded run: code rules compare profile and portfolio and size actions in dollars, then a Deep Agent drafts a one-page brief.",
-      ciscoFit: [{
-        product: "Cisco AI Defense",
-        how: "When private inference is down, client data reaches a hosted model only with AI Defense forced to enforce; the result header says so.",
-        status: "running",
-        requires: { status: { service: "wealth", aiDefense: "on" } },
-        otherwise: "AI Defense isn't active for wealth now, so live client data would stay private; this recording shows the forced-enforce path.",
-      }],
+      body: "This saved sample uses code to compare the hypothetical portfolio with its profile and build a brief. No model ran; it does not consume this session’s handoff.",
     },
     {
       id: "advisory.notes", kind: "wait", story: true, targets: ["advisory.notes"],
       waitFor: HAS_RESULT, waitingText: "Waiting for the meeting brief…",
       needs: HAS_RESULT, resumeFrom: "advisory.run",
       title: "CRM notes, screened first",
-      body: "Notes are inspected before any model call. Each note shows what was masked or withheld, and by which check; Dana's notes came through clean.",
-      ciscoFit: [{
-        product: "Cisco AI Defense",
-        how: "Inspects every CRM note before the meeting-prep agent sees it.",
-        status: "running",
-        requires: { status: { service: "wealth", aiDefense: "on" } },
-        otherwise: "AI Defense isn't active for wealth on this machine now; each note names the check that screened it.",
-      }],
+      body: "The saved sample screens invented notes with local rules. No model or AI Defense call was made. Live preparation can inspect notes before sending them to a model.",
       variants: [{
         when: { state: { stage: ["withheld"] } },
         patch: { body: "Notes are inspected before any model call. PII is masked and an injected instruction is withheld; each note names what was found and by which check." },
@@ -82,7 +68,7 @@ export const advisoryTour: Tour = {
       body: "The advisor checks the brief and the chosen actions, then submits them for supervision.",
       variants: [{
         when: { not: { state: { stage: ["approval-awaiting_advisor"] } } },
-        patch: { kind: "observe", body: "The advisor checked the brief and the chosen actions, then submitted them for supervision." },
+        patch: { kind: "observe", body: "A live model-generated brief requires advisor review. This code-written sample cannot be submitted for supervision." },
       }],
     },
     {
@@ -99,6 +85,9 @@ export const advisoryTour: Tour = {
         otherwise: "Hosted Agent Control isn't enforcing for wealth yet; the policy list says a local check evaluated it.",
       }],
       variants: [{
+        when: { state: { stage: ["approval-unavailable"] } },
+        patch: { kind: "observe", body: "This sample cannot be approved. Live model-generated briefs require supervisor review; approval records a simulated outcome and never executes a trade or transfer.", ciscoFit: [] },
+      }, {
         when: { any: [{ state: { stage: ["approval-sent"] } }, { state: { stage: ["approval-denied"] } }, { state: { stage: ["approval-rejected"] } }] },
         patch: { kind: "observe" },
       }],

@@ -38,7 +38,8 @@ for (const tour of TOURS) {
       const seen = await walk(page);
       expect(seen.length).toBeGreaterThan(4);
       expect(seen.at(-1)?.title).toBeTruthy();
-      if (tour.recorded) expect(seen.some((step) => /^Recorded run · /.test(step.source)), "a recorded run is labelled with its date").toBe(true);
+      if (tour.id === "client-advisory") expect(seen.some((step) => step.source === "Sample data · no model call")).toBe(true);
+      else if (tour.recorded) expect(seen.some((step) => /^Recorded run · /.test(step.source)), "a recorded run is labelled with its date").toBe(true);
       else expect(seen.every((step) => step.source === "Illustrative prototype · no live service")).toBe(true);
       expect(seen.some((step) => step.fits.some((fit) => fit.endsWith("=proposed") || fit.endsWith("=running") || fit.endsWith("=when-configured")))).toBe(true);
       await expect(page.locator(".guide-card")).toHaveCount(0);

@@ -129,17 +129,17 @@ test("card numbers appear only masked or as the 4111 test PAN", () => {
 
 test("lifecycle customer carries what fraud, SAR, briefing, and advisory need", () => {
   const customer = JSON.parse(read("fixtures/customers/lifecycle-customer.json"));
-  assert.equal(customer.household_id, "dana-whitfield");
+  assert.equal(customer.household_id, "chuck-robbins");
   assert.equal(customer.person.ssn, "000-00-0158");
   assert.match(customer.person.phone, /555-0142$/);
-  assert.equal(customer.person.email, "dana.whitfield@example.com");
-  assert.equal(customer.kyc.employer_ticker, "HCYN");
+  assert.equal(customer.person.email, "chuck.robbins@example.com");
+  assert.equal(customer.kyc.employer_ticker, "CSCO");
   assert.equal(customer.kyc.pep, false);
   assert.ok(customer.kyc.risk_rating && customer.kyc.source_of_wealth);
   const types = customer.accounts.map((account) => account.type);
   assert.deepEqual(["checking", "credit_card", "brokerage"].filter((type) => types.includes(type)), ["checking", "credit_card", "brokerage"]);
   assert.equal(customer.accounts.find((account) => account.type === "credit_card").number_masked, "****1188");
-  assert.equal(customer.accounts.find((account) => account.type === "brokerage").household_id, "dana-whitfield");
+  assert.equal(customer.accounts.find((account) => account.type === "brokerage").household_id, "chuck-robbins");
   const fraud = customer.service_events.find((event) => event.id === "cpp-orbit");
   assert.ok(fraud, "cpp-orbit fraud event is on file");
   assert.equal(fraud.amount, 286.4);
@@ -157,18 +157,26 @@ test("issuer, customer, and household agree where they overlap", (t) => {
   assert.equal(issuer.fictional, true);
   assert.ok(existsSync(join(root, issuer.annual_report)), "annual report path resolves");
   assert.ok(issuer.peers.every((peer) => peer.real === true), "peers are labelled real");
-  const dana = issuer.executives.find((exec) => exec.name === "Dana Whitfield");
-  assert.match(dana.title, /Global Operations/);
-  assert.match(customer.kyc.occupation, /Global Operations/);
-  assert.match(read(issuer.annual_report), /Dana Whitfield/);
+  assert.ok(!issuer.executives.some((exec) => exec.name === "Chuck Robbins"));
+  assert.match(customer.kyc.occupation, /Chair and Chief Executive Officer/);
+  assert.doesNotMatch(read(issuer.annual_report), /Chuck Robbins/);
+  assert.equal(customer.public_profile.source_url, "https://newsroom.cisco.com/c/r/newsroom/en/us/executives/robbins-chuck.html");
+  assert.equal(customer.person.age, undefined);
+  assert.equal(customer.person.date_of_birth, undefined);
 
-  const householdPath = "fixtures/households/dana-whitfield.json";
+  const householdPath = "fixtures/households/chuck-robbins.json";
   if (!existsSync(join(root, householdPath))) {
     t.diagnostic(`${householdPath} not written yet; skipping household cross-checks`);
     return;
   }
   const household = JSON.parse(read(householdPath));
   assert.equal(household.id, customer.household_id);
+  assert.equal(household.employer, "Cisco");
+  assert.equal(household.employer_ticker, "CSCO");
+  assert.equal(household.affiliate, false);
+  assert.equal(household.age, undefined);
+  assert.deepEqual(household.dependents, []);
+  assert.doesNotMatch(household.goals.join(" "), /retire|college/i);
   const brokerage = customer.accounts.find((account) => account.type === "brokerage");
   assert.ok(household.accounts.some((account) => account.number === brokerage.household_account_number),
     "brokerage account number matches the household");
@@ -202,4 +210,19 @@ test("fixture paths stay inside the repo", () => {
   for (const entry of manifest.fixtures) {
     assert.ok(!relative(root, join(root, entry.path)).startsWith(".."), `${entry.path} stays in the repo`);
   }
+});
+
+test("Chuck's saved advisor example is a current code-written sample, not a fabricated model recording", () => {
+  const sample = JSON.parse(read("services/wealth/data/recorded/advisory-chuck-robbins.json"));
+  const household = JSON.parse(read("fixtures/households/chuck-robbins.json"));
+  assert.equal(sample.served_by, null);
+  assert.equal(sample.result.brief.mode, "fixture");
+  assert.equal(sample.result.approval.status, "unavailable");
+  assert.equal(sample.result.usage.llm_calls, 0);
+  assert.ok(sample.events.every((event) => event.kind !== "llm.call"));
+  assert.equal(sample.result.household.headline, household.headline);
+  assert.equal(sample.result.household.employer_ticker, "CSCO");
+  assert.equal(sample.result.household.affiliate, false);
+  assert.ok(!sample.result.suitability.some((finding) => ["R-AFF-01", "R-EDU-01", "R-REV-01"].includes(finding.rule)));
+  assert.match(sample.note, /does not consume the current session/);
 });

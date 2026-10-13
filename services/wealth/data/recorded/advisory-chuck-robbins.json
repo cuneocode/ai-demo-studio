@@ -1,0 +1,2213 @@
+{
+ "v": 1,
+ "name": "advisory-chuck-robbins",
+ "title": "Chuck Robbins \u00b7 hypothetical advisor sample \u00b7 no model",
+ "scenario": "advisory-chuck-robbins",
+ "recorded_at": "2026-10-13T19:08:27.067476+00:00",
+ "served_by": null,
+ "synthetic": true,
+ "run": {
+  "id": "wealth-20261013-190827-ce7426",
+  "service": "wealth",
+  "label": "Chuck Robbins \u00b7 hypothetical advisor sample \u00b7 no model",
+  "scenario": "advisory-chuck-robbins",
+  "status": "completed",
+  "started_at": "2026-10-13T19:08:27.031002+00:00",
+  "finished_at": "2026-10-13T19:08:27.067476+00:00",
+  "meta": {},
+  "result": {
+   "household": {
+    "id": "chuck-robbins",
+    "name": "Chuck Robbins",
+    "synthetic": true,
+    "risk_profile": "Moderate",
+    "total_value": 14200000.0,
+    "headline": "Cisco Chair and CEO \u00b7 hypothetical portfolio with 46% in fictional HCYN",
+    "age": null,
+    "horizon_years": 4,
+    "goals": [
+     "Reduce single-issuer concentration",
+     "Maintain a four-year liquidity plan"
+    ],
+    "affiliate": false,
+    "employer_ticker": "CSCO"
+   },
+   "holdings": [
+    {
+     "ticker": "HCYN",
+     "name": "Halcyon Interconnect (fictional)",
+     "weight": 0.46,
+     "asset_class": "equity",
+     "value": 6532276,
+     "account": "Taxable brokerage",
+     "return_1y": 0.19431538671768234,
+     "return_1y_spy": 0.16911722608346103,
+     "return_1y_vs_spy": 0.02519816063422131,
+     "sector": "Technology",
+     "source": {
+      "kind": "fictional",
+      "label": "Fictional \u00b7 synthetic data",
+      "asOf": "2026-10-08",
+      "fictional": true
+     },
+     "status": "ready"
+    },
+    {
+     "ticker": "VTI",
+     "name": "Vanguard Total Stock Market ETF",
+     "weight": 0.2,
+     "asset_class": "equity",
+     "value": 2840000,
+     "account": "Taxable brokerage",
+     "return_1y": 0.1642236989661472,
+     "return_1y_spy": 0.1691548078576357,
+     "return_1y_vs_spy": -0.0049311088914885115,
+     "sector": null,
+     "source": {
+      "kind": "fixture",
+      "label": "Committed snapshot \u00b7 Yahoo Finance as of 2026-10-09",
+      "asOf": "2026-10-09",
+      "fictional": false
+     },
+     "status": "ready"
+    },
+    {
+     "ticker": "VXUS",
+     "name": "Vanguard Total International Stock ETF",
+     "weight": 0.12,
+     "asset_class": "equity",
+     "value": 1704000,
+     "account": "Taxable brokerage",
+     "return_1y": 0.16749941501149324,
+     "return_1y_spy": 0.1691548078576357,
+     "return_1y_vs_spy": -0.0016553928461424672,
+     "sector": null,
+     "source": {
+      "kind": "fixture",
+      "label": "Committed snapshot \u00b7 Yahoo Finance as of 2026-10-09",
+      "asOf": "2026-10-09",
+      "fictional": false
+     },
+     "status": "ready"
+    },
+    {
+     "ticker": "BND",
+     "name": "Vanguard Total Bond Market ETF",
+     "weight": 0.17600000000000002,
+     "asset_class": "fixed_income",
+     "value": 2503724,
+     "account": "Taxable brokerage",
+     "return_1y": -0.01596982045863493,
+     "return_1y_spy": 0.1691548078576357,
+     "return_1y_vs_spy": -0.18512462831627063,
+     "sector": null,
+     "source": {
+      "kind": "fixture",
+      "label": "Committed snapshot \u00b7 Yahoo Finance as of 2026-10-09",
+      "asOf": "2026-10-09",
+      "fictional": false
+     },
+     "status": "ready"
+    },
+    {
+     "ticker": "CASH",
+     "name": "Brokerage sweep cash",
+     "weight": 0.044000000000000004,
+     "asset_class": "cash",
+     "value": 620000,
+     "account": "Taxable brokerage",
+     "source": {
+      "kind": "household",
+      "label": "Household record \u00b7 synthetic"
+     },
+     "status": "ready",
+     "note": null
+    }
+   ],
+   "notes": [
+    {
+     "index": 0,
+     "date": "2026-10-08",
+     "author": "Demo scenario author",
+     "text": "Hypothetical review: reduce the concentrated HCYN investment while preserving liquidity. HCYN is a fictional holding, not Cisco or employer stock.",
+     "masked": [],
+     "status": "kept",
+     "ai_defense": "not_configured",
+     "ai_defense_rules": [],
+     "local": [],
+     "event_id": null
+    },
+    {
+     "index": 1,
+     "date": "2026-10-08",
+     "author": "Demo scenario author",
+     "text": "Use the sample four-year planning horizon and Moderate profile. Confirm objectives before considering any action; no retirement or family plans are assumed.",
+     "masked": [],
+     "status": "kept",
+     "ai_defense": "not_configured",
+     "ai_defense_rules": [],
+     "local": [],
+     "event_id": null
+    },
+    {
+     "index": 2,
+     "date": "2026-10-08",
+     "author": "Demo scenario author",
+     "text": "The synthetic portfolio includes $620k of cash and a $240k annual spending assumption for demonstrating reserve calculations. These are not actual client figures.",
+     "masked": [],
+     "status": "kept",
+     "ai_defense": "not_configured",
+     "ai_defense_rules": [],
+     "local": [],
+     "event_id": null
+    }
+   ],
+   "suitability": [
+    {
+     "id": "R-CONC-01:HCYN",
+     "rule": "R-CONC-01",
+     "title": "Single issuer above policy",
+     "severity": "high",
+     "category": "suitability",
+     "reg_bi": "Care: concentration risk against the stated risk profile and horizon.",
+     "detail": "HCYN is 46% of the household ($6.53M), above the 10% single-issuer policy and the 20% cap.",
+     "fields": {
+      "weight": {
+       "value": 0.46,
+       "unit": "fraction",
+       "display": "46%",
+       "label": "HCYN share of the household"
+      },
+      "limit": {
+       "value": 0.1,
+       "unit": "fraction",
+       "display": "10%",
+       "label": "Single-issuer policy"
+      },
+      "value": {
+       "value": 6532276.0,
+       "unit": "usd",
+       "display": "$6.53M",
+       "label": "HCYN position"
+      },
+      "excess_value": {
+       "value": 5112000.0,
+       "unit": "usd",
+       "display": "$5.11M",
+       "label": "Above the 10% policy"
+      },
+      "unrealized_gain": {
+       "value": 5710136.0,
+       "unit": "usd",
+       "display": "$5.71M",
+       "label": "Unrealized gain"
+      },
+      "cost_basis": {
+       "value": 11.0,
+       "unit": "usd",
+       "display": "$11.00",
+       "label": "Cost basis per share"
+      }
+     },
+     "evidence": {
+      "ticker": "HCYN",
+      "weight_pct": 46.0,
+      "limit_pct": 10.0
+     }
+    },
+    {
+     "id": "R-RISK-02",
+     "rule": "R-RISK-02",
+     "title": "Equity share above the risk band",
+     "severity": "high",
+     "category": "suitability",
+     "reg_bi": "Care: the allocation carries more risk than the client's profile allows.",
+     "detail": "Equities are 78% of the household against the Moderate band of 40\u201365%.",
+     "fields": {
+      "equity_share": {
+       "value": 0.78,
+       "unit": "fraction",
+       "display": "78%",
+       "label": "Equity share"
+      },
+      "band_max": {
+       "value": 0.65,
+       "unit": "fraction",
+       "display": "65%",
+       "label": "Moderate maximum"
+      },
+      "band_min": {
+       "value": 0.4,
+       "unit": "fraction",
+       "display": "40%",
+       "label": "Moderate minimum"
+      },
+      "gap": {
+       "value": 0.13,
+       "unit": "fraction",
+       "display": "13.0 points",
+       "label": "Distance outside the band"
+      },
+      "shift_value": {
+       "value": 1846000.0,
+       "unit": "usd",
+       "display": "$1.85M",
+       "label": "Value to move back inside the band"
+      }
+     },
+     "evidence": {
+      "equity_pct": 78.0,
+      "band": [
+       40,
+       65
+      ],
+      "profile": "Moderate"
+     }
+    },
+    {
+     "id": "R-LIQ-02",
+     "rule": "R-LIQ-02",
+     "title": "Idle cash above the reserve",
+     "severity": "medium",
+     "category": "planning",
+     "reg_bi": "Planning: cash beyond the reserve has no stated purpose.",
+     "detail": "$620k sits idle in cash; a 6-month reserve is $120k.",
+     "fields": {
+      "idle_cash": {
+       "value": 620000.0,
+       "unit": "usd",
+       "display": "$620k",
+       "label": "Idle cash"
+      },
+      "reserve": {
+       "value": 120000.0,
+       "unit": "usd",
+       "display": "$120k",
+       "label": "6-month reserve"
+      },
+      "above_reserve": {
+       "value": 500000.0,
+       "unit": "usd",
+       "display": "$500k",
+       "label": "Above the reserve"
+      },
+      "months": {
+       "value": 31.0,
+       "unit": "count",
+       "display": "31 months",
+       "label": "Months of spending"
+      }
+     },
+     "evidence": {
+      "cash": 620000.0
+     }
+    }
+   ],
+   "actions": [
+    {
+     "id": "NBA-REBALANCE",
+     "type": "rebalance",
+     "title": "Rebalance back inside the Moderate band",
+     "summary": "Move about $1.85M so equities go from 78% to at most 65%.",
+     "rules": [
+      "R-RISK-02"
+     ],
+     "dollars": 1846000.0,
+     "dollars_display": "$1.85M",
+     "dollars_label": "Value to move",
+     "suitable": true,
+     "fit": "Brings the allocation back to the Moderate profile the client chose.",
+     "cautions": [],
+     "fields": {
+      "dollars": {
+       "value": 1846000.0,
+       "unit": "usd",
+       "display": "$1.85M",
+       "label": "Value to move"
+      }
+     }
+    },
+    {
+     "id": "NBA-LADDER",
+     "type": "treasury-ladder",
+     "title": "Treasury ladder for idle cash",
+     "summary": "Put $500k above the $120k reserve into Treasuries that mature with the plan's dates (Reduce single-issuer concentration, Maintain a four-year liquidity plan).",
+     "rules": [
+      "R-LIQ-02"
+     ],
+     "dollars": 500000.0,
+     "dollars_display": "$500k",
+     "dollars_label": "Cash above the reserve",
+     "suitable": true,
+     "fit": "Low risk and liquid at each maturity; fits every profile.",
+     "cautions": [],
+     "fields": {
+      "dollars": {
+       "value": 500000.0,
+       "unit": "usd",
+       "display": "$500k",
+       "label": "Cash above the reserve"
+      },
+      "idle_cash": {
+       "value": 620000.0,
+       "unit": "usd",
+       "display": "$620k",
+       "label": "Idle cash"
+      },
+      "reserve": {
+       "value": 120000.0,
+       "unit": "usd",
+       "display": "$120k",
+       "label": "6-month reserve"
+      }
+     }
+    },
+    {
+     "id": "NBA-DAF",
+     "type": "daf-gift",
+     "title": "Gift appreciated HCYN shares to a donor-advised fund",
+     "summary": "Give $250k of low-basis shares instead of cash, avoiding about $219k of realized gain.",
+     "rules": [
+      "R-CONC-01"
+     ],
+     "dollars": 250000,
+     "dollars_display": "$250k",
+     "dollars_label": "Illustrative gift",
+     "suitable": true,
+     "fit": "Fits only if the client has charitable goals; ask before proposing.",
+     "cautions": [
+      "Ask about charitable intent first; nothing is on file.",
+      "Gifts by an affiliate still follow the insider policy."
+     ],
+     "fields": {
+      "dollars": {
+       "value": 250000,
+       "unit": "usd",
+       "display": "$250k",
+       "label": "Illustrative gift"
+      },
+      "gain_avoided": {
+       "value": 218535.46910755147,
+       "unit": "usd",
+       "display": "$219k",
+       "label": "Gain not realized"
+      },
+      "unrealized_gain": {
+       "value": 5710136.0,
+       "unit": "usd",
+       "display": "$5.71M",
+       "label": "Unrealized gain"
+      }
+     }
+    },
+    {
+     "id": "NBA-EXCHANGE",
+     "type": "exchange-fund",
+     "title": "Exchange fund for low-basis HCYN shares",
+     "summary": "Swap concentrated shares into a diversified fund without an immediate taxable sale.",
+     "rules": [
+      "R-CONC-01"
+     ],
+     "dollars": 5112000.0,
+     "dollars_display": "$5.11M",
+     "dollars_label": "Shares that could be contributed",
+     "suitable": false,
+     "fit": "Not suitable: a 7-year lock-up exceeds the 4-year planning horizon.",
+     "cautions": [
+      "Typical 7-year lock-up; accredited investors only."
+     ],
+     "fields": {
+      "dollars": {
+       "value": 5112000.0,
+       "unit": "usd",
+       "display": "$5.11M",
+       "label": "Shares that could be contributed"
+      }
+     }
+    }
+   ],
+   "addressable": 2346000.0,
+   "addressable_display": "$2.35M",
+   "context": {
+    "research": {
+     "origin": "recorded",
+     "ticker": "HCYN",
+     "rating": "Constructive",
+     "impact": "consistent",
+     "published_at": null,
+     "claims": 5
+    },
+    "issuer_policy": false,
+    "briefing": false,
+    "service_event": {
+     "origin": "record",
+     "detail": "sample",
+     "title": "Recent card issue"
+    }
+   },
+   "evidence": [
+    {
+     "id": "crm:0",
+     "title": "CRM note \u00b7 2026-10-08 \u00b7 Demo scenario author",
+     "source": "CRM (screened)",
+     "kind": "note",
+     "synthetic": true,
+     "fields": {},
+     "text": "Hypothetical review: reduce the concentrated HCYN investment while preserving liquidity. HCYN is a fictional holding, not Cisco or employer stock."
+    },
+    {
+     "id": "crm:1",
+     "title": "CRM note \u00b7 2026-10-08 \u00b7 Demo scenario author",
+     "source": "CRM (screened)",
+     "kind": "note",
+     "synthetic": true,
+     "fields": {},
+     "text": "Use the sample four-year planning horizon and Moderate profile. Confirm objectives before considering any action; no retirement or family plans are assumed."
+    },
+    {
+     "id": "crm:2",
+     "title": "CRM note \u00b7 2026-10-08 \u00b7 Demo scenario author",
+     "source": "CRM (screened)",
+     "kind": "note",
+     "synthetic": true,
+     "fields": {},
+     "text": "The synthetic portfolio includes $620k of cash and a $240k annual spending assumption for demonstrating reserve calculations. These are not actual client figures."
+    },
+    {
+     "id": "household",
+     "title": "Household \u00b7 Chuck Robbins",
+     "source": "Household record \u00b7 synthetic",
+     "kind": "data",
+     "synthetic": true,
+     "fields": {
+      "total_value": {
+       "display": "$14.2M",
+       "label": "Household value"
+      },
+      "risk_profile": {
+       "display": "Moderate",
+       "label": "Risk profile"
+      },
+      "horizon_years": {
+       "display": "4 years",
+       "label": "Horizon"
+      },
+      "annual_need": {
+       "display": "$240k",
+       "label": "Annual spending need"
+      },
+      "age": {
+       "display": "None",
+       "label": "Age"
+      },
+      "holdings.HCYN.weight": {
+       "display": "46.0%",
+       "label": "HCYN weight"
+      },
+      "holdings.HCYN.value": {
+       "display": "$6.53M",
+       "label": "HCYN value"
+      },
+      "holdings.VTI.weight": {
+       "display": "20.0%",
+       "label": "VTI weight"
+      },
+      "holdings.VTI.value": {
+       "display": "$2.84M",
+       "label": "VTI value"
+      },
+      "holdings.VXUS.weight": {
+       "display": "12.0%",
+       "label": "VXUS weight"
+      },
+      "holdings.VXUS.value": {
+       "display": "$1.7M",
+       "label": "VXUS value"
+      },
+      "holdings.BND.weight": {
+       "display": "17.6%",
+       "label": "BND weight"
+      },
+      "holdings.BND.value": {
+       "display": "$2.5M",
+       "label": "BND value"
+      },
+      "holdings.CASH.weight": {
+       "display": "4.4%",
+       "label": "CASH weight"
+      },
+      "holdings.CASH.value": {
+       "display": "$620k",
+       "label": "CASH value"
+      }
+     },
+     "text": "Chuck Robbins: Cisco Chair and CEO \u00b7 hypothetical portfolio with 46% in fictional HCYN. Goals: Reduce single-issuer concentration, Maintain a four-year liquidity plan. Investment policy: Diversification and liquidity in a hypothetical planning exercise; risk tolerance Moderate; horizon Four-year illustrative planning horizon; no retirement date assumed."
+    },
+    {
+     "id": "suitability:R-CONC-01",
+     "title": "R-CONC-01 \u00b7 Single issuer above policy",
+     "source": "Suitability rules (code)",
+     "kind": "rule",
+     "synthetic": false,
+     "fields": {
+      "weight": {
+       "display": "46%",
+       "label": "HCYN share of the household"
+      },
+      "limit": {
+       "display": "10%",
+       "label": "Single-issuer policy"
+      },
+      "value": {
+       "display": "$6.53M",
+       "label": "HCYN position"
+      },
+      "excess_value": {
+       "display": "$5.11M",
+       "label": "Above the 10% policy"
+      },
+      "unrealized_gain": {
+       "display": "$5.71M",
+       "label": "Unrealized gain"
+      },
+      "cost_basis": {
+       "display": "$11.00",
+       "label": "Cost basis per share"
+      },
+      "reg_bi": {
+       "display": "Care: concentration risk against the stated risk profile and horizon.",
+       "label": "Reg BI question"
+      }
+     },
+     "text": "HCYN is 46% of the household ($6.53M), above the 10% single-issuer policy and the 20% cap."
+    },
+    {
+     "id": "suitability:R-RISK-02",
+     "title": "R-RISK-02 \u00b7 Equity share above the risk band",
+     "source": "Suitability rules (code)",
+     "kind": "rule",
+     "synthetic": false,
+     "fields": {
+      "equity_share": {
+       "display": "78%",
+       "label": "Equity share"
+      },
+      "band_max": {
+       "display": "65%",
+       "label": "Moderate maximum"
+      },
+      "band_min": {
+       "display": "40%",
+       "label": "Moderate minimum"
+      },
+      "gap": {
+       "display": "13.0 points",
+       "label": "Distance outside the band"
+      },
+      "shift_value": {
+       "display": "$1.85M",
+       "label": "Value to move back inside the band"
+      },
+      "reg_bi": {
+       "display": "Care: the allocation carries more risk than the client's profile allows.",
+       "label": "Reg BI question"
+      }
+     },
+     "text": "Equities are 78% of the household against the Moderate band of 40\u201365%."
+    },
+    {
+     "id": "suitability:R-LIQ-02",
+     "title": "R-LIQ-02 \u00b7 Idle cash above the reserve",
+     "source": "Suitability rules (code)",
+     "kind": "rule",
+     "synthetic": false,
+     "fields": {
+      "idle_cash": {
+       "display": "$620k",
+       "label": "Idle cash"
+      },
+      "reserve": {
+       "display": "$120k",
+       "label": "6-month reserve"
+      },
+      "above_reserve": {
+       "display": "$500k",
+       "label": "Above the reserve"
+      },
+      "months": {
+       "display": "31 months",
+       "label": "Months of spending"
+      },
+      "reg_bi": {
+       "display": "Planning: cash beyond the reserve has no stated purpose.",
+       "label": "Reg BI question"
+      }
+     },
+     "text": "$620k sits idle in cash; a 6-month reserve is $120k."
+    },
+    {
+     "id": "action:NBA-REBALANCE",
+     "title": "Rebalance back inside the Moderate band",
+     "source": "Next-best-action catalogue (code)",
+     "kind": "action",
+     "synthetic": false,
+     "fields": {
+      "dollars": {
+       "display": "$1.85M",
+       "label": "Value to move"
+      }
+     },
+     "text": "Rebalance back inside the Moderate band. Move about $1.85M so equities go from 78% to at most 65%. Brings the allocation back to the Moderate profile the client chose."
+    },
+    {
+     "id": "action:NBA-LADDER",
+     "title": "Treasury ladder for idle cash",
+     "source": "Next-best-action catalogue (code)",
+     "kind": "action",
+     "synthetic": false,
+     "fields": {
+      "dollars": {
+       "display": "$500k",
+       "label": "Cash above the reserve"
+      },
+      "idle_cash": {
+       "display": "$620k",
+       "label": "Idle cash"
+      },
+      "reserve": {
+       "display": "$120k",
+       "label": "6-month reserve"
+      }
+     },
+     "text": "Treasury ladder for idle cash. Put $500k above the $120k reserve into Treasuries that mature with the plan's dates (Reduce single-issuer concentration, Maintain a four-year liquidity plan). Low risk and liquid at each maturity; fits every profile."
+    },
+    {
+     "id": "action:NBA-DAF",
+     "title": "Gift appreciated HCYN shares to a donor-advised fund",
+     "source": "Next-best-action catalogue (code)",
+     "kind": "action",
+     "synthetic": false,
+     "fields": {
+      "dollars": {
+       "display": "$250k",
+       "label": "Illustrative gift"
+      },
+      "gain_avoided": {
+       "display": "$219k",
+       "label": "Gain not realized"
+      },
+      "unrealized_gain": {
+       "display": "$5.71M",
+       "label": "Unrealized gain"
+      }
+     },
+     "text": "Gift appreciated HCYN shares to a donor-advised fund. Give $250k of low-basis shares instead of cash, avoiding about $219k of realized gain. Fits only if the client has charitable goals; ask before proposing. Ask about charitable intent first; nothing is on file. Gifts by an affiliate still follow the insider policy."
+    },
+    {
+     "id": "action:NBA-EXCHANGE",
+     "title": "Exchange fund for low-basis HCYN shares",
+     "source": "Next-best-action catalogue (code)",
+     "kind": "action",
+     "synthetic": false,
+     "fields": {
+      "dollars": {
+       "display": "$5.11M",
+       "label": "Shares that could be contributed"
+      }
+     },
+     "text": "Exchange fund for low-basis HCYN shares. Swap concentrated shares into a diversified fund without an immediate taxable sale. Not suitable: a 7-year lock-up exceeds the 4-year planning horizon. Typical 7-year lock-up; accredited investors only."
+    },
+    {
+     "id": "research:update",
+     "title": "House-view update \u00b7 HCYN \u00b7 Constructive \u00b7 consistent with the house view",
+     "source": "Research desk \u00b7 recorded run",
+     "kind": "research",
+     "synthetic": true,
+     "fields": {
+      "rating": {
+       "display": "Constructive",
+       "label": "House view rating"
+      },
+      "event.eps_actual": {
+       "display": "$1.79",
+       "label": null
+      },
+      "event.revenue": {
+       "display": "$1.51B",
+       "label": null
+      },
+      "event.guidance_low": {
+       "display": "$5.75B",
+       "label": null
+      },
+      "earnings.beat_rate": {
+       "display": "87.5%",
+       "label": null
+      },
+      "valuation.forward_pe": {
+       "display": "11.5x",
+       "label": null
+      }
+     },
+     "text": "EPS was $1.79 versus $1.62 consensus, a 10.5% beat. Revenue was $1.51B, up 42.6% year over year and 5.0% above consensus. FY2026 revenue guidance rose to $5.75B\u2013$5.85B from $5.45B\u2013$5.6B, with the midpoint up 5.0%. The earnings beat record remains strong at 87.5% across 8 observations, including a 4-quarter beat streak. Valuation remains supportive of the house view: forward P/E is 11.5x versus a 18.4x peer median, a 24.1% discount."
+    },
+    {
+     "id": "service:record",
+     "title": "Recent card issue (customer record)",
+     "source": "Customer record \u00b7 sample",
+     "kind": "service",
+     "synthetic": true,
+     "fields": {},
+     "text": "Card ending 1188 used at Orbit Digital Goods, a compromised merchant. Blocked and reissued; $286.40 refunded."
+    }
+   ],
+   "withheld": [],
+   "brief": {
+    "lines": [
+     {
+      "section": "opening",
+      "text": "Card ending 1188 used at Orbit Digital Goods, a compromised merchant. Blocked and reissued; $286.40 refunded.",
+      "evidence_id": "service:record",
+      "quote": "Card ending 1188 used at Orbit Digital Goods, a compromised merchant. Blocked and reissued; $286.40 refunded.",
+      "status": "verified",
+      "reason": "Quoted from Recent card issue (customer record).",
+      "check": "quote"
+     },
+     {
+      "section": "callout",
+      "text": "HCYN is 46% of the household ($6.53M), above the 10% single-issuer policy and the 20% cap.",
+      "evidence_id": "suitability:R-CONC-01",
+      "quote": "HCYN is 46% of the household ($6.53M), above the 10% single-issuer policy and the 20% cap.",
+      "status": "verified",
+      "reason": "Quoted from R-CONC-01 \u00b7 Single issuer above policy.",
+      "check": "quote"
+     },
+     {
+      "section": "callout",
+      "text": "Equities are 78% of the household against the Moderate band of 40\u201365%.",
+      "evidence_id": "suitability:R-RISK-02",
+      "quote": "Equities are 78% of the household against the Moderate band of 40\u201365%.",
+      "status": "verified",
+      "reason": "Quoted from R-RISK-02 \u00b7 Equity share above the risk band.",
+      "check": "quote"
+     },
+     {
+      "section": "callout",
+      "text": "$620k sits idle in cash; a 6-month reserve is $120k.",
+      "evidence_id": "suitability:R-LIQ-02",
+      "quote": "$620k sits idle in cash; a 6-month reserve is $120k.",
+      "status": "verified",
+      "reason": "Quoted from R-LIQ-02 \u00b7 Idle cash above the reserve.",
+      "check": "quote"
+     },
+     {
+      "section": "talking_point",
+      "text": "Move about $1.85M so equities go from 78% to at most 65%.",
+      "evidence_id": "action:NBA-REBALANCE",
+      "quote": "Move about $1.85M so equities go from 78% to at most 65%.",
+      "status": "verified",
+      "reason": "Quoted from Rebalance back inside the Moderate band.",
+      "check": "quote"
+     },
+     {
+      "section": "talking_point",
+      "text": "Put $500k above the $120k reserve into Treasuries that mature with the plan's dates (Reduce single-issuer concentration, Maintain a four-year liquidity plan).",
+      "evidence_id": "action:NBA-LADDER",
+      "quote": "Put $500k above the $120k reserve into Treasuries that mature with the plan's dates (Reduce single-issuer concentration, Maintain a four-year liquidity plan).",
+      "status": "verified",
+      "reason": "Quoted from Treasury ladder for idle cash.",
+      "check": "quote"
+     },
+     {
+      "section": "talking_point",
+      "text": "Give $250k of low-basis shares instead of cash, avoiding about $219k of realized gain.",
+      "evidence_id": "action:NBA-DAF",
+      "quote": "Give $250k of low-basis shares instead of cash, avoiding about $219k of realized gain.",
+      "status": "verified",
+      "reason": "Quoted from Gift appreciated HCYN shares to a donor-advised fund.",
+      "check": "quote"
+     },
+     {
+      "section": "agenda",
+      "text": "Rebalance back inside the Moderate band",
+      "evidence_id": "action:NBA-REBALANCE",
+      "status": "agenda",
+      "reason": "Agenda line, not a factual claim."
+     },
+     {
+      "section": "agenda",
+      "text": "Treasury ladder for idle cash",
+      "evidence_id": "action:NBA-LADDER",
+      "status": "agenda",
+      "reason": "Agenda line, not a factual claim."
+     },
+     {
+      "section": "agenda",
+      "text": "Gift appreciated HCYN shares to a donor-advised fund",
+      "evidence_id": "action:NBA-DAF",
+      "status": "agenda",
+      "reason": "Agenda line, not a factual claim."
+     }
+    ],
+    "action_ids": [
+     "NBA-REBALANCE",
+     "NBA-LADDER",
+     "NBA-DAF"
+    ],
+    "dropped_actions": [],
+    "counts": {
+     "claims": 7,
+     "verified": 7,
+     "unverified": 0,
+     "policy": 0
+    },
+    "status": "ready",
+    "mode": "fixture",
+    "mode_label": "Brief written by code from the rules \u00b7 no model",
+    "reason": "Saved hypothetical example generated by code; no model or hosted control was called.",
+    "refused": false
+   },
+   "compliance": {
+    "findings": [],
+    "verdicts": {
+     "no_guarantee": true,
+     "no_trade_or_wire_instruction": true,
+     "suitable_for_profile": true
+    }
+   },
+   "approval": {
+    "status": "unavailable",
+    "reason": "AI brief unavailable \u00b7 the code-written brief shows the rules and actions and cannot be submitted for supervision."
+   },
+   "duration_ms": 36,
+   "disclaimer": "Synthetic client data for demonstration only. Not investment, tax, or legal advice.",
+   "run_id": "wealth-20261013-190827-ce7426",
+   "served_by": null,
+   "usage": {
+    "llm_calls": 0,
+    "input_tokens": null,
+    "output_tokens": null,
+    "tool_calls": 7
+   },
+   "security": {
+    "mode": "off",
+    "status": "disabled",
+    "checks": 0,
+    "blocked": 0,
+    "errors": 0
+   }
+  }
+ },
+ "events": [
+  {
+   "v": 1,
+   "id": "7ec298d8-4dee-4c04-8163-67ddd8485369",
+   "at": "2026-10-13T19:08:27.031047+00:00",
+   "ns": 40459,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "run",
+   "status": "started",
+   "title": "Meeting prep \u00b7 Chuck Robbins",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": "Household record and screened CRM notes, suitability rules, sized actions, the house-view update; then the brief.",
+   "data": {}
+  },
+  {
+   "v": 1,
+   "id": "747b5ad0-105f-49ec-a991-f834f5f4be6f",
+   "at": "2026-10-13T19:08:27.031087+00:00",
+   "ns": 79875,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "get_household(id=chuck-robbins)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "get_household",
+    "agent": "workflow",
+    "arguments": {
+     "id": "chuck-robbins"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "0b315810-5a0a-4eae-a0ce-657de38498e8",
+   "at": "2026-10-13T19:08:27.031109+00:00",
+   "ns": 101167,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Household \u00b7 synthetic \u00b7 $14.2M \u00b7 Moderate profile",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": "Cisco Chair and CEO \u00b7 hypothetical portfolio with 46% in fictional HCYN",
+   "data": {
+    "tool": "get_household",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "a0af7430-2b8d-4fda-af68-c6d26adddbd1",
+   "at": "2026-10-13T19:08:27.032262+00:00",
+   "ns": 1263667,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "crm_notes(household=chuck-robbins)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "crm_notes",
+    "agent": "workflow",
+    "arguments": {
+     "household": "chuck-robbins"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "c0d7c18d-7994-4d25-9eef-d87997937a53",
+   "at": "2026-10-13T19:08:27.032294+00:00",
+   "ns": 1286417,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "CRM notes \u00b7 3 usable, 0 masked, 0 withheld",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "crm_notes",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "a68b2cfc-d270-4de6-909e-727948479140",
+   "at": "2026-10-13T19:08:27.056101+00:00",
+   "ns": 25099459,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "market_snapshot(tickers=['HCYN', 'VTI', 'VXUS', 'BND'])",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "market_snapshot",
+    "agent": "workflow",
+    "arguments": {
+     "tickers": [
+      "HCYN",
+      "VTI",
+      "VXUS",
+      "BND"
+     ]
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "16023307-136c-4898-90c3-71ee5d737ba6",
+   "at": "2026-10-13T19:08:27.056135+00:00",
+   "ns": 25128084,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Market data \u00b7 5 of 5 holdings",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "market_snapshot",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "4bcf467c-97da-411a-8f3e-92f9ea79e0b4",
+   "at": "2026-10-13T19:08:27.056298+00:00",
+   "ns": 25290834,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "suitability_rules(profile=Moderate)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "suitability_rules",
+    "agent": "workflow",
+    "arguments": {
+     "profile": "Moderate"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "e2c8b4d4-b016-43c5-95a2-73bef194be05",
+   "at": "2026-10-13T19:08:27.056313+00:00",
+   "ns": 25305209,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "Suitability rules \u00b7 2 suitability, 1 planning",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "suitability_rules",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "d809aac8-1bea-48ce-a42f-3ccc5de73755",
+   "at": "2026-10-13T19:08:27.056327+00:00",
+   "ns": 25318709,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "R-CONC-01 \u00b7 Single issuer above policy \u00b7 high",
+   "lane": "tools",
+   "source": "suitability_rules",
+   "target": null,
+   "body": "HCYN is 46% of the household ($6.53M), above the 10% single-issuer policy and the 20% cap.",
+   "data": {
+    "tool": "suitability_rules",
+    "rule": "R-CONC-01",
+    "severity": "high",
+    "category": "suitability"
+   }
+  },
+  {
+   "v": 1,
+   "id": "d29f73a9-4333-40db-9c0f-87f818891672",
+   "at": "2026-10-13T19:08:27.056341+00:00",
+   "ns": 25332542,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "flagged",
+   "title": "R-RISK-02 \u00b7 Equity share above the risk band \u00b7 high",
+   "lane": "tools",
+   "source": "suitability_rules",
+   "target": null,
+   "body": "Equities are 78% of the household against the Moderate band of 40\u201365%.",
+   "data": {
+    "tool": "suitability_rules",
+    "rule": "R-RISK-02",
+    "severity": "high",
+    "category": "suitability"
+   }
+  },
+  {
+   "v": 1,
+   "id": "981cb5d0-e98f-45ed-b270-89b3fedcde68",
+   "at": "2026-10-13T19:08:27.056352+00:00",
+   "ns": 25343625,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "info",
+   "title": "R-LIQ-02 \u00b7 Idle cash above the reserve \u00b7 medium",
+   "lane": "tools",
+   "source": "suitability_rules",
+   "target": null,
+   "body": "$620k sits idle in cash; a 6-month reserve is $120k.",
+   "data": {
+    "tool": "suitability_rules",
+    "rule": "R-LIQ-02",
+    "severity": "medium",
+    "category": "planning"
+   }
+  },
+  {
+   "v": 1,
+   "id": "5d25b20a-7a1f-4746-800f-93e90e918781",
+   "at": "2026-10-13T19:08:27.056422+00:00",
+   "ns": 25413750,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "next_best_actions(household=chuck-robbins)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "next_best_actions",
+    "agent": "workflow",
+    "arguments": {
+     "household": "chuck-robbins"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "b407e442-9ac3-4c04-b0e4-d4cd1c9ddc15",
+   "at": "2026-10-13T19:08:27.056434+00:00",
+   "ns": 25425209,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Next-best actions \u00b7 3 suitable \u00b7 $2.35M investable in play",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": "Exchange fund for low-basis HCYN shares: Not suitable: a 7-year lock-up exceeds the 4-year planning horizon.",
+   "data": {
+    "tool": "next_best_actions",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "4a023e3e-90b0-49bc-83f8-2a8511d4699f",
+   "at": "2026-10-13T19:08:27.065506+00:00",
+   "ns": 34498667,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "service_events(household=chuck-robbins)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "service_events",
+    "agent": "workflow",
+    "arguments": {
+     "household": "chuck-robbins"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "67bdcfdd-304d-4aee-a208-b11096c744e9",
+   "at": "2026-10-13T19:08:27.065519+00:00",
+   "ns": 34510292,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "Service event \u00b7 Recent card issue \u00b7 sample",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": "Customer-visible facts only, written by code from an allowlist of fields.",
+   "data": {
+    "tool": "service_events",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "6a0a2664-e7d3-4879-87d3-2f25d4d02167",
+   "at": "2026-10-13T19:08:27.065530+00:00",
+   "ns": 34520834,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "agent.tool_call",
+   "status": "info",
+   "title": "house_view_update(ticker=HCYN)",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": null,
+   "data": {
+    "tool": "house_view_update",
+    "agent": "workflow",
+    "arguments": {
+     "ticker": "HCYN"
+    }
+   }
+  },
+  {
+   "v": 1,
+   "id": "874a1cea-423d-41ff-8f86-8a4516930012",
+   "at": "2026-10-13T19:08:27.065537+00:00",
+   "ns": 34527792,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "tool.result",
+   "status": "ok",
+   "title": "House-view update \u00b7 HCYN Constructive \u00b7 recorded",
+   "lane": "tools",
+   "source": "workflow",
+   "target": null,
+   "body": "5 verified claims attached",
+   "data": {
+    "tool": "house_view_update",
+    "agent": "workflow"
+   }
+  },
+  {
+   "v": 1,
+   "id": "bd9db4ad-8920-4221-bcdf-7357b453d29a",
+   "at": "2026-10-13T19:08:27.065566+00:00",
+   "ns": 34556459,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "agent.message",
+   "status": "flagged",
+   "title": "No model drafted the brief \u00b7 code wrote it from the rules and actions",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {}
+  },
+  {
+   "v": 1,
+   "id": "da6848d9-f4bb-49ce-931d-ead69e667e33",
+   "at": "2026-10-13T19:08:27.067411+00:00",
+   "ns": 36404000,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "claim.verdict",
+   "status": "ok",
+   "title": "Brief verifier \u00b7 7 of 7 statements verified",
+   "lane": "security",
+   "source": null,
+   "target": null,
+   "body": "Statements, callouts, and the rationale are checked against the cited record; agenda lines and questions must not invent numbers.",
+   "data": {}
+  },
+  {
+   "v": 1,
+   "id": "552a8e59-3bae-4641-ab45-42341c6483ac",
+   "at": "2026-10-13T19:08:27.067425+00:00",
+   "ns": 36416834,
+   "run_id": "wealth-20261013-190827-ce7426",
+   "component": "wealth",
+   "kind": "result",
+   "status": "info",
+   "title": "AI brief unavailable \u00b7 rules, actions, and a code-written brief only (not approvable)",
+   "lane": "agent",
+   "source": null,
+   "target": null,
+   "body": null,
+   "data": {}
+  }
+ ],
+ "result": {
+  "household": {
+   "id": "chuck-robbins",
+   "name": "Chuck Robbins",
+   "synthetic": true,
+   "risk_profile": "Moderate",
+   "total_value": 14200000.0,
+   "headline": "Cisco Chair and CEO \u00b7 hypothetical portfolio with 46% in fictional HCYN",
+   "age": null,
+   "horizon_years": 4,
+   "goals": [
+    "Reduce single-issuer concentration",
+    "Maintain a four-year liquidity plan"
+   ],
+   "affiliate": false,
+   "employer_ticker": "CSCO"
+  },
+  "holdings": [
+   {
+    "ticker": "HCYN",
+    "name": "Halcyon Interconnect (fictional)",
+    "weight": 0.46,
+    "asset_class": "equity",
+    "value": 6532276,
+    "account": "Taxable brokerage",
+    "return_1y": 0.19431538671768234,
+    "return_1y_spy": 0.16911722608346103,
+    "return_1y_vs_spy": 0.02519816063422131,
+    "sector": "Technology",
+    "source": {
+     "kind": "fictional",
+     "label": "Fictional \u00b7 synthetic data",
+     "asOf": "2026-10-08",
+     "fictional": true
+    },
+    "status": "ready"
+   },
+   {
+    "ticker": "VTI",
+    "name": "Vanguard Total Stock Market ETF",
+    "weight": 0.2,
+    "asset_class": "equity",
+    "value": 2840000,
+    "account": "Taxable brokerage",
+    "return_1y": 0.1642236989661472,
+    "return_1y_spy": 0.1691548078576357,
+    "return_1y_vs_spy": -0.0049311088914885115,
+    "sector": null,
+    "source": {
+     "kind": "fixture",
+     "label": "Committed snapshot \u00b7 Yahoo Finance as of 2026-10-09",
+     "asOf": "2026-10-09",
+     "fictional": false
+    },
+    "status": "ready"
+   },
+   {
+    "ticker": "VXUS",
+    "name": "Vanguard Total International Stock ETF",
+    "weight": 0.12,
+    "asset_class": "equity",
+    "value": 1704000,
+    "account": "Taxable brokerage",
+    "return_1y": 0.16749941501149324,
+    "return_1y_spy": 0.1691548078576357,
+    "return_1y_vs_spy": -0.0016553928461424672,
+    "sector": null,
+    "source": {
+     "kind": "fixture",
+     "label": "Committed snapshot \u00b7 Yahoo Finance as of 2026-10-09",
+     "asOf": "2026-10-09",
+     "fictional": false
+    },
+    "status": "ready"
+   },
+   {
+    "ticker": "BND",
+    "name": "Vanguard Total Bond Market ETF",
+    "weight": 0.17600000000000002,
+    "asset_class": "fixed_income",
+    "value": 2503724,
+    "account": "Taxable brokerage",
+    "return_1y": -0.01596982045863493,
+    "return_1y_spy": 0.1691548078576357,
+    "return_1y_vs_spy": -0.18512462831627063,
+    "sector": null,
+    "source": {
+     "kind": "fixture",
+     "label": "Committed snapshot \u00b7 Yahoo Finance as of 2026-10-09",
+     "asOf": "2026-10-09",
+     "fictional": false
+    },
+    "status": "ready"
+   },
+   {
+    "ticker": "CASH",
+    "name": "Brokerage sweep cash",
+    "weight": 0.044000000000000004,
+    "asset_class": "cash",
+    "value": 620000,
+    "account": "Taxable brokerage",
+    "source": {
+     "kind": "household",
+     "label": "Household record \u00b7 synthetic"
+    },
+    "status": "ready",
+    "note": null
+   }
+  ],
+  "notes": [
+   {
+    "index": 0,
+    "date": "2026-10-08",
+    "author": "Demo scenario author",
+    "text": "Hypothetical review: reduce the concentrated HCYN investment while preserving liquidity. HCYN is a fictional holding, not Cisco or employer stock.",
+    "masked": [],
+    "status": "kept",
+    "ai_defense": "not_configured",
+    "ai_defense_rules": [],
+    "local": [],
+    "event_id": null
+   },
+   {
+    "index": 1,
+    "date": "2026-10-08",
+    "author": "Demo scenario author",
+    "text": "Use the sample four-year planning horizon and Moderate profile. Confirm objectives before considering any action; no retirement or family plans are assumed.",
+    "masked": [],
+    "status": "kept",
+    "ai_defense": "not_configured",
+    "ai_defense_rules": [],
+    "local": [],
+    "event_id": null
+   },
+   {
+    "index": 2,
+    "date": "2026-10-08",
+    "author": "Demo scenario author",
+    "text": "The synthetic portfolio includes $620k of cash and a $240k annual spending assumption for demonstrating reserve calculations. These are not actual client figures.",
+    "masked": [],
+    "status": "kept",
+    "ai_defense": "not_configured",
+    "ai_defense_rules": [],
+    "local": [],
+    "event_id": null
+   }
+  ],
+  "suitability": [
+   {
+    "id": "R-CONC-01:HCYN",
+    "rule": "R-CONC-01",
+    "title": "Single issuer above policy",
+    "severity": "high",
+    "category": "suitability",
+    "reg_bi": "Care: concentration risk against the stated risk profile and horizon.",
+    "detail": "HCYN is 46% of the household ($6.53M), above the 10% single-issuer policy and the 20% cap.",
+    "fields": {
+     "weight": {
+      "value": 0.46,
+      "unit": "fraction",
+      "display": "46%",
+      "label": "HCYN share of the household"
+     },
+     "limit": {
+      "value": 0.1,
+      "unit": "fraction",
+      "display": "10%",
+      "label": "Single-issuer policy"
+     },
+     "value": {
+      "value": 6532276.0,
+      "unit": "usd",
+      "display": "$6.53M",
+      "label": "HCYN position"
+     },
+     "excess_value": {
+      "value": 5112000.0,
+      "unit": "usd",
+      "display": "$5.11M",
+      "label": "Above the 10% policy"
+     },
+     "unrealized_gain": {
+      "value": 5710136.0,
+      "unit": "usd",
+      "display": "$5.71M",
+      "label": "Unrealized gain"
+     },
+     "cost_basis": {
+      "value": 11.0,
+      "unit": "usd",
+      "display": "$11.00",
+      "label": "Cost basis per share"
+     }
+    },
+    "evidence": {
+     "ticker": "HCYN",
+     "weight_pct": 46.0,
+     "limit_pct": 10.0
+    }
+   },
+   {
+    "id": "R-RISK-02",
+    "rule": "R-RISK-02",
+    "title": "Equity share above the risk band",
+    "severity": "high",
+    "category": "suitability",
+    "reg_bi": "Care: the allocation carries more risk than the client's profile allows.",
+    "detail": "Equities are 78% of the household against the Moderate band of 40\u201365%.",
+    "fields": {
+     "equity_share": {
+      "value": 0.78,
+      "unit": "fraction",
+      "display": "78%",
+      "label": "Equity share"
+     },
+     "band_max": {
+      "value": 0.65,
+      "unit": "fraction",
+      "display": "65%",
+      "label": "Moderate maximum"
+     },
+     "band_min": {
+      "value": 0.4,
+      "unit": "fraction",
+      "display": "40%",
+      "label": "Moderate minimum"
+     },
+     "gap": {
+      "value": 0.13,
+      "unit": "fraction",
+      "display": "13.0 points",
+      "label": "Distance outside the band"
+     },
+     "shift_value": {
+      "value": 1846000.0,
+      "unit": "usd",
+      "display": "$1.85M",
+      "label": "Value to move back inside the band"
+     }
+    },
+    "evidence": {
+     "equity_pct": 78.0,
+     "band": [
+      40,
+      65
+     ],
+     "profile": "Moderate"
+    }
+   },
+   {
+    "id": "R-LIQ-02",
+    "rule": "R-LIQ-02",
+    "title": "Idle cash above the reserve",
+    "severity": "medium",
+    "category": "planning",
+    "reg_bi": "Planning: cash beyond the reserve has no stated purpose.",
+    "detail": "$620k sits idle in cash; a 6-month reserve is $120k.",
+    "fields": {
+     "idle_cash": {
+      "value": 620000.0,
+      "unit": "usd",
+      "display": "$620k",
+      "label": "Idle cash"
+     },
+     "reserve": {
+      "value": 120000.0,
+      "unit": "usd",
+      "display": "$120k",
+      "label": "6-month reserve"
+     },
+     "above_reserve": {
+      "value": 500000.0,
+      "unit": "usd",
+      "display": "$500k",
+      "label": "Above the reserve"
+     },
+     "months": {
+      "value": 31.0,
+      "unit": "count",
+      "display": "31 months",
+      "label": "Months of spending"
+     }
+    },
+    "evidence": {
+     "cash": 620000.0
+    }
+   }
+  ],
+  "actions": [
+   {
+    "id": "NBA-REBALANCE",
+    "type": "rebalance",
+    "title": "Rebalance back inside the Moderate band",
+    "summary": "Move about $1.85M so equities go from 78% to at most 65%.",
+    "rules": [
+     "R-RISK-02"
+    ],
+    "dollars": 1846000.0,
+    "dollars_display": "$1.85M",
+    "dollars_label": "Value to move",
+    "suitable": true,
+    "fit": "Brings the allocation back to the Moderate profile the client chose.",
+    "cautions": [],
+    "fields": {
+     "dollars": {
+      "value": 1846000.0,
+      "unit": "usd",
+      "display": "$1.85M",
+      "label": "Value to move"
+     }
+    }
+   },
+   {
+    "id": "NBA-LADDER",
+    "type": "treasury-ladder",
+    "title": "Treasury ladder for idle cash",
+    "summary": "Put $500k above the $120k reserve into Treasuries that mature with the plan's dates (Reduce single-issuer concentration, Maintain a four-year liquidity plan).",
+    "rules": [
+     "R-LIQ-02"
+    ],
+    "dollars": 500000.0,
+    "dollars_display": "$500k",
+    "dollars_label": "Cash above the reserve",
+    "suitable": true,
+    "fit": "Low risk and liquid at each maturity; fits every profile.",
+    "cautions": [],
+    "fields": {
+     "dollars": {
+      "value": 500000.0,
+      "unit": "usd",
+      "display": "$500k",
+      "label": "Cash above the reserve"
+     },
+     "idle_cash": {
+      "value": 620000.0,
+      "unit": "usd",
+      "display": "$620k",
+      "label": "Idle cash"
+     },
+     "reserve": {
+      "value": 120000.0,
+      "unit": "usd",
+      "display": "$120k",
+      "label": "6-month reserve"
+     }
+    }
+   },
+   {
+    "id": "NBA-DAF",
+    "type": "daf-gift",
+    "title": "Gift appreciated HCYN shares to a donor-advised fund",
+    "summary": "Give $250k of low-basis shares instead of cash, avoiding about $219k of realized gain.",
+    "rules": [
+     "R-CONC-01"
+    ],
+    "dollars": 250000,
+    "dollars_display": "$250k",
+    "dollars_label": "Illustrative gift",
+    "suitable": true,
+    "fit": "Fits only if the client has charitable goals; ask before proposing.",
+    "cautions": [
+     "Ask about charitable intent first; nothing is on file.",
+     "Gifts by an affiliate still follow the insider policy."
+    ],
+    "fields": {
+     "dollars": {
+      "value": 250000,
+      "unit": "usd",
+      "display": "$250k",
+      "label": "Illustrative gift"
+     },
+     "gain_avoided": {
+      "value": 218535.46910755147,
+      "unit": "usd",
+      "display": "$219k",
+      "label": "Gain not realized"
+     },
+     "unrealized_gain": {
+      "value": 5710136.0,
+      "unit": "usd",
+      "display": "$5.71M",
+      "label": "Unrealized gain"
+     }
+    }
+   },
+   {
+    "id": "NBA-EXCHANGE",
+    "type": "exchange-fund",
+    "title": "Exchange fund for low-basis HCYN shares",
+    "summary": "Swap concentrated shares into a diversified fund without an immediate taxable sale.",
+    "rules": [
+     "R-CONC-01"
+    ],
+    "dollars": 5112000.0,
+    "dollars_display": "$5.11M",
+    "dollars_label": "Shares that could be contributed",
+    "suitable": false,
+    "fit": "Not suitable: a 7-year lock-up exceeds the 4-year planning horizon.",
+    "cautions": [
+     "Typical 7-year lock-up; accredited investors only."
+    ],
+    "fields": {
+     "dollars": {
+      "value": 5112000.0,
+      "unit": "usd",
+      "display": "$5.11M",
+      "label": "Shares that could be contributed"
+     }
+    }
+   }
+  ],
+  "addressable": 2346000.0,
+  "addressable_display": "$2.35M",
+  "context": {
+   "research": {
+    "origin": "recorded",
+    "ticker": "HCYN",
+    "rating": "Constructive",
+    "impact": "consistent",
+    "published_at": null,
+    "claims": 5
+   },
+   "issuer_policy": false,
+   "briefing": false,
+   "service_event": {
+    "origin": "record",
+    "detail": "sample",
+    "title": "Recent card issue"
+   }
+  },
+  "evidence": [
+   {
+    "id": "crm:0",
+    "title": "CRM note \u00b7 2026-10-08 \u00b7 Demo scenario author",
+    "source": "CRM (screened)",
+    "kind": "note",
+    "synthetic": true,
+    "fields": {},
+    "text": "Hypothetical review: reduce the concentrated HCYN investment while preserving liquidity. HCYN is a fictional holding, not Cisco or employer stock."
+   },
+   {
+    "id": "crm:1",
+    "title": "CRM note \u00b7 2026-10-08 \u00b7 Demo scenario author",
+    "source": "CRM (screened)",
+    "kind": "note",
+    "synthetic": true,
+    "fields": {},
+    "text": "Use the sample four-year planning horizon and Moderate profile. Confirm objectives before considering any action; no retirement or family plans are assumed."
+   },
+   {
+    "id": "crm:2",
+    "title": "CRM note \u00b7 2026-10-08 \u00b7 Demo scenario author",
+    "source": "CRM (screened)",
+    "kind": "note",
+    "synthetic": true,
+    "fields": {},
+    "text": "The synthetic portfolio includes $620k of cash and a $240k annual spending assumption for demonstrating reserve calculations. These are not actual client figures."
+   },
+   {
+    "id": "household",
+    "title": "Household \u00b7 Chuck Robbins",
+    "source": "Household record \u00b7 synthetic",
+    "kind": "data",
+    "synthetic": true,
+    "fields": {
+     "total_value": {
+      "display": "$14.2M",
+      "label": "Household value"
+     },
+     "risk_profile": {
+      "display": "Moderate",
+      "label": "Risk profile"
+     },
+     "horizon_years": {
+      "display": "4 years",
+      "label": "Horizon"
+     },
+     "annual_need": {
+      "display": "$240k",
+      "label": "Annual spending need"
+     },
+     "age": {
+      "display": "None",
+      "label": "Age"
+     },
+     "holdings.HCYN.weight": {
+      "display": "46.0%",
+      "label": "HCYN weight"
+     },
+     "holdings.HCYN.value": {
+      "display": "$6.53M",
+      "label": "HCYN value"
+     },
+     "holdings.VTI.weight": {
+      "display": "20.0%",
+      "label": "VTI weight"
+     },
+     "holdings.VTI.value": {
+      "display": "$2.84M",
+      "label": "VTI value"
+     },
+     "holdings.VXUS.weight": {
+      "display": "12.0%",
+      "label": "VXUS weight"
+     },
+     "holdings.VXUS.value": {
+      "display": "$1.7M",
+      "label": "VXUS value"
+     },
+     "holdings.BND.weight": {
+      "display": "17.6%",
+      "label": "BND weight"
+     },
+     "holdings.BND.value": {
+      "display": "$2.5M",
+      "label": "BND value"
+     },
+     "holdings.CASH.weight": {
+      "display": "4.4%",
+      "label": "CASH weight"
+     },
+     "holdings.CASH.value": {
+      "display": "$620k",
+      "label": "CASH value"
+     }
+    },
+    "text": "Chuck Robbins: Cisco Chair and CEO \u00b7 hypothetical portfolio with 46% in fictional HCYN. Goals: Reduce single-issuer concentration, Maintain a four-year liquidity plan. Investment policy: Diversification and liquidity in a hypothetical planning exercise; risk tolerance Moderate; horizon Four-year illustrative planning horizon; no retirement date assumed."
+   },
+   {
+    "id": "suitability:R-CONC-01",
+    "title": "R-CONC-01 \u00b7 Single issuer above policy",
+    "source": "Suitability rules (code)",
+    "kind": "rule",
+    "synthetic": false,
+    "fields": {
+     "weight": {
+      "display": "46%",
+      "label": "HCYN share of the household"
+     },
+     "limit": {
+      "display": "10%",
+      "label": "Single-issuer policy"
+     },
+     "value": {
+      "display": "$6.53M",
+      "label": "HCYN position"
+     },
+     "excess_value": {
+      "display": "$5.11M",
+      "label": "Above the 10% policy"
+     },
+     "unrealized_gain": {
+      "display": "$5.71M",
+      "label": "Unrealized gain"
+     },
+     "cost_basis": {
+      "display": "$11.00",
+      "label": "Cost basis per share"
+     },
+     "reg_bi": {
+      "display": "Care: concentration risk against the stated risk profile and horizon.",
+      "label": "Reg BI question"
+     }
+    },
+    "text": "HCYN is 46% of the household ($6.53M), above the 10% single-issuer policy and the 20% cap."
+   },
+   {
+    "id": "suitability:R-RISK-02",
+    "title": "R-RISK-02 \u00b7 Equity share above the risk band",
+    "source": "Suitability rules (code)",
+    "kind": "rule",
+    "synthetic": false,
+    "fields": {
+     "equity_share": {
+      "display": "78%",
+      "label": "Equity share"
+     },
+     "band_max": {
+      "display": "65%",
+      "label": "Moderate maximum"
+     },
+     "band_min": {
+      "display": "40%",
+      "label": "Moderate minimum"
+     },
+     "gap": {
+      "display": "13.0 points",
+      "label": "Distance outside the band"
+     },
+     "shift_value": {
+      "display": "$1.85M",
+      "label": "Value to move back inside the band"
+     },
+     "reg_bi": {
+      "display": "Care: the allocation carries more risk than the client's profile allows.",
+      "label": "Reg BI question"
+     }
+    },
+    "text": "Equities are 78% of the household against the Moderate band of 40\u201365%."
+   },
+   {
+    "id": "suitability:R-LIQ-02",
+    "title": "R-LIQ-02 \u00b7 Idle cash above the reserve",
+    "source": "Suitability rules (code)",
+    "kind": "rule",
+    "synthetic": false,
+    "fields": {
+     "idle_cash": {
+      "display": "$620k",
+      "label": "Idle cash"
+     },
+     "reserve": {
+      "display": "$120k",
+      "label": "6-month reserve"
+     },
+     "above_reserve": {
+      "display": "$500k",
+      "label": "Above the reserve"
+     },
+     "months": {
+      "display": "31 months",
+      "label": "Months of spending"
+     },
+     "reg_bi": {
+      "display": "Planning: cash beyond the reserve has no stated purpose.",
+      "label": "Reg BI question"
+     }
+    },
+    "text": "$620k sits idle in cash; a 6-month reserve is $120k."
+   },
+   {
+    "id": "action:NBA-REBALANCE",
+    "title": "Rebalance back inside the Moderate band",
+    "source": "Next-best-action catalogue (code)",
+    "kind": "action",
+    "synthetic": false,
+    "fields": {
+     "dollars": {
+      "display": "$1.85M",
+      "label": "Value to move"
+     }
+    },
+    "text": "Rebalance back inside the Moderate band. Move about $1.85M so equities go from 78% to at most 65%. Brings the allocation back to the Moderate profile the client chose."
+   },
+   {
+    "id": "action:NBA-LADDER",
+    "title": "Treasury ladder for idle cash",
+    "source": "Next-best-action catalogue (code)",
+    "kind": "action",
+    "synthetic": false,
+    "fields": {
+     "dollars": {
+      "display": "$500k",
+      "label": "Cash above the reserve"
+     },
+     "idle_cash": {
+      "display": "$620k",
+      "label": "Idle cash"
+     },
+     "reserve": {
+      "display": "$120k",
+      "label": "6-month reserve"
+     }
+    },
+    "text": "Treasury ladder for idle cash. Put $500k above the $120k reserve into Treasuries that mature with the plan's dates (Reduce single-issuer concentration, Maintain a four-year liquidity plan). Low risk and liquid at each maturity; fits every profile."
+   },
+   {
+    "id": "action:NBA-DAF",
+    "title": "Gift appreciated HCYN shares to a donor-advised fund",
+    "source": "Next-best-action catalogue (code)",
+    "kind": "action",
+    "synthetic": false,
+    "fields": {
+     "dollars": {
+      "display": "$250k",
+      "label": "Illustrative gift"
+     },
+     "gain_avoided": {
+      "display": "$219k",
+      "label": "Gain not realized"
+     },
+     "unrealized_gain": {
+      "display": "$5.71M",
+      "label": "Unrealized gain"
+     }
+    },
+    "text": "Gift appreciated HCYN shares to a donor-advised fund. Give $250k of low-basis shares instead of cash, avoiding about $219k of realized gain. Fits only if the client has charitable goals; ask before proposing. Ask about charitable intent first; nothing is on file. Gifts by an affiliate still follow the insider policy."
+   },
+   {
+    "id": "action:NBA-EXCHANGE",
+    "title": "Exchange fund for low-basis HCYN shares",
+    "source": "Next-best-action catalogue (code)",
+    "kind": "action",
+    "synthetic": false,
+    "fields": {
+     "dollars": {
+      "display": "$5.11M",
+      "label": "Shares that could be contributed"
+     }
+    },
+    "text": "Exchange fund for low-basis HCYN shares. Swap concentrated shares into a diversified fund without an immediate taxable sale. Not suitable: a 7-year lock-up exceeds the 4-year planning horizon. Typical 7-year lock-up; accredited investors only."
+   },
+   {
+    "id": "research:update",
+    "title": "House-view update \u00b7 HCYN \u00b7 Constructive \u00b7 consistent with the house view",
+    "source": "Research desk \u00b7 recorded run",
+    "kind": "research",
+    "synthetic": true,
+    "fields": {
+     "rating": {
+      "display": "Constructive",
+      "label": "House view rating"
+     },
+     "event.eps_actual": {
+      "display": "$1.79",
+      "label": null
+     },
+     "event.revenue": {
+      "display": "$1.51B",
+      "label": null
+     },
+     "event.guidance_low": {
+      "display": "$5.75B",
+      "label": null
+     },
+     "earnings.beat_rate": {
+      "display": "87.5%",
+      "label": null
+     },
+     "valuation.forward_pe": {
+      "display": "11.5x",
+      "label": null
+     }
+    },
+    "text": "EPS was $1.79 versus $1.62 consensus, a 10.5% beat. Revenue was $1.51B, up 42.6% year over year and 5.0% above consensus. FY2026 revenue guidance rose to $5.75B\u2013$5.85B from $5.45B\u2013$5.6B, with the midpoint up 5.0%. The earnings beat record remains strong at 87.5% across 8 observations, including a 4-quarter beat streak. Valuation remains supportive of the house view: forward P/E is 11.5x versus a 18.4x peer median, a 24.1% discount."
+   },
+   {
+    "id": "service:record",
+    "title": "Recent card issue (customer record)",
+    "source": "Customer record \u00b7 sample",
+    "kind": "service",
+    "synthetic": true,
+    "fields": {},
+    "text": "Card ending 1188 used at Orbit Digital Goods, a compromised merchant. Blocked and reissued; $286.40 refunded."
+   }
+  ],
+  "withheld": [],
+  "brief": {
+   "lines": [
+    {
+     "section": "opening",
+     "text": "Card ending 1188 used at Orbit Digital Goods, a compromised merchant. Blocked and reissued; $286.40 refunded.",
+     "evidence_id": "service:record",
+     "quote": "Card ending 1188 used at Orbit Digital Goods, a compromised merchant. Blocked and reissued; $286.40 refunded.",
+     "status": "verified",
+     "reason": "Quoted from Recent card issue (customer record).",
+     "check": "quote"
+    },
+    {
+     "section": "callout",
+     "text": "HCYN is 46% of the household ($6.53M), above the 10% single-issuer policy and the 20% cap.",
+     "evidence_id": "suitability:R-CONC-01",
+     "quote": "HCYN is 46% of the household ($6.53M), above the 10% single-issuer policy and the 20% cap.",
+     "status": "verified",
+     "reason": "Quoted from R-CONC-01 \u00b7 Single issuer above policy.",
+     "check": "quote"
+    },
+    {
+     "section": "callout",
+     "text": "Equities are 78% of the household against the Moderate band of 40\u201365%.",
+     "evidence_id": "suitability:R-RISK-02",
+     "quote": "Equities are 78% of the household against the Moderate band of 40\u201365%.",
+     "status": "verified",
+     "reason": "Quoted from R-RISK-02 \u00b7 Equity share above the risk band.",
+     "check": "quote"
+    },
+    {
+     "section": "callout",
+     "text": "$620k sits idle in cash; a 6-month reserve is $120k.",
+     "evidence_id": "suitability:R-LIQ-02",
+     "quote": "$620k sits idle in cash; a 6-month reserve is $120k.",
+     "status": "verified",
+     "reason": "Quoted from R-LIQ-02 \u00b7 Idle cash above the reserve.",
+     "check": "quote"
+    },
+    {
+     "section": "talking_point",
+     "text": "Move about $1.85M so equities go from 78% to at most 65%.",
+     "evidence_id": "action:NBA-REBALANCE",
+     "quote": "Move about $1.85M so equities go from 78% to at most 65%.",
+     "status": "verified",
+     "reason": "Quoted from Rebalance back inside the Moderate band.",
+     "check": "quote"
+    },
+    {
+     "section": "talking_point",
+     "text": "Put $500k above the $120k reserve into Treasuries that mature with the plan's dates (Reduce single-issuer concentration, Maintain a four-year liquidity plan).",
+     "evidence_id": "action:NBA-LADDER",
+     "quote": "Put $500k above the $120k reserve into Treasuries that mature with the plan's dates (Reduce single-issuer concentration, Maintain a four-year liquidity plan).",
+     "status": "verified",
+     "reason": "Quoted from Treasury ladder for idle cash.",
+     "check": "quote"
+    },
+    {
+     "section": "talking_point",
+     "text": "Give $250k of low-basis shares instead of cash, avoiding about $219k of realized gain.",
+     "evidence_id": "action:NBA-DAF",
+     "quote": "Give $250k of low-basis shares instead of cash, avoiding about $219k of realized gain.",
+     "status": "verified",
+     "reason": "Quoted from Gift appreciated HCYN shares to a donor-advised fund.",
+     "check": "quote"
+    },
+    {
+     "section": "agenda",
+     "text": "Rebalance back inside the Moderate band",
+     "evidence_id": "action:NBA-REBALANCE",
+     "status": "agenda",
+     "reason": "Agenda line, not a factual claim."
+    },
+    {
+     "section": "agenda",
+     "text": "Treasury ladder for idle cash",
+     "evidence_id": "action:NBA-LADDER",
+     "status": "agenda",
+     "reason": "Agenda line, not a factual claim."
+    },
+    {
+     "section": "agenda",
+     "text": "Gift appreciated HCYN shares to a donor-advised fund",
+     "evidence_id": "action:NBA-DAF",
+     "status": "agenda",
+     "reason": "Agenda line, not a factual claim."
+    }
+   ],
+   "action_ids": [
+    "NBA-REBALANCE",
+    "NBA-LADDER",
+    "NBA-DAF"
+   ],
+   "dropped_actions": [],
+   "counts": {
+    "claims": 7,
+    "verified": 7,
+    "unverified": 0,
+    "policy": 0
+   },
+   "status": "ready",
+   "mode": "fixture",
+   "mode_label": "Brief written by code from the rules \u00b7 no model",
+   "reason": "Saved hypothetical example generated by code; no model or hosted control was called.",
+   "refused": false
+  },
+  "compliance": {
+   "findings": [],
+   "verdicts": {
+    "no_guarantee": true,
+    "no_trade_or_wire_instruction": true,
+    "suitable_for_profile": true
+   }
+  },
+  "approval": {
+   "status": "unavailable",
+   "reason": "AI brief unavailable \u00b7 the code-written brief shows the rules and actions and cannot be submitted for supervision."
+  },
+  "duration_ms": 36,
+  "disclaimer": "Synthetic client data for demonstration only. Not investment, tax, or legal advice.",
+  "run_id": "wealth-20261013-190827-ce7426",
+  "served_by": null,
+  "usage": {
+   "llm_calls": 0,
+   "input_tokens": null,
+   "output_tokens": null,
+   "tool_calls": 7
+  },
+  "security": {
+   "mode": "off",
+   "status": "disabled",
+   "checks": 0,
+   "blocked": 0,
+   "errors": 0
+  }
+ },
+ "note": "Code-written hypothetical advisor sample. Chuck Robbins's public role is sourced from Cisco; financial data and events are invented. No model, AI Defense, or hosted Agent Control call was made. Replay does not consume the current session's handoff.",
+ "public_profile": {
+  "name": "Chuck Robbins",
+  "title": "Chair and Chief Executive Officer",
+  "employer": "Cisco",
+  "source_url": "https://newsroom.cisco.com/c/r/newsroom/en/us/executives/robbins-chuck.html",
+  "verified_on": "2026-10-13",
+  "scope": "Public professional identity only. Banking relationship, balances, holdings, screening results and events are hypothetical."
+ }
+}

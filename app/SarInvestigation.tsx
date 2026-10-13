@@ -463,7 +463,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
                 </li>
               ))}
             </ul>
-            <p className="sar-note">{handoff?.caseId === LINKED_FRAUD_CASE || !handoff ? "Cards from the Orbit Digital Goods compromise funded the mule account; the referral goes to the agent as cited, untrusted evidence." : "The synthetic data links only the Orbit Digital Goods compromise to a SAR case; this referral is attached as evidence."}</p>
+            <p className="sar-note">{handoff?.caseId === LINKED_FRAUD_CASE || !handoff ? "Other compromised cards funded Kendall Reyes’s account; the attempt from Chuck’s card was declined. Chuck is the hypothetical victim, not the subject. Live investigation uses the referral; replay uses a saved investigation." : "The synthetic data links only the Orbit Digital Goods compromise to a SAR case; this referral is attached as evidence."}</p>
           </section>
         )}
 
@@ -742,7 +742,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
         )}
       </div>
       <RunStats ledger={ledger} {...stats} empty="Investigate a case. Its model calls, tool calls, and AI Defense verdicts land here." />
-      {embedded && inStory && <div className="sar-story"><span>STORY MODE</span> The money-mule case is the same card-fraud ring the fraud demo blocked; Dana Whitfield is the victim cardholder, never a subject.</div>}
+      {embedded && inStory && <div className="sar-story"><span>STORY MODE</span> The money-mule case is the same card-fraud ring the fraud demo blocked; Chuck Robbins is the victim cardholder, never a subject.</div>}
     </div>
   );
 }

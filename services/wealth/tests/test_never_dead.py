@@ -205,12 +205,12 @@ def test_research_run_events_stream_in_attach_mode(offline, drafted_research):
 def test_households_are_served_and_labelled_synthetic(offline):
     client = TestClient(server.app)
     cards = client.get("/api/wealth/households").json()
-    assert [card["id"] for card in cards["households"]] == ["dana-whitfield", "okafor", "priya-raman"]
+    assert [card["id"] for card in cards["households"]] == ["chuck-robbins", "okafor", "priya-raman"]
     assert all(card["synthetic"] for card in cards["households"])
-    dana = client.get("/api/wealth/households/dana-whitfield").json()
-    hcyn = next(row for row in dana["holdings"] if row["ticker"] == "HCYN")
+    chuck = client.get("/api/wealth/households/chuck-robbins").json()
+    hcyn = next(row for row in chuck["holdings"] if row["ticker"] == "HCYN")
     assert hcyn["weight_pct"] == 46.0 and hcyn["shares"] == 74740 and hcyn["cost_basis_per_share"] == 11.0
-    assert abs(hcyn["shares"] * hcyn["price"] / dana["total_value"] - 0.46) < 0.001
+    assert abs(hcyn["shares"] * hcyn["price"] / chuck["total_value"] - 0.46) < 0.001
     assert client.get("/api/wealth/households/nobody").status_code == 404
     assert client.get("/api/wealth/households/..%2Fsecrets").status_code == 404
 
@@ -218,7 +218,7 @@ def test_households_are_served_and_labelled_synthetic(offline):
 def test_synthetic_pii_is_obviously_fake():
     priya = json.dumps(household("priya-raman"))
     assert "000-00-1234" in priya and "SYSTEM OVERRIDE" in priya and "0000-4471-9902" in priya and "4111 1111 1111 1111" in priya
-    for record in (household(h) for h in ("dana-whitfield", "okafor", "priya-raman")):
+    for record in (household(h) for h in ("chuck-robbins", "okafor", "priya-raman")):
         assert all(account["number"].startswith("0000-") for account in record["accounts"])
 
 
@@ -231,7 +231,7 @@ def test_household_suitability_names_its_rules():
     def rules(hid):
         return {item["rule"] for item in household_findings(household(hid))}
 
-    assert rules("dana-whitfield") == {"R-CONC-01", "R-RISK-02", "R-AFF-01", "R-LIQ-02", "R-REV-01", "R-EDU-01"}
+    assert rules("chuck-robbins") == {"R-CONC-01", "R-RISK-02", "R-LIQ-02"}
     assert rules("okafor") == {"R-RISK-02", "R-LIQ-03", "R-BEN-01", "R-RMD-01"}
     assert rules("priya-raman") == {"R-LIQ-02", "R-BEN-01", "R-REV-01"}
 
@@ -239,7 +239,7 @@ def test_household_suitability_names_its_rules():
 def test_every_household_preps_offline_with_a_verified_code_written_brief(offline, no_models):
     client = TestClient(server.app)
     assert set(household_tickers()) - {"CASH"} <= {"HCYN", "VTI", "VXUS", "BND", "SCHD"}
-    for hid in ("dana-whitfield", "okafor", "priya-raman"):
+    for hid in ("chuck-robbins", "okafor", "priya-raman"):
         body = client.post("/api/wealth/advisory/brief", json={"household_id": hid}).json()
         assert all(row["status"] == "ready" for row in body["holdings"]), (hid, body["holdings"])
         assert body["household"]["id"] == hid and body["household"]["synthetic"] is True
@@ -249,7 +249,7 @@ def test_every_household_preps_offline_with_a_verified_code_written_brief(offlin
         assert body["approval"]["status"] == "unavailable" and body["approval"]["reason"] == advisory.FIXTURE_NOT_APPROVABLE
         assert client.post("/api/wealth/advisory/approve", json={"stage": "advisor", "result": body}).status_code == 409
         service = [row for row in body["evidence"] if row["kind"] == "service"]
-        if hid == "dana-whitfield":
+        if hid == "chuck-robbins":
             assert [row["source"] for row in service] == ["Customer record · sample"]
             assert brief["lines"][0]["section"] == "opening" and brief["lines"][0]["status"] == "verified"
         else:
@@ -257,13 +257,13 @@ def test_every_household_preps_offline_with_a_verified_code_written_brief(offlin
 
 
 def test_fraud_service_event_reaches_meeting_prep_without_investigation_details(offline, no_models):
-    event = {"id": "service-dana-whitfield-cpp-orbit", "kind": "service-event", "customerId": "dana-whitfield",
+    event = {"id": "service-chuck-robbins-cpp-orbit", "kind": "service-event", "customerId": "chuck-robbins",
              "occurredAt": "2026-10-02T21:14:00Z", "cardLast4": "1188", "merchant": "Orbit Digital Goods", "amount": 286.4,
              "actions": ["contact_customer", "block_and_reissue", "escalate"], "provenance": "live",
              "summary": "Escalated to investigations; SAR referral drafted.", "title": "SAR filed"}
     stranger = {**event, "customerId": "okafor", "cardLast4": "9999"}
     body = TestClient(server.app).post("/api/wealth/advisory/brief",
-                                       json={"household_id": "dana-whitfield", "service_events": [stranger, event]}).json()
+                                       json={"household_id": "chuck-robbins", "service_events": [stranger, event]}).json()
     service = [row for row in body["evidence"] if row["kind"] == "service"]
     assert [row["id"] for row in service] == ["service:card-1188"] and service[0]["source"] == "Card fraud triage · this session"
     assert service[0]["text"] == ("On Oct 2, card ending 1188 was used for an unauthorised online purchase at Orbit Digital Goods ($286.40). "
@@ -281,7 +281,7 @@ def test_a_line_that_tips_off_is_blocked_by_policy(offline, monkeypatch):
                 "ranked_actions": []}, "deep_agent"
 
     monkeypatch.setattr(advisory, "run_deep_agent", drafted)
-    body = TestClient(server.app).post("/api/wealth/advisory/brief", json={"household_id": "dana-whitfield"}).json()
+    body = TestClient(server.app).post("/api/wealth/advisory/brief", json={"household_id": "chuck-robbins"}).json()
     opening, *drafted_lines = body["brief"]["lines"]
     assert (opening["section"], opening["evidence_id"], opening["status"]) == ("opening", "service:record", "verified")
     assert [row["status"] for row in drafted_lines] == ["policy", "policy"]
@@ -320,7 +320,7 @@ def test_advisory_refuses_client_data_to_a_hosted_model_without_ai_defense(offli
     monkeypatch.setattr(security.defense, "key", "")
     monkeypatch.setattr(nim, "chat_model", lambda *_a, **_k: (_ for _ in ()).throw(AssertionError("no model call")))
     client = TestClient(server.app)
-    body = client.post("/api/wealth/advisory/brief", json={"household_id": "dana-whitfield", "run_id": "wealth-advisory-refused-test"}).json()
+    body = client.post("/api/wealth/advisory/brief", json={"household_id": "chuck-robbins", "run_id": "wealth-advisory-refused-test"}).json()
     studio_models.reset_health()
     assert body["brief"]["refused"] is True and body["brief"]["mode"] == "fixture" and "AI Defense" in body["brief"]["reason"]
     assert body["served_by"]["provider"] == "openai" and body["served_by"]["fallback"] is True
@@ -362,7 +362,7 @@ def test_supervisor_approval_runs_the_advisory_policies(offline, monkeypatch):
 
     monkeypatch.setattr(advisory, "run_deep_agent", drafted)
     client = TestClient(server.app)
-    body = client.post("/api/wealth/advisory/brief", json={"household_id": "dana-whitfield", "run_id": "wealth-advisory-approve-test"}).json()
+    body = client.post("/api/wealth/advisory/brief", json={"household_id": "chuck-robbins", "run_id": "wealth-advisory-approve-test"}).json()
     run_id = body["run_id"]
     early = client.post("/api/wealth/advisory/approve", json={"run_id": run_id, "stage": "supervisor"})
     assert early.status_code == 409, "the advisor submits first"
@@ -379,12 +379,12 @@ def test_supervisor_approval_runs_the_advisory_policies(offline, monkeypatch):
 
 def test_recordings_are_served_when_present():
     recordings = TestClient(server.app).get("/api/wealth/recordings").json()["recordings"]
-    assert {"research-hcyn", "research-kstl-restricted", "research-hcyn-poisoned", "advisory-dana-whitfield",
+    assert {"research-hcyn", "research-kstl-restricted", "research-hcyn-poisoned", "advisory-chuck-robbins",
             "advisory-priya-raman"} <= {item["name"] for item in recordings}
     for item in recordings:
         assert item["synthetic"] is True
-        if item["scenario"] == "research-restricted":
-            assert item["served_by"] is None, "the restricted issuer is blocked before any model call"
+        if item["scenario"] in {"research-restricted", "advisory-chuck-robbins"}:
+            assert item["served_by"] is None, "the blocked research and code-written advisor sample make no model call"
         else:
             assert item["served_by"]
 
@@ -396,7 +396,7 @@ def test_a_model_paraphrase_of_the_service_event_is_replaced_by_the_code_built_o
     ev = Evidence()
     ev.add("service:card-1188", "Card ending 1188 compromised and reissued", source="Card fraud triage · this session",
            kind="service", text="On Oct 2, card ending 1188 was used for an unauthorised online purchase.", synthetic=True)
-    ctx = AdvisoryContext(name="Dana", profile="moderate", evidence=ev, actions=[], findings=[], notes=[])
+    ctx = AdvisoryContext(name="Chuck", profile="moderate", evidence=ev, actions=[], findings=[], notes=[])
     draft = {"lines": [{"section": "opening", "text": "Please confirm whether the bank blocked the card.", "evidence_id": "service:card-1188"},
                        {"section": "agenda", "text": "Review concentration", "evidence_id": "action:x"}]}
     lines = with_service_opening(ctx, draft)["lines"]

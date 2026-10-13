@@ -182,8 +182,8 @@
       "currency": "USD",
       "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
       "scoreable_by_model": true,
-      "customer": "Dana Whitfield (fictional)",
-      "customer_id": "dana-whitfield"
+      "customer": "Chuck Robbins (fictional)",
+      "customer_id": "chuck-robbins"
      },
      "probability": 0.74,
      "risk_band": "high",
@@ -1710,8 +1710,8 @@
         "currency": "USD",
         "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
         "scoreable_by_model": true,
-        "customer": "Dana Whitfield (fictional)",
-        "customer_id": "dana-whitfield"
+        "customer": "Chuck Robbins (fictional)",
+        "customer_id": "chuck-robbins"
        },
        "probability": 0.74,
        "risk_band": "high",

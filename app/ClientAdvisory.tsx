@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { ArrowRight, Ban, Briefcase, Check, CircleAlert, FileText, History, Landmark, Loader2, Lock, NotebookPen, Play, ShieldAlert, ShieldCheck, UserCheck, Users } from "lucide-react";
 import type { StoredCompanyProfile } from "./company-profile";
 import DemoStatusBanner from "./DemoStatusBanner";
+import DemoCustomerContext from "./DemoCustomerContext";
 import {
   ADVISOR, LINE_SECTIONS, RECORDED_HOUSEHOLDS, SUPERVISOR, briefingPayload, fetchHouseholds, formatMoney, normalizeApproval, normalizeMeetingPrep,
   saveAdvisoryBrief, type ApprovalState, type HouseholdCard, type MeetingPrep, type NextBestAction, type StoredAdvisoryBrief,
@@ -40,8 +41,8 @@ type ContextItem = { id: string; label: string; detail: string; tone: "ok" | "in
 const parsed = (text: string): unknown => { try { return text ? JSON.parse(text) : {}; } catch { return {}; } };
 
 function provenanceOf(prep: MeetingPrep, origin: Origin): Provenance {
-  if (origin.kind === "recorded") return { kind: "recorded", recordedAt: origin.recordedAt, servedBy: prep.servedBy };
   if (prep.brief.mode === "fixture") return { kind: "sample", detail: prep.brief.refused ? "Brief written by code · client data stayed in the bank" : "Brief written by code from the rules · no model" };
+  if (origin.kind === "recorded") return { kind: "recorded", recordedAt: origin.recordedAt, servedBy: prep.servedBy };
   return prep.servedBy ? { kind: "live", servedBy: prep.servedBy } : { kind: "none", detail: "No model answered" };
 }
 
@@ -115,7 +116,7 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
   const [health, setHealth] = useState<WealthHealth | null>(null);
   const [service, setService] = useState<WealthService | null>(null);
   const [households, setHouseholds] = useState<HouseholdCard[]>([]);
-  const [householdId, setHouseholdId] = useState("dana-whitfield");
+  const [householdId, setHouseholdId] = useState("chuck-robbins");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [prep, setPrep] = useState<MeetingPrep | null>(null);
@@ -144,7 +145,7 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
       .then((body) => { setHealth(normalizeWealthHealth(body)); setService(wealthService(body)); })
       .catch(() => { setHealth({ ready: false, advisoryModel: { status: "down" } }); setService({ reachable: false }); });
     fetchHouseholds().then(setHouseholds).catch(() => setHouseholds([
-      { id: "dana-whitfield", name: "Dana Whitfield", scenario: "Annual review" },
+      { id: "chuck-robbins", name: "Chuck Robbins", scenario: "Annual review" },
       { id: "okafor", name: "Ruth & Samuel Okafor", scenario: "Conservative mismatch" },
       { id: "priya-raman", name: "Priya Raman", scenario: "Attack: PII and an injected instruction" },
     ]));
@@ -301,14 +302,14 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
     <div
       className={`advisory-demo ${embedded ? "advisory-embedded" : ""}`}
       data-guide-run={guideRun}
-      data-guide-source={prep ? (origin.kind === "recorded" ? "recorded" : "live") : "none"}
+      data-guide-source={prep ? (prep.brief.mode === "fixture" ? "sample" : origin.kind === "recorded" ? "recorded" : "live") : "none"}
       data-guide-recorded-at={prep && origin.kind === "recorded" ? origin.recordedAt : undefined}
       data-guide-stage={guideStage}
     >
       {!inStory && (
         <p className="rx-intro" {...guideAnchor("advisory.intro")}>
           <strong>Jordan, advisor.</strong> Prepare a client meeting: the household&apos;s profile against its portfolio, ranked next-best actions
-          sized in dollars, and a one-page brief where every statement is checked. A supervisor approves before anything is recorded.
+          sized in dollars, and a one-page brief where every statement is checked. Live model-generated briefs require advisor and supervisor review; code-written samples cannot be approved.
         </p>
       )}
 
@@ -336,7 +337,9 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
             </label>
           ))}
         </fieldset>
+        {householdId === "chuck-robbins" && <DemoCustomerContext />}
         <section className="ax-context" aria-label="Meeting context" {...guideAnchor("advisory.context")}>
+          <p className="rx-muted">Current session context is used by live preparation. Replay loads a saved example and does not recompute it from this context.</p>
           <h3><Briefcase size={15} aria-hidden="true" /> Context loaded for the meeting</h3>
           <ul>
             {context.map((item) => (

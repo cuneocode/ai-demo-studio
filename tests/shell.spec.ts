@@ -158,7 +158,7 @@ test("prototype queue rows select the workbench item", async ({ page }) => {
   await card.click();
   await expect(page.locator(".live-status-chip")).toContainText("Illustrative prototype · no live service");
   await expect(page.locator(".case-metrics small")).toHaveText([/Illustrative$/, /Illustrative$/, /Illustrative$/]);
-  await expect(page.locator(".workbench-body h3")).toHaveText("Dana Whitfield (fictional)");
+  await expect(page.locator(".workbench-body h3")).toHaveText("Chuck Robbins (fictional demo profile)");
   await page.getByRole("row", { name: /Avery Chen/ }).click();
   await expect(page.getByRole("row", { name: /Avery Chen/ })).toHaveAttribute("aria-selected", "true");
   await expect(page.locator(".workbench-body h3")).toHaveText("Avery Chen");

@@ -4,7 +4,7 @@ import { STATUS_LIVE, mockStudio, openLibrary, setTheme, walk } from "./guide-he
 test.describe.configure({ mode: "parallel" });
 
 for (const layout of [{ width: 1440, theme: "dark" }, { width: 1100, theme: "light" }] as const) {
-  test(`the guided story follows Dana across four demos and hands off at Escalate to SAR (${layout.width} ${layout.theme})`, async ({ page }) => {
+  test(`the guided story follows Chuck across four demos and hands off at Escalate to SAR (${layout.width} ${layout.theme})`, async ({ page }) => {
     test.setTimeout(300_000);
     await page.setViewportSize({ width: layout.width, height: 900 });
     await setTheme(page, layout.theme);
@@ -21,6 +21,8 @@ for (const layout of [{ width: 1440, theme: "dark" }, { width: 1100, theme: "lig
     const ids = seen.map((step) => step.step);
 
     expect(ids).toContain("lifecycle.escalate");
+    expect(ids).toContain("lifecycle.subject");
+    expect(ids.indexOf("lifecycle.subject")).toBeLessThan(ids.indexOf("sar.problem"));
     expect(ids).toContain("sar.problem");
     expect(ids.indexOf("sar.problem")).toBeGreaterThan(ids.indexOf("lifecycle.escalate"));
     expect(ids).toContain("advisory.household");
@@ -29,6 +31,7 @@ for (const layout of [{ width: 1440, theme: "dark" }, { width: 1100, theme: "lig
       "Cisco AI Defense=running", "Splunk Agent Control=running", "Splunk Agent Observability=running", "Cisco AI infrastructure=proposed",
     ]);
     expect(seen.some((step) => step.step.startsWith("fraud.") && /^Recorded run · Oct 12, 2026/.test(step.source))).toBe(true);
+    expect(seen.some((step) => step.step.startsWith("advisory.") && step.source === "Sample data · no model call")).toBe(true);
     expect(paid).toEqual([]);
   });
 }

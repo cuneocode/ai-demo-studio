@@ -141,7 +141,7 @@ def test_contacting_the_customer_is_denied(client):
 
 
 def test_fraud_handoff_becomes_cited_evidence(client):
-    handoff = {"id": "h-1", "kind": "fraud-case", "createdAt": "2026-10-02T22:00:00Z", "customerId": "dana-whitfield", "caseId": "cpp-orbit",
+    handoff = {"id": "h-1", "kind": "fraud-case", "createdAt": "2026-10-02T22:00:00Z", "customerId": "chuck-robbins", "caseId": "cpp-orbit",
                "title": "Compromised card at Orbit Digital Goods", "summary": "Card ending 1188 blocked and reissued; $286.40 refunded.",
                "disposition": "confirmed fraud", "evidence": [{"label": "Merchant", "value": "Orbit Digital Goods", "source": "fraud score"}],
                "transactions": [{"id": "t1", "at": "2026-10-02T20:41:00Z", "amount": 286.4, "currency": "USD", "merchant": "Orbit Digital Goods", "channel": "cnp"}]}

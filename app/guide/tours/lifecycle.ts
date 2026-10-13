@@ -17,18 +17,18 @@ const FRAUD = "Moment 2 of 4 · Fraud";
 const SAR = "Moment 3 of 4 · SAR";
 const ADVISORY = "Moment 4 of 4 · Advisory";
 
-/** Dana Whitfield across four teams, on recorded runs, handing off where the demos hand off. */
+/** Chuck Robbins across four teams, on recorded runs, handing off where the demos hand off. */
 export const lifecycleTour: Tour = {
   id: LIFECYCLE_TOUR_ID,
   useCaseId: "kyc-processing",
-  title: "Dana Whitfield lifecycle story",
+  title: "Chuck Robbins lifecycle story",
   story: true,
   recording: "cpp-orbit-escalate-live",
   steps: [
     pick(kycTour, "kyc.label", KYC),
     pick(kycTour, "kyc.queue", KYC),
     pick(kycTour, "kyc.workbench", KYC, {
-      body: "Only uncertain matches reach a person, who decides with evidence attached. Dana is a Medium-risk customer with a clean history. Next: one purchase at a compromised merchant.",
+      body: "Chuck’s public role is real; this banking profile is hypothetical. KYC is illustrative and sends no data onward. Next, a saved card-fraud example shows how the bank protects a customer.",
     }),
     pick(fraudTour, "fraud.problem", FRAUD),
     pick(fraudTour, "fraud.scenario", FRAUD),
@@ -42,15 +42,18 @@ export const lifecycleTour: Tour = {
       waitFor: { anchor: "sar.band" },
       waitingText: "Choose Escalate to SAR to hand the case over.",
       title: "Hand off to investigations",
-      body: "Escalate to SAR hands the case to the financial-crimes team. Only \"card compromised and reissued\" is shared with Dana's advisor.",
+      body: "Escalate to SAR hands the case to the financial-crimes team. Only \"card compromised and reissued\" is shared with Chuck's advisor.",
     },
+    { id: "lifecycle.subject", kind: "observe", case: "sar-support", moment: SAR, targets: ["sar.band"],
+      title: "A different account holder",
+      body: "Chuck is the hypothetical victim. The investigation concerns Kendall Reyes’s separate account. Other compromised cards funded it; the attempted transfer from Chuck’s blocked card was declined." },
     pick(sarTour, "sar.problem", SAR),
     {
       ...pick(sarTour, "sar.inbox", SAR),
       kind: "auto",
       targets: ["sar.inbox"],
       action: { type: "click", anchor: "sar.inbox.open" },
-      body: "The fraud referral is waiting. Opening it attaches the referral to the linked money-mule case as cited, untrusted evidence.",
+      body: "Opening the locally saved referral selects Kendall’s case. A live investigation can use the referral; this tour replays an existing investigation and does not recompute it.",
     },
     pick(sarTour, "sar.pick", SAR, { showIf: { anchor: "sar.inbox", present: false } }),
     pick(sarTour, "sar.run", SAR),
@@ -62,11 +65,11 @@ export const lifecycleTour: Tour = {
     {
       id: "lifecycle.sar-close", kind: "observe", case: "sar-support", moment: SAR, targets: ["sar.audit"],
       title: "No tipping off",
-      body: "The subject is never contacted, and nothing about this case reaches the advisor. That would be tipping off.",
+      body: "This demo keeps investigation details within the financial-crimes workflow. The advisor receives only the card-replacement service event, with no SAR narrative or allegation about Chuck.",
     },
     pick(advisoryTour, "advisory.household", ADVISORY),
     pick(advisoryTour, "advisory.context", ADVISORY, {
-      body: "Only the reissued card appears, as a service event Dana already knows about. Nothing from the fraud or financial-crimes work reaches the advisor.",
+      body: "The context panel can show this session’s reissued card. The saved sample brief uses fixed context, not that handoff. Choose live preparation outside the tour to use the current event.",
     }),
     pick(advisoryTour, "advisory.run", ADVISORY),
     pick(advisoryTour, "advisory.notes", ADVISORY),
@@ -75,18 +78,18 @@ export const lifecycleTour: Tour = {
     {
       id: "lifecycle.recap", kind: "observe", case: "client-advisory", moment: "Close", targets: [],
       title: "Four teams, one foundation",
-      body: "AI Defense inspected what agents sent to hosted models, policies held every consequential action for a person, and live runs are traced. Production placement on Cisco AI POD is proposed.",
+      body: "KYC was illustrative; fraud and SAR used recordings; advisor preparation used a code-written sample. Live workflows can inspect model traffic and require approvals. Production placement on Cisco AI POD remains proposed.",
       ciscoFit: [
         {
           product: "Cisco AI Defense",
-          how: "Inspected agent prompts and model responses in the fraud, SAR, and advisory recordings, including client data bound for a hosted model.",
+          how: "The fraud and SAR recordings show inspected model traffic. The advisor sample makes no model or AI Defense call.",
           status: "running",
           requires: { any: [{ status: { service: "fraud", aiDefense: "on" } }, { status: { service: "sar", aiDefense: "on" } }] },
           otherwise: "AI Defense isn't active on these services now; what it found is shown from the recordings.",
         },
         {
           product: "Splunk Agent Control",
-          how: "fraud.take_action and sar.file_requires_approval held consequential steps for a person; advisory.recommendation runs as a labelled local check.",
+          how: "Fraud and SAR recordings show approval gates. The code-written advisor sample cannot be approved.",
           status: "running",
           requires: { all: [{ status: { service: "fraud", agentControl: "enforcing" } }, { status: { service: "sar", agentControl: "enforcing" } }] },
           otherwise: "Hosted Agent Control isn't enforcing everywhere now; the same rules run as labelled local checks.",

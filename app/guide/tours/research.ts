@@ -28,7 +28,7 @@ export const researchTour: Tour = {
       id: "research.scenario", kind: "auto", story: true, targets: ["research.scenario.earnings"],
       action: { type: "selectScenario", value: "earnings" },
       title: "Earnings on a Focus List name",
-      body: "Halcyon Interconnect (HCYN) is a fictional issuer with synthetic data. It employs Dana Whitfield, so this update later reaches her advisor.",
+      body: "Halcyon Interconnect (HCYN) is a fictional issuer. It appears as a hypothetical investment in Chuck’s sample portfolio, not as his employer. A published update can inform live advisor preparation.",
     },
     {
       id: "research.run", kind: "act", story: true, targets: ["research.replay"],

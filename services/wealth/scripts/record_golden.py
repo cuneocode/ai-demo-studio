@@ -4,7 +4,7 @@
     cd services/wealth && .venv/bin/python scripts/record_golden.py research KSTL --scenario restricted --name research-kstl-restricted
     cd services/wealth && .venv/bin/python scripts/record_golden.py research HCYN --scenario poisoned-news --name research-hcyn-poisoned
     cd services/wealth && .venv/bin/python scripts/record_golden.py research JPM --scenario bank --name research-jpm-bank
-    cd services/wealth && .venv/bin/python scripts/record_golden.py advisory dana-whitfield --with-research research-hcyn
+    cd services/wealth && .venv/bin/python scripts/record_golden.py advisory chuck-robbins --with-research research-hcyn
 
 Makes one live call (a paid model call when the chain answers from a hosted provider), then saves the
 run's events and the full response in the services/common/runs.py recording format. The studio replays

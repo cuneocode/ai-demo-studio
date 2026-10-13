@@ -59,10 +59,10 @@
     "id": "handoff-fraud-20261012-143851-adf6e9",
     "kind": "fraud-case",
     "createdAt": "2026-10-12T14:39:23.519213+00:00",
-    "customerId": "dana-whitfield",
+    "customerId": "chuck-robbins",
     "caseId": "cpp-orbit",
     "title": "Online purchase at Orbit Digital Goods \u00b7 ****1188",
-    "summary": "Card fraud triage escalated ****1188 (Dana Whitfield (fictional)): $286.40 at Orbit Digital Goods. Rules approve, graph model high risk (0.74). Synthetic data.",
+    "summary": "Card fraud triage escalated ****1188 (Chuck Robbins (fictional)): $286.40 at Orbit Digital Goods. Rules approve, graph model high risk (0.74). Synthetic data.",
     "disposition": "escalate",
     "score": 0.74,
     "band": "high",
@@ -211,8 +211,8 @@
      "currency": "USD",
      "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
      "scoreable_by_model": true,
-     "customer": "Dana Whitfield (fictional)",
-     "customer_id": "dana-whitfield"
+     "customer": "Chuck Robbins (fictional)",
+     "customer_id": "chuck-robbins"
     }
    }
   },
@@ -278,8 +278,8 @@
       "currency": "USD",
       "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
       "scoreable_by_model": true,
-      "customer": "Dana Whitfield (fictional)",
-      "customer_id": "dana-whitfield"
+      "customer": "Chuck Robbins (fictional)",
+      "customer_id": "chuck-robbins"
      },
      "probability": 0.74,
      "risk_band": "high",
@@ -587,8 +587,8 @@
      "currency": "USD",
      "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
      "scoreable_by_model": true,
-     "customer": "Dana Whitfield (fictional)",
-     "customer_id": "dana-whitfield"
+     "customer": "Chuck Robbins (fictional)",
+     "customer_id": "chuck-robbins"
     },
     "opened": true
    }
@@ -2335,8 +2335,8 @@
       "currency": "USD",
       "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
       "scoreable_by_model": true,
-      "customer": "Dana Whitfield (fictional)",
-      "customer_id": "dana-whitfield"
+      "customer": "Chuck Robbins (fictional)",
+      "customer_id": "chuck-robbins"
      },
      "scenario": {
       "id": "cpp-orbit",
@@ -2581,8 +2581,8 @@
         "currency": "USD",
         "situation": "A clean, long-tenured card makes its first purchase at a digital-goods merchant.",
         "scoreable_by_model": true,
-        "customer": "Dana Whitfield (fictional)",
-        "customer_id": "dana-whitfield"
+        "customer": "Chuck Robbins (fictional)",
+        "customer_id": "chuck-robbins"
        },
        "probability": 0.74,
        "risk_band": "high",
@@ -2966,10 +2966,10 @@
      "id": "handoff-fraud-20261012-143851-adf6e9",
      "kind": "fraud-case",
      "createdAt": "2026-10-12T14:39:23.519213+00:00",
-     "customerId": "dana-whitfield",
+     "customerId": "chuck-robbins",
      "caseId": "cpp-orbit",
      "title": "Online purchase at Orbit Digital Goods \u00b7 ****1188",
-     "summary": "Card fraud triage escalated ****1188 (Dana Whitfield (fictional)): $286.40 at Orbit Digital Goods. Rules approve, graph model high risk (0.74). Synthetic data.",
+     "summary": "Card fraud triage escalated ****1188 (Chuck Robbins (fictional)): $286.40 at Orbit Digital Goods. Rules approve, graph model high risk (0.74). Synthetic data.",
      "disposition": "escalate",
      "score": 0.74,
      "band": "high",
@@ -3079,10 +3079,10 @@
      "id": "handoff-fraud-20261012-143851-adf6e9",
      "kind": "fraud-case",
      "createdAt": "2026-10-12T14:39:23.519213+00:00",
-     "customerId": "dana-whitfield",
+     "customerId": "chuck-robbins",
      "caseId": "cpp-orbit",
      "title": "Online purchase at Orbit Digital Goods \u00b7 ****1188",
-     "summary": "Card fraud triage escalated ****1188 (Dana Whitfield (fictional)): $286.40 at Orbit Digital Goods. Rules approve, graph model high risk (0.74). Synthetic data.",
+     "summary": "Card fraud triage escalated ****1188 (Chuck Robbins (fictional)): $286.40 at Orbit Digital Goods. Rules approve, graph model high risk (0.74). Synthetic data.",
      "disposition": "escalate",
      "score": 0.74,
      "band": "high",
@@ -3213,10 +3213,10 @@
    "id": "handoff-fraud-20261012-143851-adf6e9",
    "kind": "fraud-case",
    "createdAt": "2026-10-12T14:39:23.519213+00:00",
-   "customerId": "dana-whitfield",
+   "customerId": "chuck-robbins",
    "caseId": "cpp-orbit",
    "title": "Online purchase at Orbit Digital Goods \u00b7 ****1188",
-   "summary": "Card fraud triage escalated ****1188 (Dana Whitfield (fictional)): $286.40 at Orbit Digital Goods. Rules approve, graph model high risk (0.74). Synthetic data.",
+   "summary": "Card fraud triage escalated ****1188 (Chuck Robbins (fictional)): $286.40 at Orbit Digital Goods. Rules approve, graph model high risk (0.74). Synthetic data.",
    "disposition": "escalate",
    "score": 0.74,
    "band": "high",

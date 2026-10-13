@@ -212,6 +212,6 @@ export const LINE_SECTIONS: { id: string; label: string }[] = [
 ];
 
 /** Households a recorded golden run exists for (services/wealth/data/recorded/advisory-<id>.json). */
-export const RECORDED_HOUSEHOLDS = new Set(["dana-whitfield", "okafor", "priya-raman"]);
+export const RECORDED_HOUSEHOLDS = new Set(["chuck-robbins", "okafor", "priya-raman"]);
 
 export { RESEARCH_NOTE_STORAGE_KEY };

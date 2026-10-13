@@ -1,0 +1,129 @@
+{
+  "id": "chuck-robbins",
+  "order": 1,
+  "synthetic": true,
+  "label": "Synthetic demo profile \u00b7 invented personal and financial details",
+  "name": "Chuck Robbins",
+  "headline": "Cisco Chair and CEO \u00b7 hypothetical portfolio with 46% in fictional HCYN",
+  "scenario": "Annual review",
+  "employer": "Cisco",
+  "employer_ticker": "CSCO",
+  "title": "Chair and Chief Executive Officer",
+  "affiliate": false,
+  "affiliate_note": "HCYN is an unrelated fictional investment, not employer stock; no HCYN affiliate status is assumed.",
+  "risk_profile": "Moderate",
+  "horizon_years": 4,
+  "goals": [
+    "Reduce single-issuer concentration",
+    "Maintain a four-year liquidity plan"
+  ],
+  "total_value": 14200000,
+  "as_of": "2026-10-08",
+  "ips": {
+    "objective": "Diversification and liquidity in a hypothetical planning exercise",
+    "risk_tolerance": "Moderate",
+    "horizon": "Four-year illustrative planning horizon; no retirement date assumed",
+    "annual_spending_need": 240000,
+    "single_issuer_limit_pct": 10
+  },
+  "holdings": [
+    {
+      "ticker": "HCYN",
+      "vehicle": "stock",
+      "name": "Halcyon Interconnect (fictional)",
+      "weight_pct": 46.0,
+      "asset_class": "equity",
+      "account": "Taxable brokerage",
+      "shares": 74740,
+      "price": 87.4,
+      "cost_basis_per_share": 11.0,
+      "value": 6532276
+    },
+    {
+      "ticker": "VTI",
+      "vehicle": "fund",
+      "name": "Vanguard Total Stock Market ETF",
+      "weight_pct": 20.0,
+      "asset_class": "equity",
+      "account": "Taxable brokerage",
+      "value": 2840000
+    },
+    {
+      "ticker": "VXUS",
+      "vehicle": "fund",
+      "name": "Vanguard Total International Stock ETF",
+      "weight_pct": 12.0,
+      "asset_class": "equity",
+      "account": "Taxable brokerage",
+      "value": 1704000
+    },
+    {
+      "ticker": "BND",
+      "vehicle": "fund",
+      "name": "Vanguard Total Bond Market ETF",
+      "weight_pct": 17.6,
+      "asset_class": "fixed_income",
+      "account": "Taxable brokerage",
+      "value": 2503724
+    },
+    {
+      "ticker": "CASH",
+      "vehicle": "cash",
+      "name": "Brokerage sweep cash",
+      "weight_pct": 4.4,
+      "asset_class": "cash",
+      "account": "Taxable brokerage",
+      "value": 620000,
+      "idle": true
+    }
+  ],
+  "accounts": [
+    {
+      "type": "Taxable brokerage",
+      "number": "0000-0000-4471",
+      "value": 14200000,
+      "beneficiary": "Synthetic designation on file"
+    }
+  ],
+  "estate": {
+    "documents": [
+      "Synthetic planning record"
+    ],
+    "last_review": "2026-10-08"
+  },
+  "dependents": [],
+  "rmd_due": false,
+  "crm_notes": [
+    {
+      "date": "2026-10-08",
+      "author": "Demo scenario author",
+      "text": "Hypothetical review: reduce the concentrated HCYN investment while preserving liquidity. HCYN is a fictional holding, not Cisco or employer stock."
+    },
+    {
+      "date": "2026-10-08",
+      "author": "Demo scenario author",
+      "text": "Use the sample four-year planning horizon and Moderate profile. Confirm objectives before considering any action; no retirement or family plans are assumed."
+    },
+    {
+      "date": "2026-10-08",
+      "author": "Demo scenario author",
+      "text": "The synthetic portfolio includes $620k of cash and a $240k annual spending assumption for demonstrating reserve calculations. These are not actual client figures."
+    }
+  ],
+  "service_events": [
+    {
+      "date": "2026-10-02",
+      "kind": "fraud_case",
+      "summary": "Card ending 1188 used at Orbit Digital Goods, a compromised merchant. Blocked and reissued; $286.40 refunded.",
+      "source": "Card fraud triage demo (synthetic)"
+    }
+  ],
+  "public_profile": {
+    "name": "Chuck Robbins",
+    "title": "Chair and Chief Executive Officer",
+    "employer": "Cisco",
+    "source_url": "https://newsroom.cisco.com/c/r/newsroom/en/us/executives/robbins-chuck.html",
+    "verified_on": "2026-10-13",
+    "scope": "Public professional identity only. Banking relationship, balances, holdings, screening results and events are hypothetical."
+  }
+}

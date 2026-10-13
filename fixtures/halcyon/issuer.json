@@ -39,7 +39,7 @@
     { "name": "Marcus Ellery", "age": 54, "title": "President and Chief Executive Officer", "since": 2014, "fictional": true },
     { "name": "Lena Vasquez", "age": 49, "title": "Chief Financial Officer", "since": 2021, "fictional": true },
     { "name": "Tomas Brandt", "age": 51, "title": "Chief Technology Officer and co-founder", "since": 2011, "fictional": true },
-    { "name": "Dana Whitfield", "age": 58, "title": "Senior Vice President, Global Operations", "since": 2019, "joined": 2013, "section16_officer": true, "fictional": true, "customer_ref": "fixtures/customers/lifecycle-customer.json" },
+    { "name": "Morgan Ellis", "age": 58, "title": "Senior Vice President, Global Operations", "since": 2019, "joined": 2013, "section16_officer": true, "fictional": true },
     { "name": "Hollis Grant", "age": 52, "title": "Senior Vice President, Worldwide Sales", "since": 2022, "fictional": true },
     { "name": "Gareth Lin", "age": 47, "title": "Senior Vice President, General Counsel and Secretary", "since": 2020, "fictional": true }
   ],

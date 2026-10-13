@@ -18,8 +18,8 @@ export const kycTour: Tour = {
     },
     {
       id: "kyc.queue", kind: "observe", story: true, targets: ["kyc.queue"],
-      title: "Dana Whitfield's refresh",
-      body: "The lifecycle customer's periodic KYC refresh: sanctions clear, and a Section 16 officer of HCYN, so her employer-stock trades need pre-clearance.",
+      title: "Chuck Robbins's refresh",
+      body: "Chuck Robbins is Cisco’s Chair and CEO. This hypothetical banking profile uses invented screening results; the prototype does not perform a real KYC check.",
     },
     {
       id: "kyc.workbench", kind: "observe", story: true, targets: ["kyc.workbench"],

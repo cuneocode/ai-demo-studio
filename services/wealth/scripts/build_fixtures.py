@@ -162,15 +162,15 @@ def book() -> dict:
     """240 households: 214 hold HCYN (31 above 10%), 6 executives or affiliates, 26 do not hold it."""
     rng = random.Random(214)
     others = ["VTI", "VXUS", "BND", "SCHD", "NVDA", "MSFT", "AAPL", "JPM", "XOM"]
-    ids = ["dana-whitfield", "okafor", "priya-raman"] + [f"hh-{n:04d}" for n in range(1, 238)]
-    pool = [i for i in ids if i not in {"dana-whitfield", "okafor", "priya-raman"}]
+    ids = ["chuck-robbins", "okafor", "priya-raman"] + [f"hh-{n:04d}" for n in range(1, 238)]
+    pool = [i for i in ids if i not in {"chuck-robbins", "okafor", "priya-raman"}]
     rng.shuffle(pool)
-    concentrated = ["dana-whitfield"] + pool[:30]
+    concentrated = ["chuck-robbins"] + pool[:30]
     small = pool[30:213]
-    affiliates = {"dana-whitfield", *concentrated[1:5], small[0]}
+    affiliates = {*concentrated[1:6], small[0]}  # Chuck is not an affiliate of fictional HCYN.
     rows = []
     for hid in ids:
-        if hid == "dana-whitfield":
+        if hid == "chuck-robbins":
             hcyn = 46.0
         elif hid in concentrated:
             hcyn = round(rng.uniform(10.5, 38.0), 1)

@@ -1,4 +1,5 @@
 # Guided mode for every demo: plan
+> **October 13, 2026 correction (supersedes older scenario details below):** Chuck Robbins’s public role is Cisco Chair and Chief Executive Officer, verified against [Cisco’s biography](https://newsroom.cisco.com/c/r/newsroom/en/us/executives/robbins-chuck.html). His banking relationship and all financial data and incidents are hypothetical. Age, birth date, family and retirement assumptions were removed. HCYN is an unrelated fictional investment, not his employer; no HCYN affiliate status is assumed. The SAR subject is Kendall Reyes, not Chuck, and Chuck’s attempted transfer was declined. KYC sends no live handoff; fraud/SAR replay saved examples. Advisor replay is rebuilt by `services/wealth/scripts/build_chuck_sample.py`, uses local rules with no model call, cannot be approved, and does not recompute from current session context. Live advisor preparation still consumes the service-event handoff and retains human approval gates.
 
 Status: **built** (phases 0–6 done, Oct 12, 2026; see the as-built notes under §5) · Branch: `studio-integration` ([PR #1](https://github.com/cuneocode/FSI-AI-demo-platfrom/pull/1)) · Date: 2026-10-12
 Companion to [`fsi-demo-redesign.md`](fsi-demo-redesign.md). That plan's narrative arc (business problem → AI transformation → Cisco value, §1.1), honesty rules (§1.2), and Cisco value map (§1.3) apply to every line of copy below.
@@ -30,7 +31,7 @@ Every `file:line` below was read on the working tree on 2026-10-12. Another work
 - **Where you start it.** A **Guided tour** button in each use case's tab row; ⌘K ("Guide: Card fraud triage"); a **Guide this moment** button in Present mode; and a deep link `?guide=<tour>`. Keys: → / Enter next, ← back, Esc exits.
 - **How it stays honest.** Tours drive the real demo. They never fake a result and never click a consequential button for you: a person always starts runs, makes dispositions, approves, publishes, and files. Tours wait on the demo's real state and say so ("Waiting for the first timeline event…"). The live, recorded, and sample labels stay visible, and the source is chosen once at the start of the tour, with no silent switching.
 - **How it is built.** One `GuidedTour` engine and overlay, declarative step files per demo (`app/guide/tours/*.ts`), and `data-guide` anchors plus a small `data-guide-run` state contract on each demo root.
-- **Scope.** Nine tours: eight demos plus the Dana Whitfield lifecycle story across four demos. There are 6 to 12 main steps per demo, plus short "encore" tours for each attack scenario.
+- **Scope.** Nine tours: eight demos plus the Chuck Robbins lifecycle story across four demos. There are 6 to 12 main steps per demo, plus short "encore" tours for each attack scenario.
 - **Effort.** About 16–18 engineer-days in 7 phases. Anchor work should land after the authenticity pass, because both touch the same demo files.
 
 ---
@@ -157,7 +158,7 @@ The tour drives the demo's real paths with their existing labels: `ProvenanceBad
   | Card fraud triage | Triage queue | Recorded run (`services/fraud/data/recorded/cpp-orbit-*.json`) | No: the disposition replays as recorded (`FraudDemo.tsx:191`, `:510`). |
   | SAR investigation | Investigate | **Sample narrative**: tools, AI Defense screening, rules, policies, and HITL all run live with a pre-written cited draft (`SarInvestigation.tsx:485`, `:489`) | **Yes** |
   | Market research | Run live (even with no model it writes a code-built fixture summary, labelled, `MarketResearch.tsx:245`) | Recorded run (`research-hcyn.json`) | Yes: publish works on a recorded result (`MarketResearch.tsx:200`). |
-  | Advisor meeting prep | Prepare meeting | Recorded run (`advisory-dana-whitfield.json`) | Yes: approvals work on a recorded result (`ClientAdvisory.tsx:254`). |
+  | Advisor meeting prep | Prepare meeting | Recorded run (`advisory-chuck-robbins.json`) | Yes: approvals work on a recorded result (`ClientAdvisory.tsx:254`). |
   | Interbank | Start investigation (Docker lab) | Replay a recent run from the lab's own history (`InterbankDemo.tsx:481-486`). There are no golden recordings. | No. If the lab is down there is nothing to replay: the tour switches to its **offline variant** (architecture and source viewer only). |
   | Brahe Bank | Live chat only | No recordings: offline variant | — |
   | Company briefing | Live extract | If a company was already accepted, review it with no new run; otherwise offline variant | — |
@@ -193,7 +194,7 @@ app/guide/
   guide.css             overlay, card, ring; reduced-motion and forced-colors rules
   tours/
     fraud.ts sar.ts research.ts advisory.ts interbank.ts banking.ts briefing.ts kyc.ts
-    lifecycle.ts        the Dana Whitfield story (composes story cuts)
+    lifecycle.ts        the Chuck Robbins story (composes story cuts)
     index.ts            registry: tourId → Tour
 ```
 
@@ -387,7 +388,7 @@ export type Tour = {
 | # | Step id | Anchor → today | Trigger | Title | Body | Cisco fit |
 |---|---|---|---|---|---|---|
 | 1 | `research.problem` | `research.intro` → `.rx-intro` `MarketResearch.tsx:237` (hidden in story mode; variant falls back to `research.scenarios`) | Next | When an issuer reports | Sam, a CIO-office strategist, must tell advisors what changed and whether the house view moves, with every number sourced and restricted issuers respected. | — |
-| 2 | `research.scenario` | `research.scenario.earnings` → `:254` | Auto: select (safe) | Earnings on a Focus List name | Halcyon Interconnect (HCYN) is a fictional issuer with synthetic data. It employs Dana Whitfield, so this update later reaches her advisor. | — |
+| 2 | `research.scenario` | `research.scenario.earnings` → `:254` | Auto: select (safe) | Earnings on a Focus List name | Halcyon Interconnect (HCYN) is a fictional issuer with synthetic data. Chuck Robbins is its executive in this fictional scenario; this update later reaches his advisor. | — |
 | 3 | `research.run` | live `research.run` → `#research-run` `:264`; recorded `research.replay` → `:229` (rendered `:267`) | Act · Wait: run ≠ idle (patience 30s) | Run the research desk | A research Deep Agent with fundamentals, valuation, macro, and compliance subagents starts. A restricted issuer would stop before any data or model call. | — |
 | 4 | `research.timeline` | `research.timeline` → `RunTimeline` `:289` (`scroll: "start"`, tall) | Wait: first event · Next | Subagents at work | Each plan step, tool call, model call, and policy check streams here with a lane tag. A line's source button highlights its evidence. | Splunk Agent Observability: supervisor and subagent spans form one trace. Splunk Observability Cloud (*when configured*): OTLP spans. |
 | 5 | `research.impact` | `research.impact` → `.rx-impact` `:345` | Wait: result · Next | Does the view change? | The update says whether the event trips a thesis point or key risk. The AI never sets ratings or targets; the CIO office owns that call. | — |
@@ -411,8 +412,8 @@ export type Tour = {
 | # | Step id | Anchor → today | Trigger | Title | Body | Cisco fit |
 |---|---|---|---|---|---|---|
 | 1 | `advisory.problem` | `advisory.intro` → `.rx-intro` `ClientAdvisory.tsx:288` (hidden in story; falls back to households) | Next | Hours of prep per review | Jordan rebuilds each client's picture from profile, holdings, CRM notes, and the house view, and must document Reg BI care. Supervisors see the rationale days later. | — |
-| 2 | `advisory.household` ★ | `advisory.household.dana-whitfield` → radio label `:309-315` | Auto: select (safe) | Dana Whitfield's review | A synthetic executive client with concentrated employer stock. Every identifier is a test value. | — |
-| 3 | `advisory.context` ★ | `advisory.context` → `.ax-context` `:318` | Next | What the advisor may see | Context lists the house-view update, the company briefing, and one service event: Dana's card was reissued. Fraud and SAR work never appear here. | — |
+| 2 | `advisory.household` ★ | `advisory.household.chuck-robbins` → radio label `:309-315` | Auto: select (safe) | Chuck Robbins's review | Chuck Robbins in a fictional executive-client scenario with concentrated employer stock. Personal details, holdings, and identifiers are invented. | — |
+| 3 | `advisory.context` ★ | `advisory.context` → `.ax-context` `:318` | Next | What the advisor may see | Context lists the house-view update, the company briefing, and one service event: Chuck's card was reissued. Fraud and SAR work never appear here. | — |
 | 4 | `advisory.run` ★ | live `advisory.run` → `#advisory-run` `:332`; recorded `advisory.replay` → `:280` (rendered `:335`) | Act · Wait: run ≠ idle (patience 30s) | Prepare the meeting | Code rules compare profile and portfolio and size actions in dollars; then a meeting-prep Deep Agent drafts a one-page brief. | Cisco AI Defense: if private inference is down, client data reaches a hosted model only with AI Defense forced to enforce. |
 | 5 | `advisory.notes` ★ | `advisory.notes` → `.ax-notes` `:464-477` | Wait: result · Next | CRM notes, screened first | Notes are inspected before any model call. PII is masked and an injected instruction is withheld; each note names what was found and by which check. | Cisco AI Defense (*if on*; otherwise: "AI Defense is off for wealth on this machine; each note names the local check."). |
 | 6 | `advisory.findings` | `advisory.findings` → `.ax-findings` `:394-411` | Next | Profile against portfolio | Each finding names the rule that fired, its category, and the Reg BI care note. These are code rules, not the model. | — |
@@ -494,22 +495,22 @@ Every card carries the kicker **Illustrative prototype · no live service**. The
 |---|---|---|---|---|---|---|
 | 1 | `kyc.label` ★ | `kyc.label` → `#illustrative-experience` `page.tsx:880` | Next | An illustrative prototype | No service runs behind this page. The values and the AI review show how KYC could work, not how it works here. | — |
 | 2 | `kyc.metrics` | `kyc.metrics` → `.case-metrics` `:885` | Next | Example queue metrics | Open reviews, median age, and auto-verified share are example figures, not measurements. | — |
-| 3 | `kyc.queue` ★ | `kyc.queue` → `.case-queue-panel` `:897` (Dana row `:906`) | Next | Dana Whitfield's refresh | The lifecycle customer's periodic KYC refresh: sanctions clear, and a Section 16 officer of HCYN, so her employer-stock trades need pre-clearance. | — |
+| 3 | `kyc.queue` ★ | `kyc.queue` → `.case-queue-panel` `:897` (Chuck row `:906`) | Next | Chuck Robbins's refresh | Public role: Cisco Chair and CEO. Sample screening values demonstrate KYC; no real check runs. | — |
 | 4 | `kyc.workbench` ★ | `kyc.workbench` → `.ai-workbench-panel` `:918-934` | Next | The analyst keeps approval | Proposed: document models extract fields and entity resolution reconciles registries. Only uncertain matches reach a person, who decides with evidence attached. | — |
 | 5 | `kyc.stats` | `kyc.stats` → `IllustrativeRunStats` `:936` (`RunStats.tsx:350`) | Next | What would be traced | These cards show what an instrumented run would report. Nothing here is measured. | Splunk Agent Observability (*proposed*); Cisco AI Defense (*proposed*): on document text and model hops. |
 | 6 | `kyc.architecture` | `arch.mode` → status label, proposed only (`Explorer.tsx:941`) | Auto: Architecture tab · Next | Proposed design only | The map shows only the proposed design: document intelligence, entity resolution, and exception review. | Cisco AI infrastructure (*proposed*): GPU document models on Cisco AI infrastructure. |
 
 **Anchors to add:** `kyc.label`, `kyc.metrics`, `kyc.queue`, `kyc.workbench`, `kyc.stats` (all in `page.tsx`, inside the illustrative branch).
 
-### 4.9 Dana Whitfield lifecycle story (`lifecycle`), 4 moments, 22 steps
+### 4.9 Chuck Robbins lifecycle story (`lifecycle`), 4 moments, 22 steps
 
 - **How it runs.** Present mode with Guided on (§1.6), over the default story order `kyc-processing → fraud-modeling → sar-support → client-advisory` (`page.tsx:956`). Each moment plays its tour's ★ steps plus bridges. The card kicker reads "Moment 2 of 4 · Step 4 of 7".
 - **Source.** One choice applies to the whole story. In recorded mode the handoffs still work, because fraud writes the referral and the service event from a recorded run, labelled (`FraudDemo.tsx:95-103`, `:301`). The SAR inbox and the advisory context read them back.
 
 | Moment | Steps (ids) | Bridge copy |
 |---|---|---|
-| 1 · KYC (3) | `kyc.label`, `kyc.queue`, `kyc.workbench` | Closing bridge: "Dana is a Medium-risk customer with a clean history. Next: one purchase at a merchant that has been compromised." |
-| 2 · Fraud (7) | `fraud.problem`, `fraud.scenario`, `fraud.run`, `fraud.verdicts`, `fraud.network`, `fraud.decide` (variant body: "Choose **Escalate to investigations**"), then bridge `fraud.escalate` → `#escalate-to-sar` (`FraudDemo.tsx:303`, Act) | "Escalate to SAR hands the case to the financial-crimes team. Only 'card compromised and reissued' is shared with Dana's advisor." Clicking it calls `nav.openUseCase("sar-support")` (`:186`), which advances Present mode (`page.tsx:1031-1033`). The tour continues at moment 3. |
+| 1 · KYC (3) | `kyc.label`, `kyc.queue`, `kyc.workbench` | Closing bridge: "Chuck’s public Cisco role is sourced; all banking details are hypothetical. KYC is illustrative. Next is a saved card-fraud example." |
+| 2 · Fraud (7) | `fraud.problem`, `fraud.scenario`, `fraud.run`, `fraud.verdicts`, `fraud.network`, `fraud.decide` (variant body: "Choose **Escalate to investigations**"), then bridge `fraud.escalate` → `#escalate-to-sar` (`FraudDemo.tsx:303`, Act) | "Escalate to SAR hands the case to the financial-crimes team. Only 'card compromised and reissued' is shared with Chuck's advisor." Clicking it calls `nav.openUseCase("sar-support")` (`:186`), which advances Present mode (`page.tsx:1031-1033`). The tour continues at moment 3. |
 | 3 · SAR (7) | `sar.problem`, `sar.pick` (inbox variant: the referral is attached), `sar.run`, `sar.typologies` (variant body cites MM-04, the Orbit Digital Goods link), `sar.narrative`, `sar.investigator`, `sar.qa` | Closing bridge: "The subject is never contacted, and nothing about this case reaches the advisor. That would be tipping off." |
 | 4 · Advisory (5) | `advisory.household`, `advisory.context` (variant body: "Only the reissued card appears. No SAR, no investigation."), `advisory.run`, `advisory.notes`, `advisory.approve` | — |
 | Close (1, no target) | `lifecycle.recap`: a centered card, no hole | "Four teams, one governed foundation. AI Defense screened untrusted text, Agent Control gated every consequential action, and each run was traced. Production placement on Cisco AI POD is proposed." Cisco fit: AI Defense; Agent Control; Splunk Agent Observability; AI infrastructure (*proposed*). This is the only card allowed four fit entries. |
@@ -533,7 +534,7 @@ A second story, **Grow the relationship** (Company briefing → Market research 
 | Brahe Bank assistant | 9 | 3 | 1 × 2 |
 | Company briefing | 9 | 3 | — |
 | KYC processing (illustrative) | 6 | — | — |
-| Dana Whitfield lifecycle story | 22 across 4 demos | per-moment offline variants | — |
+| Chuck Robbins lifecycle story | 22 across 4 demos | per-moment offline variants | — |
 
 ---
 
