@@ -43,14 +43,14 @@ test("settings shows the chain's health and which backend answers each use case 
   }
 });
 
-test("the model chip names the chain and says the fallback is answering", async ({ page }) => {
+test("the header indicates cloud inference without a model-chain warning", async ({ page }) => {
   await mockModels(page);
   await page.goto("/", { waitUntil: "networkidle" });
   await page.locator(".side-nav").getByRole("button", { name: "Use case library" }).click();
   await page.getByRole("button", { name: "Open Brahe Bank assistant experience" }).click();
-  const chip = page.locator(".st-chip");
-  await expect(chip).toHaveText(/Model · Sparky vLLM → OpenAI API/);
-  await expect(chip).toHaveAttribute("title", /Answering now: OpenAI API \(fallback\)/);
+  const chip = page.locator(".topbar .inference-indicator");
+  await expect(chip).toHaveText("Cloud model");
+  await expect(chip).toHaveAttribute("title", /OpenAI API/);
 });
 
 test("a banking answer and the stats row both say which model answered", async ({ page }) => {

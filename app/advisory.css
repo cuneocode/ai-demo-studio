@@ -75,3 +75,7 @@
 @media (max-width: 1180px) {
   .ax-top { grid-template-columns: minmax(0, 1fr); }
 }
+
+.ax-start { display: flex; flex-direction: column; gap: 10px; }
+.ax-start .rx-actions { margin: 0; }
+.ax-context { grid-column: 1 / -1; }

@@ -22,7 +22,7 @@ const STATUS: StudioStatus = {
   links: { agentObservability: "https://console.example.test", splunkObservability: null },
   readiness: [
     ready("brahe-bank", "Brahe Bank assistant"), ready("company-briefing", "Company briefing"), ready("fraud-modeling", "Card fraud triage"),
-    ready("market-research", "Market event → house-view update"),
+    ready("market-research", "Market research"),
     { id: "client-advisory", title: "Advisor meeting prep", ready: false, missing: ["OPENAI_API_KEY"], notes: [] },
     ready("interbank-a2a", "Interbank settlement investigation"),
     ready("sar-support", "SAR investigation"),
@@ -44,7 +44,7 @@ test("top bar tabs open live Controls and Telemetry pages", async ({ page }) => 
 
   await page.locator(".product-nav").getByRole("button", { name: "Telemetry" }).click();
   await expect(page.getByRole("link", { name: /Open Splunk Agent Observability/ })).toHaveAttribute("href", "https://console.example.test");
-  await expect(page.getByRole("table", { name: "Telemetry by use case" }).getByRole("row", { name: /Market event → house-view update/ })).toContainText("exporting");
+  await expect(page.getByRole("table", { name: "Telemetry by use case" }).getByRole("row", { name: /Market research/ })).toContainText("exporting");
   await expect(page.getByRole("table", { name: "Recent interbank investigations" })).toContainText("inv-1");
 
   await page.getByRole("button", { name: "Open", exact: true }).first().click();
@@ -102,11 +102,11 @@ test("Cmd-K searches use cases and pages, and library filters narrow the grid", 
   await page.locator(".side-nav").getByRole("button", { name: "Use case library" }).click();
   const count = page.locator(".library-summary strong");
   const all = Number(await count.textContent());
-  await page.getByRole("button", { name: "Live only" }).click();
+  await page.getByRole("button", { name: "Live ready" }).click();
   await expect(page.getByRole("button", { name: /Open KYC processing/ })).toHaveCount(0);
   await page.getByLabel("Cisco solution", { exact: true }).selectOption("AI Infrastructure");
   expect(Number(await count.textContent())).toBeLessThan(all);
-  await page.getByRole("button", { name: "Live only" }).click();
+  await page.getByRole("button", { name: "Live ready" }).click();
   await page.getByLabel("Cisco solution", { exact: true }).selectOption("");
   await expect(count).toHaveText(String(all));
 });
@@ -115,7 +115,7 @@ test("the story is reordered, scored from live readiness, and presented full scr
   await open(page);
   await page.locator(".side-nav").getByRole("button", { name: /Story builder/ }).click();
   await expect(page.locator(".outline-item strong")).toHaveText(["KYC processing", "Card fraud triage", "SAR investigation", "Advisor meeting prep"]);
-  await expect(page.locator(".story-score strong")).toHaveText("50%");
+  await expect(page.locator(".story-score strong")).toHaveText("25%");
   await expect(page.locator(".story-outline")).toContainText("Needs OPENAI_API_KEY");
   await expect(page.locator(".story-outline")).toContainText("Illustrative prototype · no live service");
 
@@ -123,9 +123,9 @@ test("the story is reordered, scored from live readiness, and presented full scr
   await page.getByRole("button", { name: "Move Advisor meeting prep up" }).click();
   await expect(page.locator(".outline-item strong").nth(2)).toHaveText("Advisor meeting prep");
   await page.getByRole("button", { name: "Remove Advisor meeting prep from the story" }).click();
-  await expect(page.locator(".story-score strong")).toHaveText("67%");
+  await expect(page.locator(".story-score strong")).toHaveText("33%");
   await page.getByRole("button", { name: "Remove Card fraud triage from the story" }).click();
-  await expect(page.locator(".story-score strong")).toHaveText("100%");
+  await expect(page.locator(".story-score strong")).toHaveText("50%");
   await page.getByRole("button", { name: "Done" }).click();
 
   await page.getByRole("button", { name: "Present story" }).click();
@@ -140,6 +140,7 @@ test("the story is reordered, scored from live readiness, and presented full scr
   await page.keyboard.press("ArrowRight");
   await expect(bar).toContainText("MOMENT 2 OF 2");
   await expect(page.getByRole("heading", { name: "SAR investigation", level: 1 })).toBeVisible();
+  await bar.getByRole("button", { name: "Talk track", exact: true }).click();
   const now = bar.getByRole("list", { name: "Talk track" }).locator("li").last();
   await expect(now).toContainText("Right now");
   await expect(now).toContainText("AI Defense is off here, so don't claim inspections");

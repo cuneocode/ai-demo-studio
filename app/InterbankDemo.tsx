@@ -20,6 +20,7 @@ import { servedByFromEvents, type Recording, type RecordingMeta, type RunEvent }
 import { useRun, useStickToBottom } from "./run/useRun";
 import { RichText, TimelineItem, defaultLine, useExpanded, type TimelineLine } from "./run/RunTimeline";
 import ProvenanceBadge from "./run/ProvenanceBadge";
+import { useStudioNav } from "./studio-nav";
 import { guideAnchor } from "./guide/anchors";
 import { useGuideActions } from "./guide/GuidedTour";
 import "./banking.css";
@@ -392,10 +393,12 @@ function interbankStats(labUp: boolean | null, runtime: Runtime | null): { obser
 }
 
 export default function InterbankDemo({ embedded = false }: InterbankDemoProps) {
+  const { preview } = useStudioNav();
   const [labUp, setLabUp] = useState<boolean | null>(null);
   const [runtime, setRuntime] = useState<Runtime | null>(null);
   const [examples, setExamples] = useState<Record<string, string>>({});
   const [scenario, setScenario] = useState("allowed");
+  const [review, setReview] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
   const [history, setHistory] = useState<Run[]>([]);
   const [recordings, setRecordings] = useState<RecordingMeta[]>([]);
@@ -434,7 +437,7 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
     onSettled: loadHistory,
     lostContact: "Lost contact with the interbank lab. Check npm run interbank:status.",
   });
-  const open = (id: string, replay: boolean) => { resetExpanded(); follow(id, replay); };
+  const open = (id: string, replay: boolean) => { setReview(null); resetExpanded(); follow(id, replay); };
 
   /** Plays a committed recording of a real lab run; the lab is not called. */
   async function playRecording(name: string) {
@@ -442,7 +445,8 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
     try {
       const response = await fetch(`${RECORDINGS_API}/${encodeURIComponent(name)}`, { signal: AbortSignal.timeout(8000) });
       if (!response.ok) throw new Error(`Recording ${name} is unavailable (${response.status}).`);
-      const recording = await response.json() as Recording & { run?: Run; events: LabEvent[] };
+      const recording = await response.json() as Recording & { review?: string } & { run?: Run; events: LabEvent[] };
+      setReview(recording.review ?? null);
       resetExpanded();
       play({ run: recording.run ?? null, events: recording.events });
     } catch (cause) {
@@ -450,11 +454,12 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
     }
   }
 
-  async function start() {
-    if (!prompt.trim() || starting) return;
+  async function start(guidePrompt?: string) {
+    if (!(guidePrompt ?? prompt).trim() || starting) return;
+    if (guidePrompt) { setPrompt(guidePrompt); setScenario("blocked"); }
     setStarting(true); setError("");
     try {
-      const response = await fetch("/api/interbank/kickoff", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt }), signal: AbortSignal.timeout(15000) });
+      const response = await fetch("/api/interbank/kickoff", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: guidePrompt ?? prompt }), signal: AbortSignal.timeout(15000) });
       if (!response.ok) throw new Error((await response.json().catch(() => ({}))).detail || `Kickoff failed (${response.status}).`);
       const created = await response.json() as Run;
       open(created.id, false);
@@ -482,7 +487,7 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
   const observed = useMemo(() => (run ? observeRun(run, visible, replaying, traceId, runtime, recorded) : null), [run, visible, replaying, traceId, runtime, recorded]);
   useEffect(() => { if (observed) record(observed); }, [observed, record]);
   const stats = useMemo(() => interbankStats(labUp, runtime), [labUp, runtime]);
-  useGuideActions("interbank-a2a", { replay: (name) => { if (name) void playRecording(name); }, skipReplay: skip });
+  useGuideActions("interbank-a2a", { run: (name) => { void start(name === "trd-847-blocked" ? examples.blocked : undefined); }, canRun: () => Boolean(labUp && prompt.trim()) && !starting && effectiveRun?.status !== "running", replay: (name) => { if (name) void playRecording(name); }, skipReplay: skip });
   const guideRun = starting ? "starting" : replaying || effectiveRun?.status === "running" ? "running"
     : effectiveRun?.status === "completed" ? "done" : effectiveRun?.status === "blocked" ? "blocked" : effectiveRun?.status === "failed" ? "failed" : "idle";
   const guideStage = [lanes.a.length && "bank-a", lanes.wire.length && "wire", lanes.b.length && "bank-b", done && run?.report && "report"].filter(Boolean).join(" ");
@@ -499,13 +504,14 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
         <div className="ib-controls-head">
           <div>
             <span className="review-kicker">OPERATIONS DESK · BANK A</span>
-            <h3>Investigate a failed settlement with the counterparty&apos;s agent</h3>
-            <p>The kickoff is an A2A message to Bank A&apos;s Deep Agent through Bank A&apos;s gateway. Bank A&apos;s agent decides when to ask Bank B&apos;s agent over A2A. Both agents are read-only; people approve any fix.</p>
-            <p className="ib-synthetic-note">Fictional banks · synthetic settlement records in each bank&apos;s own database · live agents, gateways, and Cisco and Splunk calls</p>
+            <h3>TRD-847 · settlement mismatch</h3>
+            <p>Compare both banks’ records, review the cause, and propose a correction for human approval.</p>
+            <p className="ib-synthetic-note">Fictional banks · synthetic records · read-only investigation</p>
           </div>
           <span className={`ib-lab-state ${labUp ? "up" : labUp === false ? "down" : ""}`}><span className={labUp ? "status-dot ready" : "status-dot"} />{labUp ? `Lab running · ${runtime?.model.name ?? "model"}` : labUp === false ? "Lab offline" : "Checking lab…"}</span>
         </div>
-        {labUp === false && <div className="banking-error" {...guideAnchor("interbank.offline")}><CircleAlert size={14} /><div>The interbank lab runs in Docker and is not running. Start it with <code>npm run interbank:up</code>, then reload. Recorded runs still replay, and the source and configuration viewer below still works.</div></div>}
+        {preview ? <p className="demo-status info" role="note" {...guideAnchor("interbank.offline")}>Recorded preview · no live execution. Open the recorded fallback below.</p> : labUp === false && <div className="banking-error" {...guideAnchor("interbank.offline")}><CircleAlert size={14} /><div>The interbank lab runs in Docker and is not running. Start it with <code>npm run interbank:up</code>, then reload. Recorded runs still replay, and the source and configuration viewer below still works.</div></div>}
+        <section className="demo-details"><h3>Live investigation setup · scenario & kickoff</h3>
         <div className="ib-scenarios" role="group" aria-label="Scenario" {...guideAnchor("interbank.scenarios")}>
           {[["allowed", "Allowed investigation", "TRD-847 · both banks investigate"], ["blocked", "Prompt-injection kickoff", "AI Defense blocks it at Bank A's gateway"]].map(([key, label, detail]) => (
             <button key={key} className={scenario === key ? "active" : ""} aria-pressed={scenario === key} disabled={!examples[key]} onClick={() => { setScenario(key); setPrompt(examples[key] ?? ""); }}>
@@ -516,16 +522,20 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
         <label className="ib-prompt" {...guideAnchor("interbank.kickoff")}><span>Kickoff message</span>
           <textarea id="interbank-kickoff" rows={2} value={prompt} onChange={(event) => { setPrompt(event.target.value); setScenario("custom"); }} disabled={!labUp} />
         </label>
-        <div className="ib-actions">
-          <button className="ib-primary" {...guideAnchor("interbank.start")} onClick={start} disabled={!labUp || starting || !prompt.trim() || effectiveRun?.status === "running"}>
+        </section>
+        <div className="ib-actions" {...guideAnchor("interbank.replay")}>
+          <button className="ib-primary" {...guideAnchor("interbank.start")} onClick={() => start()} disabled={!labUp || starting || !prompt.trim() || effectiveRun?.status === "running"}>
             {starting ? <><Loader2 size={15} className="ib-spin" /> Starting…</> : effectiveRun?.status === "running" && !replaying ? <><Loader2 size={15} className="ib-spin" /> Investigation running…</> : <><Play size={15} /> Start investigation</>}
           </button>
-          {recordings.length > 0 && <label className="ib-recorded" {...guideAnchor("interbank.replay")}><History size={14} aria-hidden="true" /><span>Replay a recorded run</span>
+          <details className="demo-fallback"><summary>Fallback: recorded demo</summary>
+          {recordings.length > 0 && <button type="button" className="secondary-button" data-demo-replay onClick={() => playRecording(recordings.find((item) => item.name === (scenario === "blocked" ? "trd-847-blocked" : "trd-847-allowed"))?.name ?? recordings[0].name)}>Replay recording</button>}
+          {recordings.length > 0 && <details className="demo-replay-options"><summary>Other recordings</summary><label className="ib-recorded"><History size={14} aria-hidden="true" /><span>Replay a recorded run</span>
             <select id="interbank-replay" value="" onChange={(event) => { if (event.target.value) playRecording(event.target.value); }}>
               <option value="">Choose a recording…</option>
               {recordings.map((item) => <option key={item.name} value={item.name}>{item.title} · {new Date(item.recorded_at).toLocaleDateString()}</option>)}
             </select>
-          </label>}
+          </label></details>}
+          </details>
           {history.length > 0 && <label className="ib-history"><span>Replay a recent run</span>
             <select value="" onChange={(event) => { if (event.target.value) open(event.target.value, true); }}>
               <option value="">Choose a run…</option>
@@ -537,10 +547,12 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
         {error && <div className="banking-error"><CircleAlert size={14} /><div>{error}</div><button onClick={() => setError("")} aria-label="Dismiss"><X size={14} /></button></div>}
       </section>
 
-      <section className="ib-stage" aria-label="Agents and gateways">
-        <Terminal lane="a" lines={lanes.a} run={effectiveRun} active={effectiveRun?.status === "running" && lastAgentLane === "a"} expanded={expanded} toggle={toggle} onSource={openSources} />
-        <Wire lines={lanes.wire} run={effectiveRun} expanded={expanded} toggle={toggle} onSource={openSources} />
-        <Terminal lane="b" lines={lanes.b} run={effectiveRun} active={effectiveRun?.status === "running" && lastAgentLane === "b"} expanded={expanded} toggle={toggle} onSource={openSources} />
+      <section className="demo-details"><h3>Technical execution · agents, gateways & SQL</h3>
+        <section className="ib-stage" aria-label="Agents and gateways">
+          <Terminal lane="a" lines={lanes.a} run={effectiveRun} active={effectiveRun?.status === "running" && lastAgentLane === "a"} expanded={expanded} toggle={toggle} onSource={openSources} />
+          <Wire lines={lanes.wire} run={effectiveRun} expanded={expanded} toggle={toggle} onSource={openSources} />
+          <Terminal lane="b" lines={lanes.b} run={effectiveRun} active={effectiveRun?.status === "running" && lastAgentLane === "b"} expanded={expanded} toggle={toggle} onSource={openSources} />
+        </section>
       </section>
 
       <section className="ib-results">
@@ -549,12 +561,15 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
           {done && run?.report ? <>
             {recorded ? <ProvenanceBadge provenance={{ kind: "recorded", recordedAt: run.started_at, servedBy }} /> : servedBy && <ProvenanceBadge provenance={{ kind: "live", servedBy }} />}
             <span className={`ib-status ${run.status}`}>{run.status === "completed" ? "Completed" : run.status === "blocked" ? "Blocked at Bank A's gateway" : "Failed"}</span>
-            <Report run={run} />
+            {review && recorded && <p className="demo-review" role="note">{review}</p>}
+            {review && recorded ? <section className="demo-details"><h3>Original recorded report · contains the error noted above</h3><Report run={run} /></section> : <Report run={run} />}
           </> : <p>{effectiveRun ? "The report appears when Bank A's agent replies to the Ops desk." : "Start or replay an investigation to see the joint report."}</p>}
         </div>
+        <RunStats ledger={ledger} {...stats} empty="Start or replay an investigation. Counts fill in as each event arrives." />
+
         <aside className="ib-side">
           {runtime && <div className="proof-card ib-runtime" {...guideAnchor("interbank.runtime")}>
-            <span className="review-kicker">RUNTIME</span>
+            <span className="review-kicker">Runtime details</span>
             <dl className="fact-grid">
               <div><dt>Model</dt><dd>{runtime.model.label ? `${runtime.model.label} · ` : ""}{runtime.model.name} · {runtime.model.api}{runtime.model.fallback ? " (fallback)" : ""}</dd></div>
               {runtime.model.chain && runtime.model.chain.length > 1 && <div><dt>Model chain</dt><dd>{runtime.model.chain.join(" → ")}</dd></div>}
@@ -568,8 +583,7 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
         </aside>
       </section>
 
-      <RunStats ledger={ledger} {...stats} empty="Start or replay an investigation. Counts fill in as each event arrives." />
-
+      <section className="demo-details"><h3>Integration source & configuration</h3>
       <section className="proof-card ib-integrations" aria-label="Integration points" {...guideAnchor("interbank.integrations")}>
         <div className="ib-integrations-head">
           <span className="review-kicker"><SquareTerminal size={13} /> INTEGRATION POINTS · SOURCE AND CONFIGURATION</span>
@@ -583,6 +597,7 @@ export default function InterbankDemo({ embedded = false }: InterbankDemoProps) 
             </article>
           ))}
         </div>
+      </section>
       </section>
       {viewer && <EvidencePanel viewer={viewer} onSelect={(current) => setViewer({ ...viewer, current })} onClose={closeSources} />}
     </div>

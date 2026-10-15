@@ -27,6 +27,7 @@ async function mockStudio(page: Page) {
     readiness: readiness(settings(), () => ({ label: "OpenAI API (.env)", ok: Boolean(state.values.OPENAI_API_KEY), detail: "OPENAI_API_KEY (Model backends)" })),
   });
   const modelSnapshot = () => ({ saved: state.saved, problem: null, file: ".studio/models.json", registry: state.registry, useCases: MODEL_USE_CASES,
+    health: { openai: { up: true } }, routes: Object.fromEntries(MODEL_USE_CASES.map(item => [item.id, { active: "openai" }])),
     keys: { OPENAI_API_KEY: true, VLLM_API_KEY: false, NIM_API_KEY: false, NVIDIA_API_KEY: false } });
   const services = () => ({
     services: [
@@ -141,7 +142,7 @@ test("model backends saves an ordered default chain and per-use-case overrides w
   const interbank = table.getByRole("row", { name: "Interbank settlement investigation" });
   await interbank.getByRole("button", { name: "Customize" }).click();
   await interbank.getByRole("button", { name: "Remove OpenAI API from Interbank settlement investigation chain" }).click();
-  await page.getByLabel("Market event → house-view update hosted models").selectOption("deny");
+  await page.getByLabel("Market research hosted models").selectOption("deny");
   const advisoryPolicies = await page.getByLabel("Advisor meeting prep hosted models").locator("option").allTextContents();
   expect(advisoryPolicies).not.toContain("Hosted models allowed");
 
@@ -185,13 +186,13 @@ test("a provider key is saved to .env from its card and an invalid provider bloc
   expect(state.puts).toHaveLength(0);
 });
 
-test("the use case model chip shows the chain and opens Studio settings", async ({ page }) => {
+test("the header inference indicator opens model settings", async ({ page }) => {
   await mockStudio(page);
   await page.goto("/", { waitUntil: "networkidle" });
   await page.locator(".side-nav").getByRole("button", { name: "Use case library" }).click();
   await page.getByRole("button", { name: "Open Brahe Bank assistant experience" }).click();
-  const chip = page.locator(".st-chip");
-  await expect(chip).toHaveText(/Model · Sparky vLLM → OpenAI API/);
+  const chip = page.locator(".topbar .inference-indicator");
+  await expect(chip).toHaveText("Cloud model");
   await chip.click();
   await expect(page.getByRole("heading", { name: "Studio settings", level: 1 })).toBeVisible();
 });

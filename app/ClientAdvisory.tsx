@@ -1,15 +1,18 @@
 "use client";
 
+import { SourceInputs } from "./SourceInputs";
+
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { ArrowRight, Ban, Briefcase, Check, CircleAlert, FileText, History, Landmark, Loader2, Lock, NotebookPen, Play, ShieldAlert, ShieldCheck, UserCheck, Users } from "lucide-react";
 import type { StoredCompanyProfile } from "./company-profile";
-import DemoStatusBanner from "./DemoStatusBanner";
 import DemoCustomerContext from "./DemoCustomerContext";
 import {
   ADVISOR, LINE_SECTIONS, RECORDED_HOUSEHOLDS, SUPERVISOR, briefingPayload, fetchHouseholds, formatMoney, normalizeApproval, normalizeMeetingPrep,
   saveAdvisoryBrief, type ApprovalState, type HouseholdCard, type MeetingPrep, type NextBestAction, type StoredAdvisoryBrief,
 } from "./advisory-brief";
-import { IMPACT_LABEL, loadWealthRecording, normalizeWealthHealth, parseApiError, rawResearchNote, type EvidenceItem, type StoredResearchNote, type WealthHealth } from "./research-note";
+import { IMPACT_LABEL, loadWealthRecording, parseApiError, rawResearchNote, type EvidenceItem, type StoredResearchNote } from "./research-note";
+import DemoWorkflow from "./DemoWorkflow";
+import { OperatorWorkspace, OperatorEmpty, ExecutionSummary } from "./OperatorWorkspace";
 import RunStats, { startRun, useRunLedger } from "./RunStats";
 import { newRunId } from "./run/events";
 import ProvenanceBadge, { type Provenance } from "./run/ProvenanceBadge";
@@ -113,7 +116,6 @@ function ApprovalBar({ approval, busy, canAct, onDecide }: {
 const ADVISORY_DEFENSE = { inputs: "CRM notes inspected", whenOff: "CRM notes are still inspected, and a run on a hosted model is forced to enforce." };
 
 export default function ClientAdvisory({ embedded = false, inStory = false, companyProfile, researchNote, onBriefChange }: Props) {
-  const [health, setHealth] = useState<WealthHealth | null>(null);
   const [service, setService] = useState<WealthService | null>(null);
   const [households, setHouseholds] = useState<HouseholdCard[]>([]);
   const [householdId, setHouseholdId] = useState("chuck-robbins");
@@ -140,15 +142,22 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
   }, [prep]);
 
   useEffect(() => {
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const refreshHealth = () => {
     fetch("/api/wealth/health", { signal: AbortSignal.timeout(10000) })
       .then((response) => (response.ok ? response.json() : Promise.reject(new Error("unavailable"))))
-      .then((body) => { setHealth(normalizeWealthHealth(body)); setService(wealthService(body)); })
-      .catch(() => { setHealth({ ready: false, advisoryModel: { status: "down" } }); setService({ reachable: false }); });
+      .then((body) => { setService(wealthService(body)); })
+      .catch(() => { setService({ reachable: false }); })
+      .finally(() => { if (active) timer = setTimeout(refreshHealth, 10000); });
+    };
+    refreshHealth();
     fetchHouseholds().then(setHouseholds).catch(() => setHouseholds([
       { id: "chuck-robbins", name: "Chuck Robbins", scenario: "Annual review" },
       { id: "okafor", name: "Ruth & Samuel Okafor", scenario: "Conservative mismatch" },
       { id: "priya-raman", name: "Priya Raman", scenario: "Attack: PII and an injected instruction" },
     ]));
+    return () => { active = false; clearTimeout(timer); };
   }, []);
 
   const published = researchNote?.analyze.publish.status === "published" ? researchNote : null;
@@ -165,9 +174,9 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
   const context: ContextItem[] = [
     ...serviceRow,
     published
-      ? { id: "research", label: `House-view update · ${published.ticker} · ${published.analyze.context?.houseView?.rating ?? ""}`.trim(), tone: "ok",
+      ? { id: "research", label: `Research update · ${published.ticker} · ${published.analyze.context?.houseView?.rating ?? ""}`.trim(), tone: "ok",
         detail: `Published by ${published.publishedBy ?? "the CIO office"} · ${IMPACT_LABEL[published.analyze.update.impact ?? ""] ?? ""} · ${published.analyze.update.counts.verified} verified claims` }
-      : { id: "research", label: "House-view update · none published this session", tone: "info",
+      : { id: "research", label: "Research update · none published this session", tone: "info",
         detail: "Meeting prep uses the recorded Halcyon update when the client holds HCYN.", action: openUseCase ? { label: "Open research", open: () => openUseCase("market-research") } : undefined },
     companyProfile?.company.name
       ? { id: "briefing", label: `Company briefing · ${companyProfile.company.name}`, tone: "ok", detail: `From the Company briefing demo${companyProfile.period ? ` · ${companyProfile.period}` : ""}` }
@@ -177,12 +186,12 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
 
   const evidence = useMemo(() => new Map((prep?.evidence ?? []).map((item) => [item.id, item])), [prep]);
   const serviceDown = service?.reachable === false;
-  const fallbackRefused = health?.advisoryHostedFallback?.startsWith("refused");
   const shownApproval = approval ?? prep?.approval ?? null;
   const locked = Boolean(shownApproval && !["awaiting_advisor"].includes(shownApproval.status));
   const recordedAvailable = RECORDED_HOUSEHOLDS.has(householdId);
 
   function begin() {
+    setPrep(null); setRaw(null);
     setLoading(true);
     setError("");
     setFocus(null);
@@ -280,13 +289,14 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
   }
 
   const replayButton = (anchor?: "advisory.replay") => (
-    <button type="button" className="secondary" disabled={loading || !recordedAvailable} onClick={replay} data-guide={anchor}>
-      <History size={15} aria-hidden="true" /> Replay recorded run
+    <button type="button" className="secondary" data-demo-replay={anchor ? true : undefined} disabled={loading || !recordedAvailable} onClick={replay} data-guide={anchor}>
+      <History size={15} aria-hidden="true" /> Replay recording
     </button>
   );
-  const replayAction = replayButton();
 
   useGuideActions("client-advisory", {
+    run: () => { void runLive(); },
+    canRun: () => !loading && !serviceDown,
     replay: () => { if (recordedAvailable) void replay(); },
     skipReplay: timeline.skip,
     selectScenario: setHouseholdId,
@@ -308,39 +318,40 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
     >
       {!inStory && (
         <p className="rx-intro" {...guideAnchor("advisory.intro")}>
-          <strong>Jordan, advisor.</strong> Prepare a client meeting: the household&apos;s profile against its portfolio, ranked next-best actions
-          sized in dollars, and a one-page brief where every statement is checked. Live model-generated briefs require advisor and supervisor review; code-written samples cannot be approved.
+          <strong>Walk into a client meeting prepared.</strong> AI reviews the client’s investments and notes, flags concerns, and drafts a meeting brief. You choose the proposed actions; a supervisor reviews them. No trades are placed.
         </p>
       )}
 
-      {serviceDown ? (
-        <DemoStatusBanner title="The wealth service is not answering" stillWorks="Recorded runs for each household" fix="Start it from Studio settings · Services" actions={replayAction} />
-      ) : health?.advisoryModel?.fallback && !fallbackRefused ? (
-        <DemoStatusBanner tone="degraded" settingsSection="st-ai-defense" settingsLabel="AI Defense settings"
-          title={`Private inference is down · client data may reach ${health.advisoryModel.label} only with AI Defense in enforce`}
-          stillWorks="Every prompt and answer is inspected and blocked on a violation for this run" />
-      ) : health?.advisoryModel?.fallback && fallbackRefused ? (
-        <DemoStatusBanner tone="degraded" settingsSection="st-ai-defense" title="Private inference is down · client data will not leave the bank"
-          stillWorks="Rules, actions, and a code-written brief; recorded runs replay" fix="Turn AI Defense on to allow a hosted fallback for client data" />
-      ) : null}
+      <DemoWorkflow steps={["Choose a client", "Generate and review the brief", "Select actions and request approval"]}
+        active={loading ? 1 : prep ? 2 : 0} status={loading ? "Preparing the brief — follow the activity below." : prep ? (shownApproval?.status === "sent" ? "Supervisor approved the proposed actions. No trades were placed." : "Review the brief and proposed actions below.") : "Choose a client, then select Prepare live meeting."} />
+      <OperatorWorkspace execution={<>
+        <ExecutionSummary ledger={ledger} observability={stats.observability} defense={stats.defense} controls={shownApproval ? `Approval: ${shownApproval.status.replaceAll("_", " ")} · no trades placed` : "Advisor review, then supervisor approval · no trades placed"} />
 
+      <section className="demo-details"><h3>Agent activity</h3>
+      <RunTimeline label="Agent timeline" anchor="advisory.timeline" events={timeline.visible} start={timeline.run?.started_at} showLane
+        onSource={(ids) => ids[0] && setFocus({ id: ids[0] })}
+        empty={loading ? "Waiting for the first event…" : "Screening, rules, the meeting-prep agent and its reviewer, policy checks, and both approvals stream here."} /></section>
+<RunStats ledger={ledger} observability={stats.observability} defense={stats.defense} />
+
+      </>}>
+      <section className="operator-input"><h3>Choose a client</h3>
       <div className="ax-top">
         <fieldset className="ax-households" {...guideAnchor("advisory.households")}>
-          <legend>Household</legend>
+          <legend>Demo clients</legend>
           {households.map((item) => (
             <label key={item.id} className={householdId === item.id ? "selected" : ""} {...guideSafeAnchor(`advisory.household.${item.id}`)}>
-              <input type="radio" name="advisory-household" value={item.id} checked={householdId === item.id} onChange={() => setHouseholdId(item.id)} />
+              <input type="radio" name="advisory-household" value={item.id} checked={householdId === item.id} disabled={loading} onChange={() => { setHouseholdId(item.id); setPrep(null); setRaw(null); setApproval(null); setChosen([]); setFocus(null); setError(""); timeline.reset(); }} />
               <span className={`rx-kind ${item.scenario?.startsWith("Attack") ? "is-attack" : ""}`}>{item.scenario}</span>
               <strong>{item.name}</strong>
               <small>{[item.riskProfile, item.totalValue != null ? formatMoney(item.totalValue) : null, item.age ? `age ${item.age}` : null].filter(Boolean).join(" · ")}</small>
-              {item.headline && <span>{item.headline}</span>}
+
             </label>
           ))}
         </fieldset>
-        {householdId === "chuck-robbins" && <DemoCustomerContext />}
+<div className="ax-start"><div className="operator-task-context"><span className="operator-eyebrow">YOUR TASK</span><h2>Prepare a useful client conversation</h2><p>Find the concerns, choose what to discuss, and send proposed actions for supervision.</p></div>        {householdId === "chuck-robbins" && <DemoCustomerContext />}</div>
         <section className="ax-context" aria-label="Meeting context" {...guideAnchor("advisory.context")}>
-          <p className="rx-muted">Current session context is used by live preparation. Replay loads a saved example and does not recompute it from this context.</p>
-          <h3><Briefcase size={15} aria-hidden="true" /> Context loaded for the meeting</h3>
+          <p className="rx-muted">Recent updates attached to this client.</p>
+          <h3><Briefcase size={15} aria-hidden="true" /> Recent updates</h3>
           <ul>
             {context.map((item) => (
               <li key={item.id} className={`is-${item.tone}`}>
@@ -350,14 +361,18 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
               </li>
             ))}
           </ul>
+          {published && <div className="source-scroll" tabIndex={0} role="region" aria-label="Published research update"><ul>{published.analyze.update.claims.filter(claim => claim.status === "verified").map((claim, index) => <li key={index}>{claim.text}</li>)}</ul></div>}
         </section>
       </div>
-      <div className="rx-actions">
+      </section>
+
+      <SourceInputs kind="advisory" identity={householdId}  action={<div className="rx-actions">
         <button type="button" id="advisory-run" className="primary" disabled={loading || serviceDown} onClick={runLive} {...guideAnchor("advisory.run")}>
-          {loading ? <Loader2 size={15} className="spin" aria-hidden="true" /> : <Play size={15} aria-hidden="true" />} Prepare meeting
+          {loading ? <Loader2 size={15} className="spin" aria-hidden="true" /> : <Play size={15} aria-hidden="true" />} Prepare live meeting
         </button>
-        {replayButton("advisory.replay")}
-      </div>
+        <details className="demo-fallback"><summary>Fallback: recorded demo</summary>{replayButton("advisory.replay")}</details>
+      </div>} />
+
       {error && <p className="rx-error" role="alert"><CircleAlert size={15} aria-hidden="true" /> {error}</p>}
 
       {prep ? (
@@ -365,14 +380,10 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
           chosen={chosen} locked={locked} onToggle={(id) => setChosen((list) => (list.includes(id) ? list.filter((item) => item !== id) : [...list, id]))}
           approval={shownApproval} deciding={deciding} onDecide={decide} />
       ) : (
-        <p className="rx-empty">Pick a household and prepare the meeting, or replay the recorded run.</p>
+        <OperatorEmpty busy={loading} title={loading ? "Preparing the client review" : "What needs attention before the meeting?"} description={loading ? "The agent is checking client notes, investments, and suitability rules. Actual activity appears below this workspace." : "Select Prepare live meeting. Review the concerns first, then choose proposed actions and send them to a supervisor."} items={["Concerns and supporting evidence", "Actions you choose", "Supervisor approval · no trades"]} />
       )}
 
-      <RunTimeline label="Agent timeline" anchor="advisory.timeline" events={timeline.visible} start={timeline.run?.started_at} showLane
-        onSource={(ids) => ids[0] && setFocus({ id: ids[0] })}
-        empty={loading ? "Waiting for the first event…" : "Screening, rules, the meeting-prep agent and its reviewer, policy checks, and both approvals stream here."} />
-
-      <RunStats ledger={ledger} observability={stats.observability} defense={stats.defense} />
+      </OperatorWorkspace>
       <p className="rx-disclaimer">Synthetic clients · test values only (000- SSNs, 4111 card). Demonstration only · not investment, tax, or legal advice.</p>
     </div>
   );
@@ -413,20 +424,22 @@ function PrepView({ prep, origin, focus, onCite, evidence, headingRef, chosen, l
         <p className="ax-refused"><Lock size={15} aria-hidden="true" /> Client data stayed in the bank: the hosted fallback was refused without AI Defense enforce. {prep.brief.reason}</p>
       )}
 
+
       <div className="rx-grid">
         <div className="rx-main">
+          <section className="operator-findings"><h3>What needs your attention</h3>
           {prep.suitability.length > 0 && (
             <div className="rx-section">
-              <h3><ShieldAlert size={15} aria-hidden="true" /> Profile against portfolio · Reg BI care obligation</h3>
+              <h3><ShieldAlert size={15} aria-hidden="true" /> Concerns to discuss</h3>
               <ul className="ax-findings" {...guideAnchor("advisory.findings")}>
                 {prep.suitability.map((row) => (
                   <li key={row.id} className={`is-${row.severity}`}>
                     <button type="button" className="ax-finding" onClick={() => onCite(row.rule ? { id: `suitability:${row.rule}` } : null)}>
                       <span className="ax-severity">{row.severity}</span>
-                      <strong>{row.title}</strong>
+                      <strong>{{ "R-CONC-01": "Too much invested in one company", "R-RISK-02": "More stock exposure than planned", "R-LIQ-02": "Cash above the planned reserve" }[row.rule ?? ""] ?? row.title}</strong>
                       <small>{row.rule} · {row.category}</small>
                     </button>
-                    <p>{row.detail}</p>
+                    <p>{row.detail.replaceAll("household", "client’s investments").replaceAll("Equities", "Stocks").replaceAll("single-issuer", "one-company")}</p>
                     {row.regBi && <small className="rx-muted">{row.regBi}</small>}
                   </li>
                 ))}
@@ -436,7 +449,7 @@ function PrepView({ prep, origin, focus, onCite, evidence, headingRef, chosen, l
 
           {prep.actions.length > 0 && (
             <div className="rx-section">
-              <h3><Landmark size={15} aria-hidden="true" /> Next-best actions{prep.addressableDisplay ? ` · ${prep.addressableDisplay} investable in play` : ""}</h3>
+              <h3><Landmark size={15} aria-hidden="true" /> Choose proposed actions{prep.addressableDisplay ? ` · ${prep.addressableDisplay} potential allocation` : ""}</h3>
               <ul className="ax-actions" {...guideAnchor("advisory.actions")}>
                 {ranked.map((action) => (
                   <ActionRow key={action.id} action={action} chosen={chosen.includes(action.id)} locked={locked} onToggle={() => onToggle(action.id)} />
@@ -448,7 +461,15 @@ function PrepView({ prep, origin, focus, onCite, evidence, headingRef, chosen, l
             </div>
           )}
 
-          <div className="rx-section ax-brief" {...guideAnchor("advisory.brief")}>
+          </section>
+          <div className="rx-policies" {...guideAnchor("advisory.policies")}>
+            <PolicyList title="Approval · advisory.recommendation" result={approval?.controls} />
+          </div>
+          <section className="operator-decision"><h3>Meeting actions · {chosen.length} selected</h3>
+            <p>{chosen.length ? ranked.filter((action) => chosen.includes(action.id)).map((action) => action.title).join(" · ") : "Choose the actions you want to discuss from the list above."}</p>
+          {approval && prep.brief.status === "ready" && <ApprovalBar approval={approval} busy={deciding} canAct={Boolean(prep.brief.lines.length)} onDecide={onDecide} />}
+          </section>
+          <div className="rx-section ax-brief operator-document" tabIndex={0} aria-label="Meeting brief" {...guideAnchor("advisory.brief")}>
             <h3><FileText size={15} aria-hidden="true" /> One-page meeting brief</h3>
             {prep.brief.status !== "ready" && <p className="rx-muted">{prep.brief.reason || "No brief was drafted."}</p>}
             {LINE_SECTIONS.map((section) => {
@@ -469,23 +490,21 @@ function PrepView({ prep, origin, focus, onCite, evidence, headingRef, chosen, l
               {prep.evaluation && <> · {prep.evaluation.label}</>}
             </p>
           </div>
+
           {struck.length > 0 && (
             <div className="rx-section rx-struck">
-              <h3>Struck by the claim verifier or policy</h3>
+              <h3>Excluded by source checks or policy</h3>
               <ul>{struck.map((line, index) => (
                 <ClaimRow key={index} claim={line} item={line.evidenceId ? evidence.get(line.evidenceId) : undefined} onCite={onCite} focus={focus} />
               ))}</ul>
             </div>
           )}
 
-          <div className="rx-policies" {...guideAnchor("advisory.policies")}>
-            <PolicyList title="Approval · advisory.recommendation" result={approval?.controls} />
-          </div>
-          {approval && prep.brief.status === "ready" && <ApprovalBar approval={approval} busy={deciding} canAct={Boolean(prep.brief.lines.length)} onDecide={onDecide} />}
+
         </div>
 
-        <aside className="rx-side" aria-label="Client record and evidence">
-          <h3><NotebookPen size={15} aria-hidden="true" /> CRM notes · screened before any model call</h3>
+        <section className="demo-details demo-evidence"><h3>Client record & evidence</h3><aside className="rx-side" aria-label="Client record and evidence">
+          <h3><NotebookPen size={15} aria-hidden="true" /> Client notes · checked before the AI reads them</h3>
           <ul className="ax-notes" {...guideAnchor("advisory.notes")}>
             {prep.notes.map((note) => (
               <li key={note.index} className={`is-${note.status} ${focus?.id === `crm:${note.index}` ? "is-cited" : ""}`}>
@@ -517,7 +536,7 @@ function PrepView({ prep, origin, focus, onCite, evidence, headingRef, chosen, l
               <small>{item.reason}</small>
             </article>
           ))}
-        </aside>
+        </aside></section>
       </div>
     </section>
   );

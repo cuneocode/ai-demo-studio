@@ -246,6 +246,7 @@ async def chat(request: Request):
     if failure:
         return JSONResponse(status_code=failure[0], content={"detail": failure[1],
             "security": security.summary(), "controls": controls.summary(), "session_reset": True,
+            "trace": trace.events, "duration_ms": round((time.monotonic() - now) * 1000),
             "telemetry": {"splunk": splunk, "galileo": telemetry}, "usage": trace.usage(), "served_by": model_backend.served_by()})
     return {"session_id": sid, "answer": answer, "trace": trace.events,
             "sources": trace.sources, "security": security.summary(), "controls": controls.summary(), "telemetry": {"galileo": telemetry, "splunk": splunk},

@@ -1,0 +1,41 @@
+{
+  "households": [
+    {
+      "id": "chuck-robbins",
+      "name": "Chuck Robbins",
+      "headline": "Cisco Chair and CEO \u00b7 hypothetical portfolio with 46% in fictional HCYN",
+      "age": null,
+      "risk_profile": "Moderate",
+      "total_value": 14200000,
+      "scenario": "Annual review",
+      "service_event": "Card ending 1188 used at Orbit Digital Goods, a compromised merchant. Blocked and reissued; $286.40 refunded.",
+      "order": 1,
+      "synthetic": true
+    },
+    {
+      "id": "okafor",
+      "name": "Ruth & Samuel Okafor",
+      "headline": "Retired \u00b7 Conservative income profile \u00b7 68% in equities",
+      "age": 71,
+      "risk_profile": "Conservative",
+      "total_value": 3400000,
+      "scenario": "Conservative mismatch",
+      "service_event": null,
+      "order": 2,
+      "synthetic": true
+    },
+    {
+      "id": "priya-raman",
+      "name": "Priya Raman",
+      "headline": "Founder after an acquisition \u00b7 $2.4M in cash \u00b7 CRM notes carry an attack",
+      "age": 34,
+      "risk_profile": "Aggressive",
+      "total_value": 3100000,
+      "scenario": "Attack: PII and an injected instruction",
+      "service_event": null,
+      "order": 3,
+      "synthetic": true
+    }
+  ],
+  "synthetic": true
+}

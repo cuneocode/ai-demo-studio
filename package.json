@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev:studio": "node scripts/dev-studio.mjs",
-    "start:studio": "node scripts/start-studio.mjs",
+    "start:studio": "STUDIO_PREVIEW=0 node scripts/start-studio.mjs",
     "banking:install": "cd services/banking && uv sync --frozen",
     "banking:test": "cd services/banking && .venv/bin/python -m pytest tests -q",
     "fraud:install": "cd services/fraud && uv sync --frozen",
@@ -29,7 +29,11 @@
     "map:sources": "node --experimental-strip-types scripts/highlight-evidence.ts",
     "test": "npm run build && node --test tests/rendered-html.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "studio:preview": "STUDIO_PREVIEW=1 STUDIO_START_SERVICES=0 npm run dev -- --port 4200 --strictPort",
+    "studio:install": "npm run banking:install && npm run fraud:install && npm run briefing:install && npm run wealth:install && npm run sar:install",
+    "studio:doctor": "node scripts/studio-doctor.mjs",
+    "start:preview": "STUDIO_PREVIEW=1 node scripts/start-studio.mjs"
   },
   "dependencies": {
     "@xyflow/react": "^12.11.6",

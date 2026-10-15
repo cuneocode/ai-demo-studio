@@ -6,7 +6,7 @@ const TOURS = [
   { title: "Brahe Bank assistant", id: "brahe-bank", recorded: true },
   { title: "Card fraud triage", id: "fraud-modeling", recorded: true },
   { title: "Company briefing", id: "company-briefing", recorded: true },
-  { title: "Market event → house-view update", id: "market-research", recorded: true },
+  { title: "Market research", id: "market-research", recorded: true },
   { title: "Advisor meeting prep", id: "client-advisory", recorded: true },
   { title: "KYC processing", id: "kyc-processing", recorded: false },
   { title: "SAR investigation", id: "sar-support", recorded: true },
@@ -32,7 +32,8 @@ for (const tour of TOURS) {
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
       await openLibrary(page);
-      await page.getByRole("button", { name: `Guided tour: ${tour.title}` }).click();
+      await page.getByRole("button", { name: `Open ${tour.title} experience` }).first().click();
+      await page.getByRole("button", { name: "Full walkthrough", exact: true }).click();
       await expect(page.getByRole("heading", { name: tour.title, level: 1 })).toBeVisible();
 
       const seen = await walk(page);
@@ -151,23 +152,20 @@ test("Cisco fit lines follow live status: running, when configured, and always p
   await expect(page.getByRole("dialog").locator(".guide-fit")).toHaveAttribute("data-cisco-status", "running");
 });
 
-test("a demo whose service is down gets the short offline tour", async ({ page }) => {
-  await mockStudio(page, statusWith("banking", { up: false, ready: false, detail: "Not running" }));
+test("recorded overview works while the live service is down", async ({ page }) => {
+  const paid = await mockStudio(page, statusWith("banking", { up: false, ready: false, detail: "Not running" }));
   await openLibrary(page);
-  await page.getByRole("button", { name: "Guided tour: Brahe Bank assistant" }).click();
-  const card = page.getByRole("dialog");
-  await expect(card).toContainText("Step 1 of 3");
-  await page.keyboard.press("ArrowRight");
-  await expect(card).toHaveAttribute("data-guide-step", "offline");
-  await expect(card).toContainText("Brahe Bank is offline");
-  await page.keyboard.press("ArrowRight");
-  await expect(page.getByRole("tab", { name: "Architecture" })).toHaveAttribute("aria-selected", "true");
+  await page.getByRole("button", { name: "Guided overview: Brahe Bank assistant" }).click();
+  const seen = await walk(page);
+  expect(seen.some(step => step.step === "banking.answer")).toBe(true);
+  expect(seen.some(step => step.step === "offline")).toBe(false);
+  expect(paid).toEqual([]);
 });
 
 test("leaving the demo mid-tour offers to resume where you were", async ({ page }) => {
   await mockStudio(page);
   await openLibrary(page);
-  await page.getByRole("button", { name: "Guided tour: KYC processing" }).click();
+  await page.getByRole("button", { name: "Guided overview: KYC processing" }).click();
   await expect(page.getByRole("dialog")).toHaveAttribute("data-guide-ready", "true");
   await page.keyboard.press("ArrowRight");
   const step = await page.getByRole("dialog").getAttribute("data-guide-step");
@@ -202,6 +200,8 @@ test("Present mode guides one moment on request and keeps the talk track otherwi
   await page.locator(".side-nav").getByRole("button", { name: /Story builder/ }).click();
   await page.getByRole("button", { name: "Present story" }).click();
   const bar = page.getByRole("region", { name: "Presenter controls" });
+  await expect(bar.getByRole("list", { name: "Talk track" })).toHaveCount(0);
+  await bar.getByRole("button", { name: "Talk track", exact: true }).click();
   await expect(bar.getByRole("list", { name: "Talk track" })).toBeVisible();
   await expect(page.locator(".guide-card")).toHaveCount(0);
 
@@ -223,4 +223,29 @@ test("Present mode guides one moment on request and keeps the talk track otherwi
   await expect(bar).toContainText("MOMENT 2 OF 4");
   await expect(page.locator(".guide-card")).toHaveCount(0);
   await expect(bar.getByRole("list", { name: "Talk track" }).locator("li").last()).toContainText("Right now");
+});
+
+
+test("guide live action uses the real endpoint and does not load a recording", async ({ page }) => {
+  await mockStudio(page);
+  let calls = 0;
+  let replays = 0;
+  await page.route("**/api/banking/health", route => route.fulfill({ json: { ready: true } }));
+  await page.route("**/api/banking/chat", route => {
+    calls++;
+    expect(route.request().postDataJSON().message).toBe("What's my credit score?");
+    return route.fulfill({ json: { answer: "Live endpoint test response", session_id: "test-live", sources: [], trace: [] } });
+  });
+  await page.goto("/?guide=brahe-bank&step=banking.ask");
+  const card = page.getByRole("dialog");
+  await expect(card).toHaveAttribute("data-guide-ready", "true");
+  // Banking preloads its fallback menu; count any later fetches separately.
+  await page.waitForLoadState("networkidle");
+  page.on("request", request => { if (/\/recordings\/banking\//.test(request.url())) replays++; });
+  await expect(card.getByRole("button", { name: "Replay the recorded question" })).toBeHidden();
+  await card.getByRole("button", { name: "Run live", exact: true }).click();
+  await expect(page.locator(".chat-feed")).toContainText("Live endpoint test response");
+  expect(calls).toBe(1);
+  expect(replays).toBe(0);
+  await expect(page.locator(".banking-demo")).toHaveAttribute("data-guide-source", "live");
 });

@@ -13,6 +13,7 @@ async function openCase(page: Page, title: string) {
   await page.route("**/api/studio/status", (route) => route.fulfill({ json: STATUS }));
   await page.goto("/", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: `Open ${title} experience` }).first().click();
+  await expect(page.getByRole("region", { name: "Live run stats" })).toBeVisible();
   return page.getByRole("region", { name: "Live run stats" });
 }
 
@@ -114,6 +115,7 @@ test("prototype use cases label their run stats as illustrative", async ({ page 
   await page.getByRole("button", { name: "Open KYC processing experience" }).first().click();
   await expect(page.getByRole("region", { name: "Live run stats" })).toHaveCount(0);
   const stats = page.getByRole("region", { name: "Illustrative run stats" });
+  await expect(stats).toBeVisible();
   await expect(stats).toContainText("RUN STATS · ILLUSTRATIVE");
   await expect(stats.locator(".run-stats-chip")).toHaveText(["Illustrative", "Illustrative"]);
   await expect(stats).toContainText("No service runs behind this prototype");
@@ -191,6 +193,7 @@ test("interbank counts its own events, and the source drawer is wide with dark c
   await page.getByRole("tab", { name: "Use case demo" }).click();
   await expect(tile(ao, "LLM calls")).toHaveText("2");
 
+  await page.getByText("Integration source & configuration", { exact: true }).click();
   await page.locator(".ib-integrations").getByRole("button", { name: "AI Defense ExtProc" }).click();
   const drawer = page.locator(".ib-evidence .map-source");
   await expect(page.locator(".ib-evidence .src-line").first()).toBeVisible();

@@ -1,89 +1,97 @@
-# vinext-starter
+# Financial Services AI Demo Studio
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+Nine use cases with live AI services, guided walkthroughs, architecture views,
+and explicitly labelled recorded fallbacks. The library keeps every use case visible, including
+technical demos and illustrative prototypes.
 
-## Prerequisites
+## Start the live studio — default
 
-- Node.js `>=22.13.0`
-
-## Quick Start
+Requires **Node.js 22.13 or newer**, npm, and **uv**. From a fresh checkout:
 
 ```bash
-npm install
-npm run dev
+npm ci
+npm run studio:install
+npm run studio:doctor
+npm run dev:studio
+```
+
+Open **http://localhost:4200**. In **Studio settings**, configure model endpoints
+and credentials, test connections, and apply changes. The primary demo actions
+and guided walkthroughs run the real services. They use synthetic banking data;
+model, tool, policy, and telemetry results identify what actually executed.
+
+The install command sets up banking, fraud, briefing, wealth, and SAR. **Docker**
+is needed only for live interbank execution: start Docker, then run
+`npm run interbank:up`. A configuration check is not proof of a working service;
+check live status and each result’s provenance.
+
+## Market research
+
+The user story is: **load a company, inspect its evidence, and review a concise
+12-month outlook with a Buy/Hold/Sell opinion, key drivers, risks, and peer context.**
+The initial NVDA packet is cached public data in
+`services/wealth/data/research/NVDA.json`. Other tickers and **Refresh latest** use
+Yahoo financials, earnings, industry peers, and news from the last 30 days.
+Provider gaps and snapshot dates stay visible; paywalled previews are not treated
+as complete articles. Article dialogs show the complete text supplied to analysis.
+
+`GET /api/wealth/market/inputs/{ticker}` creates an immutable packet. Analysis posts
+its id to `/api/wealth/market/analyze`. Every packet includes the same synthetic
+prompt-injection article. Cisco AI Defense screens articles before model input;
+flagged or uninspected articles are excluded. The configured model produces a
+structured assessment, and code checks supporting facts against source fields or
+quotes. At least three facts must verify. If a fact is discarded, the opinion is
+reassessed using only verified facts. No trade or distribution takes place.
+
+The UI contains company selection, compact input metrics and peers, article
+dialogs, the report, collapsed agent activity, Live run stats, and Runtime details.
+Usage, actual inspection verdicts, and trace delivery use the shared wealth
+instrumentation. This flow has no canned recommendation or recorded-run fallback.
+
+## Last-resort fallback
+
+If a live dependency fails, fix it or explicitly open **Fallback: recorded demo**.
+Recordings keep their original date and counts and generate no new model calls or
+traces. Synthetic score or code-written narrative fallbacks are labelled separately;
+they are not evidence that an AI model ran. Fraud never silently switches a failed
+live request to replay.
+
+For a machine that cannot run live services, an **optional recording-only preview**
+is available after `npm ci`:
+
+```bash
+npm run studio:preview
+```
+
+Preview requires no Python, Docker, or model keys and disables all live demo APIs.
+It is not the default presentation path. Initial package installation needs internet.
+
+## Present and share
+
+For a production build on the same machine:
+
+```bash
 npm run build
+npm run start:studio
+# Only for a recording-only fallback:
+npm run start:preview
 ```
 
-This starter does not use `wrangler.jsonc`.
+These commands listen on loopback at localhost:4200. That address is only accessible
+on the presenter's machine. To share now, give colleagues the repository and the
+live setup commands above, or present through screen sharing. This is not a hosted public
+link. Hosting requires a separate deployment with access controls for the host-side
+settings and service-management API; do not expose the local server directly.
 
-## Included Shape
+`npm run studio:doctor` checks prerequisites without reading keys, starting services,
+or making model calls. If port 4200 is occupied, stop the other local studio first.
+Closing the startup command stops processes it owns; independently started services
+must be stopped where they were launched.
 
-- edit site code under `app/`
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
-
-## Workspace Auth Headers
-
-OpenAI workspace sites can read the current user's email from
-`oai-authenticated-user-email`.
-
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
-
-Treat the full name as optional and fall back to email when it is absent:
-
-```tsx
-import { headers } from "next/headers";
-
-export default async function Home() {
-  const requestHeaders = await headers();
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
-
-  const displayName = fullName ?? email;
-  // ...
-}
-```
-
-## Optional Dispatch-Owned ChatGPT Sign-In
-
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
-
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
-  browser links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
-
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
-
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
-
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
+Synthetic banking data is labelled throughout. Chuck Robbins's public role as
+Cisco Chair and CEO is used as context; the portfolio and banking events are
+hypothetical. HCYN is a fictional, unrelated investment. Original recordings are
+preserved; subsequent review corrections are disclosed alongside playback.
 
 ## Studio settings
 
@@ -101,7 +109,7 @@ brings their own models and credentials without editing files.
   which holds provider URLs, model names, and the *name* of each key variable; key
   values stay in `.env`. Services resolve it per request, so model changes need no
   restart. Without the file, each service keeps its own `.env` settings.
-- **Use case readiness** lists what each live demo still needs.
+- **Live configuration** lists the settings each live demo still needs.
 - **Services** applies credential changes. Services read `.env` when they start, so
   **Apply** restarts the Python services the studio launched (`npm run dev:studio` or
   `npm run start:studio`) and starts any that are stopped. **Rebuild lab** reruns

@@ -27,43 +27,20 @@ async function openCase(page: Page, title: string, json: unknown = status()) {
 const heading = (page: Page) => page.locator(".case-frame-heading");
 const chip = (page: Page) => heading(page).locator(".live-status-chip");
 
-const focused = (page: Page, section: string) => page.evaluate((id) => {
-  const element = document.activeElement as HTMLElement | null;
-  return {
-    inside: Boolean(element && document.getElementById(id)?.contains(element)),
-    enabled: Boolean(element && !element.matches(":disabled")),
-    tag: element?.tagName ?? "",
-  };
-}, section);
-
-const LIVE_CASES = [
-  { title: "Brahe Bank assistant", section: "banking-experience", cta: "Open assistant" },
-  { title: "Card fraud triage", section: "fraud-experience", cta: "Triage queue" },
-  { title: "Company briefing", section: "briefing-experience", cta: "Extract briefing" },
-  { title: "Market event → house-view update", section: "research-experience", cta: "Run the scenario" },
-  { title: "Advisor meeting prep", section: "advisory-experience", cta: "Prepare meeting" },
-  { title: "Interbank settlement investigation", section: "interbank-experience", cta: "Start investigation" },
-];
-
-for (const { title, section, cta } of LIVE_CASES) {
-  test(`${title}: the header CTA focuses an enabled control in the demo`, async ({ page }) => {
+const LIVE_CASES = ["Brahe Bank assistant", "Card fraud triage", "Company briefing", "Market research", "Advisor meeting prep", "SAR investigation", "Interbank settlement investigation"];
+for (const title of LIVE_CASES) {
+  test(`${title}: live controls lead, recordings require explicit fallback selection`, async ({ page }) => {
     await openCase(page, title);
-    await heading(page).getByRole("button", { name: cta }).click();
-    await expect.poll(() => focused(page, section)).toMatchObject({ inside: true, enabled: true });
+    await expect(heading(page).locator(".primary-button")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Replay recording", exact: true })).toBeHidden();
+    await expect(page.getByText(/^Fallback: recorded (demo|extract)$/).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Guided overview", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Full walkthrough", exact: true })).toBeVisible();
+    const stats = page.getByRole("region", { name: "Live run stats", exact: true });
+    await expect(stats).toBeVisible();
+    expect(await stats.evaluate((element) => Boolean(element.closest("details")))).toBe(false);
   });
 }
-
-test("the fraud header CTA reads 'Triage queue'", async ({ page }) => {
-  await openCase(page, "Card fraud triage");
-  await expect(heading(page).locator(".primary-button")).toHaveText(/^Triage queue/);
-  await expect(heading(page).getByRole("button", { name: "Review next alert" })).toHaveCount(0);
-});
-
-test("the advisory header CTA focuses the selected household", async ({ page }) => {
-  await openCase(page, "Advisor meeting prep");
-  await heading(page).getByRole("button", { name: "Prepare meeting" }).click();
-  await expect.poll(() => focused(page, "advisory-experience")).toMatchObject({ inside: true, enabled: true, tag: "INPUT" });
-});
 
 test("'meeting prep' + Enter in the launcher opens Advisor meeting prep", async ({ page }) => {
   await page.route("**/api/studio/status", (route) => route.fulfill({ json: status() }));
@@ -76,35 +53,47 @@ test("'meeting prep' + Enter in the launcher opens Advisor meeting prep", async 
 });
 
 test("the header says Live only when the use case's service is up and ready", async ({ page }) => {
-  await openCase(page, "Market event → house-view update");
-  await expect(chip(page)).toHaveText(/^\s*Live · /);
+  await openCase(page, "Market research");
+  await expect(chip(page)).toHaveText(/^\s*Live ready/);
 });
 
 test("a downed service never shows Live in the header", async ({ page }) => {
   const down = status({ services: [service("banking", "Brahe Bank", false), service("wealth", "Wealth", false), service("fraud", "Fraud scoring", true, false)], interbankUp: false });
 
-  await openCase(page, "Market event → house-view update", down);
-  await expect(chip(page)).toHaveText(/Offline · recorded runs available/);
-  await expect(chip(page)).not.toHaveText(/^\s*Live/);
+  await openCase(page, "Market research", down);
+  await expect(chip(page)).toHaveText(/Live unavailable/);
+  await expect(chip(page)).not.toHaveText(/^\s*Live ready/);
 
   await page.getByRole("button", { name: "Back to library" }).click();
   await page.getByRole("button", { name: "Open Brahe Bank assistant experience" }).first().click();
-  await expect(chip(page)).toHaveText(/^\s*Offline/);
+  await expect(chip(page)).toHaveText(/^\s*Live unavailable/);
   await expect(chip(page)).toHaveAttribute("title", /not running/);
 
   await page.getByRole("button", { name: "Back to library" }).click();
   await page.getByRole("button", { name: "Open Card fraud triage experience" }).first().click();
-  await expect(chip(page)).not.toHaveText(/^\s*Live/);
+  await expect(chip(page)).not.toHaveText(/^\s*Live ready/);
   await expect(chip(page)).toHaveAttribute("title", /not answering/);
 
   await page.getByRole("button", { name: "Back to library" }).click();
   await page.getByRole("button", { name: "Open Interbank settlement investigation experience" }).first().click();
-  await expect(chip(page)).toHaveText(/^\s*Offline/);
+  await expect(chip(page)).toHaveText(/^\s*Live unavailable/);
 });
 
 test("an unreachable studio status API does not claim Live", async ({ page }) => {
   await page.route("**/api/studio/status", (route) => route.fulfill({ status: 503, body: "" }));
   await page.goto("/", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Open Company briefing experience" }).first().click();
-  await expect(chip(page)).toHaveText(/Checking live service/);
+  await expect(chip(page)).toHaveText(/Live unavailable/);
+});
+
+
+test("failed live fraud triage stays failed until a fallback is explicitly chosen", async ({ page }) => {
+  let replayLoads = 0;
+  await page.route("**/api/fraud/runs", route => route.fulfill({ status: 503, json: { detail: "Service unavailable" } }));
+  page.on("request", request => { if (/\/recordings\/fraud\//.test(request.url())) replayLoads++; });
+  await openCase(page, "Card fraud triage");
+  await page.locator("#triage-queue").click();
+  await expect(page.getByRole("alert")).toContainText("did not start the run");
+  await expect(page.locator(".fraud-demo")).not.toHaveAttribute("data-guide-source", "recorded");
+  expect(replayLoads).toBe(0);
 });

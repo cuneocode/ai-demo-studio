@@ -56,6 +56,8 @@ def test_sessions_and_error_redaction(client, monkeypatch):
     assert other["session_id"] != first["session_id"]
     error = client.post("/api/banking/chat", json={"message": "fail"})
     assert error.status_code == 502
+    assert error.json()["trace"] == []
+    assert error.json()["duration_ms"] >= 0
     assert "SECRET" not in error.text
     assert client.post("/api/banking/chat", json={"message": "hi", "session_id": "00000000-0000-0000-0000-000000000000"}).status_code == 404
 

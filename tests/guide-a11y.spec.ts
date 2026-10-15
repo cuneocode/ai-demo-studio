@@ -4,7 +4,7 @@ import { mockStudio, openLibrary } from "./guide-helpers";
 test("the card is a labelled dialog, announces each step, and starts with focus on its title", async ({ page }) => {
   await mockStudio(page);
   await openLibrary(page);
-  await page.getByRole("button", { name: "Guided tour: Card fraud triage" }).click();
+  await page.getByRole("button", { name: "Guided overview: Card fraud triage" }).click();
   const card = page.getByRole("dialog");
   await expect(card).toHaveAttribute("data-guide-ready", "true");
   await expect(card).toHaveAttribute("aria-modal", "false");
@@ -46,6 +46,7 @@ test("the act step's control can be reached and used by keyboard", async ({ page
   await page.goto("/?guide=brahe-bank&step=banking.ask");
   const card = page.getByRole("dialog");
   const replay = card.getByRole("button", { name: "Replay the recorded question" });
+  await card.getByText("Fallback: recorded run", { exact: true }).click();
   await expect(replay).toBeVisible();
   await replay.focus();
   await page.keyboard.press("Enter");

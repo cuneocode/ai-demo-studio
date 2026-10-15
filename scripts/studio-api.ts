@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { send } from "./studio-http.ts";
 import { handleModels } from "./studio-models-api.ts";
 import { handleSettings } from "./studio-settings-api.ts";
+import { reviewedRecording } from "./recording-review.ts";
 import { handleStatus } from "./studio-status-api.ts";
 
 export { startMissing, stopAll } from "./studio-services.ts";
@@ -19,10 +20,24 @@ const ROUTES = {
   "/api/studio/status": (request: IncomingMessage, response: ServerResponse) => handleStatus(request, response),
 } as const;
 
-// Committed recordings the studio serves itself, for a service whose own history goes away
-// when it stops (the interbank lab keeps runs only while its containers run). Read-only;
-// same list shape and name rule as services/common/runs.py.
-const RECORDINGS: Record<string, URL> = { interbank: new URL("../services/interbank/recorded/", import.meta.url) };
+// Serve committed recordings without requiring the corresponding live services.
+// Read-only; same list shape and name rule as services/common/runs.py.
+const RECORDINGS: Record<string, URL> = Object.fromEntries(
+  ["banking", "fraud", "briefing", "wealth", "sar", "interbank"].map((id) => [id,
+    new URL(`../services/${id}/${id === "interbank" ? "" : "data/"}recorded/`, import.meta.url)]),
+);
+// Only committed demo data is exposed. Never proxy arbitrary paths into the filesystem.
+const EXAMPLES: Record<string, string> = {
+  "/api/studio/examples/fraud/scenarios": "../services/fraud/data/scenarios.json",
+  "/api/studio/examples/fraud/cases": "../services/fraud/data/cases.json",
+  "/api/studio/examples/wealth/households": "../fixtures/studio/wealth-households.json",
+  "/api/studio/examples/sar/scenarios": "../fixtures/studio/sar-scenarios.json",
+};
+async function handleExample(request: IncomingMessage, response: ServerResponse, path: string) {
+  if (request.method !== "GET") return send(response, 405, { error: "Method not allowed." });
+  const value = JSON.parse(await readFile(new URL(EXAMPLES[path], import.meta.url), "utf8"));
+  return send(response, 200, path.endsWith("/cases") ? { cases: value, synthetic: true } : value);
+}
 const RECORDING = /^[a-z0-9][a-z0-9-]{1,80}$/;
 const RECORDINGS_PATH = /^\/api\/studio\/recordings\/([a-z]+)(?:\/([^/]+))?$/;
 
@@ -60,14 +75,18 @@ async function handleRecordings(request: IncomingMessage, response: ServerRespon
   if (!directory) return send(response, 404, { error: "No recordings for that service." });
   if (name === undefined) return send(response, 200, { recordings: await recordingMetas(directory) });
   const doc = RECORDING.test(name) ? await readRecording(directory, name) : null;
-  return doc ? send(response, 200, doc) : send(response, 404, { error: "Unknown recording." });
+  return doc ? send(response, 200, reviewedRecording(service, name, doc)) : send(response, 404, { error: "Unknown recording." });
 }
 
 /** Handles the request when it targets the studio API; returns false otherwise. */
 export function handleStudioApi(request: IncomingMessage, response: ServerResponse): boolean {
   const path = request.url?.split("?")[0] ?? "";
+  if (process.env.STUDIO_PREVIEW === "1" && /^\/api\/(banking|fraud|briefing|wealth|sar|interbank)(?:\/|$)/.test(path)) {
+    send(response, 503, { detail: "Recorded preview: live execution is disabled. Start npm run dev:studio for live services." });
+    return true;
+  }
   const recordings = RECORDINGS_PATH.exec(path);
-  const route = recordings
+  const route = EXAMPLES[path] ? (req: IncomingMessage, res: ServerResponse) => handleExample(req, res, path) : recordings
     ? (req: IncomingMessage, res: ServerResponse) => handleRecordings(req, res, recordings[1], recordings[2])
     : ROUTES[path as keyof typeof ROUTES];
   if (!route) return false;

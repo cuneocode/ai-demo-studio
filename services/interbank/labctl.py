@@ -258,6 +258,16 @@ def run_tool(module: str, *args: str) -> None:
 
 
 def up(_: argparse.Namespace) -> None:
+    # Check the engine before generating credentials or trying a build.
+    try:
+        engine = subprocess.run(["docker", "info", "--format", "{{.ServerVersion}}"],
+                                cwd=ROOT, capture_output=True, text=True, timeout=15)
+    except FileNotFoundError:
+        raise SystemExit("Docker is not installed. Install Docker Desktop, start it, then select Start lab again.") from None
+    except subprocess.TimeoutExpired:
+        raise SystemExit("Docker is not responding. Open Docker Desktop and wait for the engine to be ready, then select Start lab again.") from None
+    if engine.returncode:
+        raise SystemExit("Docker is not ready. Open Docker Desktop (or start your Docker engine), wait until it is running, then select Start lab again. No lab changes were made.")
     RUNTIME.mkdir(mode=0o700, exist_ok=True)
     STUDIO.mkdir(mode=0o700, exist_ok=True)
     for folder in ("runs", "telemetry/bank-a", "telemetry/bank-b"):

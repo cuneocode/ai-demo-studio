@@ -179,7 +179,7 @@ async def agent_model(use_case: str, *, max_tokens: int = 3000, call_label: str 
     return model, selection, record
 
 
-async def structured(use_case: str, schema, messages: list, config: dict):
+async def structured(use_case: str, schema, messages: list, config: dict, *, max_tokens: int | None = None):
     """Structured output from the chain's first healthy backend, with one failover retry."""
     selection = await apick(use_case)
 
@@ -205,7 +205,7 @@ async def structured(use_case: str, schema, messages: list, config: dict):
         usage = model_usage.get()
         before = (usage.input_tokens, usage.output_tokens) if usage else (0, 0)
         started = time.monotonic()
-        model = chat_model(use_case, current, enforce=decision["force_enforce"])
+        model = chat_model(use_case, current, enforce=decision["force_enforce"], **({"max_tokens": max_tokens} if max_tokens else {}))
         try:
             result = await model.with_structured_output(schema, method="json_mode").ainvoke(messages, config=config)
         except Exception as exc:

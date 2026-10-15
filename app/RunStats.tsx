@@ -123,6 +123,7 @@ export function servedByFrom(raw: unknown): ServedBy | undefined {
 export function runProvenance(run: ObservedRun): Provenance | null {
   if (run.provenance === "recorded") return { kind: "recorded", recordedAt: run.recordedAt ?? "", servedBy: run.servedBy };
   if (run.provenance === "sample") return { kind: "sample" };
+  if (run.llmCalls === 0 && run.status !== "running") return { kind: "none", detail: "No model call made" };
   return run.servedBy ? { kind: "live", servedBy: run.servedBy } : null;
 }
 

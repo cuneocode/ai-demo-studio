@@ -367,3 +367,29 @@ def test_health_reports_agent_controls_and_model_card(client):
     assert health["galileo"] == health["splunk"]["galileo"]
     scenarios = client.get("/api/fraud/scenarios").json()
     assert scenarios["synthetic"] is True and len(scenarios["scenarios"]) >= 6
+
+
+def test_agent_startup_failure_does_not_invent_a_model_call(client, monkeypatch):
+    from types import SimpleNamespace
+
+    selection = SimpleNamespace(
+        backend=SimpleNamespace(label="Test model", external=False),
+        served_by=lambda: {"backend": "test", "model": "test"},
+    )
+
+    async def fails_before_request(*args, **kwargs):
+        raise RuntimeError("Agent initialization failed before a model request")
+
+    monkeypatch.setattr(triage, "agent_mode", lambda: "auto")
+    monkeypatch.setattr(triage, "pick", lambda _: selection)
+    monkeypatch.setattr(triage, "egress_decision", lambda *args: {"allowed": True})
+    monkeypatch.setattr(triage, "call_with_failover", fails_before_request)
+    run_id = client.post("/api/fraud/runs", json={"scenario": "cpp-orbit", "input": {}}).json()["run_id"]
+    events = wait_for(client, run_id, "hitl.request")
+    assert not any(event["kind"] == "llm.call" for event in events)
+    assert any(event["kind"] == "run" and event["status"] == "error"
+               and "scripted investigation instead" in event["title"] for event in events)
+    assert any(event["kind"] == "agent.message" and event["data"].get("mode") == "scripted" for event in events)
+    client.post(f"/api/fraud/runs/{run_id}/decision",
+                json={"request_id": "disposition", "decision": "contact_customer", "by": "Maya (analyst)"})
+    wait_for(client, run_id, "result")

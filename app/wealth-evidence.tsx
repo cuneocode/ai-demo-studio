@@ -12,6 +12,7 @@ const NEUTRAL = new Set(["agenda", "question"]);
 function chipText(claim: Claim, item?: EvidenceItem) {
   const title = item?.title.replace(/^10-K FY\d+ · /, "10-K · ").replace(/ \(book of record\)$/, "") ?? claim.evidenceId ?? "Source";
   const field = claim.fieldPath ? item?.fields[claim.fieldPath] : undefined;
+  if (item?.title === claim.text || (item?.title && claim.text.includes(item.title))) return "View source";
   if (field) return `${title} · ${field.label || claim.fieldPath} ${field.display}`;
   return claim.quote ? `${title} · quoted` : title;
 }
@@ -45,6 +46,13 @@ export function PolicyList({ title, result }: { title: string; result?: PolicyRe
   );
 }
 
+/** Display-only vocabulary changes; original evidence and verification stay untouched. */
+function plainLanguage(text: string) {
+  return text.replace(/house[- ]view/gi, "investment outlook").replace(/\bEPS\b/g, "profit per share")
+    .replace(/\bconsensus\b/gi, "analyst forecasts").replace(/\bhousehold’s\b/g, "client’s")
+    .replace(/\bhousehold\b/gi, "client portfolio");
+}
+
 /** One checked sentence: ✓ verified, ✗ struck with the reason, or a neutral agenda line / question. */
 export function ClaimRow({ claim, item, onCite, focus }: { claim: Claim; item?: EvidenceItem; onCite: (focus: Focus) => void; focus: Focus }) {
   const neutral = NEUTRAL.has(claim.status);
@@ -56,7 +64,7 @@ export function ClaimRow({ claim, item, onCite, focus }: { claim: Claim; item?: 
         {neutral ? <Minus size={14} /> : kept ? <Check size={14} /> : <X size={14} />}
       </span>
       <div>
-        <p>{kept ? claim.text : <s>{claim.text}</s>}</p>
+        <p>{kept ? plainLanguage(claim.text) : <s>{plainLanguage(claim.text)}</s>}</p>
         {claim.evidenceId && (
           <button type="button" className={`rx-cite ${active ? "is-active" : ""}`} aria-pressed={active}
             onClick={() => onCite(active ? null : { id: claim.evidenceId!, field: claim.fieldPath, quote: claim.quote })}>
@@ -72,7 +80,12 @@ export function ClaimRow({ claim, item, onCite, focus }: { claim: Claim; item?: 
 export function EvidenceCard({ item, focus }: { item: EvidenceItem; focus: Focus }) {
   const ref = useRef<HTMLElement>(null);
   const cited = focus?.id === item.id;
-  useEffect(() => { if (cited) ref.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [cited]);
+  useEffect(() => {
+    if (!cited || !ref.current) return;
+    let parent = ref.current.parentElement;
+    while (parent) { if (parent instanceof HTMLDetailsElement) parent.open = true; parent = parent.parentElement; }
+    ref.current.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [cited]);
   const fields = Object.entries(item.fields).slice(0, cited ? 24 : 8);
   const text = cited || item.text.length < 260 ? item.text : `${item.text.slice(0, 240).trimEnd()}…`;
   return (

@@ -57,7 +57,7 @@ export const briefingTour: Tour = {
     {
       id: "briefing.stats", kind: "observe", targets: ["stats"],
       title: "Measured from the run",
-      body: "A replay makes no model calls now, so the stats show zero, and the note gives the original run's count.",
+      body: "Live extracts report the calls made now. A replay shows historical counts from its original run, clearly labelled, and creates no new calls or traces.",
       ciscoFit: [{
         product: "Splunk Agent Observability",
         how: "Each live extract is one agent trace with tool spans. A replay sends no new trace.",

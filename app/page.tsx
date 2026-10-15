@@ -10,7 +10,8 @@ import ClientAdvisory from "./ClientAdvisory";
 import SarInvestigation from "./SarInvestigation";
 import InterbankDemo from "./InterbankDemo";
 import ArchitectureMap from "./ArchitectureMap";
-import StudioSettings, { ModelChip } from "./StudioSettings";
+import StudioSettings from "./StudioSettings";
+import InferenceIndicator from "./InferenceIndicator";
 import { ControlsPage, HelpDrawer, PresenterBar, ServiceBell, TelemetryPage } from "./StudioShell";
 import { presenterNotes } from "./presenter-notes";
 import { momentReady, platformSummary, presenterStatus, useStudioStatus, type StudioStatus, type Tone } from "./studio-status";
@@ -82,7 +83,7 @@ type UseCase = {
   accent: "blue" | "violet" | "mint" | "amber";
   solutions: string[];
   signal: string;
-  stage: string;
+  stage: "Interactive" | "In development" | "Planned";
 };
 
 type UseCaseFrame = {
@@ -130,7 +131,7 @@ const useCases: UseCase[] = [
     accent: "mint",
     solutions: ["AI Infrastructure", "Splunk Observability", "AI Defense"],
     signal: "Graph model + triage agent",
-    stage: "Interactive",
+    stage: "In development",
   },
   {
     id: "company-briefing",
@@ -142,31 +143,31 @@ const useCases: UseCase[] = [
     accent: "violet",
     solutions: ["AI Defense", "Splunk Observability", "AI Infrastructure"],
     signal: "Filing extract",
-    stage: "Interactive",
+    stage: "In development",
   },
   {
     id: "market-research",
-    title: "Market event → house-view update",
+    title: "Market research",
     category: "Wealth & advisory",
-    description: "An earnings event lands on a covered name: a research Deep Agent drafts what changed, every claim is verified, and the strategist publishes.",
-    outcome: "Hours of desk research become a verified, policy-checked update.",
+    description: "Review earnings, recent news and competitors. Get a cited outlook and Buy, Hold or Sell recommendation.",
+    outcome: "See the facts behind the recommendation and the article AI Defense excluded.",
     icon: Landmark,
     accent: "blue",
     solutions: ["AI Defense", "Splunk Observability"],
-    signal: "Research Deep Agent · verified claims · Agent Control",
-    stage: "Interactive",
+    signal: "Market analysis · screened news · cited drivers",
+    stage: "In development",
   },
   {
     id: "client-advisory",
     title: "Advisor meeting prep",
     category: "Wealth & advisory",
-    description: "Profile against portfolio, ranked next-best actions in dollars, and a checked one-page brief a supervisor approves.",
-    outcome: "Meeting-ready in minutes, with client data protected and Reg BI care documented.",
+    description: "AI reviews a client’s investments and notes, flags concerns, and prepares a meeting brief for human approval.",
+    outcome: "A clear meeting agenda and proposed actions, with people in control.",
     icon: WalletCards,
     accent: "amber",
     solutions: ["AI Defense", "Splunk Observability", "AI Infrastructure"],
     signal: "Meeting-prep Deep Agent · AI Defense on client data",
-    stage: "Interactive",
+    stage: "In development",
   },
   {
     id: "kyc-processing",
@@ -178,7 +179,7 @@ const useCases: UseCase[] = [
     accent: "blue",
     solutions: ["AI Defense", "AI Infrastructure"],
     signal: "Document intake",
-    stage: "Prototype",
+    stage: "Planned",
   },
   {
     id: "sar-support",
@@ -190,7 +191,7 @@ const useCases: UseCase[] = [
     accent: "violet",
     solutions: ["AI Defense", "Splunk Observability", "AI Infrastructure"],
     signal: "Investigation agent + cited narrative",
-    stage: "Interactive",
+    stage: "In development",
   },
   {
     id: "transaction-llm",
@@ -202,7 +203,7 @@ const useCases: UseCase[] = [
     accent: "violet",
     solutions: ["AI Infrastructure", "Splunk Observability"],
     signal: "Data enrichment",
-    stage: "Concept",
+    stage: "Planned",
   },
   {
     id: "interbank-a2a",
@@ -278,7 +279,7 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
     workbenchLabel: "Next case",
     workbenchTitle: "Chuck Robbins (fictional demo profile)",
     workbenchSummary: "Chuck Robbins is Cisco’s Chair and CEO. This hypothetical banking profile uses sample screening results and a Medium risk rating; neither describes a real assessment. KYC is an illustrative prototype. The next demo shows a separate hypothetical card incident, not an outcome of this review.",
-    evidence: ["Sanctions clear", "Section 16 officer · HCYN", "Risk rating: Medium"],
+    evidence: ["Sanctions clear", "Cisco Chair and CEO", "Risk rating: Medium"],
     primaryAction: "Review next case",
   },
   "sar-support": {
@@ -336,7 +337,7 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
   "client-advisory": {
     liveExperience: "advisory",
     transformation: {
-      friction: "Advisors rebuild each client's picture by hand: profile, holdings, CRM notes, the latest house view, and what is suitable.",
+      friction: "Advisors rebuild each client's picture by hand: profile, holdings, CRM notes, the latest investment outlook, and what is suitable.",
       aiShift: "Code rules compare profile and portfolio and size the actions; a meeting-prep Deep Agent drafts a brief whose every statement is checked.",
       humanControl: "The advisor submits and a supervisor approves under advisory.recommendation policies. Nothing is executed.",
     },
@@ -355,35 +356,35 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
     },
     metrics: [], rows: [], evidence: [],
     workbenchLabel: "Meeting prep",
-    workbenchTitle: "Household, actions, and a checked brief",
-    workbenchSummary: "Pick a household, prepare the meeting, then submit for supervisor approval.",
+    workbenchTitle: "Prepare for a client meeting",
+    workbenchSummary: "Choose a client, review the AI brief, and select actions for supervisor approval.",
     primaryAction: "Prepare meeting",
   },
   "market-research": {
     liveExperience: "research",
     transformation: {
-      friction: "After an earnings print, strategists reread the filing, the event, and the house view before they can tell advisors what changed.",
-      aiShift: "A research Deep Agent with fundamentals, valuation, macro, and compliance subagents drafts a cited update; code verifies every claim.",
-      humanControl: "The AI never sets a rating. The strategist publishes under research.publish policies; restricted issuers stop before any call.",
+      friction: "Researchers assemble earnings, market data, news and peer comparisons before forming a view.",
+      aiShift: "A model weighs screened sources and drafts a concise outlook with cited supporting facts.",
+      humanControl: "The user reviews an analytical Buy, Hold or Sell opinion. No trade or distribution is performed.",
     },
     architecture: {
       process: [
-        { title: "Earnings event lands", detail: "House view on file · restricted-list pre-check" },
-        { title: "Research Deep Agent", detail: "Filing, event, news, valuation, and calc tools" },
-        { title: "Verify every claim", detail: "Field values and quotes · struck claims shown" },
-        { title: "Strategist publishes", detail: "research.publish policies · then advisor handoff" },
+        { title: "Load company", detail: "Cached NVDA packet or live Yahoo data for another ticker" },
+        { title: "Screen articles", detail: "AI Defense inspects each article; excluded text never reaches analysis" },
+        { title: "Assess the evidence", detail: "Structured outlook, recommendation, key facts and risks" },
+        { title: "Verify & review", detail: "Check cited fields and quotes before releasing the recommendation" },
       ],
       ai: [
-        { point: "01 → 02", label: "Pre-check + screened news", detail: "Agent Control blocks a restricted issuer before any data or model call; AI Defense inspects news as tool results." },
-        { point: "02 → 03", label: "Deep Agent + subagents", detail: "Supervisor and subagents on the Studio model chain; every tool and model call streams to the timeline, and to Splunk when OTLP export is configured." },
-        { point: "03 → 04", label: "Claim verifier + publish gate", detail: "Unit-aware checks against the cited field or quote; no ratings or targets; the strategist decides." },
+        { point: "01 → 02", label: "Fixed input packet", detail: "The displayed articles and figures are the exact inputs for the run. A synthetic poisoned article accompanies every ticker." },
+        { point: "02 → 03", label: "AI Defense", detail: "Inspects untrusted article text. Blocked articles and articles without an inspection verdict are excluded." },
+        { point: "03 → 04", label: "Cited assessment", detail: "Model usage, tool calls and inspection verdicts are instrumented. Supporting facts are verified against the packet." },
       ],
     },
     metrics: [], rows: [], evidence: [],
-    workbenchLabel: "House-view update",
-    workbenchTitle: "Earnings event to a published update",
-    workbenchSummary: "Run a scenario, check each claim against its evidence, then publish to meeting prep (simulated distribution).",
-    primaryAction: "Run the scenario",
+    workbenchLabel: "Market research",
+    workbenchTitle: "Company evidence to an investment outlook",
+    workbenchSummary: "Load a ticker, inspect the inputs, and review the recommendation and its supporting facts.",
+    primaryAction: "Analyze",
   },
   "transaction-llm": {
     transformation: {
@@ -418,7 +419,7 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
     workbenchTitle: "TXN-88421",
     workbenchSummary: "The payment narrative references a supplier name that does not resolve to the beneficiary record.",
     evidence: ["Payment message", "Entity graph", "Account history"],
-    primaryAction: "Investigate exception",
+    primaryAction: "Review example",
   },
   "company-briefing": {
     liveExperience: "briefing",
@@ -517,27 +518,13 @@ const solutionOf = (name: string): Solution | null =>
 
 type LiveExperience = NonNullable<UseCaseFrame["liveExperience"]>;
 
-const LIVE_SUBJECT: Record<LiveExperience, string> = {
-  banking: "fictional bank",
-  fraud: "graph model + triage agent",
-  briefing: "EDGAR + upload",
-  research: "Yahoo + FRED · committed snapshots",
-  advisory: "synthetic households + shared context",
-  interbank: "two Deep Agents",
-  sar: "synthetic cases · cited narrative",
-};
-
-/** Demos that can replay a recorded run when their service or model is down. */
-const HAS_RECORDED_RUNS = new Set<LiveExperience>(["fraud", "research", "advisory", "sar"]);
-
-/** The header chip: "Live" only when the studio status says this use case's service is up and ready. */
+/** Catalog maturity is independent of live-service readiness and replay availability. */
 function liveExperienceStatus(useCaseId: string, experience: UseCaseFrame["liveExperience"], status: StudioStatus | null): { label: string; tone: Tone; title: string } {
-  if (!experience) return { label: "Illustrative prototype · no live service", tone: "amber", title: "Illustrative frontend and data; nothing on this page is measured" };
-  if (!status) return { label: "Checking live service", tone: "blue", title: "Studio status unavailable" };
+  const stage = useCases.find((item) => item.id === useCaseId)?.stage;
+  if (stage === "In development") return { label: stage, tone: "amber", title: "Experience in development; available for review and feedback" };
+  if (stage === "Planned" || !experience) return { label: "Planned", tone: "amber", title: "Planned experience; illustrative example only, with no live service or measured results" };
   const { ready, reason } = momentReady(status, useCaseId, true);
-  if (ready) return { label: `Live · ${LIVE_SUBJECT[experience]}`, tone: "mint", title: reason };
-  const state = reason.startsWith("Needs ") ? "Setup needed" : "Offline";
-  return { label: HAS_RECORDED_RUNS.has(experience) ? `${state} · recorded runs available` : state, tone: "amber", title: reason };
+  return { label: ready ? "Ready" : "Live unavailable", tone: ready ? "mint" : "blue", title: `${reason}. Recorded fallback available.` };
 }
 
 /** Each demo's section and the control its header CTA should focus. */
@@ -590,19 +577,20 @@ function StatusDot({ tone = "mint" }: { tone?: "mint" | "blue" | "violet" | "amb
   return <span className={`status-dot ${tone}`} aria-hidden="true" />;
 }
 
-function UseCaseCard({ useCase, onOpen }: { useCase: UseCase; onOpen: (item: UseCase) => void }) {
+function UseCaseCard({ useCase, onOpen, status }: { status: StudioStatus | null; useCase: UseCase; onOpen: (item: UseCase) => void }) {
   const Icon = useCase.icon;
-  const inDevelopment = !useCaseFrames[useCase.id]?.liveExperience;
+  const developmentStage = useCase.stage === "Interactive" ? null : useCase.stage;
+  const availability = liveExperienceStatus(useCase.id, useCaseFrames[useCase.id]?.liveExperience, status);
   const guide = useGuideControls();
   const tour = mainTourFor(useCase.id);
 
   return (
     <div className="use-case-card-wrap">
     <article
-      className={`use-case-card accent-${useCase.accent}${inDevelopment ? " in-development" : ""}`}
+      className={`use-case-card accent-${useCase.accent}${developmentStage ? " in-development" : ""}`}
       role="button"
       tabIndex={0}
-      aria-label={`Open ${useCase.title} experience${inDevelopment ? ", in development" : ""}`}
+      aria-label={`Open ${useCase.title} experience${developmentStage ? `, ${developmentStage.toLowerCase()}` : ""}`}
       onClick={() => onOpen(useCase)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -613,7 +601,7 @@ function UseCaseCard({ useCase, onOpen }: { useCase: UseCase; onOpen: (item: Use
     >
       <div className="card-topline">
         <span className="category-label">{useCase.category}</span>
-        <span className="stage-label"><StatusDot tone={inDevelopment ? "amber" : "mint"} />{useCase.stage}</span>
+        <span className="stage-label" title={availability.title}><StatusDot tone={availability.tone} />{availability.label}</span>
       </div>
       <div className="use-case-heading">
         <span className="use-case-icon"><Icon size={21} strokeWidth={1.8} /></span>
@@ -631,11 +619,11 @@ function UseCaseCard({ useCase, onOpen }: { useCase: UseCase; onOpen: (item: Use
         {useCase.solutions.map((solution) => <span key={solution}>{solution}</span>)}
       </div>
       <div className="card-action">Explore AI experience <ArrowRight size={16} /></div>
-      {inDevelopment && <div className="card-dev-overlay"><span>In development</span></div>}
+      {developmentStage && <div className="card-dev-overlay"><span>{developmentStage}</span></div>}
     </article>
     {tour && guide ? (
-      <button type="button" className="card-guide" aria-label={`Guided tour: ${useCase.title}`} {...guideAnchor(`library.guide.${useCase.id}`)} onClick={() => guide.start(tour.id)}>
-        <Compass size={14} aria-hidden="true" /> Guided tour
+      <button type="button" className="card-guide" aria-label={`Guided overview: ${useCase.title}`} {...guideAnchor(`library.guide.${useCase.id}`)} onClick={() => guide.start(tour.id, { cut: true })}>
+        <Compass size={14} aria-hidden="true" /> Guided overview
       </button>
     ) : null}
     </div>
@@ -751,7 +739,6 @@ function UseCaseWorkspace({
   onResearchNoteChange,
   advisoryBrief,
   onAdvisoryBriefChange,
-  onOpenModels,
   status,
 }: {
   useCase: UseCase;
@@ -764,7 +751,6 @@ function UseCaseWorkspace({
   onResearchNoteChange: (note: StoredResearchNote | null) => void;
   advisoryBrief: StoredAdvisoryBrief | null;
   onAdvisoryBriefChange: (brief: StoredAdvisoryBrief | null) => void;
-  onOpenModels: () => void;
   status: StudioStatus | null;
 }) {
   const frame = useCaseFrames[useCase.id];
@@ -819,7 +805,12 @@ function UseCaseWorkspace({
   };
   useGuideHost(useCase.id, tab, (next) => selectTab(next));
   const startPrimaryAction = () => {
-    const run = () => (frame.liveExperience ? focusLiveExperience(frame.liveExperience) : scrollTo("illustrative-experience"));
+    const run = () => {
+      const replay = document.querySelector<HTMLElement>("#case-panel-demo [data-demo-replay]");
+      if (replay) { replay.scrollIntoView({ behavior: "smooth", block: "center" }); replay.focus({ preventScroll: true }); replay.click(); }
+      else if (frame.liveExperience) focusLiveExperience(frame.liveExperience);
+      else scrollTo("illustrative-experience");
+    };
     if (tab === "demo") { run(); return; }
     selectTab("demo");
     requestAnimationFrame(run);
@@ -840,9 +831,8 @@ function UseCaseWorkspace({
         </div>
         <div className="heading-actions">
           <span className="prototype-chip live-status-chip" title={liveStatus.title} {...guideAnchor("case.status")}><StatusDot tone={liveStatus.tone} /> {liveStatus.label}</span>
-          <ModelChip experience={frame.liveExperience} onOpen={onOpenModels} />
           <button className="secondary-button" onClick={onAdd}>{inStory ? <><Check size={16} /> In story</> : <><Plus size={16} /> Add to story</>}</button>
-          <button className="primary-button" onClick={startPrimaryAction}>{frame.primaryAction} <ArrowRight size={16} /></button>
+          {!frame.liveExperience && <button className="primary-button" onClick={startPrimaryAction}>Review example <ArrowRight size={16} /></button>}
         </div>
       </header>
 
@@ -870,25 +860,25 @@ function UseCaseWorkspace({
 
       <div className="case-tabpanel" id="case-panel-demo" role="tabpanel" aria-labelledby="case-tab-demo" hidden={tab !== "demo"}>
       {frame.liveExperience === "banking" ? <section id="banking-experience">
-        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Banking assistant</h2></div><span>Fictional products · mock score 550</span></div>
+        <p className="demo-provenance">Fictional products · mock score 550</p>
         <BankingDemo embedded inStory={inStory} onBack={onBack} onAdd={onAdd} />
       </section> : frame.liveExperience === "fraud" ? <section id="fraud-experience">
-        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Card fraud triage</h2></div><span>Graph model + triage agent · the analyst decides</span></div>
+        <p className="demo-provenance">Graph model + triage agent · the analyst decides</p>
         <FraudDemo embedded inStory={inStory} onBack={onBack} onAdd={onAdd} />
       </section> : frame.liveExperience === "briefing" ? <section id="briefing-experience">
-        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Company briefing</h2></div><span>EDGAR + upload only · accept before store</span></div>
+        <p className="demo-provenance">EDGAR + upload only · accept before store</p>
         <CompanyBriefing embedded inStory={inStory} onBack={onBack} onAdd={onAdd} profile={companyProfile} onProfileChange={onCompanyProfileChange} />
       </section> : frame.liveExperience === "research" ? <section id="research-experience">
-        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Market event → house-view update</h2></div><span>Fictional issuers · synthetic data · not investment advice</span></div>
+        <p className="demo-provenance">Public company data · one synthetic attack article</p>
         <MarketResearch embedded inStory={inStory} companyProfile={companyProfile} note={researchNote} onNoteChange={onResearchNoteChange} />
       </section> : frame.liveExperience === "advisory" ? <section id="advisory-experience">
-        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Advisor meeting prep</h2></div><span>Synthetic households · test PII only</span></div>
+        <p className="demo-provenance">Synthetic households · test PII only</p>
         <ClientAdvisory embedded inStory={inStory} companyProfile={companyProfile} researchNote={researchNote} brief={advisoryBrief} onBriefChange={onAdvisoryBriefChange} />
       </section> : frame.liveExperience === "sar" ? <section id="sar-experience">
-        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>SAR investigation</h2></div><span>Synthetic cases · simulated e-filing · the investigator and QA decide</span></div>
+        <p className="demo-provenance">Synthetic cases · simulated e-filing · the investigator and QA decide</p>
         <SarInvestigation embedded inStory={inStory} />
       </section> : frame.liveExperience === "interbank" ? <section id="interbank-experience">
-        <div className="experience-label"><div><span className="eyebrow">INTERACTIVE EXPERIENCE</span><h2>Agent-to-agent investigation</h2></div><span>Fictional banks · read-only agents · live Splunk trace</span></div>
+        <p className="demo-provenance">Fictional banks · read-only agents · recorded or live execution</p>
         <InterbankDemo embedded inStory={inStory} onBack={onBack} onAdd={onAdd} />
       </section> : null}
 
@@ -972,9 +962,10 @@ function CaseGuideActions({ caseId }: { caseId: string }) {
   return (
     <div className="case-guide-actions">
       {resumable > 0 ? <button type="button" className="case-guide-resume" onClick={() => guide.start(caseTour.id, { stepId: guide.saved?.stepId, resume: true })}>Resume at step {resumable + 1}</button> : null}
-      <button type="button" className="case-guide-button" {...guideAnchor("guide.launch")} aria-keyshortcuts="G" onClick={() => guide.start(caseTour.id)}>
-        <Compass size={16} aria-hidden="true" /> Guided tour
+      <button type="button" className="case-guide-button" {...guideAnchor("guide.launch")} aria-keyshortcuts="G" onClick={() => guide.start(caseTour.id, { cut: true })}>
+        <Compass size={16} aria-hidden="true" /> Guided overview
       </button>
+      <button type="button" className="case-guide-resume" onClick={() => guide.start(caseTour.id)}>Full walkthrough</button>
     </div>
   );
 }
@@ -1050,14 +1041,15 @@ export default function HomePage() {
 
   const filteredCases = useMemo(() => {
     const normalized = query.trim().toLowerCase();
+    const stageOrder: Record<UseCase["stage"], number> = { Interactive: 0, "In development": 1, Planned: 2 };
     return useCases.filter((item) => {
       const matchesFilter = filter === "All" || item.category === filter;
       const matchesQuery = !normalized || `${item.title} ${item.description} ${item.solutions.join(" ")}`.toLowerCase().includes(normalized);
-      const matchesLive = !liveOnly || Boolean(useCaseFrames[item.id]?.liveExperience);
+      const matchesLive = !liveOnly || (Boolean(useCaseFrames[item.id]?.liveExperience) && momentReady(status, item.id, true).ready);
       const matchesSolution = !solution || item.solutions.some((name) => solutionOf(name) === solution);
       return matchesFilter && matchesQuery && matchesLive && matchesSolution;
-    });
-  }, [filter, query, liveOnly, solution]);
+    }).sort((a, b) => stageOrder[a.stage] - stageOrder[b.stage]);
+  }, [filter, query, liveOnly, solution, status]);
 
   const switchView = useCallback((view: View) => {
     setSelectedCase(null);
@@ -1083,7 +1075,7 @@ export default function HomePage() {
 
   const story = storyItems.map((id) => useCases.find((candidate) => candidate.id === id)).filter((item): item is UseCase => Boolean(item));
   const storyStates = story.map((item) => momentReady(status, item.id, Boolean(useCaseFrames[item.id]?.liveExperience)));
-  const storyReady = story.length ? Math.round((storyStates.filter((state) => state.ready).length / story.length) * 100) : 0;
+  const storyReady = story.length ? Math.round((storyStates.filter((state, index) => state.ready && useCaseFrames[story[index].id]?.liveExperience).length / story.length) * 100) : 0;
 
   const present = (index: number) => {
     if (index < 0 || index >= story.length) return;
@@ -1154,7 +1146,7 @@ export default function HomePage() {
   useLayoutEffect(() => { openCaseRef.current = openCaseById; });
   const openUseCaseById = useCallback((id: string) => openCaseRef.current(id), []);
   const isPresenting = presenting !== null;
-  const studioNav = useMemo(() => ({ openSettings, links, openUseCase: openUseCaseById, presenting: isPresenting }), [openSettings, links, openUseCaseById, isPresenting]);
+  const studioNav = useMemo(() => ({ openSettings, links, openUseCase: openUseCaseById, presenting: isPresenting, preview: status?.mode === "preview" }), [openSettings, links, openUseCaseById, isPresenting, status?.mode]);
 
   return (
     <StudioNavContext.Provider value={studioNav}>
@@ -1186,7 +1178,7 @@ export default function HomePage() {
           <button className={!selectedCase && activeView === "telemetry" ? "active" : ""} aria-current={!selectedCase && activeView === "telemetry" ? "page" : undefined} aria-label="Telemetry" onClick={() => switchView("telemetry")}><Activity size={17} /><span>Telemetry</span></button>
         </nav>
         <div className="top-actions">
-          <span className="demo-mode"><StatusDot /> Demo mode</span>
+          <InferenceIndicator useCaseId={selectedCase ? (useCaseFrames[selectedCase.id]?.liveExperience ? selectedCase.id : "prototype") : activeView === "briefing" ? "company-briefing" : undefined} preview={status?.mode === "preview"} onOpen={() => openSettings("st-models")} />
           <button aria-label={theme === "light" ? "Switch to dark theme" : "Switch to light theme"} title={theme === "light" ? "Dark theme" : "Light theme"} onClick={() => setTheme(theme === "light" ? "dark" : "light")}>{theme === "light" ? <Moon size={18} /> : <Sun size={18} />}</button>
           <button aria-label="Help: run this demo" onClick={() => setHelpOpen(true)}><CircleHelp size={18} /></button>
           <ServiceBell status={status} onOpenSettings={() => openSettings("st-services")} />
@@ -1238,7 +1230,6 @@ export default function HomePage() {
               onResearchNoteChange={setResearchNote}
               advisoryBrief={advisoryBrief}
               onAdvisoryBriefChange={setAdvisoryBrief}
-              onOpenModels={() => switchView("settings")}
               status={status}
             />
           )}
@@ -1270,7 +1261,7 @@ export default function HomePage() {
                 </div>
                 <div className="heading-actions">
                   <button className="secondary-button" onClick={() => switchView("library")}><Library size={17} /> Browse use cases</button>
-                  <button className="primary-button" onClick={() => switchView("stories")}><Play size={16} fill="currentColor" /> Start guided story</button>
+                  <button className="primary-button" onClick={() => guideControl?.start(LIFECYCLE_TOUR_ID, { cut: true })}><Play size={16} fill="currentColor" /> Start guided story</button>
                 </div>
               </div>
 
@@ -1279,10 +1270,10 @@ export default function HomePage() {
                   <span className="eyebrow"><Sparkles size={13} /> FEATURED DEMO NARRATIVE</span>
                   <h2>Client lifecycle</h2>
                   <DemoCustomerContext />
-                  <p>Chuck Robbins, Cisco’s Chair and CEO, is the example customer in this hypothetical banking scenario. Follow an illustrative KYC review, recorded card protection, an investigation of a separate account holder, and a sample advisor review. Each module also works alone.</p>
+                  <p>Follow an illustrative KYC review, then run live fraud triage, investigate a separate account holder, and prepare an advisor review. Labelled recordings are fallback options. Each module also works alone.</p>
                   <div className="hero-meta">
                     <span><Workflow size={15} /> 4 connected moments</span>
-                    <span><CircleGauge size={15} /> 18–22 minutes</span>
+                    <span><CircleGauge size={15} /> Short overview + full walkthrough</span>
                     <span><Eye size={15} /> Executive + technical views</span>
                   </div>
                 </div>
@@ -1306,7 +1297,7 @@ export default function HomePage() {
                     <button className="text-button" onClick={() => switchView("library")}>View all {useCases.length} <ArrowRight size={15} /></button>
                   </div>
                   <div className="use-case-grid">
-                    {useCases.map((item) => <UseCaseCard key={item.id} useCase={item} onOpen={openUseCase} />)}
+                    {useCases.map((item) => <UseCaseCard status={status} key={item.id} useCase={item} onOpen={openUseCase} />)}
                   </div>
                 </section>
                 <PlatformRail />
@@ -1332,7 +1323,7 @@ export default function HomePage() {
                   ))}
                 </div>
                 <div className="library-extra">
-                  <button aria-pressed={liveOnly} onClick={() => setLiveOnly(!liveOnly)}>Live only</button>
+                  <button aria-pressed={liveOnly} onClick={() => setLiveOnly(!liveOnly)}>Live ready</button>
                   <select aria-label="Cisco solution" value={solution} onChange={(event) => setSolution(event.target.value as Solution | "")}>
                     <option value="">All Cisco solutions</option>
                     {SOLUTIONS.map((name) => <option key={name} value={name}>{name}</option>)}
@@ -1341,7 +1332,7 @@ export default function HomePage() {
               </section>
               <div className="library-summary"><span><strong>{filteredCases.length}</strong> use cases</span><span>Modular and searchable</span></div>
               <section className="library-grid">
-                {filteredCases.map((item) => <UseCaseCard key={item.id} useCase={item} onOpen={openUseCase} />)}
+                {filteredCases.map((item) => <UseCaseCard status={status} key={item.id} useCase={item} onOpen={openUseCase} />)}
                 {filteredCases.length === 0 && <div className="empty-state"><Search size={26} /><h2>No matching use cases</h2><p>Try a broader search or reset the category filter.</p><button className="secondary-button" onClick={() => { setQuery(""); setFilter("All"); setLiveOnly(false); setSolution(""); }}>Reset filters</button></div>}
               </section>
             </>
@@ -1365,7 +1356,7 @@ export default function HomePage() {
                 <div className="story-builder-top">
                   <div><span className="eyebrow">GUIDED STORY 01</span><h2>Client lifecycle</h2>
                   <DemoCustomerContext /><p>From onboarding to personalized advice.</p></div>
-                  <div className="story-score" title={storyStates.filter((state) => !state.ready).map((state) => state.reason).join("; ") || "Every moment is ready"}><span>Demo readiness</span><strong>{storyReady}%</strong><div><i style={{ width: `${storyReady}%` }} /></div><small>{storyStates.filter((state) => state.ready).length} of {story.length} moments ready</small></div>
+                  <div className="story-score" title={storyStates.filter((state) => !state.ready).map((state) => state.reason).join("; ") || "Every moment is ready"}><span>Live service readiness</span><strong>{storyReady}%</strong><div><i style={{ width: `${storyReady}%` }} /></div><small>{storyStates.filter((state, index) => state.ready && useCaseFrames[story[index].id]?.liveExperience).length} of {story.length} moments live-ready · recordings and prototypes remain available</small></div>
                 </div>
                 <StoryMap />
                 <div className="story-builder-bottom">

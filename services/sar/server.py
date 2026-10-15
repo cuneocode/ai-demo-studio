@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field
 
 load_dotenv(Path(os.getenv("SAR_ENV_FILE", Path(__file__).resolve().parents[2] / ".env")))
 
-from casefile import card, media, scenarios  # noqa: E402
+from casefile import CaseFile, TYPE_LABEL, card, media, scenario, scenarios  # noqa: E402
 from controls import controls  # noqa: E402
 from investigation import SIMULATED, start  # noqa: E402
 from model import health as model_health, reachable  # noqa: E402
@@ -90,6 +90,27 @@ async def health():
 @app.get("/api/sar/scenarios")
 async def list_scenarios():
     return {"scenarios": [card(item) for item in scenarios()], "media_source": media()["source"]}
+
+
+@app.get("/api/sar/scenarios/{scenario_id}/inputs")
+async def case_inputs(scenario_id: str):
+    """Expose the same minimized source records the investigation loads, before any run."""
+    item = scenario(scenario_id)
+    if not item:
+        raise HTTPException(404, "Case not found")
+    cf = CaseFile(item)
+    counterparties = {row["id"]: row["name"] for row in cf.case.get("counterparties", [])}
+    raw_kinds = {"alert", "referral", "kyc", "account", "counterparty", "prior_alert", "teller_note", "document"}
+    return {
+        "scenario": scenario_id, "synthetic": True, "as_of": cf.case.get("as_of"),
+        "transactions": [{
+            "id": row["id"], "at": row["at"], "direction": row["direction"],
+            "type": TYPE_LABEL.get(row["type"], row["type"]), "amount": row["amount"],
+            "counterparty": counterparties.get(row.get("counterparty"), row.get("merchant") or "—"),
+            "status": row.get("status", "posted"), "memo": cf.memos.get(row["id"], row.get("memo", "")),
+        } for row in sorted(cf.case.get("transactions", []), key=lambda row: row["at"])],
+        "records": [row for row in cf.ledger.public() if row["kind"] in raw_kinds],
+    }
 
 
 class SentenceIn(BaseModel):

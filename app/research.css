@@ -150,3 +150,5 @@
   .rx-side { max-height: none; }
   .rx-ticker { margin-left: 0; }
 }
+
+.demo-terms { margin: 0 0 16px; padding: 10px 12px; border-left: 3px solid var(--blue-soft); line-height: 1.6; }

@@ -28,7 +28,7 @@ export function observeWealth(run: ObservedRun, status: number, payload: unknown
   return {
     ...run,
     toolCalls: typeof toolCalls === "number" ? toolCalls : undefined,
-    status: status < 300 ? "completed" : status === 403 ? "blocked" : "failed",
+    status: body.status === "blocked" || status === 403 ? "blocked" : status < 300 ? "completed" : "failed",
     durationMs: typeof body.duration_ms === "number" ? body.duration_ms : undefined,
     ...usage,
     agentTrace: telemetry.galileo,

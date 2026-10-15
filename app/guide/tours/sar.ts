@@ -12,8 +12,8 @@ export const sarTour: Tour = {
   steps: [
     {
       id: "sar.problem", kind: "observe", story: true, targets: ["sar.band"],
-      title: "Half a day per SAR",
-      body: "Investigators pull KYC, transactions, counterparties, and prior alerts by hand, then write a narrative QA often returns. The 30-day filing clock never stops.",
+      title: "From alert to reviewed report",
+      body: "Choose a flagged case, review the evidence and draft, then record a decision. A different reviewer must approve it. This demo only simulates filing.",
     },
     {
       id: "sar.inbox", kind: "observe", story: true, targets: ["sar.inbox"],
@@ -31,6 +31,11 @@ export const sarTour: Tour = {
       id: "sar.case", kind: "observe", targets: ["sar.case"],
       title: "The case and its clock",
       body: "Subject, alert, and accounts are synthetic, with masked identifiers. The deadline bar shows the detection date, the due date, and the days left.",
+    },
+    {
+      id: "sar.inputs", kind: "observe", story: true, targets: ["sar.inputs"],
+      title: "Inspect the case file",
+      body: "Read the payments, customer profile and documents. These are the records the investigation will connect and cite.",
     },
     {
       id: "sar.run", kind: "act", story: true, targets: ["sar.replay", "sar.investigate"],
@@ -62,9 +67,9 @@ export const sarTour: Tour = {
     },
     {
       id: "sar.typologies", kind: "wait", story: true, targets: ["sar.typologies"],
-      waitFor: HAS_PACKAGE, patience: 30_000, waitingText: "Replaying the investigation…",
+      waitFor: HAS_PACKAGE, patience: 30_000, waitingText: "Waiting for the investigation…",
       needs: HAS_PACKAGE, resumeFrom: "sar.run",
-      title: "Typologies are rules",
+      title: "Why the case needs attention",
       body: "Money-mule indicators fire from the transactions as deterministic rules, each with a threshold, an observed value, and evidence. The model's recommendation is checked against them.",
     },
     {
@@ -81,11 +86,11 @@ export const sarTour: Tour = {
       }],
     },
     {
-      id: "sar.investigator", kind: "wait", story: true, targets: ["sar.decision"],
-      waitFor: { any: [{ state: { stage: ["filed"] } }, { state: { stage: ["closed"] } }, { state: { stage: ["investigator"] } }] },
-      waitingText: "Replaying the investigator's decision…",
+      id: "sar.investigator", kind: "act", story: true, targets: ["sar.decision"],
+      waitFor: { any: [{ state: { stage: ["filed"] } }, { state: { stage: ["closed"] } }] },
+      waitingText: "Review the draft, choose a disposition, then complete QA approval.",
       title: "People decide, twice",
-      body: "In this recorded run the investigator chose File SAR with a rationale, and a different person in second-line QA approved. Filing is simulated; nothing leaves the laptop.",
+      body: "The investigator chooses a disposition and gives a rationale; a second reviewer handles QA approval. Use the controls below in a live run. Recorded fallbacks show prior decisions. No filing is sent.",
       ciscoFit: [{
         product: "Splunk Agent Control",
         how: "sar.file_requires_approval holds filing until QA approves; sar.no_tipping_off denies contacting the customer.",
@@ -98,7 +103,7 @@ export const sarTour: Tour = {
         patch: {
           kind: "act",
           waitFor: { state: { stage: ["qa"] } },
-          body: "Choose File SAR or No SAR and give a rationale. Try Message the customer to see the no-tipping-off policy refuse it.",
+          body: "Choose Report suspicious activity or Close without a report, give a reason, then send to QA. Message the customer demonstrates the no-tipping-off policy.",
           waitingText: "Waiting for the investigator's decision.",
         },
       }],
@@ -150,13 +155,13 @@ export const sarInjectionTour: Tour = {
     },
     {
       id: "sar-injection.evidence", kind: "wait", targets: ["sar.evidence"],
-      waitFor: HAS_PACKAGE, patience: 30_000, waitingText: "Replaying the investigation…",
+      waitFor: HAS_PACKAGE, patience: 30_000, waitingText: "Waiting for the investigation…",
       needs: HAS_PACKAGE, resumeFrom: "sar-injection.run",
       title: "Withheld before the model",
       body: "The injected letter segment and the card number are withheld from the agent; the evidence list says who flagged each one.",
       ciscoFit: [{
         product: "Cisco AI Defense",
-        how: "Flagged Prompt Injection and PCI in the customer documents in this recording, before any model saw them.",
+        how: "Inspects customer documents for prompt injection and PCI data before model access; each verdict identifies what was found.",
         status: "running",
         requires: { status: { service: "sar", aiDefense: "on" } },
         otherwise: "AI Defense isn't active for SAR on this machine now; the flags shown are from the recording.",

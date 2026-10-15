@@ -9,6 +9,7 @@ export type UseCaseHealth = {
   up: boolean;
   ready: boolean;
   detail: string;
+  fallback?: string | null;
   aiDefense: { status: string; mode: string } | null;
   agentControl: { status: string; names: string[] } | null;
   tracing: string | null;
@@ -18,6 +19,7 @@ export type UseCaseHealth = {
 export type InterbankRun = { id: string; status: string; startedAt: string; traceId: string | null; prompt: string };
 
 export type StudioStatus = {
+  mode?: "preview" | "live";
   checkedAt: string;
   services: UseCaseHealth[];
   interbank: {
@@ -70,7 +72,7 @@ export function serviceRows(status: StudioStatus) {
   const rows = status.services.map((service) => ({
     id: service.id, label: service.label,
     ok: service.up && service.ready,
-    detail: !service.up ? "Not running" : service.ready ? "Ready" : service.detail,
+    detail: !service.up ? "Not running" : service.ready ? service.fallback ? `Live with fallback · ${service.fallback}` : "Live ready" : service.detail,
   }));
   rows.push({ id: "interbank", label: "Interbank lab (Docker)", ok: status.interbank.up, detail: status.interbank.up ? "Ready" : "Not running · npm run interbank:up" });
   for (const model of status.models) rows.push({ id: `model-${model.id}`, label: model.label, ok: model.up, detail: model.up ? `Serving at ${model.host}` : `Nothing answering at ${model.host}` });
@@ -83,6 +85,10 @@ const TRACED = new Set(["configured", "traces_present", "recorded"]);
 
 /** One line per Cisco capability for the sidebar and launcher. */
 export function platformSummary(status: StudioStatus | null) {
+  if (status?.mode === "preview") {
+    const preview = { tone: "blue" as Tone, detail: "Recorded preview" };
+    return { defense: preview, observability: preview, infrastructure: preview };
+  }
   if (!status) {
     const unknown = { tone: "blue" as Tone, detail: "Status unavailable" };
     return { defense: unknown, observability: unknown, infrastructure: unknown };
@@ -108,7 +114,7 @@ export function presenterStatus(status: StudioStatus | null, useCaseId: string, 
   const serviceId = USE_CASE_SERVICE[useCaseId];
   if (serviceId === "interbank") {
     const lab = status.interbank;
-    if (!lab.up) return "The interbank lab is not running: start it before presenting this moment.";
+    if (!lab.up) return "The interbank lab is offline. The recorded investigation is available.";
     return [lab.aiDefense ? `AI Defense ${lab.aiDefense.mode} at the gateways` : "AI Defense not reported by the lab", lab.project ? `traces to ${lab.project}` : "no trace project reported"].join(" · ");
   }
   const service = status.services.find((item) => item.id === serviceId);
@@ -133,8 +139,8 @@ export function momentReady(status: StudioStatus | null, useCaseId: string, live
   const settings = status.readiness.find((row) => row.id === useCaseId);
   if (settings && !settings.ready) return { ready: false, reason: `Needs ${settings.missing.join(", ")}` };
   const serviceId = USE_CASE_SERVICE[useCaseId];
-  if (serviceId === "interbank") return status.interbank.up ? { ready: true, reason: "Ready" } : { ready: false, reason: "Interbank lab is not running" };
+  if (serviceId === "interbank") return status.interbank.up ? { ready: true, reason: "Live ready" } : { ready: false, reason: "Interbank lab is not running" };
   const service = status.services.find((item) => item.id === serviceId);
   if (!service?.up) return { ready: false, reason: `${service?.label ?? "Service"} is not running` };
-  return service.ready ? { ready: true, reason: "Ready" } : { ready: false, reason: service.detail };
+  return service.ready ? { ready: true, reason: service.fallback ? `Live with fallback · ${service.fallback}` : "Live ready" } : { ready: false, reason: service.detail };
 }

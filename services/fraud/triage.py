@@ -253,7 +253,7 @@ async def start(run, payload: dict) -> dict:
                     served_by = chosen.served_by()
                     summary, usage, mode = result["summary"] or None, result["usage"], "agent"
                 except Exception as exc:
-                    store.emit(run.id, "llm.call", "Triage agent did not finish · scripted investigation instead", status="error",
+                    store.emit(run.id, "run", "Triage agent did not finish · scripted investigation instead", status="error",
                                body=type(exc).__name__, data={"served_by": served_by})
         if mode == "scripted":
             if selection is None:

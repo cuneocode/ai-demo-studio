@@ -759,3 +759,63 @@ kbd { border: 1px solid #344653; background: #17232e; color: var(--muted); font:
   .banking-demo .chat-message { max-width: 100%; }
   .banking-demo .proof-card-title { flex-wrap: wrap; gap: 8px; }
 }
+
+/* The first screen emphasizes the result; detailed evidence stays one click away. */
+.demo-provenance { margin: 8px 0 16px; color: var(--muted); font-size: var(--font-meta); }
+.demo-details { margin: 12px 0; border: 1px solid var(--border, #344054); border-radius: 9px; padding: 12px 16px; min-width: 0; }
+.demo-details > summary { cursor: pointer; font-size: var(--font-body); font-weight: 550; line-height: 1.5; }
+.demo-details[open] > summary { margin-bottom: 14px; }
+.demo-details > summary:focus-visible { outline: 2px solid var(--blue-soft, #85aaff); outline-offset: 5px; }
+.demo-replay-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; order: -1; }
+.demo-replay-primary { display: inline-flex; gap: 7px; align-items: center; padding: 10px 14px; border: 1px solid #647eff; background: #3453c9; color: white; border-radius: 7px; cursor: pointer; font: inherit; font-weight: 550; }
+.demo-replay-primary:disabled { opacity: .5; cursor: default; }
+.demo-recording-options > summary { cursor: pointer; color: var(--muted); font-size: var(--font-meta); }
+.demo-recording-options[open] > summary { margin-bottom: 8px; }
+.demo-review { padding: 14px 16px; border: 1px solid #b88d48; border-radius: 8px; background: rgba(176,128,48,.10); color: var(--text, inherit); line-height: 1.65; font-size: var(--font-body); }
+.banking-demo.banking-embedded .banking-layout { grid-template-columns: minmax(0,1fr); }
+.banking-demo .chat-card-head { flex-wrap: wrap; }
+.banking-demo .chat-card-actions { flex-wrap: wrap; }
+.rx-actions > [data-demo-replay] { order: -1; }
+.fx-casefile .fx-case-right { grid-column: 1; grid-row: 1; }
+.fx-casefile .fx-case-left { grid-column: 2; grid-row: 1; }
+@media (max-width: 900px) { .fx-casefile .fx-case-left, .fx-casefile .fx-case-right { grid-column: auto; grid-row: auto; } }
+
+.research-demo .rx-grid, .advisory-demo .rx-grid { grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr); }
+.demo-evidence { max-height: 620px; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+@media (max-width: 1000px) { .research-demo .rx-grid, .advisory-demo .rx-grid { grid-template-columns: minmax(0, 1fr); } }
+.demo-evidence .rx-side { border: 0; padding: 0; }
+.demo-evidence { margin-top: 0; }
+
+.interbank-demo .ib-results { grid-template-columns: minmax(0, 1fr); }
+
+/* Fallbacks remain an explicit secondary choice; live controls lead each demo. */
+.demo-fallback { font-size: var(--font-body); color: var(--muted); }
+.demo-fallback > summary { cursor: pointer; padding: 8px 0; }
+.demo-fallback[open] > summary { margin-bottom: 8px; }
+.demo-fallback button { margin: 4px 6px 4px 0; }
+.guide-actions .demo-fallback { flex-basis: 100%; }
+
+/* Operator-facing content stays visible; only optional raw payloads and fallbacks collapse. */
+section.demo-details > h3 { margin: 0 0 12px; font-size: var(--font-body); line-height: 1.5; font-weight: 650; }
+.runtime-section-title { grid-column: 1 / -1; margin: 0; padding: 13px 16px; border-bottom: 1px solid var(--border); font-size: var(--font-body); font-weight: 650; }
+.demo-workflow { margin: 16px 0; border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; }
+.demo-workflow ol { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding: 0; margin: 0; list-style: none; }
+.demo-workflow li { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: var(--font-body); }
+.demo-workflow li > span { display: grid; place-items: center; flex: 0 0 26px; height: 26px; border: 1px solid currentColor; border-radius: 50%; }
+.demo-workflow li[aria-current] { color: var(--blue-soft); }
+.demo-workflow li[aria-current] > span { background: var(--blue-soft); color: #071122; }
+.demo-workflow p { margin: 12px 0 0; font-size: var(--font-body); color: var(--muted); }
+.banking-demo .banking-side .run-stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 1180px) { .banking-demo .banking-side .run-stats-row { grid-template-columns: 1fr; } }
+.banking-demo .banking-side .run-stats { margin: 0; }
+.banking-demo .banking-side .demo-details { margin: 0; }
+.banking-demo .banking-side { min-width: 0; }
+.briefing-trail { max-height: 420px; overflow: auto; overscroll-behavior: contain; }
+@media (max-width: 900px) { .banking-demo .banking-side { display: flex; } }
+@media (max-width: 680px) { .demo-workflow ol { grid-template-columns: 1fr; gap: 10px; } }
+
+/* Model locality stays in the shell, without interrupting the demo. */
+.top-actions > .inference-indicator { width:auto; display:flex; align-items:center; gap:6px; padding:6px 8px; white-space:nowrap; color:var(--muted); font-size:12px; }
+.inference-indicator.is-cloud svg { color:var(--blue-soft); }
+.inference-indicator.is-local svg { color:var(--mint); }
+@media(max-width:700px) { .top-actions > button.inference-indicator { display:flex; font-size:11px; padding:4px; } }

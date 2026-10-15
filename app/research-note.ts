@@ -21,14 +21,14 @@ export type ResearchScenario = {
 
 /** The four stories. Each has a recorded golden run (services/wealth/data/recorded/<recording>.json). */
 export const RESEARCH_SCENARIOS: readonly ResearchScenario[] = [
-  { id: "earnings", ticker: "HCYN", kind: "Synthetic issuer", recording: "research-hcyn", title: "Earnings on a Focus List name",
-    summary: "Halcyon beat and raised. Does the Constructive house view still hold?", moment: "Every claim is checked against its source" },
+  { id: "earnings", ticker: "HCYN", kind: "Synthetic issuer", recording: "research-hcyn", title: "Company reports higher earnings",
+    summary: "Halcyon beat expectations and raised its forecast. Check what changed and what advisors should know.", moment: "Every claim is checked against its source" },
   { id: "restricted", ticker: "KSTL", kind: "Synthetic issuer", recording: "research-kstl-restricted", title: "Restricted issuer",
-    summary: "Kestrel Ridge is on the restricted list during a pending deal.", moment: "The research.precheck policy stops it before any data or model call" },
+    summary: "Kestrel Ridge is on the restricted list during a pending deal.", moment: "Watch policy stop research before a model is called" },
   { id: "poisoned-news", ticker: "HCYN", kind: "Attack", recording: "research-hcyn-poisoned", title: "Poisoned news story",
     summary: "A blog post in the feed tells the agent to push a $2,000 target.", moment: "The post is screened as a tool result and withheld" },
   { id: "bank", ticker: "JPM", kind: "Real data", recording: "research-jpm-bank", title: "A bank, from public data",
-    summary: "JPMorgan from cached market data. Banks are read on P/B and ROE.", moment: "Sector-appropriate metrics, no house view on file" },
+    summary: "Analyze JPMorgan’s earnings, valuation, and profitability using available public market data.", moment: "Compare the bank with peers and the market" },
 ];
 
 export type ConflictRow = { id: string; title: string; severity: string; left: string; right: string; detail: string };
@@ -91,6 +91,7 @@ export type Usage = { llmCalls?: number; toolCalls?: number; inputTokens?: numbe
 export type Evaluation = { status: string; label: string; verifier?: string };
 
 export type ResearchAnalyze = {
+  review?: string;
   ticker: string;
   scenario?: string;
   status: string;
@@ -362,6 +363,7 @@ export function normalizeAnalyze(value: unknown, fallbackTicker?: string): Resea
   const precheck = isRecord(value.precheck) ? value.precheck : undefined;
   return {
     ticker,
+    review: asString(value.review),
     scenario: asString(value.scenario),
     status: asString(value.status) || "omitted",
     company: { name: asString(company.name) || ticker, ticker, sector: asString(company.sector), industry: asString(company.industry), metricFamily: asString(company.metric_family) },
@@ -418,7 +420,7 @@ export type WealthRecording = {
 };
 
 export async function loadWealthRecording(name: string): Promise<WealthRecording> {
-  const response = await fetch(`/api/wealth/recordings/${encodeURIComponent(name)}`, { signal: AbortSignal.timeout(8000) });
+  const response = await fetch(`/api/studio/recordings/wealth/${encodeURIComponent(name)}`, { signal: AbortSignal.timeout(8000) });
   if (!response.ok) throw new Error(`The recorded run is unavailable (${response.status}).`);
   const body = await response.json() as unknown;
   if (!isRecord(body)) throw new Error("The recorded run is empty.");
@@ -482,11 +484,11 @@ export function switcherContextLabel(profile: StoredCompanyProfile | null | unde
 }
 
 export const SECTION_LABEL: Record<string, string> = {
-  what_changed: "What changed", impact: "Does it change the house view?", talking_point: "Talking points for advisors",
+  what_changed: "What changed", impact: "Why it matters", talking_point: "Talking points for advisors",
 };
 
 export const IMPACT_LABEL: Record<string, string> = {
-  consistent: "Consistent with the house view", needs_strategist_review: "Needs strategist review", no_house_view: "No house view on file",
+  consistent: "Current investment outlook still supported", needs_strategist_review: "Investment outlook needs human review", no_house_view: "No existing investment outlook to compare",
 };
 
 /** The verdict wording a claim chip shows. */

@@ -1,469 +1,164 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
-import {
-  ArrowRight, Ban, Check, CircleAlert, FileText, History, Landmark, Loader2, Newspaper, Play, Search, ShieldAlert, ShieldCheck, Users, X,
-} from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { ArrowUpRight, FileText, Loader2, Play, Search, ShieldCheck, X } from "lucide-react";
 import type { StoredCompanyProfile } from "./company-profile";
-import DemoStatusBanner from "./DemoStatusBanner";
-import {
-  EXAMPLE_RESEARCH_TICKERS, IMPACT_LABEL, RESEARCH_SCENARIOS, SECTION_LABEL,
-  loadResearchNote, loadWealthRecording, normalizeAnalyze, normalizePublish, normalizeWealthHealth, parseApiError,
-  saveResearchNote, signedPct, vsSpy,
-  type EvidenceItem, type PublishState, type ResearchAnalyze, type ResearchScenario, type StoredResearchNote, type WealthHealth,
-} from "./research-note";
+import type { EvidenceItem, StoredResearchNote } from "./research-note";
+import { parseApiError } from "./research-note";
 import RunStats, { startRun, useRunLedger } from "./RunStats";
-import { newRunId } from "./run/events";
-import ProvenanceBadge, { type Provenance } from "./run/ProvenanceBadge";
+import { newRunId, type ServedBy } from "./run/events";
 import RunTimeline from "./run/RunTimeline";
+import ProvenanceBadge from "./run/ProvenanceBadge";
 import { useRun } from "./run/useRun";
 import { useStudioNav } from "./studio-nav";
-import { guideAnchor, guideSafeAnchor } from "./guide/anchors";
-import { useGuideActions } from "./guide/GuidedTour";
-import { ClaimRow, EvidenceCard, PolicyList, type Focus } from "./wealth-evidence";
-import { observeRecordedWealth, observeWealth, wealthService, wealthStats, type WealthService } from "./wealth-stats";
-import "./research.css";
+import { guideAnchor } from "./guide/anchors";
+import { observeWealth, wealthService, wealthStats, type WealthService } from "./wealth-stats";
+import "./market-research.css";
 
-type Props = {
-  embedded?: boolean;
-  inStory?: boolean;
-  companyProfile?: StoredCompanyProfile | null;
-  note?: StoredResearchNote | null;
-  onNoteChange?: (note: StoredResearchNote | null) => void;
-};
+type Props = { embedded?: boolean; inStory?: boolean; companyProfile?: StoredCompanyProfile | null; note?: StoredResearchNote | null; onNoteChange?: (note: StoredResearchNote | null) => void };
+type Article = { id: string; headline: string; publisher: string; date: string; body: string; url?: string; synthetic?: boolean; poisoned?: boolean; content_kind?: string; status?: string; by?: string; reason?: string; ai_defense?: string; event_id?: string };
+type Peer = { ticker: string; name: string; marketCap?: number; trailingPE?: number };
+type Packet = { ticker: string; company: string; packet_id: string; as_of: string; source: { label: string; fetchedAt?: string }; news: Article[]; news_error?: string; evidence: EvidenceItem[]; peers: Peer[] };
+type Driver = { text: string; evidence_id: string; field_path?: string; display?: string; reason?: string };
+type Result = Packet & { report: { status: string; recommendation?: "Buy" | "Hold" | "Sell"; outlook?: string; risks: string[]; drivers: Driver[]; reason?: string }; served_by?: ServedBy };
+type Document = { title: string; source: string; body: string; url?: string; notice?: string; fields?: EvidenceItem["fields"] };
+const day = (value?: string) => value ? new Date(value).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" }) : "Date unavailable";
+const compact = (value?: number) => value == null ? "—" : new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(value);
+const safeUrl = (url?: string) => url && /^https?:\/\//i.test(url) ? url : undefined;
 
-type Origin = { kind: "live" } | { kind: "recorded"; recordedAt: string; name?: string };
-
-const STRATEGIST = "Sam Ortiz · CIO Office strategist";
-const SECTIONS = ["what_changed", "impact", "talking_point"];
-const parsed = (text: string): unknown => { try { return text ? JSON.parse(text) : {}; } catch { return {}; } };
-
-function provenanceOf(result: ResearchAnalyze, origin: Origin): Provenance {
-  if (origin.kind === "recorded") return { kind: "recorded", recordedAt: origin.recordedAt, servedBy: result.servedBy };
-  if (result.status === "blocked") return { kind: "none", detail: "No data fetched · no model call" };
-  if (result.update.mode === "fixture") return { kind: "sample", detail: "Fixture summary · written by code, no model" };
-  return result.servedBy ? { kind: "live", servedBy: result.servedBy } : { kind: "none", detail: "No model answered" };
+function SourceDialog({ document, onClose }: { document: Document; onClose: () => void }) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = ref.current;
+    const previous = dialog?.ownerDocument.activeElement as HTMLElement | null;
+    dialog?.showModal();
+    return () => { dialog?.close(); previous?.focus({ preventScroll: true }); };
+  }, []);
+  return <dialog className="mr-dialog" ref={ref} aria-labelledby="mr-document-title" onCancel={event => { event.preventDefault(); onClose(); }} onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
+    <div className="mr-dialog-content"><header><div><span className="mr-label">SOURCE MATERIAL</span><h2 id="mr-document-title">{document.title}</h2><p>{document.source}</p></div><button type="button" aria-label="Close source" onClick={onClose}><X size={20} /></button></header>
+      {document.notice && <p className="mr-notice">{document.notice}</p>}
+      {document.fields && <dl className="mr-facts">{Object.entries(document.fields).map(([key, field]) => <div key={key}><dt>{field.label || key}</dt><dd>{field.display}</dd></div>)}</dl>}
+      <div className="mr-document-body">{document.body}</div>
+      {safeUrl(document.url) && <a href={safeUrl(document.url)} target="_blank" rel="noreferrer">Open publisher <ArrowUpRight size={14} /></a>}
+    </div>
+  </dialog>;
 }
 
-function PublishBar({ result, publish, busy, onDecide, onPrepare }: {
-  result: ResearchAnalyze; publish: PublishState; busy: boolean; onDecide: (decision: "approve" | "reject") => void; onPrepare: () => void;
-}) {
-  if (publish.status === "published") {
-    return (
-      <section className="rx-publish is-done" aria-label="Publication" {...guideAnchor("research.publish")}>
-        <ShieldCheck size={18} aria-hidden="true" />
-        <div>
-          <strong>Published to meeting prep in this studio</strong>
-          <span>{publish.by} · {publish.at ? new Date(publish.at).toLocaleTimeString() : ""}{publish.originLabel ? ` · ${publish.originLabel}` : ""}</span>
-          <span className="rx-simulated">Simulated distribution · nothing is sent to real advisors</span>
-        </div>
-        <button type="button" className="primary" onClick={onPrepare}>Prepare client meeting <ArrowRight size={15} aria-hidden="true" /></button>
-      </section>
-    );
-  }
-  if (publish.status === "awaiting_approval") {
-    return (
-      <section className="rx-publish" aria-label="Publication" {...guideAnchor("research.publish")}>
-        <Users size={18} aria-hidden="true" />
-        <div>
-          <strong>Strategist approval</strong>
-          <span>{STRATEGIST} decides. Only the {result.update.counts.verified} verified claims go to advisors; the rating stays the CIO office&apos;s call.</span>
-        </div>
-        <button type="button" className="secondary" disabled={busy} onClick={() => onDecide("reject")}>Reject</button>
-        <button type="button" className="primary" disabled={busy} onClick={() => onDecide("approve")}>
-          {busy ? <Loader2 size={15} className="spin" aria-hidden="true" /> : <Check size={15} aria-hidden="true" />} Publish update
-        </button>
-      </section>
-    );
-  }
-  const tone = publish.status === "denied" || publish.status === "blocked" ? "is-denied" : "";
-  const text = publish.status === "denied" ? "Not published · a research.publish policy denied it"
-    : publish.status === "rejected" ? `Rejected by ${publish.by || "the strategist"} · nothing reaches advisors`
-      : publish.status === "blocked" ? "Nothing to publish · restricted issuer"
-        : `Nothing to publish${publish.reason ? ` · ${publish.reason}` : ""}`;
-  return (
-    <section className={`rx-publish ${tone}`} aria-label="Publication" {...guideAnchor("research.publish")}>
-      <Ban size={18} aria-hidden="true" />
-      <div><strong>{text}</strong></div>
-    </section>
-  );
-}
-
-const RESEARCH_DEFENSE = { inputs: "news items inspected", whenOff: "every news item is still inspected before the agent reads it." };
-
-export default function MarketResearch({ embedded = false, inStory = false, note, onNoteChange }: Props) {
-  const published = note !== undefined ? note : loadResearchNote();
-  const [health, setHealth] = useState<WealthHealth | null>(null);
-  const [service, setService] = useState<WealthService | null>(null);
-  const [scenario, setScenario] = useState<ResearchScenario>(RESEARCH_SCENARIOS[0]);
-  const [ticker, setTicker] = useState("");
-  const [loading, setLoading] = useState(false);
+export default function MarketResearch({ embedded = false }: Props) {
+  const [ticker, setTicker] = useState("NVDA");
+  const [packet, setPacket] = useState<Packet | null>(null);
+  const [result, setResult] = useState<Result | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<ResearchAnalyze | null>(null);
-  const [raw, setRaw] = useState<unknown>(null);
-  const [origin, setOrigin] = useState<Origin>({ kind: "live" });
-  const [publish, setPublish] = useState<PublishState | null>(null);
-  const [publishing, setPublishing] = useState(false);
-  const [focus, setFocus] = useState<Focus>(null);
+  const [document, setDocument] = useState<Document | null>(null);
+  const [service, setService] = useState<WealthService | null>(null);
+  const [request, setRequest] = useState({ ticker: "NVDA", refresh: false, version: 0 });
+  const [runtimeModel, setRuntimeModel] = useState("");
+  const resultHeading = useRef<HTMLHeadingElement>(null);
   const ledger = useRunLedger();
   const timeline = useRun({ pageUrl: (id, after) => `/api/wealth/runs/${encodeURIComponent(id)}?after=${after}` });
-  const { links, openUseCase } = useStudioNav();
-  const stats = useMemo(() => wealthStats(service, "/api/wealth/research/analyze", links?.agentObservability, RESEARCH_DEFENSE), [service, links?.agentObservability]);
-  const headingRef = useRef<HTMLHeadingElement>(null);
-  const focusResult = useRef(false);
+  const { links } = useStudioNav();
+  const stats = useMemo(() => wealthStats(service, "/api/wealth/market/analyze", links?.agentObservability, { inputs: "articles inspected", whenOff: "articles require a verdict before analysis." }), [service, links?.agentObservability]);
 
   useEffect(() => {
-    if (!focusResult.current || !result) return;
-    focusResult.current = false;
-    headingRef.current?.focus({ preventScroll: true });
+    const controller = new AbortController();
+    fetch(`/api/wealth/market/inputs/${encodeURIComponent(request.ticker)}?refresh=${request.refresh}`, { signal: AbortSignal.any([controller.signal, AbortSignal.timeout(120000)]) })
+      .then(async response => { const text = await response.text(); if (!response.ok) throw new Error(parseApiError(text, response.status)); return JSON.parse(text) as Packet; })
+      .then(body => { if (!controller.signal.aborted) setPacket(body); })
+      .catch(cause => { if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "Could not load research inputs."); })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [request]);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/wealth/health", { signal: AbortSignal.timeout(10000) }).then(response => response.json()).then(body => {
+      if (active) { setService(wealthService(body)); setRuntimeModel(body.nim?.model || body.model || ""); }
+    }).catch(() => { if (active) setService({ reachable: false }); });
+    return () => { active = false; };
+  }, []);
+  useEffect(() => {
+    if (result) {
+      resultHeading.current?.focus({ preventScroll: true });
+      resultHeading.current?.closest(".mr-report")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   }, [result]);
 
-  useEffect(() => {
-    fetch("/api/wealth/health", { signal: AbortSignal.timeout(10000) })
-      .then((response) => (response.ok ? response.json() : Promise.reject(new Error("unavailable"))))
-      .then((body) => { setHealth(normalizeWealthHealth(body)); setService(wealthService(body)); })
-      .catch(() => { setHealth({ ready: false, nim: { status: "down" } }); setService({ reachable: false }); });
-  }, []);
-
-  const shown = result ?? published?.analyze ?? null;
-  const shownOrigin: Origin = result ? origin : published?.recordedAt ? { kind: "recorded", recordedAt: published.recordedAt } : { kind: "live" };
-  const shownPublish = result ? publish ?? result.publish : shown?.publish ?? null;
-  const evidence = useMemo(() => new Map((shown?.evidence ?? []).map((item) => [item.id, item])), [shown]);
-  const serviceDown = service?.reachable === false;
-  const modelDown = health?.nim?.status === "down" || health?.ready === false;
-
-  function begin() {
-    setLoading(true);
-    setError("");
-    setFocus(null);
-    setPublish(null);
+  function load(symbol: string, refresh = false) {
+    const normalized = symbol.trim().toUpperCase();
+    if (!/^[A-Z]{1,5}(?:[.-][A-Z])?$/.test(normalized)) { setError("Enter a US ticker, such as NVDA or MSFT."); return; }
+    setTicker(normalized); setPacket(null); setResult(null); setDocument(null); setError(""); setLoading(true); timeline.reset();
+    setRequest(previous => ({ ticker: normalized, refresh, version: previous.version + 1 }));
   }
-
-  function landed(next: ResearchAnalyze, body: unknown, from: Origin) {
-    setResult(next);
-    setRaw(body);
-    setOrigin(from);
-    focusResult.current = true;
-  }
-
-  async function runLive(pick: ResearchScenario | null, symbol?: string) {
-    const target = (symbol ?? pick?.ticker ?? "").trim().toUpperCase();
-    if (!target) { setError("Enter a ticker."); return; }
-    begin();
-    const runId = newRunId("wealth-research");
-    timeline.open(runId);
-    const run = startRun("research", pick ? pick.title : `${target} · public data`);
+  function submit(event: FormEvent) { event.preventDefault(); load(ticker, ticker.trim().toUpperCase() !== "NVDA"); }
+  async function analyze() {
+    if (!packet) return;
+    setRunning(true); setResult(null); setError("");
+    const id = newRunId("wealth-research");
+    timeline.open(id);
+    const run = startRun("research", `${packet.ticker} · market research`);
     ledger.record(run);
-    let settled = false;
+    let recorded = false;
     try {
-      const response = await fetch("/api/wealth/research/analyze", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ticker: target, scenario: pick?.id ?? "ticker", run_id: runId }), signal: AbortSignal.timeout(260000),
-      });
+      const response = await fetch("/api/wealth/market/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ticker: packet.ticker, packet_id: packet.packet_id, run_id: id }), signal: AbortSignal.timeout(260000) });
       const text = await response.text();
-      ledger.record(observeWealth(run, response.status, parsed(text)));
-      settled = true;
+      const body = text ? JSON.parse(text) : {};
+      ledger.record(observeWealth(run, response.status, body)); recorded = true;
       if (!response.ok) throw new Error(parseApiError(text, response.status));
-      const next = normalizeAnalyze(parsed(text), target);
-      if (!next) throw new Error("The research service returned nothing.");
-      landed(next, parsed(text), { kind: "live" });
+      if (!body.report) throw new Error(body.detail || "The model did not return a report.");
+      setResult(body);
     } catch (cause) {
-      if (!settled) ledger.record({ ...run, status: "failed" });
-      setError(cause instanceof DOMException && cause.name === "TimeoutError" ? "The run timed out. Replay the recorded run instead."
-        : cause instanceof TypeError ? "The wealth service did not answer. Replay the recorded run instead."
-          : cause instanceof Error ? cause.message : "The run failed.");
-    } finally {
-      setLoading(false);
-    }
+      if (!recorded) ledger.record({ ...run, status: "failed" });
+      setError(cause instanceof Error ? cause.message : "Analysis failed. Try again.");
+    } finally { setRunning(false); }
   }
-
-  async function replay(pick: ResearchScenario) {
-    begin();
-    try {
-      const recording = await loadWealthRecording(pick.recording);
-      const next = normalizeAnalyze(recording.result);
-      if (!next) throw new Error("The recorded run has no result.");
-      timeline.play({ run: recording.run, events: recording.events });
-      ledger.record(observeRecordedWealth(startRun("research", `${pick.title} · recorded`), recording.result, recording.recordedAt));
-      landed(next, recording.result, { kind: "recorded", recordedAt: recording.recordedAt, name: recording.name });
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The recorded run is unavailable.");
-    } finally {
-      setLoading(false);
-    }
+  const shown = result || packet;
+  const openEvidence = (id: string) => {
+    const item = shown?.evidence.find(row => row.id === id);
+    if (id.startsWith("news:")) { const article = shown?.news.find(row => `news:${row.id}` === id); if (article) { openArticle(article); return; } }
+    if (item) setDocument({ title: item.title, source: item.source, body: item.text, fields: item.fields });
+  };
+  function openArticle(article: Article) {
+    setDocument({ title: article.headline, source: `${article.publisher} · ${day(article.date)} · ${article.content_kind || "Source text"}`, body: article.body, url: article.url,
+      notice: article.poisoned ? `Synthetic prompt-injection test. ${article.status === "withheld" ? `Excluded: ${article.by}. ${article.reason || ""}` : "Will be inspected before analysis."}` : article.content_kind === "Provider summary" ? "The provider supplied a summary. This is the complete text provided to the analysis; the publisher link opens the original article." : undefined });
   }
+  const metrics = shown?.evidence.find(row => row.id === "metrics");
+  const earnings = shown?.evidence.find(row => row.id === "latest-earnings");
+  const withheld = result?.news.filter(row => row.status === "withheld") || [];
 
-  async function decide(decision: "approve" | "reject") {
-    if (!result) return;
-    setPublishing(true);
-    setError("");
-    try {
-      const response = await fetch("/api/wealth/research/publish", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ run_id: origin.kind === "live" ? result.runId : undefined, recording: origin.kind === "recorded" ? origin.name : undefined,
-          decision, result: raw, by: STRATEGIST }),
-        signal: AbortSignal.timeout(30000),
-      });
-      const text = await response.text();
-      if (!response.ok) throw new Error(parseApiError(text, response.status));
-      const outcome = normalizePublish(parsed(text));
-      setPublish(outcome);
-      if (origin.kind === "live" && result.runId) timeline.resume(result.runId);
-      if (outcome.status === "published") {
-        const stored: StoredResearchNote = {
-          ticker: result.ticker, acceptedAt: outcome.at || new Date().toISOString(), publishedBy: outcome.by,
-          analyze: { ...result, publish: outcome }, recordedAt: origin.kind === "recorded" ? origin.recordedAt : undefined,
-        };
-        saveResearchNote(stored, { ...(raw as object), publish: { ...((raw as { publish?: object })?.publish ?? {}), status: "published", by: outcome.by, at: outcome.at } });
-        onNoteChange?.(stored);
-      }
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Publishing failed.");
-    } finally {
-      setPublishing(false);
-    }
-  }
-
-  function submitTicker(event: FormEvent) {
-    event.preventDefault();
-    void runLive(null, ticker);
-  }
-
-  const replayButton = (anchor?: "research.replay") => (
-    <button type="button" className="secondary" disabled={loading} onClick={() => replay(scenario)} data-guide={anchor}>
-      <History size={15} aria-hidden="true" /> Replay recorded run
-    </button>
-  );
-  const replayAction = replayButton();
-
-  useGuideActions("market-research", {
-    replay: (id) => {
-      const pick = RESEARCH_SCENARIOS.find((item) => item.id === id) ?? scenario;
-      setScenario(pick);
-      void replay(pick);
-    },
-    skipReplay: timeline.skip,
-    selectScenario: (id) => { const pick = RESEARCH_SCENARIOS.find((item) => item.id === id); if (pick) setScenario(pick); },
-  });
-  const guideRun = loading || timeline.replaying ? "running" : result ? (result.status === "blocked" ? "blocked" : "done") : error ? "failed" : "idle";
-  const guideStage = [
-    shown && "result", shown?.status === "blocked" && "blocked", timeline.visible.length && "events",
-    shown?.news.some((row) => row.status === "withheld") && "withheld", shownPublish?.status && `publish-${shownPublish.status}`,
-  ].filter(Boolean).join(" ");
-
-  return (
-    <div
-      className={`research-demo ${embedded ? "research-embedded" : ""}`}
-      data-guide-run={guideRun}
-      data-guide-source={result ? (origin.kind === "recorded" ? "recorded" : result.update.mode === "fixture" ? "sample" : "live") : "none"}
-      data-guide-recorded-at={result && origin.kind === "recorded" ? origin.recordedAt : undefined}
-      data-guide-stage={guideStage}
-    >
-      {!inStory && (
-        <p className="rx-intro" {...guideAnchor("research.intro")}>
-          <strong>Sam, CIO-office strategist.</strong> An earnings event lands on a name the house view covers. A research Deep Agent drafts
-          what changed and whether it moves the house view; every claim is checked against its source before Sam decides what advisors see.
-        </p>
-      )}
-
-      {serviceDown ? (
-        <DemoStatusBanner title="The wealth service is not answering" stillWorks="Recorded runs of every scenario" fix="Start it from Studio settings · Services" actions={replayAction} />
-      ) : modelDown ? (
-        <DemoStatusBanner tone="degraded" settingsSection="st-models" title="No model is reachable" stillWorks="Live runs still check policy, screen news, and write a code-built fixture summary; recorded runs replay" actions={replayAction} />
-      ) : health?.nim?.fallback ? (
-        <DemoStatusBanner tone="degraded" settingsSection="st-models" title={`Private inference is down · answering from ${health.nim.label}`}
-          stillWorks="Market research carries no client data, so the hosted fallback is allowed here" />
-      ) : null}
-
-      <section className="rx-scenarios" aria-label="Scenarios" {...guideAnchor("research.scenarios")}>
-        {RESEARCH_SCENARIOS.map((item) => (
-          <button key={item.id} type="button" className={`rx-scenario ${scenario.id === item.id ? "selected" : ""}`} aria-pressed={scenario.id === item.id}
-            onClick={() => setScenario(item)} {...guideSafeAnchor(`research.scenario.${item.id}`)}>
-            <span className={`rx-kind ${item.kind === "Attack" ? "is-attack" : ""}`}>{item.kind} · {item.ticker}</span>
-            <strong>{item.title}</strong>
-            <span>{item.summary}</span>
-            <small>{item.moment}</small>
-          </button>
-        ))}
-      </section>
-      <div className="rx-actions">
-        <button type="button" id="research-run" className="primary" disabled={loading || serviceDown} onClick={() => runLive(scenario)} {...guideAnchor("research.run")}>
-          {loading ? <Loader2 size={15} className="spin" aria-hidden="true" /> : <Play size={15} aria-hidden="true" />} Run live
-        </button>
-        {replayButton("research.replay")}
-        <form className="rx-ticker" onSubmit={submitTicker} aria-label="Any cached ticker">
-          <Search size={15} aria-hidden="true" />
-          <input value={ticker} onChange={(event) => setTicker(event.target.value.toUpperCase())} placeholder="Or a real ticker" aria-label="Real ticker" maxLength={8} />
-          {EXAMPLE_RESEARCH_TICKERS.filter((item) => !item.tag && item.ticker !== "JPM").map((item) => (
-            <button key={item.ticker} type="button" disabled={loading || serviceDown} onClick={() => { setTicker(item.ticker); void runLive(null, item.ticker); }}>{item.ticker}</button>
-          ))}
-        </form>
-      </div>
-      {error && <p className="rx-error" role="alert"><CircleAlert size={15} aria-hidden="true" /> {error}</p>}
-
-      {shown ? (
-        <ResultView
-          result={shown} origin={shownOrigin} publish={shownPublish} focus={focus} onCite={setFocus} evidence={evidence} headingRef={headingRef}
-          publishBar={shownPublish && (
-            <PublishBar result={shown} publish={shownPublish} busy={publishing || !result} onDecide={decide} onPrepare={() => openUseCase?.("client-advisory")} />
-          )}
-        />
-      ) : (
-        <p className="rx-empty">Pick a scenario and run it live, or replay the recorded run.</p>
-      )}
-
-      <RunTimeline label="Agent timeline" anchor="research.timeline" events={timeline.visible} start={timeline.run?.started_at} showLane
-        onSource={(ids) => ids[0] && setFocus({ id: ids[0] })}
-        empty={loading ? "Waiting for the first event…" : "The supervisor, its subagents, tools, policy checks, and the strategist's decision stream here."} />
-
-      <RunStats ledger={ledger} observability={stats.observability} defense={stats.defense} />
-      <p className="rx-disclaimer">Synthetic issuers and households. Demonstration only · not investment advice.</p>
-    </div>
-  );
-}
-
-function ResultView({ result, origin, publish, focus, onCite, evidence, headingRef, publishBar }: {
-  result: ResearchAnalyze; origin: Origin; publish: PublishState | null; focus: Focus; onCite: (focus: Focus) => void;
-  evidence: Map<string, EvidenceItem>; headingRef: RefObject<HTMLHeadingElement | null>; publishBar: ReactNode;
-}) {
-  const view = result.context?.houseView;
-  const update = result.update;
-  const kept = update.claims.filter((claim) => claim.status === "verified");
-  const struck = update.claims.filter((claim) => claim.status !== "verified");
-  const items = [...evidence.values()];
-  const cited = new Set(update.claims.map((claim) => claim.evidenceId).filter(Boolean));
-  const filings = items.filter((item) => item.kind === "filing");
-  const shownFilings = filings.filter((item) => cited.has(item.id) || focus?.id === item.id);
-  const data = items.filter((item) => !["filing", "news"].includes(item.kind));
-  const affected = result.context?.affected;
-  const blocked = result.status === "blocked";
-  const bank = result.company.metricFamily === "bank";
-
-  return (
-    <section className="rx-result" aria-label="House-view update" {...guideAnchor("research.result")}>
-      <header className="rx-result-head">
-        <div>
-          <span className="rx-eyebrow">{blocked ? "RESTRICTED-LIST PRE-CHECK" : "HOUSE-VIEW UPDATE"}</span>
-          <h2 ref={headingRef} tabIndex={-1}>{result.company.name} <span>{result.ticker}</span></h2>
-          <div className="rx-badges">
-            {result.source.fictional && <span className="rx-tag">Fictional issuer · synthetic data</span>}
-            {view?.rating && <span className="rx-tag is-view">House view: {view.rating}{view.focusList ? " · Focus List" : ""}</span>}
-            {bank && <span className="rx-tag">Bank · read on P/B and ROE</span>}
-            {!blocked && <span className="rx-tag is-mode">{update.modeLabel}</span>}
-          </div>
-        </div>
-        <ProvenanceBadge provenance={provenanceOf(result, origin)} />
-      </header>
-
-      {blocked ? (
-        <div className="rx-blocked" {...guideAnchor("research.blocked")}>
-          <ShieldAlert size={22} aria-hidden="true" />
-          <div>
-            <strong>Blocked before any data or model call</strong>
-            <p>{result.precheck?.reason || "This issuer is on the restricted list."}{result.precheck?.since ? ` Restricted since ${result.precheck.since}.` : ""}</p>
-            <PolicyList title="research.precheck" result={result.precheck?.controls} />
-          </div>
-        </div>
-      ) : (
-        <div className="rx-grid">
-          <div className="rx-main">
-            {update.impact && (
-              <div className={`rx-impact is-${update.impact}`} {...guideAnchor("research.impact")}>
-                <Landmark size={18} aria-hidden="true" />
-                <div>
-                  <strong>{IMPACT_LABEL[update.impact] ?? update.impact}</strong>
-                  <span>
-                    {update.triggers.length ? update.triggers.join(" · ") : "No thesis point or key risk was tripped by the event."}
-                    {" "}The AI does not set ratings or targets; the CIO office owns the call.
-                  </span>
-                </div>
-              </div>
-            )}
-            {update.status !== "ready" && update.reason && <p className="rx-muted">{update.reason}</p>}
-            {SECTIONS.map((section) => {
-              const rows = kept.filter((claim) => claim.section === section);
-              if (!rows.length) return null;
-              return (
-                <div key={section} className="rx-section" {...guideAnchor("research.claims")}>
-                  <h3>{SECTION_LABEL[section]}</h3>
-                  <ul>{rows.map((claim, index) => (
-                    <ClaimRow key={index} claim={claim} item={claim.evidenceId ? evidence.get(claim.evidenceId) : undefined} onCite={onCite} focus={focus} />
-                  ))}</ul>
-                </div>
-              );
-            })}
-            <p className="rx-count" {...guideAnchor("research.count")}>
-              <Check size={14} aria-hidden="true" /> {update.counts.verified} verified
-              {struck.length > 0 && <> · <X size={14} aria-hidden="true" /> {struck.length} struck before anyone saw them</>}
-              {result.evaluation && <> · {result.evaluation.label}</>}
-            </p>
-            {struck.length > 0 && (
-              <div className="rx-section rx-struck">
-                <h3>Struck by the claim verifier</h3>
-                <ul>{struck.map((claim, index) => (
-                  <ClaimRow key={index} claim={claim} item={claim.evidenceId ? evidence.get(claim.evidenceId) : undefined} onCite={onCite} focus={focus} />
-                ))}</ul>
-              </div>
-            )}
-
-            {result.news.length > 0 && (
-              <div className="rx-section" {...guideAnchor("research.news")}>
-                <h3><Newspaper size={15} aria-hidden="true" /> News feed · allowlisted sources, inspected as tool results</h3>
-                <ul className="rx-news">
-                  {result.news.map((row) => (
-                    <li key={row.id} className={`is-${row.status}`}>
-                      <span className="rx-news-status">{row.status === "withheld" ? <ShieldAlert size={14} aria-hidden="true" /> : <Check size={14} aria-hidden="true" />} {row.status === "withheld" ? "Withheld" : "Kept"}</span>
-                      <div>
-                        <strong>{row.headline}</strong>
-                        <small>{row.publisher} · {row.date}{row.by ? ` · checked by ${row.by}` : ""}</small>
-                        {row.status === "withheld" && <small className="rx-reason">{row.reason}. It never reached the agent.</small>}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {result.conflicts.length > 0 && (
-              <div className="rx-section">
-                <h3>Signal divergences</h3>
-                <ul className="rx-divergences">
-                  {result.conflicts.map((row) => <li key={row.id}><strong>{row.title}</strong><span>{row.left} · {row.right}</span></li>)}
-                </ul>
-              </div>
-            )}
-
-            <div className="rx-policies" {...guideAnchor("research.policies")}>
-              <PolicyList title="Pre-check · research.precheck" result={result.precheck?.controls} />
-              <PolicyList title="Publish · research.publish" result={publish?.controls} />
-            </div>
-            {publishBar}
-          </div>
-
-          <aside className="rx-side" aria-label="Evidence">
-            <h3><FileText size={15} aria-hidden="true" /> Evidence {focus ? <button type="button" className="rx-clear" onClick={() => onCite(null)}>Clear highlight</button> : <small>Click a citation to highlight it</small>}</h3>
-            {affected && (
-              <div className="rx-affected" {...guideAnchor("research.affected")}>
-                <Users size={16} aria-hidden="true" />
-                <span><strong>{affected.count ?? 0}</strong> of {affected.households} households hold {result.ticker}; <strong>{affected.concentrated ?? 0}</strong> above {affected.thresholdPct}%, {affected.executives ?? 0} executives</span>
-              </div>
-            )}
-            {result.returns.windows?.["1Y"] && (
-              <p className="rx-muted">1Y return {vsSpy(result.returns.windows["1Y"].ticker, result.returns.windows["1Y"].spy)} · excess {signedPct(result.returns.windows["1Y"].excess)}</p>
-            )}
-            {data.map((item) => <EvidenceCard key={item.id} item={item} focus={focus} />)}
-            {items.filter((item) => item.kind === "news").map((item) => <EvidenceCard key={item.id} item={item} focus={focus} />)}
-            {shownFilings.map((item) => <EvidenceCard key={item.id} item={item} focus={focus} />)}
-            {filings.length > shownFilings.length && <p className="rx-muted">{filings.length - shownFilings.length} more 10-K sections were searched and not cited.</p>}
-            {result.withheld.map((item) => (
-              <article key={item.id} className="rx-evidence is-withheld">
-                <header><strong>{item.title}</strong><span className="rx-tag is-deny">Withheld</span></header>
-                <small>{item.reason}</small>
-              </article>
-            ))}
-          </aside>
-        </div>
-      )}
+  return <div className={`research-demo mr-demo ${embedded ? "research-embedded" : ""}`} data-guide-run={running ? "running" : result ? "done" : error ? "failed" : "idle"} data-guide-source={result ? "live" : "none"} data-guide-stage={result ? "result" : ""}>
+    <section className="mr-start" {...guideAnchor("research.intro")}>
+      <form onSubmit={submit} className="mr-ticker" aria-label="Research a company"><label htmlFor="market-ticker">Company ticker</label><div><Search size={18} /><input id="market-ticker" value={ticker} onChange={event => setTicker(event.target.value.toUpperCase())} maxLength={8} disabled={running} /><button type="submit" disabled={loading || running}>Load company</button></div></form>
+      <div className="mr-start-actions"><button type="button" className="secondary" disabled={loading || running} onClick={() => load("NVDA")}>NVDA cached example</button><button id="research-run" type="button" className="primary" disabled={!packet || loading || running} onClick={analyze} {...guideAnchor("research.run")}>{running ? <Loader2 size={16} className="spin" /> : <Play size={16} />}{running ? "Analyzing…" : "Analyze"}</button></div>
     </section>
-  );
+    {error && <p className="mr-error" role="alert">{error} {!packet && <button onClick={() => load(ticker)}>Retry</button>}</p>}
+    {loading && <p role="status"><Loader2 size={16} className="spin" /> Loading earnings, financials and recent news…</p>}
+    {shown && <>
+      <section className="mr-inputs" aria-label="Research inputs" {...guideAnchor("research.inputs")}>
+        <header className="mr-section-head"><div><span className="mr-label">RESEARCH INPUTS</span><h2>{shown.company} <span>{shown.ticker}</span></h2><p>{shown.source.label} · Packet {day(shown.as_of)}</p></div><button type="button" disabled={running || loading} onClick={() => load(shown.ticker, true)}>Refresh latest</button></header>
+        <dl className="mr-metrics">{Object.entries(metrics?.fields || {}).slice(0, 6).map(([key, item]) => <div key={key}><dt>{item.label || key}</dt><dd>{item.display}</dd></div>)}</dl>
+        <div className="mr-input-columns"><section><h3>{earnings?.title || "Latest earnings"}</h3><dl className="mr-facts">{Object.entries(earnings?.fields || {}).map(([key, item]) => <div key={key}><dt>{item.label || key}</dt><dd>{item.display}</dd></div>)}</dl>{!Object.keys(earnings?.fields || {}).length && <p>Earnings data unavailable.</p>}</section>
+          <section><h3>Peer comparison</h3>{shown.peers.length ? <table><thead><tr><th>Company</th><th>Market cap</th><th>Trailing P/E</th></tr></thead><tbody><tr><td>{shown.ticker}</td><td>{metrics?.fields.marketCap?.display || "—"}</td><td>{shown.evidence.find(row => row.id === "valuation")?.fields.trailing_pe?.display || "—"}</td></tr>{shown.peers.slice(0, 4).map(peer => <tr key={peer.ticker}><td title={peer.name}>{peer.ticker}</td><td>${compact(peer.marketCap)}</td><td>{peer.trailingPE == null ? "—" : `${peer.trailingPE.toFixed(1)}x`}</td></tr>)}</tbody></table> : <p>Peer data unavailable.</p>}</section></div>
+        <section className="mr-news" {...guideAnchor("research.news")}><h3>Articles <span>Past 30 days + latest earnings release</span></h3>{shown.news_error && <p className="mr-source-note">{shown.news_error}</p>}
+          <div className="mr-articles">{shown.news.map(article => <button type="button" key={article.id} className={`mr-article ${article.poisoned ? "is-attack" : ""}`} onClick={() => openArticle(article)}><FileText size={18} /><span><strong>{article.headline}</strong><small>{article.publisher} · {day(article.date)}</small></span><span className="mr-article-state">{article.status === "withheld" ? `Excluded · ${article.by}` : article.status === "kept" ? "Included" : article.poisoned ? "Synthetic attack" : "Read"}</span></button>)}</div>
+        </section>
+      </section>
+      <section className="mr-report" aria-label="Research report" {...guideAnchor("research.result")}>
+        <header className="mr-section-head"><div><span className="mr-label">RESEARCH REPORT</span><h2 ref={resultHeading} tabIndex={-1}>{result ? `${result.ticker} outlook & recommendation` : "Outlook & recommendation"}</h2></div>{result && <div className="mr-decision"><span className="mr-label">FINAL RECOMMENDATION</span>{result.report.recommendation ? <strong className={`mr-rating rating-${result.report.recommendation.toLowerCase()}`}>{result.report.recommendation}</strong> : <strong>Not available</strong>}</div>}</header>
+        {result ? <>{result.report.outlook ? <p className="mr-outlook">{result.report.outlook}</p> : <p role="status">{result.report.reason}</p>}
+          {!result.report.recommendation && <button type="button" className="primary" disabled={running} onClick={analyze}>Retry analysis</button>}
+          <div className="mr-drivers">{result.report.drivers.map((driver, index) => <article key={index}><span className="mr-label">KEY DRIVER {index + 1}</span><p>{driver.text}</p><button onClick={() => openEvidence(driver.evidence_id)}>View source <ArrowUpRight size={14} /></button></article>)}</div>
+          {result.report.risks.length > 0 && <div className="mr-risks"><strong>Risks to the outlook</strong><ul>{result.report.risks.map(risk => <li key={risk}>{risk}</li>)}</ul></div>}
+          {withheld.length > 0 && <p className="mr-excluded"><ShieldCheck size={16} />{withheld.length} article{withheld.length === 1 ? "" : "s"} excluded before analysis. <button onClick={() => openArticle(withheld[0])}>Inspect verdict</button></p>}
+          <ProvenanceBadge provenance={{ kind: "live", servedBy: result.served_by }} />
+        </> : <p role="status">{running ? "Screening articles and weighing the evidence…" : "Analyze to get a Buy, Hold or Sell view, the key drivers, and the risks."}</p>}
+      </section>
+    </>}
+    <details className="mr-activity"><summary>Agent activity</summary><RunTimeline label="Agent timeline" anchor="research.timeline" events={timeline.visible} start={timeline.run?.started_at} showLane onSource={ids => ids[0] && openEvidence(ids[0])} empty="Activity appears when you run an analysis." /></details>
+    <RunStats ledger={ledger} {...stats} />
+    <details className="mr-runtime"><summary>Runtime details</summary><dl className="mr-facts"><div><dt>Model</dt><dd>{result?.served_by?.model || runtimeModel || "Not reported"}</dd></div><div><dt>Data</dt><dd>Yahoo Finance · dated source cache</dd></div><div><dt>Analysis</dt><dd>Structured model assessment · cited facts verified</dd></div><div><dt>Article screening</dt><dd>Cisco AI Defense · uninspected articles excluded</dd></div></dl></details>
+    <p className="mr-disclaimer">AI research opinion · 12-month horizon · not personalized investment advice.</p>
+    {document && <SourceDialog document={document} onClose={() => setDocument(null)} />}
+  </div>;
 }

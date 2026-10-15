@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Activity, ArrowLeft, ArrowRight, ArrowUpRight, Bell, CircleAlert, CircleCheck, Compass, Copy, KeyRound, ShieldCheck, Terminal, X } from "lucide-react";
 import { guideAnchor } from "./guide/anchors";
 import { MODEL_USE_CASES } from "./studio-models";
-import { USE_CASE_SERVICE, humanize, serviceRows, type StudioStatus, type UseCaseHealth } from "./studio-status";
+import { USE_CASE_SERVICE, humanize, momentReady, serviceRows, type StudioStatus, type UseCaseHealth } from "./studio-status";
 import "./studio-settings.css";
 import "./studio-shell.css";
 
@@ -28,15 +28,16 @@ export function ServiceBell({ status, onOpenSettings }: { status: StudioStatus |
   const [open, setOpen] = useState(false);
   const ref = useDismiss(open, () => setOpen(false));
   const rows = status ? serviceRows(status) : [];
+  const preview = status?.mode === "preview";
   const down = rows.filter((row) => !row.ok).length;
   return (
     <div className="shell-popover-anchor" ref={ref}>
-      <button className="notification-button" aria-label={status ? `Service status, ${down ? `${down} need attention` : "all ready"}` : "Service status"} aria-expanded={open} onClick={() => setOpen(!open)}>
-        <Bell size={18} />{(down > 0 || !status) && <span />}
+      <button className="notification-button" aria-label={preview ? "Service status, recorded preview" : status ? `Service status, ${down ? `${down} need attention` : "all ready"}` : "Service status"} aria-expanded={open} onClick={() => setOpen(!open)}>
+        <Bell size={18} />{!preview && (down > 0 || !status) && <span />}
       </button>
       {open && (
         <div className="shell-popover" role="dialog" aria-label="Service status">
-          <header><strong>Service status</strong><small>{status ? `Checked ${new Date(status.checkedAt).toLocaleTimeString()}` : ""}</small></header>
+          <header><strong>{preview ? "Recorded preview · live execution disabled" : "Live service status"}</strong><small>{status ? `Checked ${new Date(status.checkedAt).toLocaleTimeString()}` : ""}</small></header>
           {!status ? <p className="shell-muted">The studio API is not answering. Start the studio with <code>npm run dev:studio</code>.</p> : (
             <ul>
               {rows.map((row) => (
@@ -67,28 +68,32 @@ export function HelpDrawer({ status, onClose, onOpenSettings }: { status: Studio
       <aside className="shell-drawer" role="dialog" aria-modal="true" aria-label="Run this demo">
         <header><div><span className="eyebrow">HELP</span><h2>Run this demo</h2></div><button className="st-icon" aria-label="Close help" onClick={onClose}><X size={18} /></button></header>
         <section>
-          <h3>1. Bring your credentials</h3>
-          <p className="shell-muted">Models, Splunk Agent Observability, and Cisco AI Defense are configured per machine in Studio settings and saved to the git-ignored <code>.env</code>.</p>
+          <h3>Start the live studio</h3>
+          <p className="shell-muted">Install Node.js 22.13 or newer and uv. Run <code>npm ci</code>, <code>npm run studio:install</code>, then <code>npm run dev:studio</code>. Open localhost:4200 and configure your models and integrations below.</p>
+          <h3>Configure real execution</h3>
+          <p className="shell-muted">Models, Splunk Agent Observability, and Cisco AI Defense are configured per machine in Studio settings and saved to git-ignored local settings.</p>
           <ul className="shell-checklist">
             {(status?.readiness ?? []).map((row) => (
               <li key={row.id} className={row.ready ? "ok" : "down"}>
                 {row.ready ? <CircleCheck size={15} /> : <CircleAlert size={15} />}
-                <span><strong>{row.title}</strong><small>{row.ready ? "Ready" : `Needs ${row.missing.join(", ")}`}</small></span>
+                <span><strong>{row.title}</strong><small>{momentReady(status, row.id, true).reason}</small></span>
               </li>
             ))}
           </ul>
           <button className="secondary-button" onClick={() => { onClose(); onOpenSettings(); }}><KeyRound size={16} /> Open Studio settings</button>
         </section>
         <section>
-          <h3>2. Start the services</h3>
+          <h3>Start the live services</h3>
+          <p className="shell-muted">Install uv for Python environments. Docker is needed only for live interbank runs. Run <code>npm run studio:doctor</code> to check prerequisites.</p>
           <dl className="shell-commands">
-            <dt><code>npm run banking:install</code> (and fraud, briefing, wealth)</dt><dd>One-time Python environments.</dd>
+            <dt><code>npm run studio:install</code></dt><dd>Installs all five Python environments, including SAR.</dd>
             <dt><code>npm run dev:studio</code></dt><dd>The studio plus the Python services, which Studio settings can then restart.</dd>
             <dt><code>npm run interbank:up</code></dt><dd>The interbank lab in Docker; Studio settings can rebuild it.</dd>
           </dl>
         </section>
+        <section><h3>Last-resort fallback</h3><p className="shell-muted">If live execution is unavailable, explicitly select a recorded fallback in the demo. For a machine without live services, <code>npm run studio:preview</code> starts a recording-only preview with live calls disabled.</p></section>
         <section>
-          <h3>3. Present</h3>
+          <h3>Present</h3>
           <dl className="shell-commands">
             <dt><kbd>⌘ K</kbd> / <kbd>Ctrl K</kbd></dt><dd>Search use cases and pages.</dd>
             <dt>Story builder → <strong>Present story</strong></dt><dd>Full screen, one moment at a time. <kbd>←</kbd> <kbd>→</kbd> step, <kbd>Esc</kbd> exits.</dd>
@@ -231,7 +236,7 @@ export function PresenterBar({ index, total, title, talk, onPrev, onNext, onExit
   /** A guided tour is running: the card renders in the notes slot and the tour owns the arrow keys. */
   guiding?: boolean; onGuide?: () => void;
 }) {
-  const [notes, setNotes] = useState(true);
+  const [notes, setNotes] = useState(false);
   useEffect(() => {
     if (guiding) return;
     const onKey = (event: KeyboardEvent) => {

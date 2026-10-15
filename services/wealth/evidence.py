@@ -157,9 +157,9 @@ def add_market(ev: Evidence, ticker: str, snapshot: dict, source: dict, earnings
     if _num(info.get("forwardPE")):
         valuation["forward_pe"] = field(_num(info.get("forwardPE")), "x", label="Forward P/E")
     if peers.get("medianPe"):
-        valuation["peer_median_pe"] = field(peers["medianPe"], "x", label="Peer median P/E")
+        valuation["peer_median_pe"] = field(peers["medianPe"], "x", label="Peer median trailing P/E")
     if peers.get("pePremium") is not None:
-        valuation["pe_vs_peers"] = field(peers["pePremium"], "fraction", pct(peers["pePremium"], signed=True), label="P/E vs peer median")
+        valuation["pe_vs_peers"] = field(peers["pePremium"], "fraction", pct(peers["pePremium"], signed=True), label="Trailing P/E vs peer median")
     roster = ", ".join(
         f"{m.get('ticker')} {m['trailingPE']:.1f}x" if m.get("trailingPE") else str(m.get("ticker")) for m in members if m.get("ticker"))
     ev.add("valuation", f"{ticker} valuation vs peers" + (" (bank metrics)" if bank else ""), source=label, fields=valuation,
@@ -240,7 +240,7 @@ def add_households(ev: Evidence, book: dict) -> None:
 def add_news(ev: Evidence, item: dict) -> str:
     item_id = f"news:{item['id']}"
     ev.add(item_id, item.get("headline") or item["id"], source=item.get("publisher") or "news", kind="news",
-           text=f"{item.get('headline')}. {item.get('body')}", synthetic=True, date=item.get("date"), publisher=item.get("publisher"))
+           text=f"{item.get('headline')}. {item.get('body')}", synthetic=item.get("synthetic", True), date=item.get("date"), publisher=item.get("publisher"), url=item.get("url"))
     return item_id
 
 

@@ -13,7 +13,7 @@ export const advisoryTour: Tour = {
     {
       id: "advisory.problem", kind: "observe", targets: ["advisory.intro"],
       title: "Hours of prep per review",
-      body: "Jordan rebuilds each client's picture from profile, holdings, CRM notes, and the house view, and must document Reg BI care. Supervisors see the rationale days later.",
+      body: "An advisor needs the client’s goals, investments, recent notes, and concerns in one place before a meeting. AI prepares a brief; people review the proposed actions.",
       variants: [{ when: { anchor: "advisory.intro", present: false }, patch: { targets: ["advisory.households"] } }],
     },
     {
@@ -23,9 +23,14 @@ export const advisoryTour: Tour = {
       body: "Chuck Robbins is Cisco’s Chair and CEO. This hypothetical portfolio concentrates in fictional HCYN, an unrelated investment. Its financial figures and banking events are invented.",
     },
     {
-      id: "advisory.context", kind: "observe", story: true, targets: ["advisory.context"],
+      id: "advisory.context", kind: "observe", targets: ["advisory.context"],
       title: "What the advisor may see",
-      body: "Context lists the house-view update, the company briefing, and at most one service event the client already knows about. Fraud and SAR work never appear here.",
+      body: "Context lists the research update, the company briefing, and at most one service event the client already knows about. Fraud and SAR work never appear here.",
+    },
+    {
+      id: "advisory.inputs", kind: "observe", story: true, targets: ["advisory.inputs"],
+      title: "Read the client record",
+      body: "Compare the investments with the client’s goals and limits. Read the dated notes and recent updates before preparing the meeting.",
     },
     {
       id: "advisory.run", kind: "act", story: true, targets: ["advisory.replay"],
@@ -35,11 +40,11 @@ export const advisoryTour: Tour = {
       body: "This saved sample uses code to compare the hypothetical portfolio with its profile and build a brief. No model ran; it does not consume this session’s handoff.",
     },
     {
-      id: "advisory.notes", kind: "wait", story: true, targets: ["advisory.notes"],
+      id: "advisory.notes", kind: "wait", targets: ["advisory.notes"],
       waitFor: HAS_RESULT, waitingText: "Waiting for the meeting brief…",
       needs: HAS_RESULT, resumeFrom: "advisory.run",
       title: "CRM notes, screened first",
-      body: "The saved sample screens invented notes with local rules. No model or AI Defense call was made. Live preparation can inspect notes before sending them to a model.",
+      body: "Notes are screened before drafting; each row identifies the check and its outcome. A live run can inspect model inputs. The recorded code-written sample makes no model or AI Defense call.",
       variants: [{
         when: { state: { stage: ["withheld"] } },
         patch: { body: "Notes are inspected before any model call. PII is masked and an injected instruction is withheld; each note names what was found and by which check." },
@@ -47,16 +52,16 @@ export const advisoryTour: Tour = {
     },
     {
       id: "advisory.findings", kind: "observe", targets: ["advisory.findings"],
-      title: "Profile against portfolio",
-      body: "Each finding names the rule that fired, its category, and the Reg BI care note. These are code rules, not the model.",
+      title: "Concerns to discuss",
+      body: "These findings show where the investments do not fit the client’s goals or risk profile. Each finding links to the rule and evidence behind it.",
     },
     {
       id: "advisory.actions", kind: "observe", targets: ["advisory.actions"],
-      title: "Next-best actions, in dollars",
+      title: "Choose proposed actions",
       body: "Code sizes each action. Unsuitable ones are flagged, and the supervisor's policy check would deny them. Toggle which go into the plan.",
     },
     {
-      id: "advisory.brief", kind: "observe", targets: ["advisory.brief"], scroll: "start",
+      id: "advisory.brief", kind: "wait", story: true, waitFor: HAS_RESULT, waitingText: "Waiting for the meeting brief…", needs: HAS_RESULT, resumeFrom: "advisory.run", targets: ["advisory.brief"], scroll: "start",
       title: "A checked one-page brief",
       body: "Every statement is checked against the household, research, or briefing, and struck lines are shown. The count says how many were verified.",
     },
@@ -67,8 +72,8 @@ export const advisoryTour: Tour = {
       title: "Jordan submits",
       body: "The advisor checks the brief and the chosen actions, then submits them for supervision.",
       variants: [{
-        when: { not: { state: { stage: ["approval-awaiting_advisor"] } } },
-        patch: { kind: "observe", body: "A live model-generated brief requires advisor review. This code-written sample cannot be submitted for supervision." },
+        when: { state: { stage: ["approval-unavailable"] } },
+        patch: { kind: "observe", title: "Sample review only", body: "A live model-generated brief requires advisor review. This code-written sample cannot be submitted for supervision." },
       }],
     },
     {
@@ -86,7 +91,7 @@ export const advisoryTour: Tour = {
       }],
       variants: [{
         when: { state: { stage: ["approval-unavailable"] } },
-        patch: { kind: "observe", body: "This sample cannot be approved. Live model-generated briefs require supervisor review; approval records a simulated outcome and never executes a trade or transfer.", ciscoFit: [] },
+        patch: { kind: "observe", title: "Live approval explained", body: "This sample cannot be approved. Live model-generated briefs require supervisor review; approval records a simulated outcome and never executes a trade or transfer.", ciscoFit: [] },
       }, {
         when: { any: [{ state: { stage: ["approval-sent"] } }, { state: { stage: ["approval-denied"] } }, { state: { stage: ["approval-rejected"] } }] },
         patch: { kind: "observe" },
@@ -94,8 +99,8 @@ export const advisoryTour: Tour = {
     },
     {
       id: "advisory.stats", kind: "observe", targets: ["advisory.timeline", "stats"], scroll: "start",
-      title: "Measured from this run",
-      body: "The timeline shows screening, rules, the agent and its reviewer, policies, and both approvals. Stats come from this run's events.",
+      title: "Evidence from the original run",
+      body: "The timeline and stats identify what actually ran. Live runs report model calls and approvals; recordings show historical counts. The code-written sample makes no model call.",
       ciscoFit: [{
         product: "Splunk Agent Observability",
         how: "A live meeting-prep run is one agent trace. A replay sends no new trace.",
@@ -145,7 +150,7 @@ export const advisoryPriyaTour: Tour = {
       body: "The note is withheld before any model call, and its masked identifiers name the check that found them. The brief is written without it.",
       ciscoFit: [{
         product: "Cisco AI Defense",
-        how: "Flagged prompt injection and PII in the note in this recording, alongside the local screen.",
+        how: "Inspects notes for prompt injection and PII alongside local screening; each verdict identifies the actual check and outcome.",
         status: "running",
         requires: { status: { service: "wealth", aiDefense: "on" } },
         otherwise: "AI Defense isn't active for wealth on this machine now; the flags shown are from the recording.",

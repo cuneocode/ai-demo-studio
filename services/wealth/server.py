@@ -32,11 +32,14 @@ load_dotenv(Path(os.getenv("WEALTH_ENV_FILE", Path(__file__).resolve().parents[2
 
 import advisory
 import research
+import market_research
 from agentkit import galileo_current
 from cache import cache_root, get_snapshot, is_fresh, load_snapshot
 from compliance import restricted_check, scan_research
 from controls import controls
-from fixtures import household, households
+from fixtures import household, households, research_context, source_meta
+from evidence import Evidence, add_market
+from filings import sections as filing_sections
 from nim import ADVISORY, nim_health, nim_model, nim_reachable, served
 from observability_status import stream_status, summarize
 from providers.fred import fred_health
@@ -118,11 +121,72 @@ def normalize_ticker(value: str | None) -> str:
     return ticker
 
 
+@app.get("/api/wealth/research/inputs/{symbol}")
+async def research_inputs(symbol: str, scenario: str = "ticker"):
+    """Read source data without starting an agent, model call, or recorded run."""
+    ticker = normalize_ticker(symbol)
+    if scenario not in research.SCENARIOS:
+        raise HTTPException(422, "Unknown research scenario")
+    precheck = restricted_check(ticker)
+    if precheck["status"] == "denied":
+        return {"ticker": ticker, "restricted": precheck, "evidence": [], "news": [], "filings": []}
+    try:
+        snapshot, kind = await asyncio.to_thread(get_snapshot, ticker, refresh=False)
+    except ProviderError as exc:
+        raise HTTPException(exc.status, str(exc)) from None
+    source = {"kind": kind, "fetchedAt": snapshot.get("fetchedAt"), **source_meta(snapshot, kind)}
+    earnings, peers, returns, macro, divergences = research._panels(snapshot, None)
+    ev = Evidence()
+    add_market(ev, ticker, snapshot, source, earnings, peers, returns, macro, divergences)
+    return {"ticker": ticker, "source": source, "context": research_context(ticker),
+            "evidence": [row for row in ev.public() if row["fields"] or row["text"]],
+            "news": research.news_items(ticker, scenario == "poisoned-news"),
+            "filings": filing_sections(ticker)}
+
+
 class AnalyzeRequest(BaseModel):
     ticker: str = Field(min_length=1, max_length=10)
     scenario: str | None = Field(default=None, max_length=32)
     refresh: bool = False
     run_id: str | None = Field(default=None, max_length=90)
+
+
+class MarketRequest(BaseModel):
+    ticker: str = Field(min_length=1, max_length=10)
+    packet_id: str = Field(pattern=r"^[a-f0-9]{24}$")
+    run_id: str | None = Field(default=None, max_length=90)
+
+
+@app.get("/api/wealth/market/inputs/{symbol}")
+async def market_inputs(symbol: str, refresh: bool = False):
+    ticker = normalize_ticker(symbol)
+    try:
+        packet = await asyncio.to_thread(market_research.get_packet, ticker, refresh)
+        return market_research.public_packet(packet)
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from None
+    except ProviderError as exc:
+        raise HTTPException(exc.status, str(exc)) from None
+
+
+@app.post("/api/wealth/market/analyze")
+async def market_analyze(request: MarketRequest):
+    ticker = normalize_ticker(request.ticker)
+    try:
+        market_research.load_packet(ticker, request.packet_id)
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from None
+    timeline = store.open(request.run_id, label=f"Market research · {ticker}", scenario="market", prefix="wealth-research")
+    with store.bind(timeline.id):
+        try:
+            body = await _instrumented(timeline.id, ("Market research", ticker),
+                lambda callbacks: market_research.analyze_packet(ticker, request.packet_id, callbacks))
+            if isinstance(body, dict):
+                store.finish(timeline.id, "completed", body)
+            return body
+        except Exception:
+            store.finish(timeline.id, "failed")
+            raise
 
 
 class PublishRequest(BaseModel):

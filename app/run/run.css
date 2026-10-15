@@ -68,3 +68,7 @@
 .demo-status button{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 11px;border:1px solid currentColor;border-radius:7px;background:transparent;color:inherit;font:600 13px/1 var(--font-geist-sans),Arial,sans-serif;cursor:pointer;white-space:nowrap}
 .demo-status button:hover{background:rgba(255,255,255,.06)}
 @media (max-width:760px){.demo-status{grid-template-columns:auto 1fr}.demo-status .demo-status-actions{grid-column:1/-1;justify-content:flex-start}}
+
+/* The timeline scrolls independently so streaming work cannot lengthen the page. */
+.rt-list { max-height: 380px; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.rt-list:focus-visible { outline: 2px solid var(--blue-soft); outline-offset: 3px; }

@@ -80,7 +80,7 @@ export const fraudTour: Tour = {
     {
       id: "fraud.agent", kind: "wait", targets: ["fraud.summary", "fraud.timeline"],
       waitFor: { state: { stage: ["summary"] } }, patience: 30_000,
-      waitingText: "Replaying the agent's tool calls and summary…",
+      waitingText: "Waiting for the agent’s tool calls and summary…",
       needs: { state: { stage: ["summary"] } }, resumeFrom: "fraud.run",
       title: "The triage agent's draft",
       body: "The agent calls scoring, neighborhood, explanation, and playbook tools, then drafts a summary where every point cites tool evidence. A citation check counts the backed points.",
@@ -88,9 +88,9 @@ export const fraudTour: Tour = {
     },
     {
       id: "fraud.decide", kind: "wait", story: true, targets: ["fraud.decision"],
-      waitFor: { state: { stage: ["decided"] } }, waitingText: "Replaying the analyst's decision…",
+      waitFor: { state: { stage: ["decided"] } }, waitingText: "Waiting for the analyst’s decision…",
       title: "Maya decides",
-      body: "The agent only proposes. In this recorded run Maya chose Escalate to investigations, and the decision replays as made. Card actions are simulated.",
+      body: "The agent only proposes; Maya chooses the disposition. Recorded fallbacks show a prior decision. Card actions are simulated, and this lifecycle story continues only after an escalation.",
       ciscoFit: [takeAction],
       variants: [{
         when: { state: { run: ["awaiting-human"] } },
@@ -115,7 +115,7 @@ export const fraudTour: Tour = {
     {
       id: "fraud.stats", kind: "observe", targets: ["stats"],
       title: "Measured from this run",
-      body: "Latency, model calls, tool calls, and tokens come from the run's own events. The badge repeats that this run is recorded, with its date.",
+      body: "Latency, model calls, tool calls, and tokens come from the run's own events. The badge identifies live execution or a recorded fallback.",
       ciscoFit: [
         {
           product: "Splunk Agent Observability",
@@ -174,7 +174,7 @@ export const fraudDisputeTour: Tour = {
       body: "The note is untrusted input. It was flagged as prompt injection, and the agent never saw it; triage continued on the evidence alone.",
       ciscoFit: [{
         product: "Cisco AI Defense",
-        how: "Inspects every untrusted note before the agent; in this recording it flagged Prompt Injection and withheld the note.",
+        how: "Inspects untrusted notes before the agent; the verdict shows whether prompt injection was found and the note withheld.",
         status: "running",
         requires: { status: { service: "fraud", aiDefense: "on" } },
         otherwise: "AI Defense isn't active for fraud on this machine now; the verdict shown is from the recording.",
@@ -212,7 +212,7 @@ export const fraudPiiTour: Tour = {
       ciscoFit: [
         {
           product: "Cisco AI Defense",
-          how: "Inspects each case note for PCI data and flagged the full card number in this recording.",
+          how: "Inspects each case note for PCI data; the verdict identifies detected card numbers.",
           status: "running",
           requires: { status: { service: "fraud", aiDefense: "on" } },
           otherwise: "AI Defense isn't active for fraud on this machine now; the flag shown is from the recording.",

@@ -9,12 +9,14 @@ import { demoRoot, evaluate, findAnchors, resolveFit, resolveStep, type Conditio
 import { loadPosition, loadPrefs, readDeepLink, savePosition, savePrefs, writeDeepLink, type GuidePosition, type GuidePrefs } from "./persistence";
 import { cardWidth, mergeRects, place, scrollDelta, type Placement, type Rect } from "./placement";
 import { TOURS, mainTourFor } from "./tours";
-import { STATUS_STEP_ID } from "./tours/shared";
 import type { Condition, GuideTab, Step, StepAction, Tour } from "./types";
 import "./guide.css";
 
 type Host = { caseId: string; tab: GuideTab; selectTab: (tab: GuideTab) => void };
 export type GuideActions = {
+  /** Starts the same real request as the demo’s live control, only after a user click. */
+  run?: (arg?: string) => void;
+  canRun?: () => boolean;
   /** Replays the recorded run the step names; the same function the demo's own replay control calls. */
   replay?: (arg?: string) => void;
   /** The demo's own "Skip replay" control. */
@@ -75,6 +77,8 @@ export function useGuideActions(caseId: string, actions: GuideActions) {
   const ref = useRef(actions);
   useLayoutEffect(() => { ref.current = actions; });
   useEffect(() => register?.(caseId, {
+    run: (arg) => ref.current.run?.(arg),
+    canRun: () => Boolean(ref.current.canRun?.()),
     replay: (arg) => ref.current.replay?.(arg),
     skipReplay: () => ref.current.skipReplay?.(),
     selectScenario: (id) => ref.current.selectScenario?.(id),
@@ -437,6 +441,11 @@ function GuideOverlay({ tour, steps, active, getHost, hostVersion, getActions, o
   const lastView = useRef("");
   const firstStep = useRef(true);
   const skipped = useRef(new Set<string>());
+  const openedDetails = useRef(new Set<HTMLDetailsElement>());
+  useEffect(() => {
+    const opened = openedDetails.current;
+    return () => { for (const details of opened) details.open = false; opened.clear(); };
+  }, []);
   const marked = useRef(new Map<HTMLElement, string | null>());
   const live = useRef({ status, presenting, paused, cardBox, raw, active, caseId, steps, tour });
   useLayoutEffect(() => { live.current = { status, presenting, paused, cardBox, raw, active, caseId, steps, tour }; });
@@ -468,6 +477,13 @@ function GuideOverlay({ tour, steps, active, getHost, hostVersion, getActions, o
       publish(pending(rawStep));
       return;
     }
+    // Guided targets may sit inside progressively disclosed evidence or telemetry.
+    for (const id of rawStep.targets) {
+      for (const target of document.querySelectorAll<HTMLElement>(`[data-guide~="${CSS.escape(id)}"]`)) {
+        let parent = target.parentElement;
+        while (parent) { if (parent instanceof HTMLDetailsElement && !parent.open) { openedDetails.current.add(parent); parent.open = true; } parent = parent.parentElement; }
+      }
+    }
     const step = resolveStep(rawStep, context);
     const tab = step.tab ?? "demo";
     if (currentHost.tab !== tab) {
@@ -496,7 +512,7 @@ function GuideOverlay({ tour, steps, active, getHost, hostVersion, getActions, o
       return;
     }
     skipped.current.delete(rawStep.id);
-    const ahead = list.slice(current.index + 1).filter((item) => item.showIf && (item.id === STATUS_STEP_ID || statusOnly(item.showIf)) && !evaluate(item.showIf, context));
+    const ahead = list.slice(current.index + 1).filter((item) => item.showIf && statusOnly(item.showIf) && !evaluate(item.showIf, context));
     const hidden = [...skipped.current, ...ahead.map((item) => item.id)];
     const met = step.waitFor ? evaluate(step.waitFor, context) : true;
     // Auto steps act on entry; wait steps act once what they wait for has landed.
@@ -659,10 +675,11 @@ function GuideOverlay({ tour, steps, active, getHost, hostVersion, getActions, o
   useEffect(() => () => markTargets(marked.current, []), [stepKey]);
 
   const next = useCallback(() => {
+    if (!shown) return;
     if (waiting && step.kind === "act" && step.replay && !confirmSkip) { setConfirmSkip(true); return; }
     if (last) finish();
     else move(1);
-  }, [waiting, step, confirmSkip, setConfirmSkip, last, finish, move]);
+  }, [shown, waiting, step, confirmSkip, setConfirmSkip, last, finish, move]);
 
   // Keys: → Enter Space next, ← back, Home first, Esc exit; Tab stays in the card and the targets.
   useEffect(() => {
@@ -712,13 +729,14 @@ function GuideOverlay({ tour, steps, active, getHost, hostVersion, getActions, o
   const placement = shown?.placement ?? null;
   const strip = placement?.mode === "strip" && !stripOpen;
   const kicker = `${step.moment ? `${step.moment} · ` : `${tour.title} · `}Step ${number} of ${total}`;
-  const source = sourceLine(tour, shown);
+  const source = caseId === "kyc-processing" || caseId === "transaction-llm" ? "Illustrative prototype · no live service" : sourceLine(tour, shown);
   const fits = prefs.showCiscoFit ? shown?.fits ?? [] : [];
   const canReplay = Boolean(step.replay && actions_?.replay);
+  const canRun = status?.mode !== "preview" && Boolean(actions_?.canRun?.());
   const replaying = shown?.run === "running" && shown.source === "recorded";
   const waitTooLong = waiting && (shown?.elapsed ?? 0) * 1000 >= patience;
   const nextLabel = last ? (active.cut && presenting ? "Next moment" : "Finish") : waiting && step.kind === "act" ? (confirmSkip ? "Skip anyway" : "Skip") : waiting ? "Skip ahead" : "Next";
-  const nextDisabled = waiting && step.kind === "wait" && !waitTooLong;
+  const nextDisabled = !shown || (waiting && step.kind === "wait" && !waitTooLong);
 
   const card = (
     <div
@@ -749,12 +767,12 @@ function GuideOverlay({ tour, steps, active, getHost, hostVersion, getActions, o
         <button type="button" aria-label="Exit guided tour" onClick={exit}><X size={16} /></button>
       </header>
       {tour.label ? <p className="guide-label">{tour.label}</p> : source ? <p className={`guide-source source-${shown?.source ?? "none"}`}>{source}</p> : null}
-      <h2 id="guide-card-title" ref={titleRef} tabIndex={-1}>{step.title}</h2>
+      <h2 id="guide-card-title" ref={titleRef} tabIndex={-1}>{shown ? step.title : "Loading step…"}</h2>
       {strip ? (
         <button type="button" className="guide-strip-more" aria-expanded={false} onClick={() => setStripOpen(true)}>Show details</button>
       ) : (
         <div id="guide-card-body" className="guide-body">
-          <p>{step.body}</p>
+          <p>{shown ? step.body : "Opening the example and checking its state."}</p>
           {shown?.missing ? <p className="guide-note">This part of the page isn&apos;t showing in this run. Continue to the next step.</p> : null}
           {shown?.offscreen ? <p className="guide-note">{shown.offscreen === "below" ? "↓ Also highlighted below" : "↑ Also highlighted above"}</p> : null}
           {fits.map((fit) => (
@@ -770,7 +788,7 @@ function GuideOverlay({ tour, steps, active, getHost, hostVersion, getActions, o
           {waiting ? (
             <p className="guide-wait" role="status">
               {shown?.run === "running" || shown?.run === "starting" || step.kind === "wait" ? <Loader2 size={14} className="guide-spin" aria-hidden="true" /> : null}
-              <span>{step.kind === "act" && !(shown?.run === "running") ? (step.waitingText ?? "Waiting for you to use the highlighted control.") : `${step.waitingText ?? "Waiting for the page…"} ${clock(shown?.elapsed ?? 0)}`}</span>
+              <span>{shown?.run === "running" && shown.source === "live" ? `Running live… ${clock(shown.elapsed)}` : step.kind === "act" && !(shown?.run === "running") ? (step.waitingText ?? "Waiting for you to use the highlighted control.") : `${step.waitingText ?? "Waiting for the page…"} ${clock(shown?.elapsed ?? 0)}`}</span>
             </p>
           ) : null}
           {last && tour.encores?.length ? (
@@ -785,7 +803,11 @@ function GuideOverlay({ tour, steps, active, getHost, hostVersion, getActions, o
           {(canReplay && waiting) || (replaying && actions_?.skipReplay && waiting) ? (
             <div className="guide-actions">
               {canReplay && waiting && shown?.run !== "running" && shown?.run !== "starting" ? (
-                <button type="button" className="primary" onClick={() => actions_?.replay?.(step.replay?.arg)}>{step.replay?.label ?? "Replay the recorded run"}</button>
+                <>
+                  <button type="button" className="primary" disabled={!canRun} onClick={() => { if (canRun) actions_?.run?.(step.replay?.arg); }}>Run live</button>
+                  {!canRun && <p className="guide-note">Live execution is unavailable or needs input. Check the highlighted controls and service settings, or explicitly choose a fallback.</p>}
+                  <details className="demo-fallback"><summary>Fallback: recorded run</summary><p>No new model call or trace. The result keeps its original date and provenance.</p><button type="button" onClick={() => actions_?.replay?.(step.replay?.arg)}>{step.replay?.label ?? "Replay the recorded run"}</button></details>
+                </>
               ) : null}
               {replaying && actions_?.skipReplay ? <button type="button" onClick={() => actions_?.skipReplay?.()}>Skip to the end of the replay</button> : null}
             </div>
@@ -845,10 +867,10 @@ const rectOf = (element: Element): Rect => {
 };
 
 function sourceLine(tour: Tour, view: View | null): string | null {
-  if (!view) return tour.recording ? "Uses a recorded run" : null;
+  if (!view) return tour.recording ? "Live demo · recorded fallback available" : null;
   if (view.source === "recorded") return view.recordedAt ? provenanceText({ kind: "recorded", recordedAt: view.recordedAt }) : "Recorded run";
   if (view.source === "live") return "Live run";
   if (view.source === "sample") return "Sample data · no model call";
   if (view.source === "scripted") return "Scripted · no model call";
-  return tour.recording ? "Uses a recorded run" : null;
+  return tour.recording ? "Live demo · recorded fallback available" : null;
 }

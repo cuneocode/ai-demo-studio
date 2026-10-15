@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
+import { reviewedRecording } from "../scripts/recording-review";
 import { expect, type Page } from "@playwright/test";
 
 /** Services up with AI Defense and Agent Control on, as on the demo machine; briefing runs without AI Defense. */
@@ -63,7 +64,7 @@ export async function mockStudio(page: Page, status: object = STATUS_LIVE) {
     if (!dir) return route.fulfill({ status: 404, json: { detail: "No recordings." } });
     if (!name) return route.fulfill({ json: { recordings: listing(dir) } });
     const file = resolve(dir, `${decodeURIComponent(name)}.json`);
-    return existsSync(file) ? route.fulfill({ body: readFileSync(file, "utf8"), contentType: "application/json" }) : route.fulfill({ status: 404, json: { detail: "Not found." } });
+    return existsSync(file) ? route.fulfill({ json: reviewedRecording(service, name, JSON.parse(readFileSync(file, "utf8"))) }) : route.fulfill({ status: 404, json: { detail: "Not found." } });
   });
   await page.route("**/api/studio/status", (route) => route.fulfill({ json: status }));
   return paid;
@@ -117,8 +118,10 @@ export async function walk(page: Page, { act = false, maxSteps = 40 }: { act?: b
     await expect(page.locator(".guide-dim")).toBeAttached();
     if (view.holes) await expect.poll(() => page.locator("[data-guide-active='true']").count(), { message: `${view.step}: targets are marked` }).toBeGreaterThan(0);
 
-    const replay = card(page).locator(".guide-actions .primary");
-    if (await replay.isVisible()) {
+    const fallback = card(page).locator(".guide-actions details.demo-fallback");
+    if (await fallback.count()) {
+      if ((await fallback.getAttribute("open")) === null) await fallback.locator("summary").click();
+      const replay = fallback.getByRole("button", { name: /^Replay / });
       await replay.click();
       await page.waitForTimeout(600);
       continue;

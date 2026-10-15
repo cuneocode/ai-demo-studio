@@ -13,7 +13,7 @@
   padding: 14px 16px 12px; border: 1px solid #3a5070; border-radius: 12px;
   background: #0f1724; color: #eef2f8; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
   font-size: var(--font-body); line-height: 1.45;
-  transition: left .22s ease, top .22s ease, opacity .18s ease;
+  transition: opacity .18s ease;
 }
 .guide-card.mode-pending { left: 50%; top: 50%; width: 340px; transform: translate(-50%, -50%); }
 .guide-card.mode-presenter { position: static; max-height: 34vh; padding: 0 0 10px; border: 0; border-bottom: 1px solid var(--border-soft); border-radius: 0; background: transparent; box-shadow: none; }

@@ -155,3 +155,25 @@ def test_fraud_handoff_becomes_cited_evidence(client):
 def test_unknown_decision_is_rejected(client):
     response = client.post("/api/sar/runs/sar-nope-000000/review", json={"request_id": "x", "decision": "file", "by": "A"})
     assert response.status_code == 409
+
+
+def test_source_inputs_match_selected_case_and_exclude_derived_findings(client):
+    from casefile import CaseFile, scenario
+    for scenario_id in ("mule-reyes", "structuring-harbor", "explained-novak", "injection-reyes"):
+        response = client.get(f"/api/sar/scenarios/{scenario_id}/inputs")
+        assert response.status_code == 200
+        body = response.json()
+        cf = CaseFile(scenario(scenario_id))
+        assert body["synthetic"] is True
+        assert len(body["transactions"]) == len(cf.case["transactions"])
+        for row in body["transactions"]:
+            original = next(tx for tx in cf.case["transactions"] if tx["id"] == row["id"])
+            assert row["amount"] == original["amount"]
+            assert row["memo"] == cf.memos.get(row["id"], original.get("memo", ""))
+        assert any(row["kind"] == "kyc" for row in body["records"])
+        assert not any(row["kind"] in {"indicator", "typology", "aggregate"} for row in body["records"])
+        assert "ssn" not in body and "subject" not in body
+    clean = client.get("/api/sar/scenarios/mule-reyes/inputs").json()
+    attack = client.get("/api/sar/scenarios/injection-reyes/inputs").json()
+    assert clean["records"] != attack["records"]
+    assert client.get("/api/sar/scenarios/missing/inputs").status_code == 404

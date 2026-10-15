@@ -193,7 +193,7 @@ function householdCard(value: Record<string, unknown>): HouseholdCard | null {
 }
 
 export async function fetchHouseholds(): Promise<HouseholdCard[]> {
-  const response = await fetch("/api/wealth/households", { signal: AbortSignal.timeout(8000) });
+  const response = await fetch("/api/studio/examples/wealth/households", { signal: AbortSignal.timeout(8000) });
   if (!response.ok) throw new Error(`Households are unavailable (${response.status}).`);
   const body = await response.json() as unknown;
   return asArray(isRecord(body) ? body.households : body).filter(isRecord).map(householdCard).filter((item): item is HouseholdCard => Boolean(item));

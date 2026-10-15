@@ -63,6 +63,10 @@ const THEME_ORDER: Array<keyof Pick<CompanyBriefingRecord, "objectives" | "risks
 
 function metricValue(metric: BriefingMetric) {
   if (!metric.value) return metric.source === "absent" ? "Absent" : "Not reported";
+  const numeric = Number(metric.value.replace(/,/g, ""));
+  if (metric.unit?.toUpperCase() === "USD" && Number.isFinite(numeric)) {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: Number.isInteger(numeric) ? 0 : 2 }).format(numeric);
+  }
   return metric.unit ? `${metric.value} ${metric.unit}` : metric.value;
 }
 
@@ -78,17 +82,16 @@ function Citation({ excerpt, item, sourceUrl }: { excerpt?: string; item?: strin
 }
 
 function ThemePanel({ theme }: { theme: BriefingTheme }) {
+  const first = theme.facts[0];
   return (
     <article className="briefing-panel">
       <h3>{theme.title}<span className={`briefing-theme-status ${theme.status}`}>{theme.status}</span></h3>
-      {theme.facts.length === 0 ? (
-        <p className="briefing-empty">{theme.note || "No grounded claim remained after cite-or-abstain checks."}</p>
-      ) : theme.facts.map((fact, index) => (
-        <div className="briefing-fact" key={`${theme.id}-${index}`}>
-          <p>{fact.text}</p>
-          <Citation excerpt={fact.excerpt} item={fact.item} sourceUrl={fact.sourceUrl} />
-        </div>
-      ))}
+      {!first && <p className="briefing-empty">{theme.note || "No grounded claim remained after citation checks."}</p>}
+      {theme.facts.length > 0 && <section className="demo-details"><h3>{theme.facts.length} cited findings</h3>
+        {theme.facts.map((fact, index) => <div className="briefing-fact" key={`${theme.id}-${index}`}>
+          <p>{fact.text}</p><Citation excerpt={fact.excerpt} item={fact.item} sourceUrl={fact.sourceUrl} />
+        </div>)}
+      </section>}
     </article>
   );
 }
@@ -181,7 +184,7 @@ export default function CompanyBriefing({
       if (options.query) body.append("query", options.query);
       if (options.cik) body.append("cik", options.cik);
       if (options.file) body.append("file", options.file);
-      if (options.refresh) body.append("refresh", "true");
+      body.append("refresh", "true"); // Live extraction must not silently return a cached briefing.
       const response = await fetch("/api/briefing/analyze", {
         method: "POST",
         body,
@@ -323,7 +326,7 @@ export default function CompanyBriefing({
     notify(null);
   }
 
-  useGuideActions("company-briefing", { replay: () => { void replayRecorded(); } });
+  useGuideActions("company-briefing", { run: () => { void startExtract(); }, canRun: () => !loading && Boolean(query.trim() || file), replay: () => { void replayRecorded(); } });
 
   function refreshBriefing() {
     const previous = lastRequest.current;
@@ -351,6 +354,7 @@ export default function CompanyBriefing({
       />
 
       <div className="briefing-layout">
+        <section className="demo-details"><h3>Run a live extract · company search or file upload</h3>
         <section className="briefing-card" {...guideAnchor("briefing.intake")}>
           <div className="briefing-kicker">
             <span><Building2 size={14} /> ISSUER INTAKE</span>
@@ -407,16 +411,19 @@ export default function CompanyBriefing({
               </button>
               <button type="button" className="secondary" disabled={!displayed || loading} onClick={refreshBriefing}>Refresh</button>
               <button type="button" className="secondary" disabled={!accepted && !draft && !file && !query} onClick={clearCompany}>Clear</button>
-              {recordings.length > 0 && (
-                <button id="briefing-replay" {...guideAnchor("briefing.replay")} type="button" className="secondary" disabled={loading} onClick={replayRecorded} title={`${recordings[0].title} · recorded ${new Date(recordings[0].recorded_at).toLocaleDateString()}`}>
-                  <History size={15} /> Replay the recorded extract
-                </button>
-              )}
+
             </div>
             <p className="briefing-disclaimer">Public filings and uploaded text only. This is not investment advice, and the agent does not browse the open web or IR sites.</p>
           </form>
-        </section>
+        </section></section>
 
+        <details className="demo-fallback"><summary>Fallback: recorded extract</summary>
+              {recordings.length > 0 && (
+                <button data-demo-replay id="briefing-replay" {...guideAnchor("briefing.replay")} type="button" className="secondary" disabled={loading} onClick={replayRecorded} title={`${recordings[0].title} · recorded ${new Date(recordings[0].recorded_at).toLocaleDateString()}`}>
+                  <History size={15} /> Replay recording
+                </button>
+              )}
+        </details>
         {error && (
           <div className="briefing-error">
             <CircleAlert size={14} />
@@ -516,7 +523,7 @@ export default function CompanyBriefing({
               </article>
             </div>
 
-            <section className="briefing-trail" {...guideAnchor("briefing.trail")}>
+            <section className="demo-details"><h3>Agent steps & source trail</h3><section className="briefing-trail" {...guideAnchor("briefing.trail")}>
               <h3>Deep Agent trail</h3>
               {displayed.todos.length > 0 && (
                 <ul className="briefing-todos">
@@ -558,7 +565,7 @@ export default function CompanyBriefing({
                   {displayed.security.blocked != null ? ` · ${displayed.security.blocked} blocked` : ""}
                 </p>
               )}
-            </section>
+            </section></section>
           </>
         )}
       </div>
@@ -601,7 +608,7 @@ function observeBriefing(run: ObservedRun, status: number, payload: unknown): Ob
 function observeRecordedBriefing(run: ObservedRun, payload: unknown, recordedAt: string): ObservedRun {
   const original = usageFrom((payload as Record<string, unknown> | null)?.usage);
   return {
-    ...observeBriefing(run, 200, { ...(payload as Record<string, unknown>), cached: true, usage: { llm_calls: 0, input_tokens: 0, output_tokens: 0 } }),
+    ...observeBriefing(run, 200, payload),
     status: "completed",
     durationMs: undefined,
     otlp: undefined,
@@ -610,7 +617,7 @@ function observeRecordedBriefing(run: ObservedRun, payload: unknown, recordedAt:
     replay: true,
     provenance: "recorded",
     recordedAt,
-    note: `Recorded run · no model calls, inspections, or export now${original.llmCalls != null ? ` (the original run made ${original.llmCalls} model calls)` : ""}`,
+    note: `Historical counts · ${original.llmCalls ?? "unknown"} original model calls. No new calls, inspections, or trace export.`,
   };
 }
 

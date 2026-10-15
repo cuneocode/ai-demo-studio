@@ -18,7 +18,7 @@ export const interbankTour: Tour = {
       id: "interbank.offline", kind: "observe", targets: ["interbank.offline"],
       showIf: { status: { service: "interbank", up: false } },
       title: "The lab is offline",
-      body: "Live runs need the Docker lab. Committed recordings of real lab runs are served by the studio, so this tour still replays one, labelled.",
+      body: "Live runs need the Docker lab. Start it to run the real agents and gateways; if unavailable, explicitly choose a labelled recording.",
     },
     {
       id: "interbank.scenario", kind: "observe", targets: ["interbank.scenarios", "interbank.kickoff"],
@@ -117,7 +117,7 @@ export const interbankKickoffTour: Tour = {
       body: "The gateway refused it, with the AI Defense classifications and event ID. Neither agent received the message, so nothing was investigated.",
       ciscoFit: [{
         product: "Cisco AI Defense",
-        how: "Blocked the kickoff at Bank A's gateway for Prompt Injection and General Harms in this recording.",
+        how: "Inspects the kickoff at Bank A’s gateway; the displayed verdict shows whether it was blocked.",
         status: "running",
         requires: { status: { service: "interbank", aiDefense: "on" } },
         otherwise: "The lab isn't running now; the block shown is from the recording.",

@@ -92,7 +92,7 @@ async function openSar(page: Page) {
   await page.goto("/", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Open SAR investigation experience" }).first().click();
   const panel = page.locator("#case-panel-demo");
-  await expect(panel.getByRole("region", { name: "Business outcomes" })).toBeVisible();
+  await expect(panel.getByRole("heading", { name: "Does this case need a report?" })).toBeVisible();
   return panel;
 }
 
@@ -119,7 +119,7 @@ test("a case run streams a cited narrative and filing waits for a separate QA ap
   expect(await sentences.count()).toBeGreaterThan(6);
   for (const sentence of await sentences.all()) expect(await sentence.locator(".sar-cite").count()).toBeGreaterThan(0);
   await expect(narrative.locator(".sar-pill.ok")).toContainText(/(\d+) of \1 sentences verified/);
-  await expect(narrative.locator(".sar-recommendation")).toContainText("File a SAR");
+  await expect(panel.locator(".sar-recommendation")).toContainText("Prepare a suspicious activity report");
 
   const cite = sentences.first().locator(".sar-cite").first();
   const id = (await cite.textContent())!;
@@ -132,8 +132,8 @@ test("a case run streams a cited narrative and filing waits for a separate QA ap
   await expect(decision.locator(".sar-denied")).toContainText("Agent Control · sar.no_tipping_off · deny");
   expect(mock.contacts).toBe(1);
 
-  await expect(decision.getByRole("radio", { name: "File SAR" })).toHaveAttribute("aria-checked", "true");
-  await decision.getByRole("button", { name: "Decide: file SAR" }).click();
+  await expect(decision.getByRole("radio", { name: "Report suspicious activity" })).toHaveAttribute("aria-checked", "true");
+  await decision.getByRole("button", { name: "Send report to QA" }).click();
   await expect.poll(() => mock.decisions[0]).toMatchObject({ step: "review", request_id: "investigator-1", decision: "file", by: "Theo Marsh" });
   await expect(decision.locator("#sar-decision-heading")).toHaveText("Waiting for second-line QA");
   await expect(decision.locator(".sar-policies li.deny")).toContainText("sar.file_requires_approval");
@@ -158,7 +158,7 @@ test("the injection case withholds the flagged text and the typology rules still
   await investigate(page, /injected instruction/);
   await expect(panel.locator(".sar-case")).toHaveClass(/is-attack/);
   await expect(panel.locator(".sar-narrative .sar-pill.deny")).toContainText("3 segments withheld");
-  await expect(panel.locator(".sar-recommendation")).toContainText("File a SAR");
+  await expect(panel.locator(".sar-recommendation")).toContainText("Prepare a suspicious activity report");
   await panel.locator(".sar-filter select").selectOption("withheld");
   await expect(panel.locator(".sar-evidence li")).toHaveCount(3);
   await expect(panel.locator(".sar-evidence li.is-withheld")).toHaveCount(2);
@@ -226,6 +226,6 @@ test("an investigation in progress survives a switch to the Architecture tab", a
   await page.getByRole("tab", { name: "Use case demo" }).click();
   await expect(panel.locator("#sar-decision-heading")).toHaveText("Investigator review");
   await expect(panel.locator(".sar-narrative .sar-sentence")).toHaveCount(before);
-  await panel.locator(".sar-decision").getByRole("button", { name: "Decide: file SAR" }).click();
+  await panel.locator(".sar-decision").getByRole("button", { name: "Send report to QA" }).click();
   await expect.poll(() => mock.decisions.length).toBe(1);
 });

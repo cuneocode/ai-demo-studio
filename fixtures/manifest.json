@@ -177,6 +177,20 @@
       "owner": "sar",
       "demos": ["sar"],
       "synthetic": true
+    },
+    {
+      "path": "fixtures/studio/sar-scenarios.json",
+      "owner": "shell",
+      "description": "Presentation cards derived from SAR synthetic case fixtures; served without Python.",
+      "demos": ["sar-support"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/studio/wealth-households.json",
+      "owner": "shell",
+      "description": "Presentation cards derived from hypothetical households; served without Python.",
+      "demos": ["client-advisory"],
+      "synthetic": true
     }
   ]
 }

@@ -243,7 +243,7 @@ test("every other use case follows the continuous-system projection contract", a
   const cases = [
     { id: "fraud-modeling", title: "Card fraud triage", mode: "implemented" },
     { id: "company-briefing", title: "Company briefing", mode: "implemented" },
-    { id: "market-research", title: "Market event → house-view update", mode: "implemented" },
+    { id: "market-research", title: "Market research", mode: "implemented" },
     { id: "client-advisory", title: "Advisor meeting prep", mode: "implemented" },
     { id: "kyc-processing", title: "KYC processing", mode: "proposed" },
     { id: "sar-support", title: "SAR investigation", mode: "implemented" },

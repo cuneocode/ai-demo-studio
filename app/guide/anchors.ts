@@ -4,7 +4,7 @@
  * that no component renders.
  */
 export const ANCHORS = [
-  "case.status", "case.tabs", "case.tab.architecture", "guide.launch", "status-banner",
+  "case.status", "case.tabs", "case.tab.architecture", "guide.launch",
   "stats", "stats.observability", "stats.defense",
   "present.bar", "present.guide",
   "arch.explorer", "arch.mode", "arch.rail", "arch.focus", "arch.canvas", "arch.env",
@@ -12,6 +12,7 @@ export const ANCHORS = [
   "fraud.band", "fraud.scenarios", "fraud.run", "fraud.replay", "fraud.queue", "fraud.verdicts", "fraud.show-network", "fraud.network",
   "fraud.reasons", "fraud.timeline", "fraud.dispute", "fraud.summary", "fraud.decision", "fraud.bulk", "fraud.note", "fraud.audit",
   "fraud.shared", "fraud.handoff", "fraud.escalate", "fraud.hood",
+  "sar.inputs", "research.inputs", "advisory.inputs",
   "sar.band", "sar.runtime", "sar.inbox", "sar.inbox.open", "sar.scenarios", "sar.case", "sar.clock", "sar.investigate", "sar.replay",
   "sar.narrative", "sar.recommendation", "sar.decision", "sar.policies", "sar.typologies", "sar.evidence", "sar.timeline", "sar.audit",
   "research.intro", "research.scenarios", "research.run", "research.replay", "research.result", "research.blocked", "research.impact",

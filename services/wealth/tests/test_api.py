@@ -287,3 +287,40 @@ def test_attach_galileo_builds_official_callback(monkeypatch):
     assert callbacks
     assert seen["start"]["name"] == "Wealth research · synthesize"
     assert seen["kwargs"]["start_new_trace"] is False
+
+
+def test_research_inputs_match_sources_without_running_agent(monkeypatch, tmp_path):
+    from fixtures import earnings_event, fictional_snapshot
+    client = _client(monkeypatch, tmp_path)
+    monkeypatch.setattr(server, "get_snapshot", lambda ticker, **kw: (fictional_snapshot(ticker), "fictional"))
+    def unexpected(*args, **kwargs):
+        raise AssertionError("Input preview must not run an agent")
+    monkeypatch.setattr(research, "run_research", unexpected)
+    clean = client.get("/api/wealth/research/inputs/HCYN?scenario=earnings").json()
+    assert clean["context"]["event"] == earnings_event("HCYN")
+    assert clean["source"]["fictional"] is True
+    assert clean["evidence"] and clean["filings"]
+    assert not any(row.get("poisoned") for row in clean["news"])
+    attack = client.get("/api/wealth/research/inputs/HCYN?scenario=poisoned-news").json()
+    assert any(row.get("poisoned") for row in attack["news"])
+
+
+def test_restricted_preview_never_fetches_market_data(monkeypatch, tmp_path):
+    client = _client(monkeypatch, tmp_path)
+    def unexpected(*args, **kwargs):
+        raise AssertionError("Restricted issuer must stop before data retrieval")
+    monkeypatch.setattr(server, "get_snapshot", unexpected)
+    response = client.get("/api/wealth/research/inputs/KSTL?scenario=restricted")
+    assert response.status_code == 200
+    assert response.json()["restricted"]["status"] == "denied"
+    assert response.json()["evidence"] == []
+    assert client.get("/api/wealth/research/inputs/HCYN?scenario=unknown").status_code == 422
+
+
+def test_client_input_record_is_the_agent_fixture(monkeypatch, tmp_path):
+    from fixtures import household
+    client = _client(monkeypatch, tmp_path)
+    for name in ("chuck-robbins", "okafor", "priya-raman"):
+        response = client.get(f"/api/wealth/households/{name}")
+        assert response.status_code == 200
+        assert response.json() == household(name)

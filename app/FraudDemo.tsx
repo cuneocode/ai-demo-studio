@@ -7,7 +7,6 @@ import {
 } from "lucide-react";
 import "./banking.css";
 import "./fraud.css";
-import DemoStatusBanner from "./DemoStatusBanner";
 import FraudRuntimeDetails, { type FraudHealth } from "./FraudRuntimeDetails";
 import RunStats, { agentTraceIntegration, defenseFacts, defenseFrom, defenseIntegration, DEFENSE_TILES, startRun, traceFacts, useRunLedger, type ObservedRun, type StatsCard } from "./RunStats";
 import { saveHandoff } from "./lifecycle-handoff";
@@ -71,10 +70,10 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
   const runLive = steps.run?.status === "running" && !replay;
 
   useEffect(() => {
-    const get = (path: string) => fetch(`${API}/${path}`, { signal: AbortSignal.timeout(12000) }).then((r) => (r.ok ? r.json() : Promise.reject(new Error(path))));
+    const get = (path: string) => fetch(path === "scenarios" || path === "cases" ? `/api/studio/examples/fraud/${path}` : `${API}/${path}`, { signal: AbortSignal.timeout(12000) }).then((r) => (r.ok ? r.json() : Promise.reject(new Error(path))));
     get("health").then(setHealth).catch(() => setHealthFailed(true));
     get("scenarios").then((body) => { setScenarios(body.scenarios ?? []); setMule(body.illustrative?.mule ?? ""); }).catch(() => undefined);
-    get("cases").then((body) => setCases(body.cases ?? [])).catch(() => undefined);
+    fetch(`${API}/cases`, { signal: AbortSignal.timeout(2000) }).then((r) => r.ok ? r.json() : Promise.reject()).catch(() => get("cases")).then((body) => setCases(body.cases ?? [])).catch(() => undefined);
     get("model-card").then(setCard).catch(() => undefined);
   }, []);
 
@@ -155,9 +154,7 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
       ledgerStarted.current = run.startedAt;
       ledger.record(run);
     } catch (cause) {
-      const recording = recordingFor(id);
-      setError(cause instanceof Error ? cause.message : "The run did not start.");
-      if (recording) void replayRecording(recording.name);
+      setError(cause instanceof Error ? cause.message : "The run did not start. Retry live or explicitly choose a recorded fallback.");
     } finally {
       setStarting(false);
     }
@@ -195,6 +192,8 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
   const primaryLabel = starting ? "Starting…" : busy ? "Triaging…" : runLive && state.pending.length ? "Waiting for the analyst" : state.result || steps.run ? "Triage again" : "Triage queue";
 
   useGuideActions("fraud-modeling", {
+    run: () => { void triage(); },
+    canRun: () => Boolean(health) && !starting && !busy,
     replay: (name) => {
       const pick = name && recordings.some((item) => item.name === name) ? name : recordingFor(scenarioId)?.name;
       if (pick) void replayRecording(pick);
@@ -236,9 +235,9 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
       </>}
 
       {nav.presenting && fraudPresenterHints[scenarioId] && <p className="fx-presenter-hint" role="note"><b>Presenter</b> {fraudPresenterHints[scenarioId]}</p>}
-      <BusinessBand card={card} state={state} replay={replay} />
-      <FraudStatus health={health} failed={healthFailed} recording={recordingFor(scenarioId)?.name} onReplay={replayRecording} />
+      <section className="demo-details"><h3>Business outcome & measurement</h3><BusinessBand card={card} state={state} replay={replay} /></section>
 
+      <section className="demo-details"><h3>Scenario: {scenario?.title ?? "Compromised merchant"} · change scenario</h3>
       <section className="fx-scenarios" aria-label="Scenarios" {...guideAnchor("fraud.scenarios")}>
         {(scenarios.length ? scenarios : []).map((item) => (
           <button
@@ -254,20 +253,20 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
             <small><b>Expected:</b> {item.expected}</small>
           </button>
         ))}
-        {!scenarios.length && <p className="fx-muted">{healthFailed ? "Scenarios load from the fraud service." : "Loading scenarios…"}</p>}
-      </section>
+        {!scenarios.length && <p className="fx-muted">{healthFailed ? "Recorded scenarios could not be loaded. Reload the studio." : "Loading scenarios…"}</p>}
+      </section></section>
 
       <div className="fx-actions">
         <button id="triage-queue" className="fx-primary" onClick={() => triage()} disabled={starting || busy} {...guideAnchor("fraud.run")}>
           {starting || busy ? <Loader2 size={16} className="spin" /> : <Play size={16} />} {primaryLabel}
         </button>
         <span className="fx-actions-scenario">{scenario ? <>Scenario: <strong>{scenario.title}</strong></> : null}</span>
-        <ReplayPicker recordings={recordings} onPick={replayRecording} disabled={starting} anchor="fraud.replay" />
+        <ReplayPicker recommendedName={recordingFor(scenarioId)?.name} recordings={recordings} onPick={replayRecording} disabled={starting} anchor="fraud.replay" />
         {steps.replaying && <button className="fx-secondary" onClick={steps.skip}><FastForward size={14} /> Skip replay</button>}
       </div>
       {error && <div className="banking-error fx-error" role="alert"><CircleAlert size={14} /><div>{error}</div><button aria-label="Dismiss error" onClick={() => setError("")}><X size={14} /></button></div>}
 
-      <QueueTable cases={cases} state={state} replay={replay} recordedAt={steps.run?.finished_at} />
+      <section className="demo-details"><h3>Full fraud queue</h3><QueueTable cases={cases} state={state} replay={replay} recordedAt={steps.run?.finished_at} /></section>
       {mule && <p className="fx-mule"><span className="fx-tag illustrative">Illustrative · not in the card queue</span> {mule}</p>}
 
       {(state.opened || steps.runId) && (
@@ -296,10 +295,6 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
           </div>
 
           <div className="fx-case-right">
-            <section className="fx-timeline" aria-labelledby="fx-steps-title" {...guideAnchor("fraud.timeline")}>
-              <h4 id="fx-steps-title">Triage steps {replay && <ProvenanceBadge provenance={{ kind: "recorded", recordedAt: steps.run?.finished_at ?? steps.run?.started_at ?? "", servedBy: state.servedBy }} />}</h4>
-              <RunTimeline label="Fraud triage steps" events={steps.visible} start={steps.run?.started_at} className="boxed" showLane empty="Waiting for the first step…" />
-            </section>
             {state.dispute && <DisputeCard state={state} />}
             <SummaryCard state={state} replay={replay} recordedAt={steps.run?.finished_at ?? steps.run?.started_at} />
             <DecisionBar
@@ -314,6 +309,12 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
                 ))}</div>
               </div>
             )}
+            <section className="demo-details"><h3>Agent steps & evidence</h3>
+            <section className="fx-timeline" aria-labelledby="fx-steps-title" {...guideAnchor("fraud.timeline")}>
+              <h4 id="fx-steps-title">Triage steps {replay && <ProvenanceBadge provenance={{ kind: "recorded", recordedAt: steps.run?.finished_at ?? steps.run?.started_at ?? "", servedBy: state.servedBy }} />}</h4>
+              <RunTimeline label="Fraud triage steps" events={steps.visible} start={steps.run?.started_at} className="boxed" showLane empty="Waiting for the first step…" />
+            </section>
+            </section>
             {state.opened && <NoteComposer key={`${steps.runId}-${scenarioId}`} runId={replay ? null : steps.runId} caseId={state.opened.id} initial={state.scenario?.analyst_note ?? ""} />}
             <AuditTrail state={state} />
             {serviceEvent && (
@@ -333,13 +334,12 @@ export default function FraudDemo({ onBack, onAdd, inStory, embedded = false }: 
         </section>
       )}
 
-      <BacktestStrip card={card} />
-      <ComputeFooter card={card} run={state.score ? { backend: state.score.backend, device: state.score.device, model_ms: state.score.model_ms } : undefined} />
+      <section className="demo-details"><h3>Model evaluation & backtest</h3><BacktestStrip card={card} /></section>
+      <section className="demo-details"><h3>Scoring runtime</h3><ComputeFooter card={card} run={state.score ? { backend: state.score.backend, device: state.score.device, model_ms: state.score.model_ms } : undefined} /></section>
       <RunStats ledger={ledger} {...fraudStats(health, healthFailed)} empty="Triage the queue. The agent's model calls, tool spans, and AI Defense verdicts land here." />
-      <details className="fx-hood" {...guideSafeAnchor("fraud.hood")}>
-        <summary>Under the hood</summary>
+      <div {...guideSafeAnchor("fraud.hood")}>
         <FraudRuntimeDetails health={health} />
-      </details>
+      </div>
       {!embedded && inStory && <div className="story-context"><span>STORY MODE</span> Escalate a case to hand it to SAR investigation.</div>}
     </div>
   );
@@ -595,28 +595,6 @@ function AuditTrail({ state }: { state: TriageState }) {
       ))}</ol>
     </section>
   );
-}
-
-/** Never a dead page: what is offline, what still works, and how to fix it. */
-function FraudStatus({ health, failed, recording, onReplay }: { health: FraudHealth | null; failed: boolean; recording?: string; onReplay: (name: string) => void }) {
-  if (failed) {
-    return <DemoStatusBanner tone="down" className="fraud-status" title="The fraud triage service is not answering"
-      stillWorks="The architecture view. Scenarios, scores, and recorded runs are served by the fraud service."
-      fix="Start Card fraud triage under Services in Studio settings." />;
-  }
-  if (!health) return null;
-  const scorer = health.backend === "live" ? null : health.backend === "cache" ? `recorded GNN scores${health.recorded_at ? ` (${new Date(health.recorded_at).toLocaleDateString()})` : ""}` : "sample scores for the synthetic payments";
-  const agentDown = health.agent?.status !== "ready";
-  if (!scorer && !agentDown) return null;
-  const replay = recording ? <button type="button" onClick={() => onReplay(recording)}><History size={14} aria-hidden="true" /> Replay recorded run</button> : null;
-  return <DemoStatusBanner
-    tone="degraded" className="fraud-status"
-    title={[scorer && "The live GNN scorer on Sparky is offline", agentDown && "no model is reachable for the triage agent"].filter(Boolean).join("; ").replace(/^n/, "N")}
-    stillWorks={`Triage runs end to end with ${scorer ?? "live scores"}${agentDown ? ", and a scripted summary (no model) labelled as such" : ", and the triage agent"}.`}
-    fix={[scorer && "Start the GNN scoring sidecar on Sparky", agentDown && "check the fraud-modeling model chain in Studio settings"].filter(Boolean).join("; ") + "."}
-    settingsSection={agentDown ? "st-models" : "st-services"}
-    actions={replay}
-  />;
 }
 
 function fraudStats(health: FraudHealth | null, failed: boolean): { observability: StatsCard; defense: StatsCard } {

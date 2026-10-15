@@ -126,7 +126,7 @@ export default function RunTimeline({ label, anchor, events, start, toLine = def
   const lines = events.filter((event) => !lanes || lanes.includes(laneOf(event))).map(toLine).filter((line): line is TimelineLine => line !== null);
   const { ref, onScroll } = useStickToBottom(lines.length);
   return (
-    <ol ref={ref} onScroll={onScroll} className={`rt-list ${className}`} aria-label={label} aria-live="polite" aria-relevant="additions" data-guide={anchor}>
+    <ol tabIndex={0} ref={ref} onScroll={onScroll} className={`rt-list ${className}`} aria-label={label} aria-live="polite" aria-relevant="additions" data-guide={anchor}>
       {lines.length ? lines.map((line) => <TimelineItem key={line.event.id} line={line} start={start} expanded={expanded.has(line.event.id)} onToggle={() => toggle(line.event.id)} onSource={onSource} showLane={showLane} />)
         : <li className="rt-empty">{empty ?? "Steps appear here as the run proceeds."}</li>}
     </ol>

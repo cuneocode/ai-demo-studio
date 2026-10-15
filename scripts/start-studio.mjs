@@ -11,12 +11,14 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const host = "127.0.0.1";
 const studioPort = Number(process.env.STUDIO_PORT || 4200);
 const frontendPort = Number(process.env.FRONTEND_PORT || studioPort + 1);
-const reuseServices = process.env.STUDIO_REUSE_SERVICES === "true";
+const preview = process.env.STUDIO_PREVIEW === "1";
+const reuseServices = preview || process.env.STUDIO_REUSE_SERVICES === "true";
 const serviceSpecs = [
   { prefix: "/api/banking", port: 8011, directory: "banking" },
   { prefix: "/api/fraud", port: 8012, directory: "fraud" },
   { prefix: "/api/briefing", port: 8013, directory: "briefing" },
   { prefix: "/api/wealth", port: 8014, directory: "wealth" },
+  { prefix: "/api/sar", port: 8015, directory: "sar" },
   // The interbank lab runs in Docker (npm run interbank:up); its dashboard serves /api/* on 8088.
   { prefix: "/api/interbank", port: 8088, rewrite: (path) => path.replace(/^\/api\/interbank/, "/api") },
 ];
@@ -31,7 +33,7 @@ if (!reuseServices) {
   }
   await startMissing();
 }
-children.push(spawn(process.execPath, [`${root}node_modules/.bin/vinext`, "start"], {
+children.push(spawn(process.execPath, [`${root}node_modules/.bin/vinext`, "start", "--hostname", host], {
   cwd: root,
   stdio: "inherit",
   env: { ...process.env, PORT: String(frontendPort), WRANGLER_LOG_PATH: ".wrangler/wrangler.log" },

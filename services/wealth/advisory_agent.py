@@ -236,6 +236,8 @@ def _tools(agent: str, names: list[str]):
 SUPERVISOR = """You prepare an advisor's one-page meeting brief for {name} ({profile} profile). The advisor, Jordan,
 reads it before the meeting; a supervisor approves it before anything is recorded. Nothing is executed from it.
 
+Write for a technology audience with no finance background. Use short sentences. Say "investment outlook" instead of "house view", "client" instead of "household", and "suggested actions" instead of "next-best actions" in prose. Expand unfamiliar abbreviations on first use. Keep evidence quotes verbatim and all schema keys unchanged.
+
 Process (keep it short; each step once):
 1. Delegate with the task tool to planner once (ranks next-best actions). Meanwhile call get_household_profile,
    get_suitability_findings, get_house_view_update, get_service_events, and get_crm_notes yourself, once each.

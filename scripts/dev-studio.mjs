@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../', import.meta.url));
-for (const service of ['banking', 'fraud', 'briefing', 'wealth']) {
+for (const service of ['banking', 'fraud', 'briefing', 'wealth', 'sar']) {
   if (!existsSync(`${root}services/${service}/.venv/bin/python`)) {
     console.error(`Run npm run ${service}:install before starting the studio.`);
     process.exit(1);
@@ -14,7 +14,7 @@ for (const service of ['banking', 'fraud', 'briefing', 'wealth']) {
 const studio = spawn(process.execPath, [`${root}node_modules/.bin/vinext`, 'dev', '--port', process.env.STUDIO_PORT || '4200', '--strictPort'], {
   cwd: root,
   stdio: 'inherit',
-  env: { ...process.env, WRANGLER_LOG_PATH: '.wrangler/wrangler.log', STUDIO_START_SERVICES: '1' },
+  env: { ...process.env, WRANGLER_LOG_PATH: '.wrangler/wrangler.log', STUDIO_START_SERVICES: '1', STUDIO_PREVIEW: '0' },
 });
 let stopping = false;
 function stop(code = 0) {

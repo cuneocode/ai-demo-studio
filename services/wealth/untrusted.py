@@ -58,7 +58,7 @@ def _acted() -> None:
         run.acted += 1
 
 
-async def screen_news(ev: Evidence, items: list[dict], *, agent: str = "news_feed") -> list[dict]:
+async def screen_news(ev: Evidence, items: list[dict], *, agent: str = "news_feed", require_inspection: bool = False) -> list[dict]:
     rows = []
     results = await asyncio.gather(*(_screen(f"{item.get('headline')}. {item.get('body')}", f"news:{item['id']}") for item in items))
     for item, (verdict, local) in zip(items, results):
@@ -66,11 +66,17 @@ async def screen_news(ev: Evidence, items: list[dict], *, agent: str = "news_fee
         by_aid = _injection(verdict)
         row = {"id": item["id"], "evidence_id": item_id, "headline": item.get("headline"), "publisher": item.get("publisher"),
                "date": item.get("date"), "body": item.get("body"), "ai_defense": verdict.get("status"),
-               "ai_defense_rules": verdict.get("rules") or [], "local": local}
-        if by_aid or local:
+               "ai_defense_rules": verdict.get("rules") or [], "local": local,
+               **{key: item.get(key) for key in ("url", "synthetic", "poisoned", "content_kind")}, "event_id": verdict.get("event_id")}
+        unavailable = require_inspection and verdict.get("status") not in {"allowed", "flagged"}
+        if by_aid or local or unavailable or (require_inspection and verdict.get("status") == "flagged"):
             who = " and ".join(part for part in ("AI Defense" if by_aid else "", "local screen" if local else "") if part)
             reason = (f"AI Defense flagged {', '.join(verdict.get('rules') or verdict.get('classifications') or ['it'])}"
                       if by_aid else f"instruction-like text ({'; '.join(local[:2])})")
+            if unavailable:
+                who, reason = "Inspection unavailable", "AI Defense did not return a verdict; excluded from analysis."
+            elif require_inspection and verdict.get("status") == "flagged" and not by_aid and not local:
+                who, reason = "AI Defense", "AI Defense flagged this article; excluded from analysis."
             row.update(status="withheld", reason=reason, by=who)
             if by_aid:
                 _acted()

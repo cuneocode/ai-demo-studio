@@ -31,11 +31,11 @@ export const bankingTour: Tour = {
     {
       id: "banking.answer", kind: "observe", story: true, targets: ["banking.answer"],
       title: "What answered, and what checked it",
-      body: "Below the answer: the model that served it, latency, and each check's verdict, all marked as the original run. OpenAI hosts inference today.",
+      body: "Below the answer: the model that served it, latency, and each check’s actual verdict. Recorded fallbacks label historical results; they make no new model call.",
       ciscoFit: [
         {
           product: "Cisco AI Defense",
-          how: "Inspects the question, each model call, and the answer; this recording shows its checks as the original run's.",
+          how: "Inspects the question, each model call, and the answer; each result identifies the checks that ran.",
           status: "running",
           requires: { status: { service: "banking", aiDefense: "on" } },
           otherwise: "AI Defense isn't active for banking on this machine now; the verdicts shown are from the recording.",
@@ -59,11 +59,11 @@ export const bankingTour: Tour = {
     },
     {
       id: "banking.blocked", kind: "observe", story: true, targets: ["banking.error"],
-      title: "Refused at the door",
-      body: "The request was refused with the AI Defense verdict and its Cisco event ID. No model call was made and no answer generated.",
+      title: "Inspect the actual guardrail outcome",
+      body: "Inspect whether the request was blocked and which check acted. A configured control is not proof of a block; the displayed verdict and event ID are the evidence.",
       ciscoFit: [{
         product: "Cisco AI Defense",
-        how: "Blocked the prompt-injection attempt on the input in this recording.",
+        how: "Checks prompt injection before the assistant answers; the displayed verdict identifies the actual outcome.",
         status: "running",
         requires: { status: { service: "banking", aiDefense: "on" } },
         otherwise: "AI Defense isn't active for banking on this machine now; the block shown is from the recording.",
@@ -118,7 +118,7 @@ export const bankingScopeTour: Tour = {
       body: "AI Defense found nothing harmful. The Banking scope control refused the request, and no answer was released.",
       ciscoFit: [{
         product: "Splunk Agent Control",
-        how: "The Banking scope control blocked the off-topic request in this recording.",
+        how: "Checks whether the request is in banking scope; the displayed verdict identifies the actual outcome.",
         status: "running",
         requires: { status: { service: "banking", agentControl: "enforcing" } },
         otherwise: "Agent Control isn't enforcing for banking now; the block shown is from the recording.",

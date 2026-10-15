@@ -98,3 +98,24 @@ def test_verify_all_counts():
         {"text": "EPS was $2.79.", "evidence_id": "event", "field_path": "eps_actual", "value": 2.79, "unit": "usd"},
     ], EVIDENCE)
     assert (result["verified"], result["unverified"], result["total"]) == (1, 1, 2)
+
+
+def test_pe_discount_requires_matching_earnings_basis():
+    evidence = {"valuation": {"title": "P/E", "fields": {
+        "forward_pe": field(11.5, "x"), "trailing_pe": field(13.92, "x"),
+        "peer_median_pe": field(18.35, "x"), "pe_vs_peers": field(-0.24141689, "fraction"),
+    }}}
+    claim = {"text": "Forward P/E is 11.5x versus an 18.4x peer median, a 24.1% discount.",
+             "evidence_id": "valuation", "field_path": "forward_pe", "value": 11.5, "unit": "x"}
+    result = verify(claim, evidence)
+    assert result["status"] == "unverified"
+    assert "trailing peer median" in result["reason"]
+    # The correctly rounded trailing comparison is accepted.
+    assert verify({**claim, "text": "Trailing P/E is 13.9x versus an 18.4x peer median, a 24.1% discount.",
+                   "field_path": "trailing_pe", "value": 13.9}, evidence)["status"] == "verified"
+    # Merely finding 24.1% somewhere in evidence must not verify a false relationship.
+    evidence["valuation"]["fields"]["peer_median_forward_pe"] = field(18.4, "x")
+    assert verify(claim, evidence)["status"] == "unverified"
+    evidence["valuation"]["fields"]["forward_discount"] = field(-0.375, "fraction")
+    assert verify({**claim, "text": "Forward P/E is 11.5x versus an 18.4x peer median, a 37.5% discount."}, evidence)["status"] == "verified"
+    assert verify({**claim, "text": "Forward P/E is 11.5x versus an 18.4x peer median, a 37.5% premium."}, evidence)["status"] == "unverified"

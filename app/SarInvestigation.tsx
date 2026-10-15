@@ -1,15 +1,15 @@
 "use client";
 
+import { SourceInputs } from "./SourceInputs";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlarmClock,
   BadgeCheck,
   CircleAlert,
   ClipboardCheck,
-  Database,
   FastForward,
   FileSearch,
-  History,
   Inbox,
   Loader2,
   MessageSquareOff,
@@ -23,7 +23,8 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import DemoStatusBanner from "./DemoStatusBanner";
+import DemoWorkflow from "./DemoWorkflow";
+import { OperatorWorkspace, OperatorEmpty, ExecutionSummary } from "./OperatorWorkspace";
 import { useHandoffs } from "./lifecycle-handoff";
 import RunStats, { startRun, useRunLedger, type ObservedRun } from "./RunStats";
 import { newRunId, type RunEvent } from "./run/events";
@@ -61,7 +62,6 @@ type Edit = { text: string; cites: string };
 
 const LINKED_FRAUD_CASE = "cpp-orbit";
 const MULE_SCENARIO = "mule-reyes";
-const REFUSED_TITLE = "Sparky (private model) is down and case data may only go to a hosted model after Cisco AI Defense inspects it; AI Defense is not configured";
 
 const SECTION_LABEL: Record<string, string> = { who: "Who", what: "What", when: "When", where: "Where", why: "Why", how: "How" };
 const KIND_LABEL: Record<string, string> = {
@@ -171,17 +171,24 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
   const evidenceRef = useRef<HTMLOListElement>(null);
 
   useEffect(() => {
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const refreshHealth = () => {
     fetch(`${SAR_API}/health`, { signal: AbortSignal.timeout(10000) })
       .then((response) => (response.ok ? response.json() : Promise.reject(new Error(String(response.status)))))
       .then((body: SarHealth) => { setHealth(body); setReachable(true); })
-      .catch(() => { setHealth(null); setReachable(false); });
-    fetch(`${SAR_API}/scenarios`, { signal: AbortSignal.timeout(10000) })
+      .catch(() => { setHealth(null); setReachable(false); })
+      .finally(() => { if (active) timer = setTimeout(refreshHealth, 10000); });
+    };
+    refreshHealth();
+    fetch("/api/studio/examples/sar/scenarios", { signal: AbortSignal.timeout(10000) })
       .then((response) => (response.ok ? response.json() : Promise.reject(new Error(String(response.status)))))
       .then((body: { scenarios?: ScenarioCard[]; media_source?: { name?: string } | string }) => {
         setCards(Array.isArray(body.scenarios) ? body.scenarios : []);
         setMediaSource(typeof body.media_source === "string" ? body.media_source : body.media_source?.name ?? "");
       })
       .catch(() => setCards([]));
+    return () => { active = false; clearTimeout(timer); };
   }, []);
 
   const card = cards.find((item) => item.id === selected) ?? null;
@@ -198,7 +205,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
     return null;
   }, [timeline.events]);
   const sections: Section[] = pkg?.final_sections ?? qaSections ?? draft?.sections ?? [];
-  const evidence = useMemo(() => new Map((pkg?.evidence ?? []).map((item) => [item.id, item] as const)), [pkg?.evidence]);
+  const evidence = new Map((pkg?.evidence ?? []).map((item) => [item.id, item] as const));
   const audit = auditTrail(pkg, replaying ? timeline.visible : timeline.events);
   const policies = controlEvents(replaying ? timeline.visible : timeline.events);
   const pendingId = pending?.requestId;
@@ -345,32 +352,29 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
   }
 
   function showEvidence(id: string) {
+    const details = evidenceRef.current?.closest("details");
+    if (details) details.open = true;
     setEvidenceFilter("all");
     setFocusEvidence(id);
   }
 
-  const kinds = useMemo(() => {
+  const kinds = (() => {
     const counts = new Map<string, number>();
     for (const item of pkg?.evidence ?? []) counts.set(item.kind, (counts.get(item.kind) ?? 0) + 1);
     return [...counts.entries()];
-  }, [pkg?.evidence]);
+  })();
   const isWithheld = (item: Evidence) => item.withheld || item.flagged_by.length > 0;
   const withheld = (pkg?.evidence ?? []).filter(isWithheld);
   const shownEvidence = (pkg?.evidence ?? []).filter((item) => evidenceFilter === "all" || (evidenceFilter === "withheld" ? isWithheld(item) : item.kind === evidenceFilter));
   const modelDown = Boolean(health && (!health.model?.label || health.model.status === "down"));
-  const refusal = willRefuse(health) || pkg?.outcome === "refused";
-  const fallbackActions = (
-    <>
-      <button type="button" onClick={() => investigate("sample")} disabled={busy || !card}><Database size={14} aria-hidden="true" /> Run with sample narrative</button>
-      {recordings.length > 0 && <button type="button" onClick={() => replay(recordings.find((item) => item.scenario === selected)?.name ?? recordings[0].name)}><History size={14} aria-hidden="true" /> Replay a recorded run</button>}
-    </>
-  );
   const verification = draft?.verification;
   const done = pkg?.outcome && ["filed_simulated", "closed_no_sar", "open"].includes(pkg.outcome);
   const isAttack = (card?.kind ?? caseHeader?.kind) === "attack";
   const hosted = pkg?.served_by && !pkg.served_by.private && pkg.usage?.llm_calls ? pkg.served_by.label : null;
 
   useGuideActions("sar-support", {
+    run: () => { void investigate("live"); },
+    canRun: () => Boolean(card) && !busy && reachable && !modelDown && !willRefuse(health),
     replay: (name) => {
       const pick = recordings.find((item) => item.name === name) ?? recordings.find((item) => item.scenario === selected) ?? recordings[0];
       if (pick) void replay(pick.name);
@@ -394,30 +398,34 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
       data-guide-recorded-at={origin.kind === "recorded" ? origin.recordedAt : undefined}
       data-guide-stage={guideStage}
     >
-      <section className="sar-band" aria-label="Business outcomes" {...guideAnchor("sar.band")}>
-        <div>
-          <span>Investigator time per SAR</span>
-          <strong>4–6 h → &lt; 1 h review</strong>
-          <small>{pkg?.duration_ms !== undefined && !replaying && pkg.mode !== "sample" ? `Measured now: reviewable draft in ${(pkg.duration_ms / 1000).toFixed(1)} s` : "Illustrative · this run measures time to draft"}</small>
-        </div>
-        <div>
-          <span>Case backlog</span>
-          <strong>~340 open · ~40 near deadline</strong>
-          <small>Illustrative</small>
-        </div>
-        <div>
-          <span>30-day filing clock</span>
-          <strong>{deadline ? `Day ${deadline.day} of ${deadline.of} · due ${shortDate(deadline.due)}` : "Shown on every case"}</strong>
-          <small>From the case data · snapshot {deadline ? shortDate(deadline.as_of) : "—"}</small>
-        </div>
-        <div>
-          <span>Narrative quality</span>
-          <strong>~20% QA returns → every sentence cited</strong>
-          <small>{verification ? `${replaying ? "Recorded run" : pkg?.mode === "sample" ? "Sample narrative, verified now" : "Measured now"}: ${verification.kept} of ${verification.total} sentences verified${draft?.dropped.length ? ` · ${draft.dropped.length} dropped` : ""}` : "Illustrative · this run measures the cited share"}</small>
-        </div>
-      </section>
+      <div className="operator-task-context" {...guideAnchor("sar.band")}><span className="operator-eyebrow">SUSPICIOUS ACTIVITY REVIEW</span><h2>Does this case need a report?</h2><p>AI assembles the evidence and a draft suspicious activity report (SAR). An investigator decides; a second reviewer must approve. Filing is simulated.</p></div>
+      <DemoWorkflow steps={["Choose & investigate", "Review evidence & draft", "Decide & get QA approval"]} active={done || pending?.stage === "qa" ? 2 : pkg ? 1 : 0} status={done ? (OUTCOME_LABEL[pkg?.outcome ?? ""] ?? "Review complete") : pending?.stage === "qa" ? "Investigator decision recorded. A different reviewer must approve or return it." : pkg ? "Review the findings and cited draft before submitting your decision." : busy ? "Investigation running. Follow the activity below." : "Choose a case from the inbox, then select Investigate."} />
+      <OperatorWorkspace inbox={<>
+                <section className="sar-card" aria-labelledby="sar-cases-heading">
+          <div className="sar-kicker"><span>CASE INBOX</span><span className="sar-tag">Synthetic</span></div>
+          <h2 id="sar-cases-heading">Choose a flagged case</h2>
+          <div className="sar-scenarios" role="group" aria-label="SAR scenarios" {...guideAnchor("sar.scenarios")}>
+            {cards.map((item) => (
+              <button key={item.id} type="button" className={`sar-scenario kind-${item.kind} ${selected === item.id ? "is-selected" : ""}`} aria-pressed={selected === item.id} disabled={busy} onClick={() => pickScenario(item.id)} {...guideSafeAnchor(`sar.scenario.${item.id}`)}>
+                <span className="sar-scenario-kind">{item.kind === "attack" ? <><ShieldAlert size={13} /> Attack</> : item.kind === "control" ? "Control case" : item.alert.priority === "high" ? "High priority" : "Case"}</span>
+                <strong>{item.kind === "attack" ? item.title.replace(/^Attack · /, "") : item.label}</strong>
+                <span className="sar-scenario-meta">{item.subject.name} · {item.alert.id}</span>
+                <span className="sar-scenario-due"><AlarmClock size={12} /> Due {shortDate(item.deadline.due)} · {item.deadline.days_left} days left</span>
+              </button>
+            ))}
+            {!cards.length && reachable && <p className="sar-empty">Loading cases…</p>}
+          </div>
+        </section>
 
+      </>} execution={<>
+        <ExecutionSummary ledger={ledger} observability={stats.observability} defense={stats.defense} status={pending ? pending.stage === "qa" ? "Awaiting QA approval" : "Awaiting investigator" : done ? OUTCOME_LABEL[pkg?.outcome ?? ""] : undefined} controls={policies.length ? policies.slice(-2).map((item) => item.title).join(" · ") : policyLabel(health)} />
+
+        <section className="demo-details" aria-label="How this case was assembled" {...guideAnchor("sar.timeline")}><h3>Agent activity</h3>
+          <RunTimeline label="SAR investigation steps" events={timeline.visible} start={timeline.run?.started_at} toLine={sarLine} className="boxed" showLane empty="Investigation steps and policy checks appear here when you start." />
+        </section>
+<RunStats ledger={ledger} {...stats} empty="Investigate a case to see measured calls, latency, and security checks." />
       <section className="sar-runtime" aria-label="SAR runtime" {...guideAnchor("sar.runtime")}>
+        <h3 className="runtime-section-title">Runtime details</h3>
         <div><span><Server size={15} /> Model</span><strong className={!reachable || modelDown ? "is-down" : health ? "is-ready" : undefined}>{modelLabel(health, reachable)}</strong></div>
         <div><span><ShieldCheck size={15} /> Case data</span><strong className={willRefuse(health) ? "is-down" : undefined}>{reachable ? egressLabel(health) : "—"}</strong></div>
         <div><span><ShieldAlert size={15} /> AI Defense</span><strong className={health?.security?.status === "configured" ? "is-ready" : undefined}>{defenseLabel(health)}</strong></div>
@@ -426,24 +434,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
         <div><span><FileSearch size={15} /> Adverse media</span><strong>{mediaSource ? `${mediaSource} allowlist` : "Allowlisted fixture source"}</strong></div>
       </section>
 
-      <div className="sar-layout">
-        {!reachable && (
-          <DemoStatusBanner
-            title="The SAR investigation service is not running"
-            stillWorks="the other demos; this tab needs the service for cases, checks, and recordings"
-            fix={<>run <code>npm run sar:install</code>, then start “SAR investigation” in Studio settings</>}
-            settingsSection="st-services"
-          />
-        )}
-        {reachable && refusal && (
-          <DemoStatusBanner title={REFUSED_TITLE} stillWorks="the sample narrative and recorded runs; tools, typology rules, policies, and approvals run live" fix="configure AI Defense or bring Sparky up" settingsSection="st-ai-defense" actions={fallbackActions} />
-        )}
-        {reachable && !refusal && modelDown && (
-          <DemoStatusBanner title="No model can draft the narrative right now" stillWorks="the sample narrative (no model call) and recorded runs; tools, typology rules, policies, and approvals run live" fix={health?.model?.reason || "bring Sparky up or add a hosted model key"} settingsSection="st-models" actions={fallbackActions} />
-        )}
-        {reachable && !refusal && !modelDown && health?.model?.private === false && (
-          <DemoStatusBanner tone="degraded" title={`Sparky is not answering: the narrative uses ${health.model.label} (hosted), with AI Defense enforcing on every hop`} stillWorks="private inference returns when Sparky is back" settingsSection="st-models" settingsLabel="Model settings" />
-        )}
+      </>}>
 
         {handoffs.length > 0 && (
           <section className="sar-card sar-inbox" aria-labelledby="sar-inbox-heading" {...guideAnchor("sar.inbox")}>
@@ -467,30 +458,13 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
           </section>
         )}
 
-        <section className="sar-card" aria-labelledby="sar-cases-heading">
-          <div className="sar-kicker"><span>ALERT QUEUE · FIU</span><span className="sar-tag">Synthetic</span></div>
-          <h2 id="sar-cases-heading">Pick a case</h2>
-          <div className="sar-scenarios" role="group" aria-label="SAR scenarios" {...guideAnchor("sar.scenarios")}>
-            {cards.map((item) => (
-              <button key={item.id} type="button" className={`sar-scenario kind-${item.kind} ${selected === item.id ? "is-selected" : ""}`} aria-pressed={selected === item.id} disabled={busy} onClick={() => pickScenario(item.id)} {...guideSafeAnchor(`sar.scenario.${item.id}`)}>
-                <span className="sar-scenario-kind">{item.kind === "attack" ? <><ShieldAlert size={13} /> Attack</> : item.kind === "control" ? "Control case" : item.alert.priority === "high" ? "High priority" : "Case"}</span>
-                <strong>{item.kind === "attack" ? item.title.replace(/^Attack · /, "") : item.label}</strong>
-                <span className="sar-scenario-meta">{item.subject.name} · {item.alert.id}</span>
-                <span className="sar-scenario-summary">{item.summary}</span>
-                <span className="sar-scenario-due"><AlarmClock size={12} /> Due {shortDate(item.deadline.due)} · {item.deadline.days_left} days left</span>
-              </button>
-            ))}
-            {!cards.length && reachable && <p className="sar-empty">Loading cases…</p>}
-          </div>
-        </section>
-
         {card && (
           <section className={`sar-card sar-case ${isAttack ? "is-attack" : ""}`} aria-labelledby="sar-case-heading" {...guideAnchor("sar.case")}>
             <div className="sar-case-head">
               <div>
                 <div className="sar-kicker"><span>CASE · {card.alert.id}</span>{handoff && card.id === MULE_SCENARIO && <span className="sar-tag referral">Fraud referral attached</span>}</div>
                 <h2 id="sar-case-heading">{card.subject.name} <span>· {card.label}</span></h2>
-                <p className="sar-lead">{card.alert.source}. {card.summary}</p>
+                <p className="sar-lead"><strong>Why this was flagged: </strong>{card.summary}</p>
                 {caseHeader && <p className="sar-subject">{caseHeader.subject.detail} · {caseHeader.subject.location} · SSN {caseHeader.subject.ssn_masked} · accounts {caseHeader.accounts.join(", ")}</p>}
               </div>
               {deadline && (
@@ -502,30 +476,92 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
                 </div>
               )}
             </div>
-            <div className="sar-actions">
+            <SourceInputs kind="sar" identity={selected}  action={<div className="sar-actions">
               <button id="sar-investigate" className="sar-primary" type="button" {...guideAnchor("sar.investigate")} disabled={busy || !reachable || modelDown || willRefuse(health)} onClick={() => investigate("live")}>
                 {busy ? <><Loader2 size={15} className="spin" /> Investigating…</> : <><Sparkles size={15} /> Investigate</>}
               </button>
-              <button className="sar-secondary" type="button" disabled={busy || !reachable} onClick={() => investigate("sample")}><Play size={15} /> Run with sample narrative</button>
-              <ReplayPicker recordings={recordings} onPick={replay} disabled={busy} anchor="sar.replay" />
+              <details className="demo-fallback"><summary>Fallback: sample narrative</summary><button className="sar-secondary" type="button" disabled={busy || !reachable} onClick={() => investigate("sample")}><Play size={15} /> Run with sample narrative</button></details>
+              <ReplayPicker recommendedName={recordings.find((item) => item.scenario === selected)?.name} recordings={recordings} onPick={replay} disabled={busy} anchor="sar.replay" />
               {timeline.replaying && <button className="sar-secondary" type="button" onClick={timeline.skip}><FastForward size={15} /> Skip replay</button>}
-            </div>
-            <p className="sar-note">Investigate runs the Deep Agent on the Studio model chain{health?.model?.label && health.model.status !== "down" ? ` (${health.model.label})` : ""}. The sample narrative is pre-written and cited, with no model call; tools, AI Defense screening, typology rules, the citation check, policies, and approvals still run live.</p>
+            </div>} />
+            <p className="sar-note">Investigate checks transactions, customer records, and risk patterns, then prepares a cited draft for your review. No report is filed automatically.</p>
             {error && (
               <div className="sar-error" role="alert"><CircleAlert size={14} /><div>{error}</div><button type="button" aria-label="Dismiss error" onClick={() => setError("")}><X size={14} /></button></div>
             )}
           </section>
         )}
 
+        {!pkg && <OperatorEmpty busy={busy} title={busy ? "Investigating the flagged activity" : "From a flagged payment to a reviewable case"} description={busy ? "The agent is assembling case evidence and checking risk patterns. Live steps and safeguards appear below this workspace." : "Start the investigation to see the risk signals, supporting evidence, missing information, and a draft report. You decide whether to report or close the case."} items={["Review risk signals", "Check the cited draft", "Record a human decision"]} />}
+
         {pkg && (
           <div className="sar-results">
             <div className="sar-col">
+              <section className="sar-card sar-findings" aria-labelledby="sar-typology-heading" {...guideAnchor("sar.typologies")}>
+                <div className="sar-kicker"><span>INVESTIGATION FINDINGS</span></div>
+                <h2 id="sar-typology-heading" ref={resultRef} tabIndex={-1}>What the evidence shows</h2>
+                <p className="sar-finding-summary">{pkg.typologies.filter((item) => item.matched).length} risk pattern{pkg.typologies.filter((item) => item.matched).length === 1 ? "" : "s"} matched. A matched rule is a reason to investigate; it does not establish wrongdoing.</p>
+                <div className="operator-comparison-grid sar-review-summary">
+                  <article {...guideAnchor("sar.recommendation")} className={`sar-recommendation ${draft?.recommendation ?? ""}`}><h3>Agent’s recommendation</h3><p>{draft ? draft.recommendation === "file" ? "Prepare a suspicious activity report for review." : "Close without a report, with a documented reason." : "No recommendation available. Review the evidence and run status."}</p>{draft && <p>{draft.rationale.text} {draft.rationale.cites.map((id) => <button key={id} type="button" className="sar-cite" onClick={() => showEvidence(id)}>{id}</button>)}</p>}</article>
+                  <article><h3>Before you decide</h3><p>{!draft ? "A report draft is not available." : SECTION_ORDER.some((name) => !sections.find((section) => section.section === name)?.sentences.length) ? "Some report sections are missing. Review the draft and add supported information before submitting." : "All report sections have content. Check the citations and confirm the conclusion."}</p><p>{withheld.length} evidence items flagged or withheld · {draft?.dropped.length ?? 0} unsupported sentences removed.</p></article>
+                </div>
+                <div className="sar-risk-checks" tabIndex={0} role="region" aria-label="Risk pattern checks">{pkg.typologies.map((typology) => (
+                  <section className={`sar-typology ${typology.matched ? "matched" : ""}`} key={typology.id}>
+                    <header><strong>{typology.label}</strong><span className={`sar-pill ${typology.matched ? "deny" : "ok"}`}>{typology.matched ? "Needs review" : "Not triggered"} · {typology.fired} of {typology.total} triggered</span></header>
+                    <table>
+                      <thead><tr><th>Rule</th><th>Indicator</th><th>Observed</th><th>Threshold</th><th /></tr></thead>
+                      <tbody>
+                        {typology.indicators.map((indicator) => (
+                          <tr key={indicator.id} className={indicator.status}>
+                            <td><button type="button" className="sar-cite" onClick={() => showEvidence(`IND-${indicator.id}`)}>{indicator.id}</button></td>
+                            <td>{indicator.label}</td>
+                            <td>{indicator.observed_text}</td>
+                            <td>{indicator.threshold_text}</td>
+                            <td><span className={`sar-dot ${indicator.status}`}>{indicator.status === "fired" ? "fired" : indicator.status === "clear" ? "clear" : "n/a"}</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <small>Match rule: {typology.rule}{typology.reference ? ` · ${typology.reference}` : ""}</small>
+                  </section>
+                ))}</div>
+              </section>
+
+              <section className="demo-details sar-evidence-panel"><h3>Source evidence · {pkg.evidence.length} items</h3><section className="sar-card" aria-labelledby="sar-evidence-heading" {...guideAnchor("sar.evidence")}>
+                <div className="sar-kicker"><span>EVIDENCE · {pkg.evidence.length} ITEMS</span><span className="sar-tag">Synthetic</span></div>
+                <h2 id="sar-evidence-heading">Transactions & supporting evidence</h2><p className="sar-note">Filter to transactions to follow the payment sequence. Select a citation anywhere in this case to highlight its source here.</p>
+                <label className="sar-filter">Show
+                  <select value={evidenceFilter} onChange={(event) => setEvidenceFilter(event.target.value)}>
+                    <option value="all">All</option>
+                    {withheld.length > 0 && <option value="withheld">Withheld ({withheld.length})</option>}
+                    {kinds.map(([kind, count]) => <option key={kind} value={kind}>{KIND_LABEL[kind] ?? kind} ({count})</option>)}
+                  </select>
+                </label>
+                <ol tabIndex={0} className="sar-evidence" ref={evidenceRef} aria-label="Case evidence">
+                  {shownEvidence.map((item: Evidence) => (
+                    <li key={item.id} data-evidence={item.id} className={`${item.withheld ? "is-withheld" : item.flagged_by.length ? "is-flagged" : ""} ${focusEvidence === item.id ? "is-focus" : ""}`}>
+                      <div className="sar-evidence-head"><code>{item.id}</code><strong>{item.title}</strong>{item.untrusted && <span className="sar-tag">Untrusted</span>}</div>
+                      {item.withheld ? (
+                        <p className="sar-withheld"><ShieldAlert size={13} /> Withheld from the agent · {item.flagged_by.join(", ") || "flagged"}</p>
+                      ) : (
+                        <>
+                          <p>{item.text}</p>
+                          {item.flagged_by.length > 0 && <p className="sar-withheld"><ShieldAlert size={13} /> Memo withheld from the agent · {item.flagged_by.join(", ")}</p>}
+                        </>
+                      )}
+                      <small>{item.source}</small>
+                    </li>
+                  ))}
+                </ol>
+              </section></section>
+
+            </div>
+            <div className="sar-col">
               <section className="sar-card sar-narrative" aria-labelledby="sar-narrative-heading" {...guideAnchor("sar.narrative")}>
                 <div className="sar-kicker">
-                  <span>DRAFT SAR NARRATIVE · FINCEN ORDER</span>
+                  <span>DRAFT REPORT · REVIEW BEFORE DECIDING</span>
                   {replaying && <span className="sar-tag">Recorded run</span>}
                 </div>
-                <h2 id="sar-narrative-heading" ref={resultRef} tabIndex={-1}>{pkg.case.subject.name} · {pkg.case.label}</h2>
+                <h2 id="sar-narrative-heading">Review the draft report</h2>
                 <div className="sar-badges">
                   {(() => { const shown = provenanceOf(pkg, origin); return <ProvenanceBadge provenance={shown.provenance} label={shown.label} />; })()}
                   {verification && <span className={`sar-pill ${verification.failing || draft?.dropped.length ? "warn" : "ok"}`}><BadgeCheck size={13} /> {verification.kept} of {verification.total} sentences verified{draft?.dropped.length ? ` · ${draft.dropped.length} dropped` : ""}</span>}
@@ -533,10 +569,10 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
                 </div>
                 {hosted && <p className="sar-inspected"><ShieldCheck size={14} aria-hidden="true" /> Case data inspected by Cisco AI Defense (enforce) on every hop to {hosted}</p>}
                 {!draft ? (
-                  <p className="sar-empty">{pkg.outcome ? `${OUTCOME_LABEL[pkg.outcome] ?? pkg.outcome}: ${pkg.reason ?? "no draft"}` : "Waiting for the draft."} The typology indicators and evidence on the right are still usable.</p>
+                  <p className="sar-empty">{pkg.outcome ? `${OUTCOME_LABEL[pkg.outcome] ?? pkg.outcome}: ${pkg.reason ?? "no draft"}` : "Waiting for the draft."} Review the available risk signals and evidence above. Nothing has been filed.</p>
                 ) : (
                   <>
-                    {SECTION_ORDER.map((name) => {
+                    <div className="sar-draft-document" tabIndex={0} role="region" aria-label="Draft report text">{SECTION_ORDER.map((name) => {
                       const section = sections.find((item) => item.section === name);
                       return (
                         <div className="sar-section" key={name}>
@@ -560,20 +596,13 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
                         </div>
                       );
                     })}
-                    {draft.dropped.length > 0 && (
-                      <details className="sar-dropped">
-                        <summary>{draft.dropped.length} sentence{draft.dropped.length === 1 ? "" : "s"} dropped by the citation check</summary>
-                        <ul>{draft.dropped.map((item, index) => <li key={index}><span>{item.text}</span><small>{(item.problems ?? []).join("; ")}</small></li>)}</ul>
-                      </details>
-                    )}
-                    <div className={`sar-recommendation ${draft.recommendation}`} {...guideAnchor("sar.recommendation")}>
-                      <div>
-                        <span>Agent recommendation</span>
-                        <strong>{draft.recommendation === "file" ? "File a SAR" : "No SAR · close with rationale"}</strong>
-                        <small>{draft.agrees ? "Agrees with the typology indicators" : "Conflicts with the typology indicators: the investigator decides"}</small>
-                      </div>
-                      <p>{draft.rationale.text} {draft.rationale.cites.map((id) => <button type="button" key={id} className="sar-cite" onClick={() => showEvidence(id)}>{id}</button>)}</p>
                     </div>
+                    {draft.dropped.length > 0 && (
+                      <section className="sar-dropped">
+                        <h3>{draft.dropped.length} sentence{draft.dropped.length === 1 ? "" : "s"} dropped by the citation check</h3>
+                        <ul>{draft.dropped.map((item, index) => <li key={index}><span>{item.text}</span><small>{(item.problems ?? []).join("; ")}</small></li>)}</ul>
+                      </section>
+                    )}
                     {draft.next_steps.length > 0 && (
                       <div className="sar-steps-list">
                         <h3>Suggested next steps</h3>
@@ -613,13 +642,13 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
                       {pending.qaNote && <p className="sar-returned"><CircleAlert size={14} /> {pending.qaNote}</p>}
                       <label className="sar-field">Investigator<input value={investigator} onChange={(event) => setInvestigator(event.target.value)} /></label>
                       <div className="sar-choice" role="radiogroup" aria-label="Filing decision">
-                        <button type="button" role="radio" aria-checked={choice === "file"} onClick={() => setChoice("file")}>File SAR</button>
-                        <button type="button" role="radio" aria-checked={choice === "no_file"} onClick={() => setChoice("no_file")}>No SAR</button>
+                        <button type="button" role="radio" aria-checked={choice === "file"} onClick={() => setChoice("file")}>Report suspicious activity</button>
+                        <button type="button" role="radio" aria-checked={choice === "no_file"} onClick={() => setChoice("no_file")}>Close without a report</button>
                       </div>
                       <label className="sar-field">Rationale (required, kept in the case file)<textarea value={rationale} onChange={(event) => setRationale(event.target.value)} /></label>
                       <div className="sar-actions">
                         <button type="button" className="sar-primary" disabled={!canAct || !choice || rationale.trim().length < 12} onClick={submitReview}>
-                          {sending ? <Loader2 size={15} className="spin" /> : <Scale size={15} />} {choice === "file" ? "Decide: file SAR" : "Decide: no SAR"}
+                          {sending ? <Loader2 size={15} className="spin" /> : <Scale size={15} />} {choice === "file" ? "Send report to QA" : "Send closure to QA"}
                         </button>
                         <button type="button" className="sar-secondary" aria-pressed={editing} onClick={() => { setEditing((value) => !value); setEdits({}); }}><PencilLine size={15} /> {editing ? "Discard edits" : "Edit narrative"}</button>
                         <button type="button" className="sar-danger" disabled={sending} onClick={contactCustomer}><MessageSquareOff size={15} /> Message the customer…</button>
@@ -657,73 +686,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
               )}
             </div>
 
-            <div className="sar-col">
-              <section className="sar-card" aria-labelledby="sar-typology-heading" {...guideAnchor("sar.typologies")}>
-                <div className="sar-kicker"><span>TYPOLOGY INDICATORS · DETERMINISTIC RULES</span></div>
-                <h2 id="sar-typology-heading">Typologies</h2>
-                {pkg.typologies.map((typology) => (
-                  <details className={`sar-typology ${typology.matched ? "matched" : ""}`} key={typology.id} open={typology.matched}>
-                    <summary><strong>{typology.label}</strong><span className={`sar-pill ${typology.matched ? "deny" : "ok"}`}>{typology.matched ? "matched" : "not matched"} · {typology.fired} of {typology.total} fired</span></summary>
-                    <table>
-                      <thead><tr><th>Rule</th><th>Indicator</th><th>Observed</th><th>Threshold</th><th /></tr></thead>
-                      <tbody>
-                        {typology.indicators.map((indicator) => (
-                          <tr key={indicator.id} className={indicator.status}>
-                            <td><button type="button" className="sar-cite" onClick={() => showEvidence(`IND-${indicator.id}`)}>{indicator.id}</button></td>
-                            <td>{indicator.label}</td>
-                            <td>{indicator.observed_text}</td>
-                            <td>{indicator.threshold_text}</td>
-                            <td><span className={`sar-dot ${indicator.status}`}>{indicator.status === "fired" ? "fired" : indicator.status === "clear" ? "clear" : "n/a"}</span></td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <small>Match rule: {typology.rule}{typology.reference ? ` · ${typology.reference}` : ""}</small>
-                  </details>
-                ))}
-              </section>
-
-              <section className="sar-card" aria-labelledby="sar-evidence-heading" {...guideAnchor("sar.evidence")}>
-                <div className="sar-kicker"><span>EVIDENCE · {pkg.evidence.length} ITEMS</span><span className="sar-tag">Synthetic</span></div>
-                <h2 id="sar-evidence-heading">Case evidence</h2>
-                <label className="sar-filter">Show
-                  <select value={evidenceFilter} onChange={(event) => setEvidenceFilter(event.target.value)}>
-                    <option value="all">All</option>
-                    {withheld.length > 0 && <option value="withheld">Withheld ({withheld.length})</option>}
-                    {kinds.map(([kind, count]) => <option key={kind} value={kind}>{KIND_LABEL[kind] ?? kind} ({count})</option>)}
-                  </select>
-                </label>
-                <ol className="sar-evidence" ref={evidenceRef} aria-label="Case evidence">
-                  {shownEvidence.map((item: Evidence) => (
-                    <li key={item.id} data-evidence={item.id} className={`${item.withheld ? "is-withheld" : item.flagged_by.length ? "is-flagged" : ""} ${focusEvidence === item.id ? "is-focus" : ""}`}>
-                      <div className="sar-evidence-head"><code>{item.id}</code><strong>{item.title}</strong>{item.untrusted && <span className="sar-tag">Untrusted</span>}</div>
-                      {item.withheld ? (
-                        <p className="sar-withheld"><ShieldAlert size={13} /> Withheld from the agent · {item.flagged_by.join(", ") || "flagged"}</p>
-                      ) : (
-                        <>
-                          <p>{item.text}</p>
-                          {item.flagged_by.length > 0 && <p className="sar-withheld"><ShieldAlert size={13} /> Memo withheld from the agent · {item.flagged_by.join(", ")}</p>}
-                        </>
-                      )}
-                      <small>{item.source}</small>
-                    </li>
-                  ))}
-                </ol>
-              </section>
-
-              <section className="sar-card sar-run" aria-label="How this case was assembled" {...guideAnchor("sar.timeline")}>
-                <div className="sar-kicker"><span>RUN STEPS</span>{replaying && <span className="sar-tag">Recorded run</span>}</div>
-                <RunTimeline label="SAR investigation steps" events={timeline.visible} start={timeline.run?.started_at} toLine={sarLine} className="boxed" showLane />
-              </section>
-            </div>
           </div>
-        )}
-
-        {!pkg && timeline.visible.length > 0 && (
-          <section className="sar-card sar-run" aria-label="How this case is being assembled" {...guideAnchor("sar.timeline")}>
-            <div className="sar-kicker"><span>RUN STEPS</span></div>
-            <RunTimeline label="SAR investigation steps" events={timeline.visible} start={timeline.run?.started_at} toLine={sarLine} className="boxed" showLane />
-          </section>
         )}
 
         {audit.length > 0 && (
@@ -740,8 +703,7 @@ export default function SarInvestigation({ embedded = false, inStory = false }: 
             </table>
           </section>
         )}
-      </div>
-      <RunStats ledger={ledger} {...stats} empty="Investigate a case. Its model calls, tool calls, and AI Defense verdicts land here." />
+      </OperatorWorkspace>
       {embedded && inStory && <div className="sar-story"><span>STORY MODE</span> The money-mule case is the same card-fraud ring the fraud demo blocked; Chuck Robbins is the victim cardholder, never a subject.</div>}
     </div>
   );

@@ -292,6 +292,31 @@ def verdict(claim: dict, status: str, reason: str, check: str, **extra) -> dict:
     return {**claim, "status": status, "reason": reason, "check": check, **extra}
 
 
+def _valuation_comparison_error(text: str, item: dict) -> str | None:
+    """Check a P/E discount/premium relationship, not just its individual numbers."""
+    if not re.search(r"p/e|price.to.earnings", text, re.I):
+        return None
+    comparisons = re.findall(r"(\d+(?:\.\d+)?)\s*(?:%|percent)\s*(discount|premium)", text, re.I)
+    if not comparisons:
+        return None
+    fields = item.get("fields") or {}
+    forward = bool(re.search(r"forward", text, re.I))
+    subject = fields.get("forward_pe" if forward else "trailing_pe") or {}
+    median = fields.get("peer_median_forward_pe" if forward else "peer_median_pe") or {}
+    if forward and not median:
+        return "Forward P/E cannot be compared with a trailing peer median. No forward peer median was retrieved."
+    numerator = canonical(subject.get("value"), subject.get("unit"))
+    denominator = canonical(median.get("value"), median.get("unit"))
+    if not numerator or not denominator or denominator[0] <= 0:
+        return "The P/E comparison needs a numeric subject and peer median on the same earnings basis."
+    delta = (numerator[0] / denominator[0] - 1) * 100
+    for amount, direction in comparisons:
+        signed = float(amount) * (-1 if direction.lower() == "discount" else 1)
+        if abs(signed - delta) > 0.15:
+            return f"P/E comparison mismatch: the cited multiples imply {abs(delta):.1f}% {'discount' if delta < 0 else 'premium'}."
+    return None
+
+
 def verify(claim: dict, evidence: dict[str, dict]) -> dict:
     """One claim against the run's evidence store. Returns the claim with status/reason/check."""
     text = normalize_text(str(claim.get("text") or ""))
@@ -304,6 +329,9 @@ def verify(claim: dict, evidence: dict[str, dict]) -> dict:
         return verdict(claim, "unverified", reason, "none")
     also = [evidence[eid] for eid in claim.get("also") or [] if isinstance(eid, str) and eid in evidence]
     cited = [item, *also]
+    comparison_error = _valuation_comparison_error(text, item)
+    if comparison_error:
+        return verdict(claim, "unverified", comparison_error, "numeric_relationship")
     written = quantities(text)
     path = str(claim.get("field_path") or "").strip()
 

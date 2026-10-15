@@ -31,6 +31,7 @@ export default function CompanyBriefingRuntime({
   const confirmed = health?.security?.status === "configured" || security?.status === "allowed" || security?.verdict === "allowed";
   return (
     <section className="briefing-runtime" aria-label="Briefing runtime">
+      <h3 className="runtime-section-title">Runtime details</h3>
       <div>
         <span><Server size={15} /> Model</span>
         <strong>{health?.model || (health ? "No model reachable" : "Not reported")}</strong>

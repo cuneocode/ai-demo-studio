@@ -88,7 +88,8 @@ export default function StudioSettings() {
 function ReadinessPanel({ rows }: { rows: Readiness[] }) {
   return (
     <section className="st-section" aria-labelledby="st-readiness">
-      <div className="section-heading"><div><span className="eyebrow">LIVE DEMOS</span><h2 id="st-readiness">Use case readiness</h2></div></div>
+      <div className="section-heading"><div><span className="eyebrow">LIVE DEMOS</span><h2 id="st-readiness">Live configuration</h2></div></div>
+      <p className="st-muted">Configuration checks only. The library shows whether each live service is responding; recorded demos need no credentials.</p>
       <div className="st-readiness">
         {rows.map((row) => (
           <article key={row.id} className={row.ready ? "ready" : "missing"} aria-label={`${row.title} readiness`}>
@@ -124,6 +125,7 @@ function ServicesPanel() {
 
   const pendingCount = status?.services.reduce((total, row) => total + (row.managed && row.pending ? row.pending.length : 0), 0) ?? 0;
   const job = status?.interbank.job;
+  const dockerUnavailable = job?.state === "failed" && job.log.some((line) => /Docker is not|Cannot connect to the Docker daemon|docker daemon running/i.test(line));
 
   return (
     <section className="st-section" aria-labelledby="st-services">
@@ -161,9 +163,11 @@ function ServicesPanel() {
           </div>
         )}
       </div>
+      {!status?.interbank.up && <p className="st-note">Interbank needs Docker Desktop running. Start its engine, then select Start lab. The other demos run directly on this machine.</p>}
+      {dockerUnavailable && !status?.interbank.up && <p className="st-banner" role="alert">Docker is not running or cannot be reached. Open Docker Desktop, wait for the engine to be ready, then select Start lab again.</p>}
       {job && job.state !== "idle" && (
-        <details className="st-log" open={job.state !== "succeeded"}>
-          <summary>{job.state === "running" ? "Interbank rebuild running (about a minute)" : job.state === "succeeded" ? "Interbank lab rebuilt" : "Interbank rebuild failed"}</summary>
+        <details className="st-log" open={job.state !== "succeeded" && !status?.interbank.up && !dockerUnavailable}>
+          <summary>{job.state === "running" ? "Interbank rebuild running (about a minute)" : job.state === "succeeded" ? "Interbank lab rebuilt" : status?.interbank.up ? "Previous startup attempt · lab is now running" : "Startup details"}</summary>
           <pre>{job.log.join("\n")}</pre>
         </details>
       )}
@@ -389,7 +393,7 @@ function ModelsPanel({ modelKeys, onKeysSaved, onModelsSaved }: { modelKeys: Rec
                 <select aria-label={`${useCase.title} hosted models`} value={policy} onChange={(event) => setUseCase(useCase.id, { externalPolicy: event.target.value as ExternalPolicy })}>
                   {(Object.keys(POLICY_LABEL) as ExternalPolicy[]).filter((value) => !(useCase.clientData && value === "allow")).map((value) => <option key={value} value={value}>{POLICY_LABEL[value]}</option>)}
                 </select>
-                {useCase.clientData && <small className="st-muted st-applies">Client data: a hosted model is used only after Cisco AI Defense (enforce) inspects the request; without AI Defense the demo replays a recorded run.</small>}
+                {useCase.clientData && <small className="st-muted st-applies">Client data: a hosted model is used only after Cisco AI Defense (enforce) inspects the request; without AI Defense, the hosted model is refused and any sample fallback is labelled.</small>}
               </span>
             </div>
           );
@@ -498,28 +502,4 @@ function ChainEditor({ label, chain, providers, status, onChange, compact = fals
       )}
     </div>
   );
-}
-
-/** The chain a live use case will try, linking to Studio settings; the tooltip says which backend answers now. */
-export function ModelChip({ experience, onOpen }: { experience?: string; onOpen: () => void }) {
-  const useCase = MODEL_USE_CASES.find((item) => item.experience === experience);
-  const [state, setState] = useState<{ label: string; title: string } | null>(null);
-  useEffect(() => {
-    if (!useCase) return;
-    let live = true;
-    getJson<ModelSnapshot>(MODELS_API)
-      .then((snapshot) => {
-        if (!live) return;
-        const unconfigured = snapshot.saved ? {} : snapshot.unconfigured ?? {};
-        const ids = chainFor(snapshot.registry, useCase.id).ids.filter((id) => !unconfigured[id]);
-        const name = (id: string) => snapshot.registry.providers[id]?.label ?? id;
-        const route = snapshot.routes?.[useCase.id];
-        const answering = route?.active ? `Answering now: ${name(route.active)}${route.fallback ? " (fallback)" : ""}` : "No backend is answering right now";
-        setState({ label: ids.map(name).join(" → ") || "No backend", title: `${answering}. Change in Studio settings.` });
-      })
-      .catch(() => live && setState(null));
-    return () => { live = false; };
-  }, [useCase]);
-  if (!useCase || !state) return null;
-  return <button className="prototype-chip st-chip" onClick={onOpen} title={state.title}><Cpu size={15} /> Model · {state.label}</button>;
 }

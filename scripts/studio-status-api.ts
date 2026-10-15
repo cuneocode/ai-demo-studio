@@ -29,11 +29,14 @@ function serviceHealth(id: string, label: string, raw: unknown): UseCaseHealth {
   const security = object(health.security);
   const observability = object(health.observability);
   const controls = object(health.controls ?? observability.controls);
-  const model = object(health.nim);
+  const model = object(health.nim ?? health.model);
+  const answering = object(object(health.backend).answering);
+  const fallbackModel = model.fallback ? model : answering.fallback ? answering : null;
   const ready = health.ready !== false;
   const detail = ready ? "" : text(health.detail) || (text(model.status) === "down" ? "Model endpoint is not answering" : text(health.error) || "Not ready");
   return {
     id, label, up: true, ready, detail,
+    fallback: id === "fraud" && health.backend && health.backend !== "live" ? text(health.backend_label) || "Sample scores" : fallbackModel ? text(fallbackModel.label) || "Secondary model" : null,
     aiDefense: security.status ? { status: text(security.status), mode: text(security.mode) } : null,
     agentControl: controls.status ? { status: text(controls.status), names: names(controls.names) } : null,
     tracing: text(object(observability.tracing).status) || text(health.galileo) || null,
@@ -51,6 +54,12 @@ async function probeModels() {
 }
 
 async function build(): Promise<StudioStatus> {
+  if (process.env.STUDIO_PREVIEW === "1") return {
+    mode: "preview", checkedAt: new Date().toISOString(),
+    services: SERVICES.map(spec => serviceHealth(spec.id, spec.label, null)),
+    interbank: { up: false, aiDefense: null, agentControl: null, project: null, stream: null, runs: [] },
+    models: [], links: { agentObservability: "https://console.multitenant.galileocloud.io", splunkObservability: null }, readiness: [],
+  };
   const [services, lab, runtime, runs, models] = await Promise.all([
     Promise.all(SERVICES.map(async (spec) => serviceHealth(spec.id, spec.label, await getJson(`http://127.0.0.1:${spec.port}${spec.health}`)))),
     getJson(`http://127.0.0.1:${INTERBANK.port}${INTERBANK.health}`),
