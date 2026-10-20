@@ -9,9 +9,13 @@ import MarketResearch from "./MarketResearch";
 import ClientAdvisory from "./ClientAdvisory";
 import SarInvestigation from "./SarInvestigation";
 import InterbankDemo from "./InterbankDemo";
+import CodeVulnerability from "./CodeVulnerability";
+import { vulnerabilityStory } from "./vulnerability-story";
 import ArchitectureMap from "./ArchitectureMap";
 import StudioSettings from "./StudioSettings";
 import InferenceIndicator from "./InferenceIndicator";
+import DemoNarrativeLayout from "./DemoNarrative";
+import { demoNarratives } from "./demo-narratives";
 import { ControlsPage, HelpDrawer, PresenterBar, ServiceBell, TelemetryPage } from "./StudioShell";
 import { presenterNotes } from "./presenter-notes";
 import { momentReady, platformSummary, presenterStatus, useStudioStatus, type StudioStatus, type Tone } from "./studio-status";
@@ -87,7 +91,7 @@ type UseCase = {
 };
 
 type UseCaseFrame = {
-  liveExperience?: "banking" | "fraud" | "briefing" | "research" | "advisory" | "interbank" | "sar";
+  liveExperience?: "banking" | "fraud" | "briefing" | "research" | "advisory" | "interbank" | "sar" | "vulnerability";
   transformation: {
     friction: string;
     aiShift: string;
@@ -113,7 +117,14 @@ type UseCaseFrame = {
  * Preserve the shared component class contracts and the established ink/navy/slate/cobalt/violet
  * design theme unless an intentional product redesign is requested.
  */
-const useCases: UseCase[] = [
+const useCaseCatalog: UseCase[] = [
+  {
+    id: "code-vulnerability", title: "Code vulnerability analysis", category: "Risk & compliance",
+    description: "Find vulnerabilities in a payments API, review the code evidence, and test a proposed fix with Visa’s agentic harness.",
+    outcome: "Verified findings, a reviewable patch, and executable regression checks.",
+    icon: ShieldCheck, accent: "violet", solutions: ["AI Infrastructure", "Splunk Observability"],
+    signal: "Visa VVAH · source analysis + patch review", stage: "Interactive",
+  },
   {
     id: "brahe-bank", title: "Brahe Bank assistant", category: "Operations",
     description: "Explore product questions and credit eligibility with a supervisor and specialist agents.",
@@ -219,7 +230,34 @@ const useCases: UseCase[] = [
   },
 ];
 
+// One catalog order for overview, library, and launcher. Preserve authored order within each stage.
+const stageOrder: Record<UseCase["stage"], number> = { Interactive: 0, "In development": 1, Planned: 2 };
+const useCases = [...useCaseCatalog].sort((a, b) => stageOrder[a.stage] - stageOrder[b.stage]);
+
 const useCaseFrames: Record<string, UseCaseFrame> = {
+  "code-vulnerability": {
+    liveExperience: "vulnerability",
+    transformation: {
+      friction: "Security teams spend hours reproducing scanner findings and coordinating payment application fixes.",
+      aiShift: "Visa VVAH builds code context, investigates threats, verifies findings, and generates a proposed patch in a disposable copy.",
+      humanControl: "A reviewer inspects the evidence and patch before applying it to the run copy. Executable checks and a fresh scan show the result.",
+    },
+    architecture: {
+      process: [
+        { title: "Inspect source", detail: "Synthetic merchant payments API" },
+        { title: "Discover and verify", detail: "Visa VVAH S0 through S9" },
+        { title: "Review a patch", detail: "Fix agent works in a proposal copy" },
+        { title: "Test and rescan", detail: "Trusted regression checks and fresh discovery" },
+      ],
+      ai: [
+        { point: "01 → 02", label: "Visa vulnerability harness", detail: "Visa’s DeepAgents backend runs discovery and adversarial verification on LangGraph using the selected Studio model and an isolated sample copy." },
+        { point: "02 → 03", label: "Patch proposal", detail: "Visa’s remediation agent edits a disposable proposal copy. The UI shows the resulting diff for human review." },
+        { point: "03 → 04", label: "Executable verification", detail: "Four trusted checks exercise legitimate access and both seeded attacks. Agent Control gates patch application; Agent Observability receives model and tool traces with per-operation delivery status." },
+      ],
+    },
+    metrics: [], rows: [], evidence: [], workbenchLabel: "Application security", workbenchTitle: "Payments source review",
+    workbenchSummary: "Find a flaw, inspect evidence, and review a tested fix.", primaryAction: "Analyze source",
+  },
   // Every demo uses UseCaseWorkspace and ArchitectureMap. Live frontends/backends
   // may evolve independently; never bypass the shared mapping or design theme.
   "brahe-bank": {
@@ -524,7 +562,7 @@ function liveExperienceStatus(useCaseId: string, experience: UseCaseFrame["liveE
   if (stage === "In development") return { label: stage, tone: "amber", title: "Experience in development; available for review and feedback" };
   if (stage === "Planned" || !experience) return { label: "Planned", tone: "amber", title: "Planned experience; illustrative example only, with no live service or measured results" };
   const { ready, reason } = momentReady(status, useCaseId, true);
-  return { label: ready ? "Ready" : "Live unavailable", tone: ready ? "mint" : "blue", title: `${reason}. Recorded fallback available.` };
+  return { label: ready ? "Ready" : "Live unavailable", tone: ready ? "mint" : "blue", title: `${reason}.${useCaseId === "code-vulnerability" ? " Live analysis uses the configured model." : " Recorded fallback available."}` };
 }
 
 /** Each demo's section and the control its header CTA should focus. */
@@ -536,6 +574,7 @@ const FOCUS_TARGETS: Record<LiveExperience, { section: string; control: string }
   advisory: { section: "advisory-experience", control: "input[name='advisory-household']:checked" },
   interbank: { section: "interbank-experience", control: "#interbank-kickoff" },
   sar: { section: "sar-experience", control: "#sar-investigate" },
+  vulnerability: { section: "vulnerability-experience", control: "#vulnerability-run" },
 };
 const FOCUSABLE = "input, select, textarea, button, [href], [tabindex]:not([tabindex='-1'])";
 
@@ -836,6 +875,7 @@ function UseCaseWorkspace({
         </div>
       </header>
 
+      <DemoNarrativeLayout narrative={useCase.id === "code-vulnerability" ? vulnerabilityStory : demoNarratives[useCase.id]}>
       <div className="case-tab-row" {...guideAnchor("case.tabs")}>
       <div className="case-tabs" role="tablist" aria-label={`${useCase.title} views`} ref={tablistRef}>
         {([["demo", "Use case demo"], ["architecture", "Architecture"]] as const).map(([id, label]) => (
@@ -874,6 +914,9 @@ function UseCaseWorkspace({
       </section> : frame.liveExperience === "advisory" ? <section id="advisory-experience">
         <p className="demo-provenance">Synthetic households · test PII only</p>
         <ClientAdvisory embedded inStory={inStory} companyProfile={companyProfile} researchNote={researchNote} brief={advisoryBrief} onBriefChange={onAdvisoryBriefChange} />
+      </section> : frame.liveExperience === "vulnerability" ? <section id="vulnerability-experience">
+        <p className="demo-provenance">Synthetic payments source · Visa VVAH · human-reviewed patches</p>
+        <CodeVulnerability />
       </section> : frame.liveExperience === "sar" ? <section id="sar-experience">
         <p className="demo-provenance">Synthetic cases · simulated e-filing · the investigator and QA decide</p>
         <SarInvestigation embedded inStory={inStory} />
@@ -948,6 +991,7 @@ function UseCaseWorkspace({
       <div className="case-tabpanel" id="case-panel-architecture" role="tabpanel" aria-labelledby="case-tab-architecture" hidden={tab !== "architecture"}>
         {architectureOpened && <div id="architecture-explorer"><ArchitectureMap key={useCase.id} caseId={useCase.id} title={useCase.title} frame={frame} /></div>}
       </div>
+      </DemoNarrativeLayout>
     </div>
   );
 }
@@ -1041,14 +1085,13 @@ export default function HomePage() {
 
   const filteredCases = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    const stageOrder: Record<UseCase["stage"], number> = { Interactive: 0, "In development": 1, Planned: 2 };
     return useCases.filter((item) => {
       const matchesFilter = filter === "All" || item.category === filter;
       const matchesQuery = !normalized || `${item.title} ${item.description} ${item.solutions.join(" ")}`.toLowerCase().includes(normalized);
       const matchesLive = !liveOnly || (Boolean(useCaseFrames[item.id]?.liveExperience) && momentReady(status, item.id, true).ready);
       const matchesSolution = !solution || item.solutions.some((name) => solutionOf(name) === solution);
       return matchesFilter && matchesQuery && matchesLive && matchesSolution;
-    }).sort((a, b) => stageOrder[a.stage] - stageOrder[b.stage]);
+    });
   }, [filter, query, liveOnly, solution, status]);
 
   const switchView = useCallback((view: View) => {
@@ -1278,7 +1321,7 @@ export default function HomePage() {
                   </div>
                 </div>
                 <div className="hero-story">
-                  <div className="story-title"><span>CLIENT LIFECYCLE STORY</span><strong>Four use cases. One client journey.</strong></div>
+                  <div className="story-title"><span>CLIENT LIFECYCLE STORY</span><strong>A client journey across four use cases</strong></div>
                   <StoryMap compact />
                 </div>
               </section>

@@ -95,7 +95,7 @@ export const brahe: CaseMap = {
     trace: {
       id: "trace",
       title: "Request trace",
-      subtitle: "Records. Does not block.",
+      subtitle: "Records activity without blocking requests.",
       detail: "Galileo callbacks and an optional Splunk span describe the request. A missing exporter does not decide the answer.",
       role: "telemetry",
       status: "implemented",

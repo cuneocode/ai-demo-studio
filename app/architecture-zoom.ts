@@ -105,6 +105,59 @@ function observeInterior(incoming: string, controls: boolean | string[]): ZoomIn
 }
 
 export const zoomMaps: Record<string, ZoomMap> = {
+  "code-vulnerability": {
+    implemented: true,
+    note: "Visa VVAH runs DeepAgents on LangGraph through the Studio model route. Agent Control gates scans and patches. Agent Observability traces model and tool execution.",
+    cores: [
+      box("workload", "Security analysis service", "FastAPI and Visa VVAH", "Starts isolated SDK workers, persists reports, stages patches, and runs trusted regression checks."),
+      box("model", "DeepAgents on LangGraph", "Studio model route", "Discovery, verification, and patch generation use Visa’s supported DeepAgents backend with the selected endpoint.", "ai"),
+      box("review", "Reviewer", "Evidence and patch review", "A person inspects the findings and proposed diff, applies the patch to the run copy, and requests a fresh scan.", "human"),
+      box("observe", "Splunk Agent Observability", "Model, tool, and control spans", "The native Splunk AO SDK exports OpenInference traces. Agent Control enforces scan scope, patch scope, and reviewed application.", "cisco", { optional: true }),
+    ],
+    coreEdges: [
+      { from: "workload", to: "model", label: "source analysis", kind: "data" },
+      { from: "workload", to: "review", label: "findings and patch", kind: "data" },
+      { from: "review", to: "workload", label: "apply and rescan", kind: "control" },
+      { from: "workload", to: "observe", label: "agent trace", kind: "telemetry" },
+      { from: "observe", to: "workload", label: "control verdict", kind: "control" },
+    ],
+    interiors: {
+      workload: {
+        title: "Security analysis service", note: "Source, proposal, and checked run copies have separate roles. Each scan has fresh harness state.",
+        entities: [
+          box("scan", "Copy, discover, and verify", "Visa SDK S0 through S9", "Builds context from an isolated source copy, verifies findings, and exports JSON, SARIF, and Markdown.", "ai"),
+          box("patch", "Prepare and review patch", "Disposable proposal copy", "Visa’s remediation agent edits a separate copy. The UI displays the diff before adoption.", "ai"),
+          box("check", "Run regression checks", "Trusted suite outside scan scope", "Exercises normal merchant access, SQL injection, and cross-merchant lookup."),
+        ],
+        edges: [
+          { from: "scan", to: "patch", label: "selected finding", kind: "data" },
+          { from: "patch", to: "check", label: "reviewer applies", kind: "control" },
+        ], stubs: [],
+      },
+      model: {
+        title: "Studio model route", note: "Each operation selects the first answering backend from its configured chain.",
+        entities: [
+          box("route", "Select the endpoint", "Studio settings", "The adapter reads provider, model, and egress policy before starting a worker."),
+          box("inference", "Run model roles", "DeepAgents / LangGraph", "All model-driven roles use Visa’s DeepAgents backend with the selected OpenAI-compatible provider.", "ai"),
+        ], edges: [{ from: "route", to: "inference", label: "selected provider", kind: "data" }], stubs: [],
+      },
+      review: {
+        title: "Reviewer", note: "Evidence review and patch application are explicit actions.",
+        entities: [
+          box("evidence", "Inspect the finding", "Severity and code evidence", "Read the exploit conditions and adversarial verifier’s rationale.", "human"),
+          box("approve", "Review and apply", "Diff and regression results", "Apply the reviewed diff to the run copy and inspect the executable check results.", "human"),
+        ], edges: [{ from: "evidence", to: "approve", label: "reviewed finding", kind: "control" }], stubs: [],
+      },
+      observe: {
+        title: "Splunk Agent Observability", note: "Live run stats show measured model and tool usage and actual trace delivery. The control panel identifies hosted or local enforcement.",
+        entities: [
+          box("span", "Agent traces", "OpenInference LangChain instrumentation", "Records LangGraph execution, model calls, tool calls, token usage, and a shared trace and session across the worker."),
+          box("export", "Native Splunk AO exporter", "Configured project and agent stream", "Exports GenAI spans and records receiver acceptance or failure.", "cisco"),
+          box("controls", "Agent Control", "Three hosted policies", "Gates synthetic scan scope, verified-finding patch generation, and application of an unchanged reviewed diff.", "cisco"),
+        ], edges: [{ from: "span", to: "export", label: "OTLP", kind: "telemetry" }, { from: "controls", to: "export", label: "SDK control events", kind: "telemetry" }], stubs: [],
+      },
+    },
+  },
   "brahe-bank": {
     implemented: true,
     note: "Live path: AI Defense inspects the question and the answer. The application judge stays in the workload and only produces a boolean. Agent Control enforces brahe-banking-scope.",

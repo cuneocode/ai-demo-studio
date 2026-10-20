@@ -49,6 +49,8 @@ next-env.d.ts
 /services/wealth/.cache/
 /services/sar/.venv/
 /services/sar/.cache/
+/services/vulnerability/.venv/
+/services/vulnerability/.cache/
 __pycache__/
 .pytest_cache/
 /output/

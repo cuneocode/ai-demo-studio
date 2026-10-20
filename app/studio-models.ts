@@ -48,6 +48,7 @@ export const MODEL_USE_CASES: { id: string; experience: string; title: string; c
   { id: "market-research", experience: "research", title: "Market event → house-view update", calls: "Research Deep Agent and subagents", applies: "Next run" },
   { id: "client-advisory", experience: "advisory", title: "Advisor meeting prep", calls: "Meeting-prep Deep Agent", applies: "Next run", clientData: true },
   { id: "sar-support", experience: "sar", title: "SAR investigation", calls: "Investigation Deep Agent and narrative draft", applies: "Next investigation", clientData: true },
+  { id: "code-vulnerability", experience: "vulnerability", title: "Code vulnerability analysis", calls: "Visa discovery, verification, and patch proposal", applies: "Next operation" },
   { id: "interbank-a2a", experience: "interbank", title: "Interbank settlement investigation", calls: "Both banks' Deep Agents", applies: "Next investigation (after one interbank:up)" },
 ];
 

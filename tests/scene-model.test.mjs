@@ -15,7 +15,7 @@ import { frameScene } from "../app/map/viewport.ts";
 const evidenceIds = new Set(Object.keys(evidence));
 
 test("scene catalogs reference real relationships, ports, drills, and sources", () => {
-  assert.equal(Object.keys(catalogs).length, 9);
+  assert.equal(Object.keys(catalogs).length, 10);
   for (const catalog of Object.values(catalogs)) {
     const errors = validateCase(catalog, evidenceIds);
     assert.deepEqual(errors, [], catalog.id);

@@ -237,7 +237,21 @@ const interbank: Catalog = {
   },
 };
 
+const vulnerability = journeyCase({
+  id: "code-vulnerability", title: "Code vulnerability analysis",
+  purpose: "Review vulnerabilities in a synthetic payments API, inspect a proposed patch, and check the result.",
+  modes: ["implemented", "proposed"],
+  environment: ["Visa VVAH 1.5.0 uses DeepAgents on LangGraph through the Studio model route. Agent Observability traces and Agent Control gates use the shared configuration. Synthetic merchant records."],
+  steps: [
+    { id: "source", label: "Inspect payments source", text: "Merchant-scoped settlement API", emphasis: "customer" },
+    { id: "scan", label: "Discover and verify", text: "Visa harness S0 through S9", emphasis: "assisted" },
+    { id: "review", label: "Review the proposed patch", text: "A person applies the reviewed change", emphasis: "customer" },
+    { id: "test", label: "Test and rescan", text: "Trusted regression checks and fresh analysis", emphasis: "customer" },
+  ],
+});
+
 const rawCatalogs: Record<string, Catalog> = {
+  "code-vulnerability": vulnerability,
   "brahe-bank": {
     ...braheScenes,
     resolveScene(sceneId, mode) {

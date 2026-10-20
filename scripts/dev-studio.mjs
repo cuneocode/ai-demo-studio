@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../', import.meta.url));
-for (const service of ['banking', 'fraud', 'briefing', 'wealth', 'sar']) {
+for (const service of ['banking', 'fraud', 'briefing', 'wealth', 'sar', 'vulnerability']) {
   if (!existsSync(`${root}services/${service}/.venv/bin/python`)) {
     console.error(`Run npm run ${service}:install before starting the studio.`);
     process.exit(1);

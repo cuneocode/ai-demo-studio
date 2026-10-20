@@ -3,7 +3,7 @@ import type { AnchorId } from "./anchors";
 export type GuideTab = "demo" | "architecture";
 export type RunState = "idle" | "starting" | "running" | "awaiting-human" | "done" | "failed" | "blocked";
 export type Source = "live" | "recorded" | "sample" | "scripted" | "illustrative" | "none";
-export type ServiceId = "banking" | "fraud" | "briefing" | "wealth" | "sar" | "interbank";
+export type ServiceId = "banking" | "fraud" | "briefing" | "wealth" | "sar" | "vulnerability" | "interbank";
 
 export type CiscoProduct =
   | "Cisco AI Defense"
@@ -81,6 +81,8 @@ export type Tour = {
   id: string;
   useCaseId: string;
   title: string;
+  /** Live-only workflows have no recording to replay. */
+  liveOnly?: boolean;
   /** Stamped on every card. */
   label?: "Illustrative prototype · no live service";
   /** Which recorded run the tour replays, for the first card. */

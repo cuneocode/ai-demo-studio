@@ -45,6 +45,7 @@ export const USE_CASE_SERVICE: Record<string, string> = {
   "market-research": "wealth",
   "client-advisory": "wealth",
   "sar-support": "sar",
+  "code-vulnerability": "vulnerability",
   "interbank-a2a": "interbank",
 };
 
@@ -118,6 +119,11 @@ export function presenterStatus(status: StudioStatus | null, useCaseId: string, 
     return [lab.aiDefense ? `AI Defense ${lab.aiDefense.mode} at the gateways` : "AI Defense not reported by the lab", lab.project ? `traces to ${lab.project}` : "no trace project reported"].join(" · ");
   }
   const service = status.services.find((item) => item.id === serviceId);
+  if (useCaseId === "code-vulnerability") {
+    if (!service?.up) return "Start the code vulnerability service in Studio settings.";
+    if (!service.ready) return service.detail;
+    return service.tracing === "configured" ? "DeepAgents / LangGraph · agent trace export configured" : "DeepAgents / LangGraph · run history stored locally";
+  }
   if (!service?.up) return `${service?.label ?? "The service"} is not running: present a recorded run, labelled, or start it.`;
   const parts: string[] = [];
   if (!service.ready) parts.push(`Not ready: ${service.detail}`);

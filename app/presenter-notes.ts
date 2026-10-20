@@ -6,6 +6,11 @@
 export type PresenterNote = { problem: string; ai: string; cisco: string; lifecycle?: string };
 
 export const presenterNotes: Record<string, PresenterNote> = {
+  "code-vulnerability": {
+    problem: "Payment security findings consume engineering time to reproduce, triage, and fix.",
+    ai: "Visa VVAH discovers and adversarially verifies flaws in a synthetic payments API. A remediation agent proposes a patch in a disposable copy. The reviewer applies it and runs four trusted checks, then rescans.",
+    cisco: "Visa’s DeepAgents backend runs on LangGraph through the Studio model route. Splunk Agent Observability captures model and tool traces. Hosted Agent Control gates scan scope, verified-finding patches, and reviewed application. Live run stats show measured usage and trace delivery; the control panel shows policy decisions.",
+  },
   "kyc-processing": {
     problem: "Onboarding and periodic KYC refreshes queue behind manual document, registry, and screening checks.",
     ai: "Illustrative prototype, no live service: document extraction, entity resolution, and exception routing are proposed. Say Illustrative out loud.",
@@ -32,8 +37,8 @@ export const presenterNotes: Record<string, PresenterNote> = {
   },
   "market-research": {
     problem: "When an issuer reports, strategists must update the house view quickly, with every number sourced and restricted issuers respected.",
-    ai: "A research Deep Agent with fundamentals, valuation, macro, and compliance subagents drafts a cited update; code verifies every claim before the strategist publishes.",
-    cisco: "Agent Control checks the restricted list before any data pull and gates research.publish; AI Defense inspects news as tool results; Splunk Agent Observability traces the subagents.",
+    ai: "A cached NVDA packet or fresh ticker data supplies earnings, recent news, metrics and peers. A structured assessment produces a Buy, Hold or Sell outlook; code verifies its supporting facts and withholds the recommendation when evidence is insufficient.",
+    cisco: "Issuer restrictions are checked before retrieval and analysis. AI Defense screens each article before model use, including the synthetic attack article. Agent Control gates the analysis precheck; run evidence reports model calls, tokens and screening results.",
     lifecycle: "HCYN is a fictional investment in the sample portfolio, unrelated to Chuck’s public role at Cisco. Published research can inform a live review; replay uses saved context.",
   },
   "company-briefing": {

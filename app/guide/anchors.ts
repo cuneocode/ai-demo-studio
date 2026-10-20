@@ -4,6 +4,7 @@
  * that no component renders.
  */
 export const ANCHORS = [
+  "vulnerability.intro", "vulnerability.source", "vulnerability.run", "vulnerability.findings", "vulnerability.patch", "vulnerability.checks",
   "case.status", "case.tabs", "case.tab.architecture", "guide.launch",
   "stats", "stats.observability", "stats.defense",
   "present.bar", "present.guide",

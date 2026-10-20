@@ -19,6 +19,7 @@ const serviceSpecs = [
   { prefix: "/api/briefing", port: 8013, directory: "briefing" },
   { prefix: "/api/wealth", port: 8014, directory: "wealth" },
   { prefix: "/api/sar", port: 8015, directory: "sar" },
+  { prefix: "/api/vulnerability", port: 8016, directory: "vulnerability" },
   // The interbank lab runs in Docker (npm run interbank:up); its dashboard serves /api/* on 8088.
   { prefix: "/api/interbank", port: 8088, rewrite: (path) => path.replace(/^\/api\/interbank/, "/api") },
 ];

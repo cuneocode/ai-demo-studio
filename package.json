@@ -31,9 +31,12 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
     "studio:preview": "STUDIO_PREVIEW=1 STUDIO_START_SERVICES=0 npm run dev -- --port 4200 --strictPort",
-    "studio:install": "npm run banking:install && npm run fraud:install && npm run briefing:install && npm run wealth:install && npm run sar:install",
+    "studio:install": "npm run banking:install && npm run fraud:install && npm run briefing:install && npm run wealth:install && npm run sar:install && npm run vulnerability:install",
     "studio:doctor": "node scripts/studio-doctor.mjs",
-    "start:preview": "STUDIO_PREVIEW=1 node scripts/start-studio.mjs"
+    "start:preview": "STUDIO_PREVIEW=1 node scripts/start-studio.mjs",
+    "vulnerability:install": "cd services/vulnerability && uv sync --frozen",
+    "vulnerability:test": "cd services/vulnerability && .venv/bin/python -m pytest tests -q",
+    "vulnerability:controls": "cd services/vulnerability && .venv/bin/python setup_controls.py"
   },
   "dependencies": {
     "@xyflow/react": "^12.11.6",

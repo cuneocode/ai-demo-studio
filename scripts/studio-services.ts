@@ -15,6 +15,7 @@ const OTEL = ["SPLUNK_REALM", "SPLUNK_ACCESS_TOKEN"];
 const GALILEO = ["GALILEO_API_KEY", "GALILEO_CONSOLE_URL", "GALILEO_PROJECT", "GALILEO_LOG_STREAM"];
 
 export const SERVICES: ServiceSpec[] = [
+  { id: "vulnerability", label: "Code vulnerability analysis", port: 8016, health: "/api/vulnerability/health", directory: "vulnerability", reads: [...GALILEO, "AGENT_CONTROL_URL", ...OTEL, ...MODEL_KEYS] },
   { id: "banking", label: "Brahe Bank", port: 8011, health: "/api/banking/health", directory: "banking", reads: [...GALILEO, "AGENT_CONTROL_URL", ...AIDEFENSE, "AIDEFENSE_MODE", ...OTEL, ...MODEL_KEYS, "PINECONE_API_KEY"] },
   { id: "fraud", label: "Card fraud triage", port: 8012, health: "/api/fraud/health", directory: "fraud", reads: [...GALILEO, "AGENT_CONTROL_URL", ...AIDEFENSE, "AIDEFENSE_MODE", ...OTEL, ...MODEL_KEYS] },
   { id: "briefing", label: "Company briefing", port: 8013, health: "/api/briefing/health", directory: "briefing", reads: [...AIDEFENSE, "BRIEFING_AIDEFENSE_MODE", ...OTEL, ...MODEL_KEYS, "SEC_USER_AGENT"] },

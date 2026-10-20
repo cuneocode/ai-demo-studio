@@ -55,6 +55,7 @@ export default defineConfig(async () => {
         "/api/fraud": { target: "http://127.0.0.1:8012", changeOrigin: false, timeout: 180000, proxyTimeout: 180000 },
         "/api/briefing": { target: "http://127.0.0.1:8013", changeOrigin: false, timeout: 240000, proxyTimeout: 240000 },
         "/api/wealth": { target: "http://127.0.0.1:8014", changeOrigin: false, timeout: 180000, proxyTimeout: 180000 },
+        "/api/vulnerability": { target: "http://127.0.0.1:8016", changeOrigin: false },
         "/api/sar": { target: "http://127.0.0.1:8015", changeOrigin: false, timeout: 180000, proxyTimeout: 180000 },
         // The interbank lab runs in Docker (npm run interbank:up); its dashboard serves /api/* on 8088.
         "/api/interbank": { target: "http://127.0.0.1:8088", changeOrigin: false, timeout: 30000, proxyTimeout: 30000, rewrite: (path: string) => path.replace(/^\/api\/interbank/, "/api") },

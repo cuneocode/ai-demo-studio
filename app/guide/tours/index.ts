@@ -1,4 +1,5 @@
 import type { Tour } from "../types";
+import { vulnerabilityTour } from "./vulnerability.ts";
 import { advisoryPriyaTour, advisoryTour } from "./advisory.ts";
 import { bankingScopeTour, bankingTour } from "./banking.ts";
 import { briefingTour } from "./briefing.ts";
@@ -36,6 +37,7 @@ function finish(tour: Tour): Tour {
 }
 
 const ALL: Tour[] = [
+  finish(vulnerabilityTour),
   finish(fraudTour),
   finish(fraudDisputeTour),
   finish(fraudPiiTour),

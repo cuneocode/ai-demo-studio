@@ -121,7 +121,7 @@ test("structure: unique ids, resolvable jumps and encores, a story cut, one main
     }
     for (const id of tour.encores ?? []) assert.ok(TOURS[id]?.encore, `${tour.id}: encore ${id} is missing`);
     if (!tour.encore && !tour.story) assert.ok(tour.steps.some((step) => step.story), `${tour.id} has no story-cut steps`);
-    if (!tour.encore && !tour.story && !tour.label) assert.ok(tour.steps.some((step) => step.replay), `${tour.id} has no recorded-run step`);
+    if (!tour.encore && !tour.story && !tour.label && !tour.liveOnly) assert.ok(tour.steps.some((step) => step.replay), `${tour.id} has no recorded-run step`);
     for (const step of tour.steps) if (step.kind === "act") assert.ok(step.waitFor, `${tour.id} › ${step.id}: act steps need waitFor`);
   }
   for (const id of ["fraud-modeling", "sar-support", "market-research", "client-advisory", "kyc-processing", "interbank-a2a", "brahe-bank", "company-briefing"]) assert.ok(mainTourFor(id), `no main tour for ${id}`);

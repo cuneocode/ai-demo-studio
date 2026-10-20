@@ -1,6 +1,6 @@
 # Financial Services AI Demo Studio
 
-Nine use cases with live AI services, guided walkthroughs, architecture views,
+Ten use cases with live AI services, guided walkthroughs, architecture views,
 and explicitly labelled recorded fallbacks. The library keeps every use case visible, including
 technical demos and illustrative prototypes.
 
@@ -20,10 +20,19 @@ and credentials, test connections, and apply changes. The primary demo actions
 and guided walkthroughs run the real services. They use synthetic banking data;
 model, tool, policy, and telemetry results identify what actually executed.
 
-The install command sets up banking, fraud, briefing, wealth, and SAR. **Docker**
+The install command sets up banking, fraud, briefing, wealth, SAR, and code vulnerability analysis. **Docker**
 is needed only for live interbank execution: start Docker, then run
 `npm run interbank:up`. A configuration check is not proof of a working service;
 check live status and each result’s provenance.
+
+## Code vulnerability analysis
+
+Analyze a synthetic payments API with Visa’s vulnerability harness. Review code
+locations, severity, and verification evidence, then request a patch, inspect its
+diff, apply it to the run copy, and execute four regression checks. A fresh scan
+can reassess the patched source. Model routing uses Studio settings.
+DeepAgents runs on LangGraph with Splunk Agent Observability model and tool traces
+and Agent Control gates. [Setup and workflow](services/vulnerability/README.md).
 
 ## Market research
 
@@ -132,6 +141,7 @@ and test with `npm run <id>:test`.
 | `fraud` | 8012 | Card fraud triage |
 | `briefing` | 8013 | Company briefing |
 | `wealth` | 8014 | Market research and client advisory |
+| `vulnerability` | 8016 | Visa VVAH code analysis, reviewed patches, and regression checks |
 | `sar` | 8015 | SAR investigation: synthetic cases, a cited narrative, investigator and QA approval, simulated e-filing |
 
 The interbank lab runs in Docker (`npm run interbank:up`).

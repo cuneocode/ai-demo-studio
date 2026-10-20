@@ -35,8 +35,8 @@ export const SETTING_GROUPS: SettingGroup[] = [
     fields: [
       { name: "GALILEO_API_KEY", label: "API key", secret: true },
       { name: "GALILEO_CONSOLE_URL", label: "Console URL", placeholder: "https://console.multitenant.galileocloud.io", https: true },
-      { name: "GALILEO_PROJECT", label: "Project (Brahe Bank, wealth)", placeholder: "fsi-brahe-bank" },
-      { name: "GALILEO_LOG_STREAM", label: "Log stream (Brahe Bank, wealth)", placeholder: "brahe-bank" },
+      { name: "GALILEO_PROJECT", label: "Shared project", placeholder: "fsi-brahe-bank" },
+      { name: "GALILEO_LOG_STREAM", label: "Shared agent stream", placeholder: "brahe-bank" },
       { name: "AGENT_CONTROL_URL", label: "Agent Control URL", placeholder: "https://agent-control.multitenant.galileocloud.io", https: true,
         help: "Leave empty for the multitenant service." },
     ],
@@ -168,6 +168,11 @@ export function readiness(settings: Record<string, SettingState>, model: (useCas
         has("GALILEO_API_KEY") && has("AGENT_CONTROL_URL") ? "Agent Control: hosted when the SAR policies are registered" : "Policies: local checks",
         "Recorded and sample runs need no credentials",
       ],
+    },
+    {
+      id: "code-vulnerability", title: "Code vulnerability analysis",
+      missing: modelNeed("code-vulnerability"),
+      notes: ["Visa VVAH on DeepAgents / LangGraph", has("GALILEO_API_KEY") ? "Agent Observability traces; register vulnerability policies for hosted Agent Control" : "Local policy checks; configure Agent Observability for export and hosted controls"],
     },
     {
       id: "interbank-a2a", title: "Interbank settlement investigation",
