@@ -220,7 +220,7 @@ test("a run started in the demo keeps going on the Architecture tab and is intac
   await open(page);
   await page.getByRole("button", { name: "Open Card fraud triage experience" }).click();
   const demoPanel = page.locator("#case-panel-demo");
-  await page.locator("#triage-queue").click();
+  await page.locator("#triage-queue").press("Enter");
   await expect(page.locator("#triage-queue")).toContainText("Triaging");
 
   await page.getByRole("tab", { name: "Architecture" }).click();
@@ -230,8 +230,8 @@ test("a run started in the demo keeps going on the Architecture tab and is intac
   await expect(explorer).toHaveAttribute("data-system-id", "fraud-modeling");
   await expect.poll(() => served, { timeout: 10_000 }).toBe(true);
   await expect(demoPanel.locator(".fx-aha")).toHaveText(/Rules approve what the graph model flags/);
-  const zoom = await explorer.getAttribute("data-zoom");
-  expect(Number(zoom)).toBeGreaterThan(0.4);
+  await expect(explorer).toHaveAttribute("data-phase", "idle");
+  const currentScope = await explorer.getAttribute("data-scope-id");
 
   await page.getByRole("tab", { name: "Use case demo" }).click();
   await expect(explorer).toBeHidden();
@@ -240,13 +240,16 @@ test("a run started in the demo keeps going on the Architecture tab and is intac
   await expect(page.locator("#triage-queue")).toContainText("Waiting for the analyst");
 
   await page.getByRole("tab", { name: "Architecture" }).click();
-  await expect(page.locator(".react-flow")).toHaveCount(1);
-  await expect(explorer).toHaveAttribute("data-zoom", zoom!);
+  await expect(explorer.locator('iframe[src="/diagrams/viewer.html"]')).toHaveCount(1);
+  await expect(explorer).toHaveAttribute("data-scope-id", currentScope!);
 
   await page.getByRole("tab", { name: "Use case demo" }).click();
   await page.setViewportSize({ width: 1100, height: 900 });
   await page.getByRole("tab", { name: "Architecture" }).click();
-  const camera = () => page.locator(".react-flow__viewport").evaluate((element) => (element as HTMLElement).style.transform);
+  const camera = () => page.frameLocator('iframe[src="/diagrams/viewer.html"]').locator("[data-cell-id]").evaluateAll((elements) => JSON.stringify(elements.map((element) => {
+    const box = element.getBoundingClientRect();
+    return [element.getAttribute("data-cell-id"), ...[box.x, box.y, box.width, box.height].map((value) => Math.round(value))];
+  })));
   await page.waitForTimeout(500);
   const refit = await camera();
 

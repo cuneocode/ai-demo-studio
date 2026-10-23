@@ -90,8 +90,8 @@ export const bankingTour: Tour = {
     },
     {
       id: "banking.architecture", kind: "observe", tab: "architecture", targets: ["arch.rail"],
-      title: "Check, build, return",
-      body: "Requests are inspected, scoped, answered by the supervisor and specialists, then inspected and checked again before release.",
+      title: "Explore the assistant architecture",
+      body: "Expand Bank assistant, then a stage to reveal its components on the same canvas. Source panels explain inspection and control decisions. Layers add platform services; Back collapses one level and restores the framing.",
     },
   ],
 };

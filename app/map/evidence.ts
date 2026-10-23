@@ -3,6 +3,58 @@ import type { EvidenceRef } from "./types.ts";
 
 /** Allowlisted excerpts. Line ranges are 1-based and inclusive. */
 export const evidence: Record<string, EvidenceRef> = {
+  "platform.vulnerability-profile": {
+    id: "platform.vulnerability-profile", file: "services/vulnerability/engine.py", symbol: "make_config", start: 75, end: 86,
+    proves: "The worker profile binds discovery, verification, and remediation roles to one selected model using the DeepAgents backend.", proofRole: "Setup", evidenceKind: "source",
+  },
+  "platform.fraud-agent": {
+    id: "platform.fraud-agent", file: "services/fraud/agent.py", symbol: "investigate", start: 155, end: 162,
+    proves: "The triage service builds a Deep Agent with the selected model and investigation tools, then streams its execution.", proofRole: "Call", evidenceKind: "source",
+  },
+  "platform.briefing-agent": {
+    id: "platform.briefing-agent", file: "services/briefing/agent.py", symbol: "build_agent", start: 211, end: 232,
+    proves: "The briefing supervisor and theme subagents receive the same protected model client.", proofRole: "Setup", evidenceKind: "source",
+  },
+  "platform.briefing-routing": {
+    id: "platform.briefing-routing", file: "services/briefing/model_backend.py", symbol: "model_settings", start: 19, end: 34,
+    proves: "Briefing resolves its Studio model chain and falls back to environment configuration when no backend resolves.", proofRole: "Setup", evidenceKind: "source",
+  },
+  "platform.research-calls": {
+    id: "platform.research-calls", file: "services/wealth/market_research.py", symbol: "analyze", start: 228, end: 256,
+    proves: "Market analysis makes structured Assessment calls with one repair attempt and conditionally regenerates an Outlook from verified facts.", proofRole: "Call", evidenceKind: "source",
+  },
+  "platform.advisory-agents": {
+    id: "platform.advisory-agents", file: "services/wealth/advisory_agent.py", symbol: "run_deep_agent", start: 283, end: 307,
+    proves: "The meeting-prep supervisor, planner, and compliance reviewer share the selected model and enforcement settings.", proofRole: "Setup", evidenceKind: "source",
+  },
+  "platform.sar-agent": {
+    id: "platform.sar-agent", file: "services/sar/agent.py", symbol: "run_live", start: 136, end: 151,
+    proves: "The SAR agent selects its configured model, applies egress admission, builds the protected client, and invokes the agent graph.", proofRole: "Call", evidenceKind: "source",
+  },
+  "platform.interbank-agent": {
+    id: "platform.interbank-agent", file: "services/interbank/lab/agents.py", symbol: "DeepAgent.current", start: 69, end: 74,
+    proves: "Each bank's Deep Agent selects its configured backend and rebuilds its graph when that endpoint changes.", proofRole: "Setup", evidenceKind: "source",
+  },
+  "platform.runtime": {
+    id: "platform.runtime", file: "scripts/studio-services.ts", symbol: "SERVICES", start: 17, end: 27,
+    proves: "Studio registers six local Python sidecars and a separate Docker interbank lab with their ports and health routes. This describes configured process placement.", proofRole: "Setup", evidenceKind: "configuration",
+  },
+  "platform.model-routing": {
+    id: "platform.model-routing", file: "services/llm/studio_models.py", symbol: "pick", start: 312, end: 342,
+    proves: "Shared routing resolves a use case's provider chain, skips unconfigured or unhealthy providers, and returns the selected backend and fallback reason.", proofRole: "Call", evidenceKind: "source",
+  },
+  "platform.egress": {
+    id: "platform.egress", file: "services/llm/studio_models.py", symbol: "egress_decision", start: 401, end: 419,
+    proves: "Private endpoints are allowed. Hosted endpoints follow the configured egress policy; required AI Defense must be available before a hosted call is allowed.", proofRole: "Decision", evidenceKind: "source",
+  },
+  "platform.vulnerability-egress": {
+    id: "platform.vulnerability-egress", file: "services/vulnerability/server.py", symbol: "selection", start: 185, end: 193,
+    proves: "The vulnerability adapter selects its Studio model and checks egress with AI Defense unavailable. A denied policy returns HTTP 409 before the worker launches.", proofRole: "Decision", evidenceKind: "source",
+  },
+  "platform.vulnerability-controls": {
+    id: "platform.vulnerability-controls", file: "services/vulnerability/controls.py", symbol: "check", start: 83, end: 105,
+    proves: "Agent Control combines deterministic verdicts with configured hosted enforcement. Missing or unavailable hosted controls block operations; unconfigured credentials retain labelled local checks.", proofRole: "Decision", evidenceKind: "source",
+  },
   "vulnerability.scan": {
     id: "vulnerability.scan", file: "services/vulnerability/worker.py", symbol: "execute", start: 13, end: 51,
     proves: "Visa runs discovery through S9, then builds the Foundry profile with independent HTTP validation. Remediation edits a separate proposal copy.",

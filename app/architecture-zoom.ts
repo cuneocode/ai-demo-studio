@@ -617,6 +617,7 @@ export const zoomMaps: Record<string, ZoomMap> = {
     coreEdges: [
       { from: "pipeline", to: "reference", label: "lookup" },
       { from: "pipeline", to: "model", label: "extract" },
+      { from: "pipeline", to: "exception", label: "low confidence", kind: "control" },
       { from: "pipeline", to: "observe", label: "proposed spans", kind: "telemetry" },
       { from: "exception", to: "defense", label: "inspect exception", kind: "control" },
     ],
@@ -628,7 +629,7 @@ export const zoomMaps: Record<string, ZoomMap> = {
           box("validate", "Schema validation", "Before publish", "Deterministic. Low confidence routes aside.", "service"),
           box("publish", "Publish", "Governed fields", "The authorization path has no LLM.", "service"),
         ],
-        edges: [{ from: "validate", to: "publish", label: "valid rows" }],
+        edges: [{ from: "validate", to: "publish", label: "valid rows" }, { from: "validate", to: "exception", label: "low confidence", kind: "control" }],
         stubs: [box("exception", "Exception agent", "Low confidence", "Not authorization.")],
       },
       reference: {

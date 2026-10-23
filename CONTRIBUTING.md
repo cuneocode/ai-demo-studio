@@ -30,6 +30,7 @@ work. Forks use their own credentials, model endpoints, and integration tenants.
 | `npm run lint` | ESLint across the repo |
 | `npm run <service>:test` | Python tests for banking, fraud, briefing, wealth, SAR, or vulnerability |
 | `npm run platform:test` | Shared Python run handling and model routing, using the wealth environment |
+| `npm run map:drawio` | Regenerate editable draw.io architecture diagrams from the shared page definitions |
 | `npm run map:sources` | Regenerate highlighted architecture source evidence after source changes |
 | `npm run studio:doctor -- --live` | Check Node, npm dependencies, uv, and the six supported Python environments |
 

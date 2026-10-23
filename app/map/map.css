@@ -119,8 +119,10 @@
 .map-zoom{display:flex;gap:6px;margin:0}
 .map-zoom button{width:36px;padding:0;display:grid;place-items:center}
 .map-source{position:relative;width:500px;height:100%;flex:none;min-width:0;min-height:0;display:flex;flex-direction:column;border-left:1px solid #2a3648;background:#131d2b;overflow:hidden}
-.map-source.is-drawer{position:absolute;left:12px;right:12px;bottom:12px;width:auto;height:min(48%,400px);z-index:7;border:1px solid #2a3648;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
-.map-environment-panel.is-drawer{height:min(42%,340px)}
+.map-source.is-drawer{position:absolute;inset:0 0 0 auto;max-width:100%;width:min(760px,100%);height:100%;z-index:7;border-left:1px solid #43516a;border-radius:0;box-shadow:-16px 0 40px rgba(0,0,0,.35);animation:map-source-enter 180ms ease-out}
+.map-environment-panel.is-drawer{width:min(520px,100%)}
+@keyframes map-source-enter{from{transform:translateX(100%)}to{transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){.map-source.is-drawer{animation:none}}
 .map-source.is-expanded-source:not(.is-drawer){position:absolute;inset:0 0 0 auto;width:min(960px,calc(100% - 40px))!important;z-index:8}
 .map-source.is-drawer.is-expanded-source{inset:0;width:auto;height:auto;z-index:8;border-radius:0}
 .map-resize{position:absolute;left:0;top:0;bottom:0;width:8px;cursor:col-resize}
@@ -129,6 +131,7 @@
 .map-source-title strong{font-size:15px;color:#eef2f8}
 .map-source-title span{font-size:13px;color:#bcd2ff;font-weight:620}
 .map-source-actions{display:flex;gap:8px;flex:none}
+.map-source-actions kbd{margin-left:6px;padding:1px 4px;border:1px solid #43516a;border-radius:3px;font-size:11px;color:#9aabbf}
 .map-source-body{flex:1;min-height:0;overflow:auto;padding:4px 16px 18px}
 .map-source h3{margin:8px 0 6px;font-size:16px}
 .map-source p{margin:0;color:#b7c3d4;font-size:14px;line-height:1.45}
@@ -139,7 +142,6 @@
 .map-source-details{margin-top:4px}
 .map-source-details summary{cursor:pointer;color:#bcd2ff;font-weight:620}
 .map-source.is-drawer .map-source-attrib{margin-top:4px;padding:0}
-.map-source.is-drawer .map-source-attrib .ownership,.map-source.is-drawer .map-source-attrib .mechanism,.map-source.is-drawer .map-source-details,.map-source.is-drawer .map-source-claim,.map-source.is-drawer .map-source-dependency,.map-source.is-drawer .path{display:none}
 .map-source.is-drawer .map-source-bar{padding:8px 12px 6px}
 .map-source.is-drawer .map-source-body{padding:2px 12px 12px}
 .map-source.is-drawer .map-source-attrib{gap:2px;margin-top:4px;padding:6px 8px}
@@ -150,7 +152,6 @@
 .map-source-provenance{margin-top:10px;color:#aac3fa;font-size:13px}
 .map-source-provenance summary{cursor:pointer;font-weight:620}
 .map-source-provenance p{margin-top:8px}
-.map-source.is-drawer:not(.is-expanded-source) .map-source-provenance{display:none}
 .map-source.is-drawer.is-expanded-source .map-source-claim,.map-source.is-drawer.is-expanded-source .map-source-dependency,.map-source.is-drawer.is-expanded-source .path{display:block}
 .map-source-facts{display:grid;gap:4px;margin:6px 0 0;padding-top:8px;border-top:1px solid #354255}
 .map-source-facts div{display:grid;grid-template-columns:108px 1fr;gap:8px}

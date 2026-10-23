@@ -45,9 +45,9 @@ import {
   type PlatformId,
   type RelationshipKind,
   type SceneNode,
-  type SceneSourceAction,
   type SceneSpec,
 } from "./scene-model.ts";
+import { sourceAttribution } from "./source-attribution.ts";
 import { frameScene, panBoundsIntoView, sceneBounds, type Bounds, type Viewport } from "./viewport.ts";
 import "./map.css";
 import { useTheme, type Theme } from "../theme.ts";
@@ -101,31 +101,6 @@ function localStoryBounds(scene: SceneSpec, nodes: SceneNode[], selectedId: stri
     if (next.width * zoom <= usableWidth - 48 && next.height * zoom <= usableHeight - 48) bounds = next;
   }
   return bounds;
-}
-
-function sourceAttribution(catalog: Catalog, node: SceneNode, mode: Mode, action?: SceneSourceAction) {
-  const resolved = attributionFor(catalog, node, mode);
-  if (!action?.bindingId) {
-    return {
-      subject: node.displayLabel,
-      ownership: node.serviceLabel,
-      platforms: [],
-      mechanism: "Occurrence implementation",
-      effect: action?.evidenceSummary ?? node.supportingText ?? "Shows how this occurrence is configured and behaves.",
-      disclosure: node.disclosure,
-    };
-  }
-  const relevant = resolved.filter((item) => item.bindingId === action.bindingId);
-  const selected = relevant[0];
-  if (!selected) return null;
-  return {
-    subject: node.displayLabel,
-    ownership: node.serviceLabel && !resolved.some((item) => item.platformName === node.serviceLabel) ? node.serviceLabel : undefined,
-    platforms: [...new Set(relevant.map((item) => item.platformName))],
-    mechanism: selected.mechanismLabel,
-    effect: selected.applicationEffect,
-    disclosure: node.disclosure,
-  };
 }
 
 function buildGraph(

@@ -16,6 +16,7 @@ const eslintConfig = defineConfig([
     // The interbank lab's standalone dashboard has its own toolchain and builds in Docker.
     "services/interbank/demo/ui/**",
     "output/**",
+    "public/vendor/**",
   ]),
 ]);
 

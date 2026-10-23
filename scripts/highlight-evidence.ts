@@ -5,13 +5,13 @@ import { createHighlighter } from "shiki";
 import { evidence } from "../app/map/evidence.ts";
 
 const revision = execFileSync("git", ["rev-parse", "--short", "HEAD"], { encoding: "utf8" }).trim();
-const highlighter = await createHighlighter({ themes: ["github-dark"], langs: ["python", "yaml", "sql"] });
+const highlighter = await createHighlighter({ themes: ["github-dark"], langs: ["python", "yaml", "sql", "typescript"] });
 const prefix = process.argv.find((arg) => arg.startsWith("--prefix="))?.slice("--prefix=".length);
 const selected = Object.values(evidence).filter((item) => !prefix || item.id.startsWith(prefix));
 if (!selected.length) throw new Error(`No evidence matches ${prefix}`);
 const artifacts: Record<string, unknown> = prefix
   ? JSON.parse(readFileSync("app/map/source-artifacts.json", "utf8")).artifacts : {};
-const languages: Record<string, "python" | "yaml" | "sql"> = { py: "python", yaml: "yaml", yml: "yaml", sql: "sql" };
+const languages: Record<string, "python" | "yaml" | "sql" | "typescript"> = { py: "python", yaml: "yaml", yml: "yaml", sql: "sql", ts: "typescript" };
 
 for (const item of selected) {
   const lang = languages[item.file.split(".").pop() ?? ""];

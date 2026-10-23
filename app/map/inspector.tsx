@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { SelectedDisclosure } from "./scene-model.ts";
 
 export type SourceExcerpt = {
@@ -35,8 +35,18 @@ function ResizeHandle({ width, onWidth, max = 640 }: { width: number; onWidth: (
     <div
       className="map-resize"
       role="separator"
+      tabIndex={0}
       aria-orientation="vertical"
       aria-label="Resize supplementary panel"
+      aria-valuemin={360}
+      aria-valuemax={max}
+      aria-valuenow={width}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+          event.preventDefault();
+          onWidth(Math.min(max, Math.max(360, width + (event.key === "ArrowLeft" ? 40 : -40))));
+        }
+      }}
       onPointerDown={(event) => {
         const startX = event.clientX;
         const startWidth = width;
@@ -104,6 +114,7 @@ export function SourceInspector({
   onSelect: (id: string) => void;
   onClose: () => void;
 }) {
+  const closeRef = useRef<HTMLButtonElement>(null);
   const [excerpt, setExcerpt] = useState<SourceExcerpt | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [loadedId, setLoadedId] = useState(sourceId);
@@ -112,6 +123,12 @@ export function SourceInspector({
     setExcerpt(null);
     setExpanded(false);
   }
+
+  useEffect(() => {
+    const previous = document.activeElement;
+    closeRef.current?.focus({ preventScroll: true });
+    return () => { if (previous instanceof HTMLElement && previous.isConnected) previous.focus({ preventScroll: true }); };
+  }, []);
 
   useEffect(() => {
     let cancel = false;
@@ -130,17 +147,15 @@ export function SourceInspector({
   }, [sourceId]);
 
   return (
-    <aside className={`map-source ${drawer ? "is-drawer" : ""} ${expanded ? "is-expanded-source" : ""}`} style={drawer ? undefined : { width }} aria-label="Source inspector">
-      {drawer ? null : (
-        <ResizeHandle width={width} onWidth={onWidth} max={maxWidth} />
-      )}
+    <aside className={`map-source ${drawer ? "is-drawer" : ""} ${expanded ? "is-expanded-source" : ""}`} style={expanded ? undefined : { width }} aria-label="Source inspector" onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); onClose(); } }}>
+      {expanded ? null : <ResizeHandle width={width} onWidth={onWidth} max={maxWidth} />}
       <div className="map-source-bar">
         <div className="map-source-title">
           <strong>{attribution?.subject ?? "Source evidence"}</strong>
           {attribution?.platforms.length ? <span>{attribution.platforms.join(" / ")}</span> : null}
         </div>
         <div className="map-source-actions">
-          <button type="button" onClick={onClose}>Close source</button>
+          <button ref={closeRef} type="button" aria-label="Close source" onClick={onClose}>Close source <kbd>Esc</kbd></button>
           <button type="button" onClick={() => setExpanded((value) => !value)}>{expanded ? "Collapse" : "Expand"}</button>
         </div>
       </div>

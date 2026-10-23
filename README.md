@@ -191,6 +191,9 @@ Runtime health and confirmed trace delivery are reported separately in the Studi
 
 Read [AGENTS.md](AGENTS.md) before making changes and
 [CONTRIBUTING.md](CONTRIBUTING.md) for development, tests, and fork conventions.
+Every Architecture tab uses one continuous draw.io canvas with collapsible
+journey, system, and component detail, platform layers, and source evidence. See
+[architecture maps](ARCHITECTURE_MAPS.md) for authoring and validation.
 Validation commands include `npm test`, `npm run typecheck`, `npm run lint`,
 `npm run test:browser`, and the per-service `npm run <service>:test` commands.
 See [setup verification](docs/SETUP_VERIFICATION.md) for the tested environment
