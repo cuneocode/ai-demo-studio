@@ -162,11 +162,11 @@ const transactions = proposed("transaction-llm", "Proposed process", "A proposed
   ["stop", "Authorization unchanged", "The payment path would not wait on a model.", "outcome"],
 ]);
 
-const vulnerability = process("code-vulnerability", "Business process", "A reviewer scans synthetic payments code, inspects verified findings, reviews a patch, then tests and rescans the run copy.", ["implemented", "proposed"], [
+const vulnerability = process("code-vulnerability", "Business process", "A reviewer validates payments vulnerability evidence, prepares HEC events, and tracks remediation under a stable finding identity.", ["implemented", "proposed"], [
   entity("source", "Inspect payments source", "Synthetic merchant settlements", "Each run copies the bundled Python and SQLite sample.", "human"),
-  entity("scan", "Discover and verify", "Visa VVAH S0 through S9", "The SDK builds code context, investigates threats, and adversarially verifies findings through the Studio model route.", "ai"),
-  entity("review", "Review a proposed patch", "Reviewer applies the diff", "The fix agent edits a disposable proposal copy. Applying the reviewed patch changes the run copy.", "decision"),
-  entity("test", "Test and rescan", "Four trusted regression checks", "Checks cover legitimate merchant access, SQL injection, and ownership. A fresh scan evaluates patched source.", "outcome"),
+  entity("scan", "Validate finding evidence", "Visa VVAH and scoped Foundry profile", "Model findings receive revision-bound citation checks and independent HTTP validation.", "ai"),
+  entity("review", "Prepare approved evidence", "Agent Control publication gate", "Verified evidence produces a local HEC envelope. Invalid citations block publication.", "decision"),
+  entity("test", "Review remediation", "Patch checks and rescan history", "A person applies the reviewed diff. Trusted regression and HTTP checks record the result under the stable finding identity.", "outcome"),
 ]);
 
 export const caseMaps: Record<string, CaseMap> = {

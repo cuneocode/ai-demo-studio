@@ -49,10 +49,8 @@ changes. They remain visible to contributors:
   types, an explorer test, Vite middleware annotations, and missing Cloudflare
   worker/storage declarations. The cleanup enabled `.ts` imports in `tsconfig.json`
   to match the host scripts' actual imports.
-- **Repo-wide lint:** `app/FoundryEvidence.tsx:47` triggers
-  `react-hooks/set-state-in-effect`. That component was already part of the local
-  vulnerability work and was preserved.
-
+- **Repo-wide lint:** passed after fixing the Foundry panel's state reset during
+  the subsequent feature verification.
 - **Browser tests:** 10 passed and 4 failed across `tests/settings.spec.ts` and
   `tests/shell.spec.ts`, using installed Chromium against live Studio mode on port
   4300. Failures include stale settings labels/selectors, telemetry text, and the
@@ -71,3 +69,36 @@ the engineer's configured accounts and are documented in the service guides.
 
 The repository has no root license selection. Preserve upstream notices while
 the owner chooses the repository's redistribution terms.
+
+## Foundry evidence verification
+
+The local Foundry extension was checked after the onboarding cleanup on October
+22, 2026. `npm run vulnerability:test` passed all 29 checks, including real HTTP
+probes before and after a reviewed fix, citation denial, immutable artifact hashes,
+idempotent HEC export, per-operation telemetry, and finding history across rescans.
+Two added regressions ensure an empty rescan requires current HTTP evidence and
+working legitimate access before its coverage goals can close.
+
+`npm run lint` and `npm run build` passed. The targeted shared Node suites for
+architecture scenes, preview APIs, guide placement, and inference status passed
+27 checks. The existing 19 TypeScript errors and two market-research guide-test
+failures remain outside this feature's changes.
+
+Browser verification used an isolated API with a copy of a saved Visa scan that
+had recorded 15 model calls. It exercised building evidence, denying an invalid
+citation, preparing a confirmed event, copying its JSON, and downloading five
+unique HEC envelopes. Both declared security goals reproduced on the independent
+HTTP testbed. Switching architecture tabs preserved the run, events, and session
+counts. Refreshing the browser and restarting the API restored the same four
+operations, five event identities, and evidence artifact hash. The new evidence
+and publication operations each reported zero model calls.
+
+All six vulnerability architecture source excerpts were regenerated with
+`npm run map:sources -- --prefix=vulnerability.` and resolved through the source
+inspection API. Full-repo source regeneration currently encounters a pre-existing
+stale `brahe.galileo.call` range; the targeted vulnerability capture succeeds.
+
+This check used local policy enforcement. Hosted Agent Control decisions have SDK
+failure-path tests; live hosted enforcement needs the four registered policies in
+the configured tenant. HEC remains a local outbox with zero events sent and unknown
+indexing. The browser check made no new paid model calls or hosted policy changes.

@@ -102,9 +102,9 @@ has no recorded assessment fallback. Other wealth workflows expose their own
 recordings and labelled partial results.
 
 Code vulnerability analysis runs Visa's DeepAgents harness against a synthetic
-payments API. Review vulnerability evidence, inspect proposed patches, apply a
-reviewed diff, run regression checks, and rescan the patched copy. Model routing,
-Agent Control gates, and trace reporting use the shared Studio settings.
+payments API. Its scoped Foundry profile adds revision-bound citations, independent
+HTTP validation, publication gates, reviewed patches, and rescans. HEC evidence is
+prepared and downloaded locally; the Studio does not send it to a Splunk receiver.
 
 ### Start the interbank lab
 

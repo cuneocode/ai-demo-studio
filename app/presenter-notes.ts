@@ -8,8 +8,8 @@ export type PresenterNote = { problem: string; ai: string; cisco: string; lifecy
 export const presenterNotes: Record<string, PresenterNote> = {
   "code-vulnerability": {
     problem: "Payment security findings consume engineering time to reproduce, triage, and fix.",
-    ai: "Visa VVAH discovers and adversarially verifies flaws in a synthetic payments API. A remediation agent proposes a patch in a disposable copy. The reviewer applies it and runs four trusted checks, then rescans.",
-    cisco: "Visa’s DeepAgents backend runs on LangGraph through the Studio model route. Splunk Agent Observability captures model and tool traces. Hosted Agent Control gates scan scope, verified-finding patches, and reviewed application. Live run stats show measured usage and trace delivery; the control panel shows policy decisions.",
+    ai: "Visa VVAH uses DeepAgents on LangGraph to investigate synthetic payments code. The scoped Foundry profile mechanically checks source citations and independently reproduces cross-merchant disclosure over loopback HTTP. A reviewer requests, inspects, and applies a patch, then checks and rescans the source.",
+    cisco: "Show the three evidence legs, the two-goal coverage checklist, and the invalid-citation publication denial in Agent Control. Splunk Agent Observability receives execution traces. The main workspace previews HEC envelopes with stable finding IDs, evidence hashes, and trace correlation. Download the prepared batch; HEC delivery is unconfigured. Live run stats retain measured usage across history and refresh.",
   },
   "kyc-processing": {
     problem: "Onboarding and periodic KYC refreshes queue behind manual document, registry, and screening checks.",

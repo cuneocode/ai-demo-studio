@@ -107,12 +107,13 @@ function observeInterior(incoming: string, controls: boolean | string[]): ZoomIn
 export const zoomMaps: Record<string, ZoomMap> = {
   "code-vulnerability": {
     implemented: true,
-    note: "Visa VVAH runs DeepAgents on LangGraph through the Studio model route. Agent Control gates scans and patches. Agent Observability traces model and tool execution.",
+    note: "Visa VVAH runs DeepAgents on LangGraph. The workload checks Foundry evidence and independent HTTP impact. Agent Control gates publication and patches; HEC envelopes stay in the local outbox.",
     cores: [
-      box("workload", "Security analysis service", "FastAPI and Visa VVAH", "Starts isolated SDK workers, persists reports, stages patches, and runs trusted regression checks."),
+      box("workload", "Security analysis service", "FastAPI, Visa VVAH, and Foundry profile", "Starts SDK workers, checks source citations and coverage, validates impact on a disposable loopback HTTP testbed, and stages reviewed patches."),
       box("model", "DeepAgents on LangGraph", "Studio model route", "Discovery, verification, and patch generation use Visa’s supported DeepAgents backend with the selected endpoint.", "ai"),
       box("review", "Reviewer", "Evidence and patch review", "A person inspects the findings and proposed diff, applies the patch to the run copy, and requests a fresh scan.", "human"),
-      box("observe", "Splunk Agent Observability", "Model, tool, and control spans", "The native Splunk AO SDK exports OpenInference traces. Agent Control enforces scan scope, patch scope, and reviewed application.", "cisco", { optional: true }),
+      box("observe", "Splunk Agent Observability", "Model, tool, and control spans", "The native Splunk AO SDK exports execution traces. Agent Control enforces scan scope, patch scope, reviewed application, and evidence publication.", "cisco", { optional: true }),
+      box("hec", "Local HEC evidence outbox", "Prepared JSON envelopes", "Persists finding transitions with stable identities, source revisions, evidence hashes, and trace IDs. The main workspace previews and downloads the batch. No HEC receiver is configured."),
     ],
     coreEdges: [
       { from: "workload", to: "model", label: "source analysis", kind: "data" },
@@ -120,6 +121,8 @@ export const zoomMaps: Record<string, ZoomMap> = {
       { from: "review", to: "workload", label: "apply and rescan", kind: "control" },
       { from: "workload", to: "observe", label: "agent trace", kind: "telemetry" },
       { from: "observe", to: "workload", label: "control verdict", kind: "control" },
+      { from: "workload", to: "hec", label: "evidence envelopes", kind: "data" },
+      { from: "hec", to: "review", label: "preview and download", kind: "data" },
     ],
     interiors: {
       workload: {
@@ -127,11 +130,12 @@ export const zoomMaps: Record<string, ZoomMap> = {
         entities: [
           box("scan", "Copy, discover, and verify", "Visa SDK S0 through S9", "Builds context from an isolated source copy, verifies findings, and exports JSON, SARIF, and Markdown.", "ai"),
           box("patch", "Prepare and review patch", "Disposable proposal copy", "Visa’s remediation agent edits a separate copy. The UI displays the diff before adoption.", "ai"),
-          box("check", "Run regression checks", "Trusted suite outside scan scope", "Exercises normal merchant access, SQL injection, and cross-merchant lookup."),
+          box("check", "Evidence and coverage checks", "Scoped Foundry profile and HTTP validator", "A credential-free process tests disclosure on a disposable loopback HTTP testbed. Workload checks resolve citations, pin revisions, track two goals and stable finding identities, and run trusted regressions."),
         ],
         edges: [
           { from: "scan", to: "patch", label: "selected finding", kind: "data" },
           { from: "patch", to: "check", label: "reviewer applies", kind: "control" },
+          { from: "scan", to: "check", label: "candidate impact", kind: "data" },
         ], stubs: [],
       },
       model: {
@@ -153,8 +157,16 @@ export const zoomMaps: Record<string, ZoomMap> = {
         entities: [
           box("span", "Agent traces", "OpenInference LangChain instrumentation", "Records LangGraph execution, model calls, tool calls, token usage, and a shared trace and session across the worker."),
           box("export", "Native Splunk AO exporter", "Configured project and agent stream", "Exports GenAI spans and records receiver acceptance or failure.", "cisco"),
-          box("controls", "Agent Control", "Three hosted policies", "Gates synthetic scan scope, verified-finding patch generation, and application of an unchanged reviewed diff.", "cisco"),
+          box("controls", "Agent Control", "Four hosted policies", "Gates synthetic scan scope, verified-finding patches, reviewed application, and evidence publication. Invalid citations produce a denied outcome.", "cisco"),
         ], edges: [{ from: "span", to: "export", label: "OTLP", kind: "telemetry" }, { from: "controls", to: "export", label: "SDK control events", kind: "telemetry" }], stubs: [],
+      },
+      hec: {
+        title: "Local HEC evidence outbox", note: "HEC delivery is unconfigured. Agent Observability trace delivery has its own runtime status.",
+        entities: [
+          box("ledger", "Finding lifecycle ledger", "Atomic run state and immutable evidence", "Stores stable finding fingerprints, citation evidence, validation artifacts, control outcomes, and patch/rescan transitions."),
+          box("envelope", "HEC event formatter", "cisco:foundry:evidence", "Creates time, host, source, sourcetype, index, and event envelopes. Audit events and confirmed security findings have separate channel values."),
+          box("preview", "Main workspace preview", "Copy JSON or download NDJSON", "Shows prepared event counts, zero sent events, and unknown indexed status. No network sender runs.", "human"),
+        ], edges: [{ from: "ledger", to: "envelope", label: "durable transitions", kind: "data" }, { from: "envelope", to: "preview", label: "prepared locally", kind: "data" }], stubs: [],
       },
     },
   },

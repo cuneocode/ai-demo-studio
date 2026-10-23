@@ -6,10 +6,14 @@ import { evidence } from "../app/map/evidence.ts";
 
 const revision = execFileSync("git", ["rev-parse", "--short", "HEAD"], { encoding: "utf8" }).trim();
 const highlighter = await createHighlighter({ themes: ["github-dark"], langs: ["python", "yaml", "sql"] });
-const artifacts: Record<string, unknown> = {};
+const prefix = process.argv.find((arg) => arg.startsWith("--prefix="))?.slice("--prefix=".length);
+const selected = Object.values(evidence).filter((item) => !prefix || item.id.startsWith(prefix));
+if (!selected.length) throw new Error(`No evidence matches ${prefix}`);
+const artifacts: Record<string, unknown> = prefix
+  ? JSON.parse(readFileSync("app/map/source-artifacts.json", "utf8")).artifacts : {};
 const languages: Record<string, "python" | "yaml" | "sql"> = { py: "python", yaml: "yaml", yml: "yaml", sql: "sql" };
 
-for (const item of Object.values(evidence)) {
+for (const item of selected) {
   const lang = languages[item.file.split(".").pop() ?? ""];
   if (!lang) throw new Error(`${item.id} has no highlighter for ${item.file}`);
   const text = readFileSync(item.file, "utf8");
@@ -42,7 +46,7 @@ for (const item of Object.values(evidence)) {
 }
 
 writeFileSync("app/map/source-artifacts.json", JSON.stringify({ revision, artifacts }));
-console.log(`captured ${Object.keys(artifacts).length} excerpts at ${revision}`);
+console.log(`captured ${selected.length} excerpts at ${revision}`);
 
 function escapeHtml(value: string) {
   return value.replace(/[&<>]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[char] ?? char));

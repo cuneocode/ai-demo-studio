@@ -3,6 +3,35 @@ import type { EvidenceRef } from "./types.ts";
 
 /** Allowlisted excerpts. Line ranges are 1-based and inclusive. */
 export const evidence: Record<string, EvidenceRef> = {
+  "vulnerability.scan": {
+    id: "vulnerability.scan", file: "services/vulnerability/worker.py", symbol: "execute", start: 13, end: 51,
+    proves: "Visa runs discovery through S9, then builds the Foundry profile with independent HTTP validation. Remediation edits a separate proposal copy.",
+    proofRole: "Call", evidenceKind: "source",
+  },
+  "vulnerability.citations": {
+    id: "vulnerability.citations", file: "services/vulnerability/foundry.py", symbol: "citation_valid", start: 68, end: 76,
+    proves: "The workload verifies path, line bounds, and quoted source before accepting evidence citations.", proofRole: "Decision", evidenceKind: "source",
+  },
+  "vulnerability.validator": {
+    id: "vulnerability.validator", file: "services/vulnerability/validator.py", symbol: "validate", start: 22, end: 76,
+    proves: "A disposable loopback HTTP testbed uses a synthetic bearer identity and fixed probes. Reproduced requires observed foreign-merchant data and working legitimate access.",
+    proofRole: "Full context", evidenceKind: "source",
+  },
+  "vulnerability.publish": {
+    id: "vulnerability.publish", file: "services/vulnerability/server.py", symbol: "prepare_evidence", start: 474, end: 499,
+    proves: "Publication evaluates the stored evidence through Agent Control before preparing a confirmed HEC event. An invalid-citation test checks a copy and records a denial artifact.",
+    proofRole: "Decision", evidenceKind: "source",
+  },
+  "vulnerability.hec": {
+    id: "vulnerability.hec", file: "services/vulnerability/foundry.py", symbol: "event", start: 158, end: 180,
+    proves: "The local outbox appends idempotent HEC envelopes with evidence, fingerprints, source revisions, and trace IDs. NDJSON export performs no network delivery.",
+    proofRole: "Full context", evidenceKind: "source",
+  },
+  "vulnerability.trace": {
+    id: "vulnerability.trace", file: "services/vulnerability/telemetry.py", symbol: "Telemetry", start: 84, end: 108,
+    proves: "The native Splunk AO exporter wraps OpenInference spans and counts receiver acceptance separately from HEC event preparation.",
+    proofRole: "Setup", evidenceKind: "source",
+  },
   "brahe.chat.boundary": {
     id: "brahe.chat.boundary",
     file: "services/banking/server.py",

@@ -347,6 +347,14 @@ function platformFor(item: Pick<ZoomBox, "id" | "title" | "kind">): PlatformId |
 }
 
 function sourceFor(caseId: string, occurrence: string): { sourceRefIds?: string[]; sources?: SceneSourceAction[] } {
+  if (caseId === "code-vulnerability") {
+    const ids = occurrence === "hec" || occurrence.startsWith("hec.") ? ["vulnerability.hec"]
+      : occurrence === "observe" || occurrence.startsWith("observe.") ? ["vulnerability.trace", "vulnerability.publish"]
+      : occurrence === "review" || occurrence.startsWith("review.") ? ["vulnerability.publish"]
+      : occurrence === "workload.check" ? ["vulnerability.citations", "vulnerability.validator"]
+      : ["vulnerability.scan"];
+    return { sourceRefIds: ids, sources: ids.map((id) => ({ id, label: id.split(".").at(-1)!, facet: "Full context" as const })) };
+  }
   if (caseId !== "fraud-modeling") return {};
   if (occurrence === "score" || occurrence.endsWith(".api") || occurrence.endsWith(".route")) {
     return { sourceRefIds: ["fraud.score"], sources: [{ id: "fraud.score", label: "Score implementation", facet: "Call" }] };

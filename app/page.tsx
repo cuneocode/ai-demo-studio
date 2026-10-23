@@ -120,10 +120,10 @@ type UseCaseFrame = {
 const useCaseCatalog: UseCase[] = [
   {
     id: "code-vulnerability", title: "Code vulnerability analysis", category: "Risk & compliance",
-    description: "Find vulnerabilities in a payments API, review the code evidence, and test a proposed fix with Visa’s agentic harness.",
+    description: "Review payments vulnerabilities with Visa’s harness, Cisco Foundry evidence checks, and a Splunk HEC event preview.",
     outcome: "Verified findings, a reviewable patch, and executable regression checks.",
     icon: ShieldCheck, accent: "violet", solutions: ["AI Infrastructure", "Splunk Observability"],
-    signal: "Visa VVAH · source analysis + patch review", stage: "Interactive",
+    signal: "Visa VVAH · Foundry evidence · Splunk events", stage: "Interactive",
   },
   {
     id: "brahe-bank", title: "Brahe Bank assistant", category: "Operations",
@@ -239,24 +239,24 @@ const useCaseFrames: Record<string, UseCaseFrame> = {
     liveExperience: "vulnerability",
     transformation: {
       friction: "Security teams spend hours reproducing scanner findings and coordinating payment application fixes.",
-      aiShift: "Visa VVAH builds code context, investigates threats, verifies findings, and generates a proposed patch in a disposable copy.",
-      humanControl: "A reviewer inspects the evidence and patch before applying it to the run copy. Executable checks and a fresh scan show the result.",
+      aiShift: "Visa VVAH investigates code with DeepAgents. The Foundry profile checks source citations, independent HTTP impact, and goal coverage.",
+      humanControl: "The reviewer prepares evidence through Agent Control, inspects the local HEC event, and applies a reviewed patch before testing and rescanning.",
     },
     architecture: {
       process: [
         { title: "Inspect source", detail: "Synthetic merchant payments API" },
-        { title: "Discover and verify", detail: "Visa VVAH S0 through S9" },
-        { title: "Review a patch", detail: "Fix agent works in a proposal copy" },
-        { title: "Test and rescan", detail: "Trusted regression checks and fresh discovery" },
+        { title: "Validate evidence", detail: "Visa discovery and independent HTTP probes" },
+        { title: "Prepare security events", detail: "Agent Control gates local HEC preparation" },
+        { title: "Review remediation", detail: "Patch, trusted checks, and rescan history" },
       ],
       ai: [
         { point: "01 → 02", label: "Visa vulnerability harness", detail: "Visa’s DeepAgents backend runs discovery and adversarial verification on LangGraph using the selected Studio model and an isolated sample copy." },
-        { point: "02 → 03", label: "Patch proposal", detail: "Visa’s remediation agent edits a disposable proposal copy. The UI shows the resulting diff for human review." },
-        { point: "03 → 04", label: "Executable verification", detail: "Four trusted checks exercise legitimate access and both seeded attacks. Agent Control gates patch application; Agent Observability receives model and tool traces with per-operation delivery status." },
+        { point: "02 → 03", label: "Foundry evidence checks", detail: "Revision-bound citations and independent HTTP impact support the finding. Agent Control blocks invalid evidence. Approved envelopes appear in the local HEC preview." },
+        { point: "03 → 04", label: "Reviewed remediation", detail: "Visa proposes a patch in a disposable copy. A reviewer applies it, runs regression and HTTP checks, and rescans. Stable identities link the evidence history; Agent Observability receives execution traces." },
       ],
     },
     metrics: [], rows: [], evidence: [], workbenchLabel: "Application security", workbenchTitle: "Payments source review",
-    workbenchSummary: "Find a flaw, inspect evidence, and review a tested fix.", primaryAction: "Analyze source",
+    workbenchSummary: "Review revision-bound vulnerability evidence and the resulting remediation record.", primaryAction: "Analyze source",
   },
   // Every demo uses UseCaseWorkspace and ArchitectureMap. Live frontends/backends
   // may evolve independently; never bypass the shared mapping or design theme.

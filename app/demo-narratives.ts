@@ -13,6 +13,14 @@ export type ObligationReference = {
 };
 
 export const obligationReferences = {
+  "foundry-security": {
+    title: "Cisco · Foundry Security Spec", kind: "Security guidance", jurisdiction: "Global",
+    url: "https://github.com/CiscoDevNet/foundry-security-spec",
+    appliesTo: "A seed framework for authorized AI-assisted security evaluation. The demo uses a scoped payments profile.",
+    responsibility: "Require reviewable evidence, mechanically resolve citations, track coverage, and retain stable finding identities.",
+    production: "Resolve the seed's deployment decisions for the target environment, including runtime sandboxing, durable scheduling, and operational acceptance criteria.",
+    reviewed: "2026-10-20",
+  },
   "consumer-duty": {
     title: "FCA Consumer Duty",
     kind: "Regulatory rules",
