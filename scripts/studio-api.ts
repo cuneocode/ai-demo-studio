@@ -81,7 +81,7 @@ async function handleRecordings(request: IncomingMessage, response: ServerRespon
 /** Handles the request when it targets the studio API; returns false otherwise. */
 export function handleStudioApi(request: IncomingMessage, response: ServerResponse): boolean {
   const path = request.url?.split("?")[0] ?? "";
-  if (process.env.STUDIO_PREVIEW === "1" && /^\/api\/(banking|fraud|briefing|wealth|sar|interbank)(?:\/|$)/.test(path)) {
+  if (process.env.STUDIO_PREVIEW === "1" && /^\/api\/(banking|fraud|briefing|wealth|sar|vulnerability|interbank)(?:\/|$)/.test(path)) {
     send(response, 503, { detail: "Recorded preview: live execution is disabled. Start npm run dev:studio for live services." });
     return true;
   }

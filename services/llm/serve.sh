@@ -27,7 +27,6 @@ set_from_env_file() {
 }
 
 set_from_env_file "$ROOT/.env" HF_TOKEN
-set_from_env_file "$HOME/enterprise-ai-sprint/.env" HF_TOKEN
 
 if [[ -z "${HF_TOKEN:-}" ]]; then
   echo "HF_TOKEN is required to pull $MODEL from Hugging Face." >&2

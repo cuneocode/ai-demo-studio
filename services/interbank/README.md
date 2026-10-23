@@ -32,7 +32,7 @@ console ─▶ Bank A gw :7443 ─▶ Bank A agent ─▶ Bank A gw :8443 ═int
 
 ## Run
 
-Prerequisites: Docker, `uv`, and the FSI Demo Studio `.env` (the repository root) with
+Prerequisites: Docker Engine with Compose v2, `uv`, Python 3.12, and the FSI Demo Studio `.env` (the repository root) with
 OpenAI, Splunk AO, Agent Control and AI Defense keys (see `.env.example`). Agents use
 the Responses API with `MODEL_REASONING_EFFORT` (default `medium`) and detailed
 reasoning summaries, which the dashboards show as each agent's thinking. If the host
@@ -47,11 +47,19 @@ still stream, without thinking. A loopback base URL is reached as
 `host.docker.internal`. Docker Desktop forwards it to the host's loopback; on Linux
 the endpoint (for example vLLM) must also listen on the Docker bridge address.
 
+Complete the [root live setup](../../README.md#start-the-live-studio) before
+using the integrated Studio launcher. This lab runs separately from the six
+sidecars. `interbank:up` builds images and registers hosted controls in your tenant.
+It requires the four explicit values `GALILEO_API_KEY`, `GALILEO_CONSOLE_URL`,
+`AIDEFENSE_API_KEY`, and `AGENT_CONTROL_URL` in root `.env`. Without a saved
+`.studio/models.json`, also set `OPENAI_API_KEY` and `MODEL_NAME`. No NVIDIA GPU
+is needed for the lab when its model runs remotely.
+
 From the repository root:
 
 ```bash
 npm run interbank:up                         # PKI, tokens, image, controls, stack
-npm run dev                                  # studio: Use case library → Interbank settlement investigation
+npm run dev:studio                           # studio: Use case library → Interbank settlement investigation
 npm run interbank:verify -- <run-id>         # checks the Splunk AO trace for that run
 npm run interbank:verify -- <run-id> blocked # same, for a run AI Defense blocked
 npm run interbank:status
@@ -62,7 +70,12 @@ The studio proxies `/api/interbank/*` to this lab's dashboard API on
 127.0.0.1:8088 and reads source excerpts from disk, so the code viewer works even
 when the lab is down. `labctl.py` also runs directly
 (`uv run --no-project --python 3.12 --with httpx --with pyjwt --with cryptography python labctl.py kickoff allowed`).
-An allowed investigation takes about 1–2 minutes.
+An allowed investigation takes about 1 to 2 minutes. Health is at
+`http://localhost:4200/api/interbank/health` through the running Studio, or
+`http://127.0.0.1:8088/api/health` directly. Stop the Studio with Ctrl+C and the
+containers with `npm run interbank:down`. Generated PKI and credentials live in
+ignored `.runtime/`; curated playback is in `recorded/`. The explicit recorded
+fallback can run through Studio preview without Docker or vendor credentials.
 
 The two kickoffs:
 
@@ -119,3 +132,14 @@ For UI development: `cd demo/ui && npm ci && npm run dev` (proxies `/api` to :80
 - Containers run as non-root. Agents, policy services, the console, and gateways also
   run with a read-only root filesystem, no-new-privileges, and all capabilities
   dropped. Banks share only the `interbank` network, between the two gateways.
+
+## Tests
+
+From the repository root:
+
+```sh
+(cd services/interbank && uv sync --frozen && uv run --frozen pytest tests -q)
+```
+
+These Python checks are separate from `interbank:verify`, which inspects delivery
+of a real investigation trace to the configured Agent Observability service.

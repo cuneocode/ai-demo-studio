@@ -28,6 +28,9 @@ test('preview serves all recordings and fixture cards while blocking live APIs',
       const doc = await fetch(`${base}/api/studio/examples/${path}`).then(r => r.json());
       assert.ok(doc[key].length > 0, path);
     }
+    for (const [path, method] of [['vulnerability/health', 'GET'], ['vulnerability/runs', 'POST']]) {
+      assert.equal((await fetch(`${base}/api/${path}`, { method })).status, 503);
+    }
     assert.equal((await fetch(`${base}/api/studio/recordings/wealth/%2e%2e%2f.env`)).status, 404);
     assert.equal((await fetch(`${base}/api/studio/recordings/wealth/research-hcyn`, { method: 'POST' })).status, 405);
     assert.equal((await fetch(`${base}/api/studio/examples/fraud/scenarios`, { method: 'POST' })).status, 405);

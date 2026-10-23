@@ -1,3 +1,37 @@
+# Repository development
+
+These instructions apply to this repository and its forks. Read [README.md](README.md)
+for setup and [CONTRIBUTING.md](CONTRIBUTING.md) for validation and change conventions.
+
+## Working in this checkout
+
+- Inspect `git status` before edits. Preserve unrelated changes, saved runs, and local configuration. Keep changes focused on the requested work.
+- Use Node 24 (minimum 22.18), npm with `package-lock.json`, and uv with each service's `uv.lock`. The root `.python-version` selects Python 3.12. Keep Python environments isolated because services pin different SDK versions.
+- Install with `npm ci` and `npm run studio:install`. Use `npm run dev:studio` for the integrated runtime on port 4200. `npm run dev` starts the frontend alone; `npm run studio:preview` disables live demo APIs.
+- Use a descriptive branch. Agent-created branches default to `codex/`. Forks must work with the engineer's own model endpoints, credentials, and tenant resources.
+- Keep credentials in ignored root `.env` and local model routes in `.studio/`. Update `.env.example` with credential-free examples when configuration changes. Avoid personal filesystem paths, SSH aliases, and implicit access to another checkout.
+- Preserve lockfiles, curated synthetic fixtures, recordings, and upstream license notices. Keep virtual environments, caches, browser output, training data, and model weights out of commits.
+- Keep hosted policy registration and infrastructure changes behind explicit commands. Dependency installation and routine tests must not create tenant resources.
+
+## Source map
+
+- `app/`: Studio UI, shared workspace and run components, stories, settings, and guides.
+- `app/map/`: shared architecture scenes, layout, catalogs, source evidence, and navigation.
+- `services/`: Python sidecars, interbank Docker lab, `common/` run handling, and `llm/` model routing.
+- `scripts/`: local orchestration, settings/status APIs, doctor checks, and evidence generation.
+- `config/`: committed non-secret defaults. `fixtures/`: curated synthetic demo inputs.
+- `tests/`: Node tests and Playwright browser flows. Each service owns its Python tests.
+- `worker/`, `build/`, `.openai/`, `db/`, and `drizzle/`: vinext/Cloudflare support and storage scaffolding. Preserve build support when cleaning generated output.
+
+## Implementation and checks
+
+- Route models through shared Studio configuration and `services/llm/studio_models.py`. Keep host configuration and process management in the Node layer, outside browser code and the worker runtime.
+- When adding a service, update install scripts, service management, dev and production proxies, doctor checks, preview API blocking, and setup docs together.
+- Add or update meaningful checks for changed behavior. Run `npm test` for the build and Node tests, `npm run typecheck`, `npm run lint`, and affected `npm run <service>:test` commands as appropriate. Shared Python changes use `npm run platform:test`.
+- Run affected browser flows against a running Studio with `npm run test:browser -- tests/<flow>.spec.ts`. Install its browser with `npx playwright install chromium`. `CHROME_PATH` and `STUDIO_URL` are optional overrides; avoid workstation-specific defaults.
+- Regenerate architecture evidence with `npm run map:sources` when linked source excerpts change. Update each affected service README and audience material when runtime behavior changes.
+- Report checks performed and their results. Separate mocked UI tests, configured dependencies, observed live execution, and confirmed integration delivery. Identify remaining blockers directly.
+
 # Writing
 
 - Keep responses and project copy concise and direct.

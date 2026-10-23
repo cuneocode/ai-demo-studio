@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test";
 
-const chrome = process.env.CHROME_PATH ?? "/home/cuneocode/.cache/ms-playwright/chromium-1246/chrome-linux-arm64/chrome";
+const chrome = process.env.CHROME_PATH;
 
 export default defineConfig({
   testDir: "tests",
@@ -13,7 +13,7 @@ export default defineConfig({
     viewport: { width: 1440, height: 900 },
     reducedMotion: "no-preference",
     launchOptions: {
-      executablePath: chrome,
+      ...(chrome ? { executablePath: chrome } : {}),
       args: ["--no-sandbox", "--disable-dev-shm-usage"],
     },
   },

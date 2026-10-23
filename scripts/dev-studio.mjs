@@ -11,7 +11,7 @@ for (const service of ['banking', 'fraud', 'briefing', 'wealth', 'sar', 'vulnera
     process.exit(1);
   }
 }
-const studio = spawn(process.execPath, [`${root}node_modules/.bin/vinext`, 'dev', '--port', process.env.STUDIO_PORT || '4200', '--strictPort'], {
+const studio = spawn(process.execPath, [`${root}node_modules/.bin/vinext`, 'dev', '--hostname', '127.0.0.1', '--port', process.env.STUDIO_PORT || '4200'], {
   cwd: root,
   stdio: 'inherit',
   env: { ...process.env, WRANGLER_LOG_PATH: '.wrangler/wrangler.log', STUDIO_START_SERVICES: '1', STUDIO_PREVIEW: '0' },

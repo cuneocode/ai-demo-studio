@@ -50,6 +50,7 @@ export default defineConfig(async () => {
     server: {
       host: "127.0.0.1",
       port: Number(process.env.STUDIO_PORT || 4200),
+      strictPort: true,
       proxy: {
         "/api/banking": { target: "http://127.0.0.1:8011", changeOrigin: false, timeout: 120000, proxyTimeout: 120000 },
         "/api/fraud": { target: "http://127.0.0.1:8012", changeOrigin: false, timeout: 180000, proxyTimeout: 180000 },

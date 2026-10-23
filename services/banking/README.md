@@ -2,14 +2,21 @@
 
 Adapted from [Galileo's LangGraph FSI agent](https://github.com/rungalileo/sdk-examples/tree/main/python/agent/langgraph-fsi-agent), revision `0c5e1180586ea59214891003de55db5a5c3685c1`. Upstream MIT attribution is retained in LICENSE.
 
-From the project root:
+Complete the [live Studio setup](../../README.md#start-the-live-studio) first.
+It installs all six environments required by the integrated launcher. From the
+project root, reinstall this service if needed and start the Studio:
 
 ```sh
 npm run banking:install
 npm run dev:studio
 ```
 
-Open http://localhost:3000 and choose **Brahe Bank assistant**. The local Python API listens on 127.0.0.1:8011 and Vite proxies `/api/banking`. This proxy is for local development; production hosting is not configured.
+Open http://localhost:4200 and choose **Brahe Bank assistant**. The local Python API listens on 127.0.0.1:8011 and Vite proxies `/api/banking`. This proxy is for local development; production hosting is not configured.
+
+Stop the managed Studio with Ctrl+C. For standalone sidecar development, run
+`(cd services/banking && .venv/bin/python -m uvicorn server:app --host 127.0.0.1 --port 8011)`
+in one terminal and `npm run dev` in another; stop each with Ctrl+C. Health is at
+`http://localhost:4200/api/banking/health`. Run `npm run banking:test` for tests.
 
 The server reads the project root `.env`; keys never enter React or browser storage. `OPENAI_API_KEY` and `MODEL_NAME` configure inference. When `PINECONE_API_KEY` is populated, retrieval uses the existing `credit-card-information` index (1536-dimensional OpenAI embeddings); this adapter does not create or modify remote indexes. When empty, it searches the eight bundled fictional product documents locally using lexical ranking, explicitly shown in the UI. This is not vector search or local GPU inference.
 

@@ -8,6 +8,44 @@ an SSH tunnel, or replays recorded scores.
 Everything generated lives in the git-ignored `services/fraud/.cache/`. Never commit raw data,
 graphs, or weights.
 
+## Studio adapter setup
+
+Complete the [live Studio setup](../../README.md#start-the-live-studio), then run
+`npm run dev:studio` and open **Card fraud triage**. `npm run fraud:install`
+reinstalls this adapter. It listens on `127.0.0.1:8012` behind `/api/fraud` and
+reads root `.env`. Stop the managed runtime with Ctrl+C.
+
+For standalone development, run
+`(cd services/fraud && .venv/bin/python -m uvicorn server:app --host 127.0.0.1 --port 8012)`
+and `npm run dev` in separate terminals. Stop each with Ctrl+C. Health is at
+`http://localhost:4200/api/fraud/health`; tests use `npm run fraud:test`.
+
+The adapter and recorded/sample scoring work on the Studio CPU. Live graph scores
+require the separate NVIDIA scorer described below. Set `FRAUD_SCORE_URL` to its
+reachable endpoint, or use a tunnel to the default `http://127.0.0.1:8000`.
+The existing scripts call the development machine `Sparky`; replace that SSH alias
+with your GPU host. NVIDIA runtime, training data, and model artifacts are required
+on that host. Allow about 40 GB free disk for the existing training pipeline.
+
+The triage agent uses the Studio model chain independently of scoring. When a
+model is unavailable, scripted summaries are labelled. Recorded/sample scores and
+explicit recorded-run playback retain their provenance; a failed live triage
+request does not silently replay a previous run. Local work lives in `.cache/`;
+curated recordings and input data live in `data/`.
+
+AI Defense follows `AIDEFENSE_MODE` and defaults to enforce when a key is set.
+Agent Observability and hosted controls use the shared `GALILEO_*` settings.
+To enable hosted controls, create your observability project/stream, review
+`controls.py`, and run the explicit tenant-changing command:
+
+```sh
+(cd services/fraud && .venv/bin/python setup_controls.py)
+```
+
+Restart through **Services → Apply**. The run identifies local checks or hosted
+controls and reports actual trace export. See
+[configuration](../../docs/CONFIGURATION.md) for shared settings.
+
 ## Model, honestly
 
 - **Graph:** account (user-card) and merchant nodes. Each payment is an edge with amount, hour
@@ -77,7 +115,7 @@ If a future image tag has no arm64 build, the fallback is a native aarch64 envir
 
 ## Use it from the Mac
 
-- **Live:** run `ssh -N -L 8000:127.0.0.1:8000 Sparky`. The default
+- **Live:** run `ssh -N -L 8000:127.0.0.1:8000 user@gpu-host`. The default
   `FRAUD_SCORE_URL=http://127.0.0.1:8000` then reaches the sidecar.
 - **Recorded:** copy the small artifacts back. Do not copy the graph or weights.
 
@@ -151,3 +189,8 @@ uv run --no-project --with numpy --with pandas --with pytest pytest services/fra
 DYLD_LIBRARY_PATH=$(uv run --no-project --with torch python -c "import torch,os;print(os.path.dirname(torch.__file__)+'/lib')") \
   uv run --no-project --with numpy --with pandas --with pytest --with torch --with xgboost pytest services/fraud/scripts/tests
 ```
+
+## Stop GPU scoring
+
+On the GPU host run `docker stop fsi-fraud-gnn`; close any SSH tunnel with Ctrl+C.
+This does not delete the training artifacts.
