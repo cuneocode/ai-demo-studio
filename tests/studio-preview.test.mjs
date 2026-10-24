@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { handleStudioApi } from '../scripts/studio-api.ts';
+import { runtimes } from '../config/use-cases.ts';
 
 test('preview serves all recordings and fixture cards while blocking live APIs', async () => {
   const previous = process.env.STUDIO_PREVIEW;
@@ -28,9 +29,10 @@ test('preview serves all recordings and fixture cards while blocking live APIs',
       const doc = await fetch(`${base}/api/studio/examples/${path}`).then(r => r.json());
       assert.ok(doc[key].length > 0, path);
     }
-    for (const [path, method] of [['vulnerability/health', 'GET'], ['vulnerability/runs', 'POST']]) {
-      assert.equal((await fetch(`${base}/api/${path}`, { method })).status, 503);
+    for (const runtime of runtimes) for (const method of ['GET', 'POST']) {
+      assert.equal((await fetch(`${base}${runtime.prefix}/health`, { method })).status, 503, runtime.id);
     }
+    assert.equal((await fetch(`${base}/api/studio/services`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'start', ids: ['sar'] }) })).status, 409);
     assert.equal((await fetch(`${base}/api/studio/recordings/wealth/%2e%2e%2f.env`)).status, 404);
     assert.equal((await fetch(`${base}/api/studio/recordings/wealth/research-hcyn`, { method: 'POST' })).status, 405);
     assert.equal((await fetch(`${base}/api/studio/examples/fraud/scenarios`, { method: 'POST' })).status, 405);

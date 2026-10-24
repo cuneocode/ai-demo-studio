@@ -202,6 +202,10 @@ async def analyze(
         raise HTTPException(422, "Provide a company query, CIK, or an uploaded annual report.")
     if not model_backend.configured():
         raise HTTPException(503, "The briefing model is not configured.")
+    try:
+        model_backend.model_settings()
+    except model_backend.EgressDenied as exc:
+        raise HTTPException(403, str(exc)) from None
     if not defense.configured():
         raise HTTPException(503, "AI Defense inspection is unavailable. No briefing was released.")
     if not _agent_importable():

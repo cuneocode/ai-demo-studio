@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "llm"))
-from studio_models import ChainUnavailable, Selection, mark_down, pick, resolve, retryable  # noqa: E402
+from studio_models import ChainUnavailable, EgressDenied, Selection, mark_down, pick, require_egress, resolve, retryable  # noqa: E402,F401
 
 USE_CASE = "company-briefing"
 _built: dict = {}
@@ -20,6 +20,9 @@ def selection() -> Selection | None:
 def model_settings() -> dict:
     chosen = selection()
     backend = chosen.backend if chosen else resolve(USE_CASE)
+    if backend:
+        from security import defense
+        require_egress(USE_CASE, chosen or Selection(backend, USE_CASE), ai_defense_enforcing=bool(defense.key and defense.valid and defense.mode == "enforce"))
     if backend is None:
         name = os.getenv("MODEL_NAME", "gpt-4o-mini")
         _built["served_by"] = {"provider": "env", "label": "Lab .env", "model": name, "fallback": False, "reason": ""}

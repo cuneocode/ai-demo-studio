@@ -170,6 +170,14 @@ def select(keyless: bool = False) -> tuple[Backend, dict]:
     count as available and only private endpoints are probed.
     """
     backends = chain()
+    data = _read(os.getenv("STUDIO_MODELS_FILE")) or _read(os.getenv("STUDIO_MODELS_DEFAULT_FILE")) or {}
+    route = (data.get("useCases") or {}).get(USE_CASE) or {}
+    policy = route.get("externalPolicy", "allow") if isinstance(route, dict) else "allow"
+    if policy in {"deny", "require_ai_defense"}:
+        # Gateway inspection covers A2A traffic. This lab has no model-hop inspector.
+        backends = [backend for backend in backends if backend.private]
+        if not backends:
+            raise ValueError("The Studio egress policy requires a private model for Interbank.")
     skipped = []
     for backend in backends:
         if keyless and not backend.private:

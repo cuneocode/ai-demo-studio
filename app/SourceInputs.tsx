@@ -53,7 +53,7 @@ function ResearchSources({ data }: { data: ResearchData }) {
 type InputKind = "sar" | "research" | "advisory";
 
 export function SourceInputs({ kind, identity, scenario, action }: { action?: ReactNode; kind: InputKind; identity: string; scenario?: string }) {
-  const url = kind === "sar" ? `/api/sar/scenarios/${encodeURIComponent(identity)}/inputs` : kind === "advisory" ? `/api/wealth/households/${encodeURIComponent(identity)}` : `/api/wealth/research/inputs/${encodeURIComponent(identity)}?scenario=${encodeURIComponent(scenario || "ticker")}`;
+  const url = kind === "sar" ? `/api/sar/scenarios/${encodeURIComponent(identity)}/inputs` : kind === "advisory" ? `/api/advisory/households/${encodeURIComponent(identity)}` : `/api/research/research/inputs/${encodeURIComponent(identity)}?scenario=${encodeURIComponent(scenario || "ticker")}`;
   return <InputPacket key={url} kind={kind} url={url} action={action} />;
 }
 function InputPacket({ kind, url, action }: { action?: ReactNode; kind: InputKind; url: string }) {

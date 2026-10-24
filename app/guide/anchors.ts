@@ -16,8 +16,7 @@ export const ANCHORS = [
   "sar.inputs", "research.inputs", "advisory.inputs",
   "sar.band", "sar.runtime", "sar.inbox", "sar.inbox.open", "sar.scenarios", "sar.case", "sar.clock", "sar.investigate", "sar.replay",
   "sar.narrative", "sar.recommendation", "sar.decision", "sar.policies", "sar.typologies", "sar.evidence", "sar.timeline", "sar.audit",
-  "research.intro", "research.scenarios", "research.run", "research.replay", "research.result", "research.blocked", "research.impact",
-  "research.claims", "research.count", "research.news", "research.policies", "research.publish", "research.affected", "research.timeline",
+  "research.intro", "research.run", "research.result", "research.news", "research.timeline",
   "advisory.intro", "advisory.households", "advisory.context", "advisory.run", "advisory.replay", "advisory.result", "advisory.findings",
   "advisory.actions", "advisory.brief", "advisory.policies", "advisory.approval", "advisory.notes", "advisory.holdings", "advisory.timeline",
   "interbank.controls", "interbank.scenarios", "interbank.kickoff", "interbank.start", "interbank.replay", "interbank.offline",
@@ -28,7 +27,7 @@ export const ANCHORS = [
 ] as const;
 
 /** Per-item anchors carry the item id, e.g. `fraud.scenario.cpp-orbit`. */
-export const ANCHOR_PREFIXES = ["fraud.scenario", "sar.scenario", "research.scenario", "advisory.household", "banking.suggestion", "library.guide"] as const;
+export const ANCHOR_PREFIXES = ["fraud.scenario", "sar.scenario", "advisory.household", "banking.suggestion", "library.guide"] as const;
 
 export type AnchorId = (typeof ANCHORS)[number] | `${(typeof ANCHOR_PREFIXES)[number]}.${string}`;
 

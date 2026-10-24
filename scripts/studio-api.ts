@@ -9,6 +9,7 @@ import { handleModels } from "./studio-models-api.ts";
 import { handleSettings } from "./studio-settings-api.ts";
 import { reviewedRecording } from "./recording-review.ts";
 import { handleStatus } from "./studio-status-api.ts";
+import { runtimeForPath } from "../config/use-cases.ts";
 
 export { startMissing, stopAll } from "./studio-services.ts";
 
@@ -81,7 +82,7 @@ async function handleRecordings(request: IncomingMessage, response: ServerRespon
 /** Handles the request when it targets the studio API; returns false otherwise. */
 export function handleStudioApi(request: IncomingMessage, response: ServerResponse): boolean {
   const path = request.url?.split("?")[0] ?? "";
-  if (process.env.STUDIO_PREVIEW === "1" && /^\/api\/(banking|fraud|briefing|wealth|sar|vulnerability|interbank)(?:\/|$)/.test(path)) {
+  if (process.env.STUDIO_PREVIEW === "1" && (runtimeForPath(path) || /^\/api\/wealth(?:\/|$)/.test(path))) {
     send(response, 503, { detail: "Recorded preview: live execution is disabled. Start npm run dev:studio for live services." });
     return true;
   }

@@ -106,7 +106,7 @@ def test_analyze_upload_and_edgar_paths(client, monkeypatch):
 
     monkeypatch.setattr(server, "execute_briefing", fake_execute)
     monkeypatch.setattr(
-        edgar,
+        server,
         "latest_annual_report",
         lambda cik, refresh=False: {
             "cik": "0000019617",
@@ -155,7 +155,7 @@ def test_defense_blocks_briefing(client, monkeypatch):
     monkeypatch.setattr(security.defense, "key", "test-key")
     monkeypatch.setattr(server, "execute_briefing", blocked)
     monkeypatch.setattr(
-        edgar,
+        server,
         "latest_annual_report",
         lambda cik, refresh=False: {
             "cik": "0000019617",

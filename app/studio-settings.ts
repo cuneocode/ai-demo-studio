@@ -88,7 +88,7 @@ export const SETTING_GROUPS: SettingGroup[] = [
     summary: "Optional providers. Each use case still runs without them, with less data.",
     fields: [
       { name: "SEC_USER_AGENT", label: "SEC EDGAR contact", placeholder: "Your Name you@example.com",
-        help: "SEC requires a contact for EDGAR requests. Without one, company briefing uses your git name and email." },
+        help: "Set your name and email for SEC EDGAR lookup. Uploaded filings work without this setting." },
       { name: "FRED_API_KEY", label: "FRED API key", secret: true, help: "Live macro series for market research; the cache is used without it." },
       { name: "PINECONE_API_KEY", label: "Pinecone API key", secret: true, help: "Vector retrieval for Brahe Bank; local document search is used without it." },
     ],
@@ -143,7 +143,7 @@ export function readiness(settings: Record<string, SettingState>, model: (useCas
     {
       id: "company-briefing", title: "Company briefing",
       missing: [...modelNeed("company-briefing"), ...defenseNeed(defenseMode("BRIEFING_AIDEFENSE_MODE", "off"))],
-      notes: [`AI Defense: ${defenseMode("BRIEFING_AIDEFENSE_MODE", "off")}`, has("SEC_USER_AGENT") ? "EDGAR contact: Studio settings" : "EDGAR contact: your git identity"],
+      notes: [`AI Defense: ${defenseMode("BRIEFING_AIDEFENSE_MODE", "off")}`, has("SEC_USER_AGENT") ? "EDGAR contact: Studio settings" : "EDGAR lookup needs a contact; uploaded filings remain available"],
     },
     {
       id: "fraud-modeling", title: "Card fraud triage",

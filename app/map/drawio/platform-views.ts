@@ -1,6 +1,7 @@
 import type { Catalog } from "../catalog.ts";
 import type { ModelRelationship, SceneNode, SceneSpec } from "../scene-model.ts";
 import { diagramNode, type ComponentType, type DiagramCell, type DiagramLayer, type DiagramPage } from "./model.ts";
+import { runtimeForUseCase } from "../../../config/use-cases.ts";
 
 export const requiredLayers: DiagramLayer[] = ["security", "observability", "deployment"];
 type Detail = { id: string; label: string; type: ComponentType; detail: string; sources?: string[]; proposedLabel?: string; proposedDetail?: string; modes?: ("implemented" | "proposed")[]; boundary?: string };
@@ -10,7 +11,7 @@ const runtimes: Record<string, string> = {
   "fraud-modeling": "The local FastAPI service listens on port 8012. Its configured scorer endpoint supplies live GPU scores; training is a separate operation.",
   "company-briefing": "The local FastAPI briefing service listens on port 8013 and orchestrates filing extraction, model calls, and grounding checks.",
   "market-research": "The local FastAPI wealth service listens on port 8014 and prepares evidence packets, screened articles, and verified recommendations.",
-  "client-advisory": "The local FastAPI wealth service listens on port 8014 and orchestrates client context, deterministic suitability checks, and meeting briefs.",
+  "client-advisory": "The Advisor Prep container exposes port 8017 and orchestrates client context, deterministic suitability checks, and meeting briefs. Its run volume is separate from Market Research.",
   "sar-support": "The local FastAPI SAR service listens on port 8015. It assembles synthetic evidence and a draft for investigator and QA review.",
 };
 
@@ -68,8 +69,8 @@ export function withPlatformViews(input: { catalog: Catalog; pages: DiagramPage[
 
   if (!system.layers.includes("deployment")) addView("infrastructure", "deployment", "AI Infrastructure",
     proposedOnly ? "Proposed application and inference placement. This use case has no live backend. Cisco AI Infrastructure is a deployment option."
-      : "The current application runs as a local Studio sidecar and uses its configured model chain. Proposed mode adds private placement on Cisco AI Infrastructure.", [
-      { id: "runtime", label: proposedOnly ? "Proposed application runtime" : "Local application runtime", type: "infrastructure", boundary: "application", detail: runtimes[catalog.id] ?? "Proposed application service. This use case currently has an illustrative UI.", proposedLabel: "Proposed application runtime", proposedDetail: "A proposed application service would own the workflow, controls, and integration calls.", sources: proposedOnly ? undefined : ["platform.runtime"] },
+      : "The Studio operator manages this use case's Docker Compose stack. Containers receive scoped credentials and shared model routes; persistent data survives Stop and Restart. Proposed mode adds placement on Cisco AI Infrastructure.", [
+      { id: "runtime", label: proposedOnly ? "Proposed application runtime" : "Use-case container stack", type: "infrastructure", boundary: "application", detail: runtimeForUseCase(catalog.id) ? `${runtimeForUseCase(catalog.id)!.label} runs in an independent Docker Compose project. The Studio proxy exposes port ${runtimeForUseCase(catalog.id)!.port}. Start, Stop, Restart, Build, and Logs operate on this package. ${runtimes[catalog.id] ?? ""}` : "Proposed application service. This use case currently has an illustrative UI.", proposedLabel: "Proposed application runtime", proposedDetail: "A proposed application service would own the workflow, controls, and integration calls.", sources: proposedOnly ? undefined : ["platform.runtime"] },
       { id: "routing", label: "Studio model routing", type: "service", boundary: "application", detail: "Shared routing resolves this use case's configured provider chain and selects the first healthy backend. Unconfigured providers are skipped; the run records the answering provider.", proposedLabel: "Model routing", proposedDetail: "The proposed service would route model calls through the shared Studio configuration. The excerpt provides the shared routing reference.", sources: ["platform.model-routing"] },
       { id: "endpoint", label: "Configured model endpoint", type: "model", boundary: "inference", detail: "The selected provider can be hosted or private according to Studio settings and egress policy. The diagram describes placement; the run identifies the provider that actually answered.", proposedLabel: "Proposed inference endpoint", proposedDetail: "A proposed inference endpoint would serve the workload's model calls. Private placement on Cisco AI Infrastructure is a design option.", sources: ["platform.model-routing", "platform.egress"] },
       { id: "private", label: "Proposed Cisco infrastructure", type: "infrastructure", boundary: "private", modes: ["proposed"], detail: "Proposed compute, networking, and operations on Cisco AI Infrastructure would host private inference. Placement needs a deployment design.", proposedDetail: "Proposed compute, networking, and operations on Cisco AI Infrastructure would host private inference. Placement needs a deployment design." },

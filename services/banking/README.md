@@ -2,21 +2,27 @@
 
 Adapted from [Galileo's LangGraph FSI agent](https://github.com/rungalileo/sdk-examples/tree/main/python/agent/langgraph-fsi-agent), revision `0c5e1180586ea59214891003de55db5a5c3685c1`. Upstream MIT attribution is retained in LICENSE.
 
-Complete the [live Studio setup](../../README.md#start-the-live-studio) first.
-It installs all six environments required by the integrated launcher. From the
-project root, reinstall this service if needed and start the Studio:
+## Setup and startup
+
+Follow the [Studio setup](../../README.md#start-studio-and-selected-demos), then
+start **Brahe Bank assistant** in **Settings → Services**. Node and Docker Compose 2.30+
+are required; Python runs inside the image. The API uses loopback port 8011
+and Studio's `/api/banking` proxy in development and production.
 
 ```sh
-npm run banking:install
-npm run dev:studio
+npm run studio:containers -- start banking
+npm run studio:containers -- logs banking
+npm run studio:containers -- stop banking
 ```
 
-Open http://localhost:4200 and choose **Brahe Bank assistant**. The local Python API listens on 127.0.0.1:8011 and Vite proxies `/api/banking`. This proxy is for local development; production hosting is not configured.
+Health is at `http://localhost:4200/api/banking/health`. Stop preserves the
+stack's data volume; closing Studio leaves its containers running. Credentials
+come from the operator's scoped root configuration and shared model settings.
 
-Stop the managed Studio with Ctrl+C. For standalone sidecar development, run
+For optional source development, install with `npm run banking:install`, run
 `(cd services/banking && .venv/bin/python -m uvicorn server:app --host 127.0.0.1 --port 8011)`
-in one terminal and `npm run dev` in another; stop each with Ctrl+C. Health is at
-`http://localhost:4200/api/banking/health`. Run `npm run banking:test` for tests.
+and `npm run dev` in separate terminals. Stop each with Ctrl+C. Source tests use
+`npm run banking:test`. Container data and source-mode `.cache/` are separate.
 
 The server reads the project root `.env`; keys never enter React or browser storage. `OPENAI_API_KEY` and `MODEL_NAME` configure inference. When `PINECONE_API_KEY` is populated, retrieval uses the existing `credit-card-information` index (1536-dimensional OpenAI embeddings); this adapter does not create or modify remote indexes. When empty, it searches the eight bundled fictional product documents locally using lexical ranking, explicitly shown in the UI. This is not vector search or local GPU inference.
 
@@ -70,7 +76,7 @@ with a dedicated token header. Secrets remain server-side.
 After reviewing definitions, explicitly provision a new stream with:
 
 ```sh
-PYTHONPATH=services/banking services/banking/.venv/bin/python services/banking/setup_controls.py
+npm run studio:containers -- controls banking
 ```
 
 This administrative script creates/binds only these three named controls and

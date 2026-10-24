@@ -1,3 +1,5 @@
+import { runtimeForUseCase } from "../config/use-cases";
+
 /** Audience-facing stories. References describe control alignment, never certification.
  * Keep claims tied to the demo implementation; deployment options are explicit.
  */
@@ -164,7 +166,7 @@ export type DemoNarrative = {
   references: { id: keyof typeof obligationReferences; evidence: string }[];
 };
 
-export const demoNarratives: Partial<Record<string, DemoNarrative>> = {
+const authoredNarratives: Partial<Record<string, DemoNarrative>> = {
   "brahe-bank": {
     headline: "Banking answers customers can trust",
     sections: [
@@ -369,3 +371,17 @@ export const demoNarratives: Partial<Record<string, DemoNarrative>> = {
     ],
   },
 };
+
+/** Deployment notes share the executable package boundary with the operator. */
+export const demoNarratives: Partial<Record<string, DemoNarrative>> = Object.fromEntries(
+  Object.entries(authoredNarratives).map(([id, narrative]) => {
+    const runtime = runtimeForUseCase(id);
+    if (!runtime || !narrative) return [id, narrative];
+    let described = false;
+    return [id, { ...narrative, sections: narrative.sections.map(section => {
+      if (!section.option || described) return section;
+      described = true;
+      return { ...section, option: { ...section.option, text: `Operators can start and stop this workflow's container stack independently in Studio. ${section.option.text}` } };
+    }) }];
+  }),
+);

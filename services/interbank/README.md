@@ -32,50 +32,48 @@ console ─▶ Bank A gw :7443 ─▶ Bank A agent ─▶ Bank A gw :8443 ═int
 
 ## Run
 
-Prerequisites: Docker Engine with Compose v2, `uv`, Python 3.12, and the FSI Demo Studio `.env` (the repository root) with
-OpenAI, Splunk AO, Agent Control and AI Defense keys (see `.env.example`). Agents use
-the Responses API with `MODEL_REASONING_EFFORT` (default `medium`) and detailed
-reasoning summaries, which the dashboards show as each agent's thinking. If the host
-sits behind a TLS-inspecting proxy, `up` adds its root to the agents' egress CA bundle:
-the Cisco Secure Access root from the macOS System keychain, or a PEM file named by
-`EXTRA_CA_FILE`.
+Prerequisites: Node 24 (minimum 22.18), Docker with Compose 2.30+, and the
+root Studio configuration. Python and uv are optional source-development tools.
+Configure `GALILEO_API_KEY`, `GALILEO_CONSOLE_URL`, `AIDEFENSE_API_KEY`, and
+`AGENT_CONTROL_URL`. Configure a shared model route, or provide `OPENAI_API_KEY`
+and `MODEL_NAME`. A remote model needs no local NVIDIA GPU.
 
-The agents and dashboard mount the studio's `.studio/` directory read-only and read
-`models.json` on each investigation, so switching the backend needs no restart. A
-provider without the Responses API runs on Chat Completions: tool calls and answers
-still stream, without thinking. A loopback base URL is reached as
-`host.docker.internal`. Docker Desktop forwards it to the host's loopback; on Linux
-the endpoint (for example vLLM) must also listen on the Docker bridge address.
+Follow the [Studio setup](../../README.md#start-studio-and-selected-demos).
+Start the stack in **Settings → Services** or use:
 
-Complete the [root live setup](../../README.md#start-the-live-studio) before
-using the integrated Studio launcher. This lab runs separately from the six
-sidecars. `interbank:up` builds images and registers hosted controls in your tenant.
-It requires the four explicit values `GALILEO_API_KEY`, `GALILEO_CONSOLE_URL`,
-`AIDEFENSE_API_KEY`, and `AGENT_CONTROL_URL` in root `.env`. Without a saved
-`.studio/models.json`, also set `OPENAI_API_KEY` and `MODEL_NAME`. No NVIDIA GPU
-is needed for the lab when its model runs remotely.
-
-From the repository root:
-
-```bash
-npm run interbank:up                         # PKI, tokens, image, controls, stack
-npm run dev:studio                           # studio: Use case library → Interbank settlement investigation
-npm run interbank:verify -- <run-id>         # checks the Splunk AO trace for that run
-npm run interbank:verify -- <run-id> blocked # same, for a run AI Defense blocked
+```sh
+npm run interbank:up
+npm run dev:studio
 npm run interbank:status
 npm run interbank:down
 ```
 
-The studio proxies `/api/interbank/*` to this lab's dashboard API on
-127.0.0.1:8088 and reads source excerpts from disk, so the code viewer works even
-when the lab is down. `labctl.py` also runs directly
-(`uv run --no-project --python 3.12 --with httpx --with pyjwt --with cryptography python labctl.py kickoff allowed`).
-An allowed investigation takes about 1 to 2 minutes. Health is at
-`http://localhost:4200/api/interbank/health` through the running Studio, or
-`http://127.0.0.1:8088/api/health` directly. Stop the Studio with Ctrl+C and the
-containers with `npm run interbank:down`. Generated PKI and credentials live in
-ignored `.runtime/`; curated playback is in `recorded/`. The explicit recorded
-fallback can run through Studio preview without Docker or vendor credentials.
+Start builds one shared application image, prepares PKI and scoped vendor files
+in a helper container, then starts agents, gateways, policy services, collectors,
+and the console as one Compose project. Hosted controls require explicit setup:
+
+```sh
+npm run interbank:controls
+```
+
+Review the policies before registration. Build and Start do not create hosted
+controls. The lab's project/stream names are defined in `labctl.py`. It uses
+Responses when supported and Chat Completions otherwise. Shared model routes are
+mounted read-only and reloaded per investigation. Loopback model URLs become
+`host.docker.internal`; Linux-hosted models must listen on an accessible interface.
+Public corporate CA roots are supplied by Studio; `EXTRA_CA_FILE` adds a PEM bundle.
+
+Studio proxies `/api/interbank/*` to loopback port 8088. Health is
+`http://localhost:4200/api/interbank/health`, or directly
+`http://127.0.0.1:8088/api/health`. An allowed investigation takes about 1 to 2
+minutes. Stop the stack explicitly; closing Studio leaves it running. Generated
+PKI and credentials live in ignored `.runtime/`; evidence persists in `evidence/`.
+Curated fallback playback in `recorded/` works in preview without Docker.
+
+Optional source tools include `labctl.py kickoff allowed` and
+`npm run interbank:verify -- <run-id>` (append `blocked` for a denied run).
+Trace verification uses the package's helper container and a configured Agent
+Observability tenant. Host Python is optional for direct source tools.
 
 The two kickoffs:
 

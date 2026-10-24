@@ -101,7 +101,7 @@ _current: ContextVar[tuple["RunStore", str] | None] = ContextVar("studio_current
 
 
 class RunStore:
-    """In-memory runs for one service, mirrored to .cache/runs/<id>.jsonl."""
+    """Runs persisted as metadata and an append-only event journal in the package's data volume."""
 
     def __init__(self, service: str, *, component: str, cache_dir: Path | None = None,
                  recordings_dir: Path | None = None, keep: int = 50):
@@ -111,6 +111,39 @@ class RunStore:
         self.recordings_dir = recordings_dir
         self.keep = keep
         self._runs: dict[str, Run] = {}
+        self._restore()
+
+    def _restore(self) -> None:
+        if not self.cache_dir or not self.cache_dir.is_dir():
+            return
+        for path in sorted(self.cache_dir.glob("*.json"), key=lambda item: item.stat().st_mtime)[-self.keep:]:
+            try:
+                saved = json.loads(path.read_text()).get("run", {})
+                if saved.get("service") != self.service or not RUN_ID.fullmatch(saved.get("id", "")):
+                    continue
+                journal = path.with_suffix(".jsonl")
+                events = [json.loads(line) for line in journal.read_text().splitlines()] if journal.exists() else []
+                run = Run(id=saved["id"], service=self.service, label=saved.get("label", ""),
+                          scenario=saved.get("scenario"), status=saved.get("status", "failed"),
+                          started_at=saved["started_at"], finished_at=saved.get("finished_at"),
+                          meta=saved.get("meta") or {}, result=saved.get("result"), events=events[-MAX_EVENTS:])
+                self._runs[run.id] = run
+                if run.status == "running":
+                    last_ns = max((event.get("ns", 0) for event in events), default=0)
+                    run.started_ns = time.monotonic_ns() - last_ns
+                    self.emit(run.id, "run", "Service restarted during this run", status="error")
+                    self.finish(run.id, "failed")
+            except (OSError, ValueError, TypeError, KeyError):
+                continue
+
+    def _persist(self, run: Run) -> None:
+        if not self.cache_dir:
+            return
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        destination = self.cache_dir / f"{run.id}.json"
+        temporary = destination.with_suffix(".tmp")
+        temporary.write_text(json.dumps({"v": SCHEMA_VERSION, "run": redact(run.public())}, default=str) + "\n")
+        temporary.replace(destination)
 
     # ------------------------------------------------------------ lifecycle ----
     def open(self, run_id: str | None = None, *, label: str = "", scenario: str | None = None,
@@ -120,6 +153,7 @@ class RunStore:
             run_id = new_run_id(prefix or self.service)
         run = Run(id=run_id, service=self.service, label=label[:200], scenario=scenario, meta=redact(meta or {}))
         self._runs[run_id] = run
+        self._persist(run)
         while len(self._runs) > self.keep:
             oldest = next(iter(self._runs))
             if self._runs[oldest].status == "running" and oldest != run_id:
@@ -157,6 +191,7 @@ class RunStore:
         }
         run.events.append(event)
         self._mirror(run, event)
+        self._persist(run)
         return event
 
     def finish(self, run_id: str, status: str = "completed", result: dict | None = None) -> None:
@@ -167,6 +202,7 @@ class RunStore:
         run.finished_at = _now()
         if result is not None:
             run.result = redact(result)
+        self._persist(run)
         for future in run.decisions.values():
             if not future.done():
                 future.cancel()

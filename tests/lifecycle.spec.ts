@@ -1,12 +1,10 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
+import { mockFraud } from "./fraud-fixtures";
 
-/*
- * The client lifecycle story against the running studio: card fraud triage (the real service, scripted so no model
- * is called) escalates Chuck Robbins's case, the SAR inbox receives the referral, and advisor meeting prep sees only
- * what Chuck already knows: his card was compromised and reissued. Nothing about the SAR reaches the advisor.
- */
+/* Repeatable UI handoff coverage uses curated synthetic fixtures and mocked APIs.
+ * Real container execution and trace delivery are verified separately. */
 
 const TIPPING_OFF = /\bSARs?\b|suspicious activity|escalat|investigat|referral|FinCEN|money mule/i;
 const ADVISORY_RECORDING = JSON.parse(readFileSync(join(process.cwd(), "services/wealth/data/recorded/advisory-chuck-robbins.json"), "utf8"));
@@ -24,13 +22,15 @@ async function openFromLibrary(page: Page, title: string) {
 
 test("fraud escalation reaches the SAR inbox, and meeting prep sees only the reissued card", async ({ page }) => {
   test.setTimeout(150_000);
-  await page.route((url) => url.pathname === "/api/fraud/runs", async (route) => {
-    if (route.request().method() !== "POST") return route.continue();
-    const body = route.request().postDataJSON() as { input?: Record<string, unknown> };
-    await route.continue({ postData: JSON.stringify({ ...body, input: { ...body.input, mode: "scripted" } }) });
-  });
+  await mockFraud(page);
+  const households = JSON.parse(readFileSync(join(process.cwd(), "fixtures/studio/wealth-households.json"), "utf8"));
+  await page.route("**/api/advisory/households", route => route.fulfill({ json: households }));
+  await page.route("**/api/advisory/health", route => route.fulfill({ json: {
+    ready: true, nim: { status: "ok", label: "Mock private model", private: true },
+    security: { status: "disabled", mode: "off" },
+  } }));
   const briefs: Record<string, unknown>[] = [];
-  await page.route("**/api/wealth/advisory/brief", async (route) => {
+  await page.route("**/api/advisory/advisory/brief", async (route) => {
     briefs.push(route.request().postDataJSON());
     await route.fulfill({ json: ADVISORY_RECORDING.result });
   });
@@ -42,16 +42,21 @@ test("fraud escalation reaches the SAR inbox, and meeting prep sees only the rei
   await fraud.getByRole("region", { name: "Scenarios" }).getByRole("button", { name: /Compromised merchant/ }).click();
   await fraud.locator("#triage-queue").click();
   const decision = fraud.getByRole("group", { name: "Analyst disposition" });
-  await expect(decision.locator('[data-action="escalate"]')).toBeEnabled({ timeout: 90_000 });
-  await decision.locator('[data-action="escalate"]').click();
-
-  await expect(fraud.locator(".fx-handoff")).toContainText("SAR referral drafted", { timeout: 30_000 });
+  await expect(decision.locator('[data-action="block_and_reissue"]')).toBeEnabled({ timeout: 20_000 });
+  await decision.locator('[data-action="block_and_reissue"]').click();
+  await fraud.getByRole("group", { name: "Approve proactive reissue" }).getByRole("button", { name: /Reissue/ }).click();
   await expect(fraud.locator(".fx-audit")).toContainText("Block and reissue");
   await expect(fraud.getByTestId("fraud-service-event")).toContainText("Card ending 1188 compromised and reissued");
   const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("fsi-studio.handoffs") ?? "[]"));
   const service = stored.find((item: { kind: string }) => item.kind === "service-event");
   expect(service).toMatchObject({ customerId: "chuck-robbins", cardLast4: "1188", provenance: "live" });
   expect(JSON.stringify(service)).not.toMatch(TIPPING_OFF);
+
+  await fraud.getByRole("region", { name: "Scenarios" }).getByRole("button", { name: /card number in a case note/ }).click();
+  await fraud.locator("#triage-queue").click();
+  await expect(decision.locator('[data-action="escalate"]')).toBeEnabled({ timeout: 20_000 });
+  await decision.locator('[data-action="escalate"]').click();
+  await expect(fraud.locator(".fx-handoff")).toContainText("SAR referral drafted", { timeout: 10_000 });
 
   await fraud.locator("#escalate-to-sar").click();
   const inbox = page.locator("#sar-experience .sar-inbox");
@@ -82,6 +87,7 @@ test("Present mode steps through KYC, fraud, SAR, and meeting prep with a three-
   await page.getByRole("button", { name: "Present story" }).click();
 
   const bar = page.getByRole("region", { name: "Presenter controls" });
+  await bar.getByRole("button", { name: "Talk track", exact: true }).click();
   const talk = bar.getByRole("list", { name: "Talk track" });
   const steps = [
     { title: "KYC processing", heading: "KYC processing", cue: "Meet Chuck Robbins" },

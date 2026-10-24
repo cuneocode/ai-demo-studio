@@ -1,24 +1,29 @@
 # Wealth research and advisor service
 
-One Python sidecar supports **Market research** and **Advisor meeting prep**.
-It listens on `127.0.0.1:8014` behind `/api/wealth` and shares model routing,
-run storage, policies, and telemetry across both workflows.
+Market research and Advisor meeting prep run as independent Compose projects,
+using the same Wealth image. Research uses host port 8014 and `/api/research`;
+advisory uses 8017 and `/api/advisory`. Each has its own persistent data volume.
+The image exposes `/api/wealth` internally, and Studio rewrites the public paths.
 
 ## Setup and startup
 
-Complete the [live Studio setup](../../README.md#start-the-live-studio), select a
-model in Studio settings, and run `npm run dev:studio` from the root. Install this
-service alone with `npm run wealth:install`. Stop the managed runtime with Ctrl+C.
-
-For standalone development, use two terminals from the root:
+Follow the [Studio setup](../../README.md#start-studio-and-selected-demos), then
+start **Market research** or **Advisor meeting prep** in **Settings → Services**.
+Node and Docker Compose 2.30+ are required. Select the model in shared Settings.
 
 ```sh
-(cd services/wealth && .venv/bin/python -m uvicorn server:app --host 127.0.0.1 --port 8014)
-# In another terminal:
-npm run dev
+npm run studio:containers -- start research advisory
+npm run studio:containers -- logs advisory
+npm run studio:containers -- stop research advisory
 ```
 
-Stop each with Ctrl+C. Health is at `http://localhost:4200/api/wealth/health`.
+Health routes are `/api/research/health` and `/api/advisory/health` through Studio.
+Stop preserves each stack's data. Closing Studio leaves the containers running.
+
+Optional source development uses `npm run wealth:install` and separate uvicorn
+instances on ports 8014 and 8017. Set distinct `WEALTH_CACHE` directories in their
+launching environments to retain isolation. Start the frontend with `npm run dev`.
+Run `npm run wealth:test` after installing the source environment.
 
 ## Market research
 
@@ -62,15 +67,17 @@ To enable hosted wealth controls, create your observability project/stream and
 review `controls.py`, then run the explicit registration command from the root:
 
 ```sh
-(cd services/wealth && .venv/bin/python scripts/setup_controls.py)
+npm run studio:containers -- controls research
+# The same policies can be registered for advisory when it uses a different stream.
+npm run studio:containers -- controls advisory
 ```
 
-Restart through **Services → Apply**. Without hosted setup, verdicts identify local
+Use **Services → Apply to running stacks** or Restart. Without hosted setup, verdicts identify local
 checks. Confirm the control source and trace delivery in the run's Runtime details.
 
 ## Storage, fallback, and tests
 
-Working caches and saved runs live under `.cache/`. Bundled source snapshots are
+Working caches and saved runs live under `.cache/` in each stack's named volume. Bundled source snapshots are
 in `data/snapshots/`; curated recordings are in `data/recorded/`. Recorded advisory
 and older research runs preserve their original counts and create no new calls.
 Use the explicit recorded fallback controls where available.

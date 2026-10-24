@@ -93,7 +93,7 @@ function localStoryBounds(scene: SceneSpec, nodes: SceneNode[], selectedId: stri
   const neighbors = scene.relationships
     .filter((edge) => edge.sourceInstanceId === selectedId || edge.targetInstanceId === selectedId)
     .map((edge) => byId.get(edge.sourceInstanceId === selectedId ? edge.targetInstanceId : edge.sourceInstanceId))
-    .filter((node): node is SceneNode => Boolean(node) && node.role !== "group")
+    .filter((node): node is SceneNode => node !== undefined && node.role !== "group")
     .sort((a, b) => Math.hypot(a.x - selected.x, a.y - selected.y) - Math.hypot(b.x - selected.x, b.y - selected.y));
   candidates.push(...neighbors.map((node) => ({ x: node.x, y: node.y, width: node.width, height: node.height })));
   for (const candidate of candidates) {

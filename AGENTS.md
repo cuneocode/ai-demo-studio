@@ -6,8 +6,8 @@ for setup and [CONTRIBUTING.md](CONTRIBUTING.md) for validation and change conve
 ## Working in this checkout
 
 - Inspect `git status` before edits. Preserve unrelated changes, saved runs, and local configuration. Keep changes focused on the requested work.
-- Use Node 24 (minimum 22.18), npm with `package-lock.json`, and uv with each service's `uv.lock`. The root `.python-version` selects Python 3.12. Keep Python environments isolated because services pin different SDK versions.
-- Install with `npm ci` and `npm run studio:install`. Use `npm run dev:studio` for the integrated runtime on port 4200. `npm run dev` starts the frontend alone; `npm run studio:preview` disables live demo APIs.
+- Use Node 24 (minimum 22.18), npm with `package-lock.json`, and Docker Compose 2.30+. Live demos run in independent container stacks. Optional source development uses uv and each service's `uv.lock`; `.python-version` selects Python 3.12. Keep source environments isolated because SDK versions differ.
+- Install Studio with `npm ci`. Use `npm run dev:studio` on port 4200 and start selected stacks in Settings. `npm run studio:install` prebuilds all images sequentially. Closing Studio leaves containers running; Stop preserves data. `npm run studio:preview` disables live demo APIs and container controls.
 - Use a descriptive branch. Agent-created branches default to `codex/`. Forks must work with the engineer's own model endpoints, credentials, and tenant resources.
 - Keep credentials in ignored root `.env` and local model routes in `.studio/`. Update `.env.example` with credential-free examples when configuration changes. Avoid personal filesystem paths, SSH aliases, and implicit access to another checkout.
 - Preserve lockfiles, curated synthetic fixtures, recordings, and upstream license notices. Keep virtual environments, caches, browser output, training data, and model weights out of commits.
@@ -17,7 +17,8 @@ for setup and [CONTRIBUTING.md](CONTRIBUTING.md) for validation and change conve
 
 - `app/`: Studio UI, shared workspace and run components, stories, settings, and guides.
 - `app/map/`: shared architecture scenes, layout, catalogs, source evidence, and navigation.
-- `services/`: Python sidecars, interbank Docker lab, `common/` run handling, and `llm/` model routing.
+- `config/use-cases.ts` and `use-cases/`: package contracts and Compose stacks. Interbank retains its multi-container definition in `services/interbank/`.
+- `services/`: containerized application source, `common/` run handling, and `llm/` model routing.
 - `scripts/`: local orchestration, settings/status APIs, doctor checks, and evidence generation.
 - `config/`: committed non-secret defaults. `fixtures/`: curated synthetic demo inputs.
 - `tests/`: Node tests and Playwright browser flows. Each service owns its Python tests.
@@ -26,7 +27,8 @@ for setup and [CONTRIBUTING.md](CONTRIBUTING.md) for validation and change conve
 ## Implementation and checks
 
 - Route models through shared Studio configuration and `services/llm/studio_models.py`. Keep host configuration and process management in the Node layer, outside browser code and the worker runtime.
-- When adding a service, update install scripts, service management, dev and production proxies, doctor checks, preview API blocking, and setup docs together.
+- When adding a use case, follow [docs/CONTAINERS.md](docs/CONTAINERS.md). Register its Compose package, API mapping, environment allowlist, health route, optional components, and storage in `config/use-cases.ts`. Preserve independent lifecycle and persistence. Keep credentials outside images and retain upstream licenses. Update setup docs and verify both proxies, doctor checks, and preview blocking.
+- Keep builds sequential and dependency concurrency bounded. Check free disk before image operations. Never prune saved-data volumes as routine cleanup.
 - Add or update meaningful checks for changed behavior. Run `npm test` for the build and Node tests, `npm run typecheck`, `npm run lint`, and affected `npm run <service>:test` commands as appropriate. Shared Python changes use `npm run platform:test`.
 - Run affected browser flows against a running Studio with `npm run test:browser -- tests/<flow>.spec.ts`. Install its browser with `npx playwright install chromium`. `CHROME_PATH` and `STUDIO_URL` are optional overrides; avoid workstation-specific defaults.
 - Regenerate architecture evidence with `npm run map:sources` when linked source excerpts change. Update each affected service README and audience material when runtime behavior changes.

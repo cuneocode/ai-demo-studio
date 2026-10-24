@@ -93,7 +93,7 @@ test("studio settings saves Splunk credentials write-only and applies them by re
   await splunk.getByRole("button", { name: "Revert" }).click();
 
   await splunk.getByLabel("API key").fill("galileo-test-key-1234567890");
-  await splunk.getByLabel("Log stream (Brahe Bank, wealth)").fill("studio");
+  await splunk.getByLabel("Shared agent stream").fill("studio");
   await splunk.getByRole("button", { name: "Test" }).click();
   await expect(splunk.getByRole("status")).toHaveText("Key accepted by api.multitenant.galileocloud.io.");
   expect(state.settingChecks).toEqual([{ target: "splunk-ao", values: { GALILEO_API_KEY: "galileo-test-key-1234567890", GALILEO_LOG_STREAM: "studio" } }]);
@@ -107,7 +107,7 @@ test("studio settings saves Splunk credentials write-only and applies them by re
 
   const servicesPanel = section(page, "Services");
   await expect(servicesPanel.getByRole("row", { name: /Brahe Bank/ })).toContainText("1 change to apply");
-  await expect(servicesPanel.getByRole("row", { name: /Fraud scoring/ })).toContainText("Running outside the studio");
+  await expect(servicesPanel.getByRole("row", { name: /Fraud scoring/ })).toContainText("external service");
   await servicesPanel.getByRole("button", { name: "Apply 1 change" }).click();
   await expect.poll(() => state.serviceActions).toEqual([{ action: "apply" }]);
 });

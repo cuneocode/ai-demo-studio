@@ -1,204 +1,180 @@
 # Financial Services AI Demo Studio
 
-A local demo studio with ten financial services use cases, guided walkthroughs,
-architecture views, live Python services, and labelled recordings. Banking data and
-customer scenarios are synthetic. Two use cases are illustrative designs.
+A local Studio for eight executable financial-services demos and two illustrative
+use cases. A trusted operator configures shared integrations and starts individual
+Docker Compose stacks from the dashboard. Banking data and customer scenarios are
+synthetic. Recordings are labelled and remain available with live stacks stopped.
 
 ## System requirements
 
-| Requirement | Recording-only preview | Live Studio |
+| Requirement | Recording preview | Live container demos |
 | --- | --- | --- |
-| Operating system | macOS or Linux; use WSL2 on Windows | Same; startup scripts use POSIX paths and shell syntax |
-| Node.js and npm | Node 24 recommended; minimum 22.18, with bundled npm 10+ | Same |
-| Python and uv | None | Python 3.12 recommended, managed by uv (verified with 0.11.23); service packages allow 3.12 or 3.13 |
-| Git | Required to clone | Also used to install the pinned Visa harness |
-| Docker Engine with Compose v2 | None | Required for the interbank lab only; Docker Desktop works on macOS |
-| GPU | None | None when using a hosted or remote model; local model hosting and live fraud scoring have separate GPU requirements |
-| Network | Package installation; playback uses bundled data | Package installation, selected model endpoints, and configured data, inspection, control, and telemetry services |
+| Operating system | macOS or Linux; WSL2 on Windows | Same; Docker Desktop or Docker Engine |
+| Node and npm | Node 24 recommended; minimum 22.18, npm 10+ | Same |
+| Docker | None | Running engine and Compose **2.30+** |
+| Python and uv on the host | None | None for container operation; required for optional source development and Python tests |
+| CPU | 64-bit CPU | Four cores recommended for local containers; model hosting has separate requirements |
+| Memory | 8 GB recommended | 16 GB host memory recommended; allocate about 8 GB to Docker for Interbank or Vulnerability and start selected stacks |
+| Disk | 3 GB free recommended | Allow **30 GB free** for images and build layers, plus saved runs and model artifacts |
+| GPU | None | Optional remote/local model hosting and live fraud graph scoring have separate NVIDIA GPU requirements |
+| Network | Package installation | Image and dependency downloads, selected model endpoints, and configured integrations |
 
-Use a current Chrome, Chromium, Firefox, Safari, or Edge browser. Apple Silicon
-and Linux ARM64 are used in the development setup. Other Linux architectures and
-WSL2 need verification in your environment. Native Windows startup is unsupported.
+These memory and disk figures are planning recommendations. The operator requires
+at least 15 GB of free host disk before building or starting stacks. Container
+operations run sequentially, with bounded dependency-install concurrency. On Docker
+Desktop, also allow sufficient space in its VM disk. Use a current browser.
+Native Windows shell startup is unsupported; use WSL2. The root `.nvmrc` selects
+Node 24. Source Python environments use `.python-version` and each service's lockfile.
 
-For planning, allow **8 GB RAM and 3 GB free disk for preview**, or **16 GB RAM and
-10 GB free disk for the live Studio**. These are starting recommendations, rather
-than benchmarked minimums. The current macOS installation uses about 0.9 GB for
-`node_modules` and 2.5 GB across the six Python environments, before download caches,
-browser binaries, saved runs, and Docker images. Budget additional Docker resources
-for interbank. GPU training and model weights have separate storage requirements.
+## Start Studio and selected demos
 
-The root `.nvmrc` selects Node 24 and `.python-version` selects Python 3.12. Node
-22.18 is the minimum because host scripts import TypeScript directly using
-[built-in type stripping](https://nodejs.org/api/typescript.html#type-stripping).
-Install [Node.js](https://nodejs.org/en/download),
-[uv](https://docs.astral.sh/uv/getting-started/installation/), and, when needed,
-[Docker](https://docs.docker.com/get-started/get-docker/).
-
-## Start the live Studio
-
-From the repository root of your clone or fork:
+From your clone or fork, with Docker running:
 
 ```sh
-node --version
-npm --version
-uv --version
 npm ci
-uv python install 3.12
-npm run studio:install
 npm run studio:doctor -- --live
 npm run dev:studio
 ```
 
-Open [http://localhost:4200](http://localhost:4200). `studio:install` installs six
-isolated Python environments using their committed lockfiles. Both `dev:studio`
-and `start:studio` require all six environments. Interbank is started separately.
+Open [http://localhost:4200](http://localhost:4200), then open **Studio settings**:
 
-In **Studio settings**:
+1. Save your provider credentials and configure/test the model endpoint.
+2. Configure AI Defense, Splunk, Agent Observability, and Agent Control as required
+   by the selected demo. Use your own tenant, project, and stream.
+3. Under **Services**, select **Start** for a use case. The first start builds its
+   image. Wait for the stack's readiness status and inspect any configuration needs.
+4. Open that demo from the library. **Logs** shows container output; **Stop** stops
+   the stack and retains its data. **Restart** recreates it with saved settings.
 
-1. Save your model provider key under **Credentials**, or configure an accessible
-   OpenAI-compatible endpoint under **Model backends**. Select the model and test
-   the connection. The default chain includes an optional private vLLM provider
-   and the OpenAI API. The private provider is skipped until its URL is configured.
-2. Configure the integrations required by your demo using the table below. Use
-   your own tenant, project, and agent stream. Create the project and stream in
-   Agent Observability before registering hosted controls.
-3. Test the saved credentials and use **Services → Apply** to start or restart
-   the managed services. Check **Live configuration**, the service status, and
-   the demo's Runtime details before running a live action.
+Start each stack explicitly. Existing containers keep running across Studio
+sessions. Market Research and Advisor Prep use separate containers and data
+volumes while reusing the Wealth image. GPU scoring is an optional Fraud component.
 
-Credentials are saved to the ignored root `.env` with mode 0600. Model routing
-is saved to ignored `.studio/models.json`; it contains key variable names.
-Model routes are read per request. Credential changes require **Apply**. You can
-also copy `.env.example` to `.env` if the file does not exist, set `chmod 600 .env`,
-and edit it before starting. Keep existing credentials when updating a checkout.
-See the [configuration guide](docs/CONFIGURATION.md) for integration details.
-
-Stop the foreground Studio command with **Ctrl+C**. It stops the Python processes
-it launched. Services started separately must be stopped in their own terminals.
-
-## Demo setup and execution modes
-
-All ten entries remain visible in the library. Live execution needs the service
-and integrations listed here. **Fallback: recorded demo** opens preserved runs;
-recordings retain their original timestamps and measured counts.
-
-| Demo | Runtime | Additional setup for live execution | Guide |
-| --- | --- | --- | --- |
-| Brahe Bank assistant | `banking`, port 8011 | Model plus Agent Observability project/stream and registered banking controls; AI Defense when enabled; Pinecone optional | [Banking](services/banking/README.md) |
-| Card fraud triage | `fraud`, port 8012 | GPU scorer endpoint for live GNN scores; model for the triage agent; otherwise labelled recorded/sample scores and scripted text | [Fraud](services/fraud/README.md) |
-| Company briefing | `briefing`, port 8013 | Model; SEC contact for ticker lookup, or upload a filing; AI Defense and OTLP export optional | [Briefing](services/briefing/README.md) |
-| Market research | `wealth`, port 8014 | Model and market-data access; AI Defense to include inspected news; FRED optional | [Wealth](services/wealth/README.md) |
-| Advisor meeting prep | `wealth`, port 8014 | Model and holdings/market data; hosted model egress requires AI Defense | [Wealth](services/wealth/README.md) |
-| SAR investigation | `sar`, port 8015 | Model; hosted model egress requires AI Defense; hosted controls and tracing optional | [SAR](services/sar/README.md) |
-| Code vulnerability analysis | `vulnerability`, port 8016 | Model; Visa harness installed by uv; hosted controls and tracing optional | [Vulnerability](services/vulnerability/README.md) |
-| Interbank settlement investigation | Docker lab, port 8088 | Docker, model, AI Defense, Agent Observability, and Agent Control; separate lab startup | [Interbank](services/interbank/README.md) |
-| KYC processing | Illustrative UI | Proposed workflow, no live KYC backend | Library story and architecture |
-| Transaction LLM | Illustrative UI | Proposed workflow, no live transaction backend | Library story and architecture |
-
-Market research loads an immutable evidence packet with financials, earnings, peers,
-and news, then creates a cited 12-month Buy/Hold/Sell assessment. Uninspected or
-flagged news is excluded. At least three supporting facts must verify. This flow
-has no recorded assessment fallback. Other wealth workflows expose their own
-recordings and labelled partial results.
-
-Code vulnerability analysis runs Visa's DeepAgents harness against a synthetic
-payments API. Its scoped Foundry profile adds revision-bound citations, independent
-HTTP validation, publication gates, reviewed patches, and rescans. HEC evidence is
-prepared and downloaded locally; the Studio does not send it to a Splunk receiver.
-
-### Start the interbank lab
-
-Configure the required root `.env` values first, then run in another terminal:
+Build all images ahead of a presentation, without starting demos or registering
+hosted controls:
 
 ```sh
-npm run studio:doctor -- --interbank
-npm run interbank:up
-npm run interbank:status
+npm run studio:install
 ```
 
-Keep the Studio running and open **Interbank settlement investigation**. `up`
-builds images, generates local PKI, creates the lab's hosted controls, and starts
-the containers. It requires permission to create resources in your configured
-tenant. Use the [lab guide](services/interbank/README.md) for prerequisites,
-trace verification, proxy certificates, and Linux container networking.
+Or manage selected stacks from the command line:
 
 ```sh
+npm run studio:containers -- build sar
+npm run studio:containers -- start sar briefing
+npm run studio:containers -- status
+npm run studio:containers -- logs sar
+npm run studio:containers -- stop sar briefing
+```
+
+Closing Studio leaves containers running. Stop them through **Services** or the
+CLI. Stop preserves volumes and existing Interbank evidence. Each checkout owns
+separate Compose projects. API ports remain fixed, so stop another checkout's
+conflicting services before starting the same demo here.
+
+## Shared configuration
+
+Studio saves credentials to ignored root `.env` with mode 0600 and model routing
+to ignored `.studio/models.json`. Keys remain write-only in the browser. The
+operator supplies scoped runtime environment files, read-only model configuration,
+and trusted CA certificates under ignored `.studio/runtime/`. Images contain no
+workstation credentials or saved runs.
+
+**Apply to running stacks** applies credential changes without starting stopped
+use cases. Model-route changes are reflected in running containers on the next
+request. Host-loopback model URLs are translated to `host.docker.internal` inside
+containers. See [configuration](docs/CONFIGURATION.md) and
+[container packages](docs/CONTAINERS.md).
+
+Hosted control registration is an explicit administrative action. Review the
+policies, create the intended project/stream, then select **Register hosted
+controls** for that package. Build and Start do not register tenant resources.
+
+## Demo packages
+
+| Demo | Runtime / host port | Live prerequisites | Guide |
+| --- | --- | --- | --- |
+| Brahe Bank assistant | `banking` / 8011 | Model; registered banking controls and Agent Observability; AI Defense when enabled; Pinecone optional | [Banking](services/banking/README.md) |
+| Card fraud triage | `fraud` / 8012 | Model for triage; optional NVIDIA scorer for live graph scores; recorded/sample scores retain provenance | [Fraud](services/fraud/README.md) |
+| Company briefing | `briefing` / 8013 | Model; SEC contact for lookup or an uploaded filing; AI Defense and OTLP optional | [Briefing](services/briefing/README.md) |
+| Market research | `research` / 8014 | Model, market-data access, inspected news; FRED optional | [Wealth](services/wealth/README.md) |
+| Advisor meeting prep | `advisory` / 8017 | Model and holdings/context; hosted client-data inference requires AI Defense | [Wealth](services/wealth/README.md) |
+| SAR investigation | `sar` / 8015 | Model; hosted client-data inference requires AI Defense | [SAR](services/sar/README.md) |
+| Code vulnerability analysis | `vulnerability` / 8016 | Model; pinned Visa harness is included in its image | [Vulnerability](services/vulnerability/README.md) |
+| Interbank settlement investigation | `interbank` / 8088 | Model, AI Defense, Agent Observability, explicit hosted control setup | [Interbank](services/interbank/README.md) |
+| KYC processing | Illustrative package | Proposed workflow with no executable backend | Library story and architecture |
+| Transaction intelligence | Illustrative package | Proposed workflow with no executable backend | Library story and architecture |
+
+Market Research analyzes an immutable evidence packet and verifies cited facts.
+It has no recorded assessment fallback. Vulnerability analysis has no bundled
+recording; it runs Visa VVAH against synthetic payments source, checks Foundry
+evidence, and prepares downloadable HEC events locally. HEC delivery is unconfigured.
+
+Interbank retains its agents, gateways, policy services, collectors, PKI, and
+persistent evidence as one stack. Use the same Services controls or:
+
+```sh
+npm run interbank:up
+npm run interbank:status
 npm run interbank:down
 ```
 
-### Preview recordings without live services
+## Preview and production build
+
+Recording preview requires no Docker, Python, credentials, or live services:
 
 ```sh
 npm ci
-npm run studio:doctor
 npm run studio:preview
 ```
 
-Open [http://localhost:4200](http://localhost:4200). Preview requires no Python,
-Docker, model keys, or `.env`. Live demo APIs are disabled. Use the explicit
-recorded fallback controls where available. Vulnerability analysis has no bundled
-recording. Closing the command stops the preview.
-
-### Run a production build locally
+Live execution and container controls are disabled in preview. Open explicit
+recorded fallbacks. To run a production build locally:
 
 ```sh
 npm run build
 npm run start:studio
+# Recording-only production preview:
+npm run start:preview
 ```
 
-For recording-only playback of the build, use `npm run start:preview` instead.
-The public local listener defaults to port 4200 and the internal frontend uses
-4201. Set `STUDIO_PORT` and, if needed, `FRONTEND_PORT` in the launching shell.
-These launcher variables are not read from `.env`.
-
-The server listens on loopback. Share the repo or screen-share the running Studio.
-Hosted deployment needs authentication and access controls for the settings and
-process-management APIs. Cloudflare development bindings in this repo are empty;
-no hosted deployment is configured.
+The listener uses loopback port 4200. Set `STUDIO_PORT` in the launching shell to
+change it; production uses the next port for its internal frontend unless
+`FRONTEND_PORT` is supplied. Studio is a trusted local operator with Docker access.
+Share the repo or screen-share the dashboard. Hosted authentication and access
+controls require a separate deployment design; Cloudflare bindings remain empty.
 
 ## Troubleshooting
 
 | Symptom | Action |
 | --- | --- |
-| Missing Python environment | Run `npm run studio:install`, then `npm run studio:doctor -- --live` |
-| Unsupported Python selected | Run `uv python install 3.12`; run installs from this checkout, which includes `.python-version` |
-| Port already occupied | Stop the other instance or set `STUDIO_PORT=4300 npm run dev:studio`; Python ports remain 8011 through 8016 |
-| Model is configured but runs fail | Test the endpoint and selected model in Studio settings; check required tool calling and demo-specific egress policy |
-| Credential changes have no effect | Save, then **Services → Apply**; rebuild interbank with `interbank:up` |
-| Hosted controls missing | Register the demo's policies for your project/stream using its service guide, then restart the service |
-| SEC lookup fails | Set your real `SEC_USER_AGENT` contact, or upload a text-based annual report |
-| Fraud shows recorded/sample scores | Start and connect the separate GPU scorer; inspect the score provenance |
-| Browser test cannot launch | Run `npx playwright install chromium`, or set `CHROME_PATH` to your browser executable |
-| Package or model TLS errors | Configure your organization's trusted CA for Node, Python, and Docker; see the interbank guide for `EXTRA_CA_FILE` |
+| Docker unavailable | Start Docker and run `npm run studio:doctor -- --live` |
+| Low disk or stalled image extraction | Free host and Docker VM disk space; inspect Docker before retrying; preserve saved-data volumes |
+| Stack starts but is blocked | Inspect readiness, configuration, and Logs; running containers and live integration readiness are distinct |
+| Port occupied | Stop the conflicting external process or stack; Studio preserves services it does not own |
+| Credential change has no effect | Save, then Apply to running stacks or Restart the selected stack |
+| Model unreachable inside Docker | Check the selected URL; host loopback is translated automatically; remote hosts must be reachable from Docker |
+| GPU scorer unavailable | Configure `FRAUD_SCORE_URL` to a reachable NVIDIA scorer or use labelled sample/recorded scores |
+| Corporate TLS failure | Set `EXTRA_CA_FILE` to the public corporate CA bundle before building/starting; Studio also exports system trust roots |
+| Browser test cannot launch | Run `npx playwright install chromium`; `CHROME_PATH` is an optional override |
 
-`studio:doctor` checks local prerequisites without reading credentials, starting
-services, or making model calls. `--live` makes missing Python requirements fail
-the check; `--interbank` also requires a working Docker daemon and Compose v2.
-Runtime health and confirmed trace delivery are reported separately in the Studio.
+## Development and extension
 
-## Development and repository layout
+Read [AGENTS.md](AGENTS.md), [CONTRIBUTING.md](CONTRIBUTING.md), and the
+[container package contract](docs/CONTAINERS.md). The package registry is
+`config/use-cases.ts`; Compose definitions live in `use-cases/` and the Interbank
+service directory. Agents and application code remain in `services/` and execute
+inside their images. `app/` owns Studio UI, run components, narratives, and guides.
 
-| Path | Purpose |
-| --- | --- |
-| `app/` | React Studio, shared workspaces, run stats, narratives, settings, and architecture explorer |
-| `services/` | Six Python sidecars, interbank lab, shared run code, and model routing |
-| `scripts/` | Local launchers, service management, host APIs, prerequisite checks, and source evidence generation |
-| `config/` | Committed non-secret model routing defaults |
-| `fixtures/` | Synthetic scenarios and curated demo inputs |
-| `tests/` | Node tests and Playwright browser flows |
-| `docs/` | Configuration, requirements verification, and design plans |
-| `worker/`, `db/`, `drizzle/`, `build/`, `.openai/` | vinext/Cloudflare build support and optional storage scaffolding |
+Source development remains available with `npm run studio:install:source`, an
+individual sidecar command from its service guide, and `npm run dev`. Install uv
+and Python 3.12 for this workflow. Each service keeps its own `uv.lock` and environment.
 
-Read [AGENTS.md](AGENTS.md) before making changes and
-[CONTRIBUTING.md](CONTRIBUTING.md) for development, tests, and fork conventions.
-Every Architecture tab uses one continuous draw.io canvas with collapsible
-journey, system, and component detail, platform layers, and source evidence. See
-[architecture maps](ARCHITECTURE_MAPS.md) for authoring and validation.
-Validation commands include `npm test`, `npm run typecheck`, `npm run lint`,
-`npm run test:browser`, and the per-service `npm run <service>:test` commands.
-See [setup verification](docs/SETUP_VERIFICATION.md) for the tested environment
-and checks completed during the onboarding cleanup.
+Architecture tabs use the shared draw.io explorer with stable identities, platform
+layers, and source evidence. See [architecture maps](ARCHITECTURE_MAPS.md).
+Validation includes `npm test`, typecheck, lint, affected browser flows, Python
+checks, and real container lifecycle checks. See [setup verification](docs/SETUP_VERIFICATION.md).
 
-Upstream license notices remain with vendored/adapted code, including
-[banking's MIT notice](services/banking/LICENSE). This repository currently has no
-root license; the owner needs to choose redistribution terms before public release.
+Preserve build support in `worker/`, `db/`, `drizzle/`, `build/`, and `.openai/`.
+Upstream notices remain with adapted code, including [banking's MIT notice](services/banking/LICENSE).
+The repository owner controls the root license decision.

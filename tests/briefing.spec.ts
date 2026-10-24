@@ -102,6 +102,7 @@ test("the committed recorded extract replays as recorded, runs no model, and can
   await page.goto("/", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Open Company briefing experience" }).first().click();
   await expect(page.locator(".briefing-demo")).toHaveAttribute("data-guide-source", "none");
+  await page.locator(".briefing-demo .demo-fallback > summary").click();
   await page.locator("#briefing-replay").click();
   const review = page.locator(".briefing-review-head");
   await expect(review.locator("h2")).toContainText("Halcyon Interconnect");

@@ -8,6 +8,7 @@ import { KEY_NAMES, MODEL_USE_CASES, baseUrlProblem, chainFor, chainLabel, valid
 import type { ModelState } from "../app/studio-settings.ts";
 import { ROOT, envValue } from "./studio-env.ts";
 import { fetchText, networkProblem, readJson, send, writeRefusal } from "./studio-http.ts";
+import { syncContainerModels } from "./studio-container-config.ts";
 
 export const STUDIO_MODELS_PATH = "/api/studio/models";
 const registryFile = () => process.env.STUDIO_MODELS_FILE ?? path.join(ROOT, ".studio", "models.json");
@@ -114,6 +115,7 @@ async function save(input: unknown) {
   const temporary = `${file}.${process.pid}.tmp`;
   writeFileSync(temporary, `${JSON.stringify(result.registry, null, 2)}\n`, { mode: 0o644 });
   renameSync(temporary, file);
+  syncContainerModels();
   healthCache = null;
   return { status: 200, body: await snapshot() };
 }

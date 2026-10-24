@@ -111,3 +111,25 @@ def test_hitl_decision_resolves_the_waiting_run(store):
     assert decision == {"decision": "approve", "by": "Maya"}
     assert store.page(run.id)["events"][-1]["kind"] == "hitl.decision"
     assert store.decide(run.id, "approve-1", {"decision": "approve"}) is False
+
+
+def test_finished_runs_restore_identity_events_provenance_and_result(store):
+    run = store.open("fr-persist-0001", meta={"provenance": "live"})
+    store.emit(run.id, "llm.call", "Model", data={"input_tokens": 12})
+    store.finish(run.id, "completed", {"approved": True})
+    restored = runs.RunStore("fraud", component="fraud-agent", cache_dir=store.cache_dir)
+    assert restored.get(run.id).public() == run.public()
+    assert restored.page(run.id)["events"] == run.events
+    assert restored.page(run.id, 1)["events"] == []
+
+
+def test_interrupted_run_is_failed_after_restart_with_original_events(store):
+    run = store.open("fr-persist-0002")
+    store.emit(run.id, "agent.tool_call", "Started investigation")
+    restored = runs.RunStore("fraud", component="fraud-agent", cache_dir=store.cache_dir)
+    assert restored.get(run.id).status == "failed"
+    assert restored.get(run.id).finished_at
+    assert restored.page(run.id)["events"][0]["id"] == run.events[0]["id"]
+    assert restored.page(run.id)["events"][-1]["status"] == "error"
+    timestamps = [event["ns"] for event in restored.page(run.id)["events"]]
+    assert timestamps == sorted(timestamps)

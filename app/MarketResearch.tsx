@@ -57,13 +57,13 @@ export default function MarketResearch({ embedded = false }: Props) {
   const [runtimeModel, setRuntimeModel] = useState("");
   const resultHeading = useRef<HTMLHeadingElement>(null);
   const ledger = useRunLedger();
-  const timeline = useRun({ pageUrl: (id, after) => `/api/wealth/runs/${encodeURIComponent(id)}?after=${after}` });
+  const timeline = useRun({ pageUrl: (id, after) => `/api/research/runs/${encodeURIComponent(id)}?after=${after}` });
   const { links } = useStudioNav();
-  const stats = useMemo(() => wealthStats(service, "/api/wealth/market/analyze", links?.agentObservability, { inputs: "articles inspected", whenOff: "articles require a verdict before analysis." }), [service, links?.agentObservability]);
+  const stats = useMemo(() => wealthStats(service, "/api/research/market/analyze", links?.agentObservability, { inputs: "articles inspected", whenOff: "articles require a verdict before analysis." }), [service, links?.agentObservability]);
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`/api/wealth/market/inputs/${encodeURIComponent(request.ticker)}?refresh=${request.refresh}`, { signal: AbortSignal.any([controller.signal, AbortSignal.timeout(120000)]) })
+    fetch(`/api/research/market/inputs/${encodeURIComponent(request.ticker)}?refresh=${request.refresh}`, { signal: AbortSignal.any([controller.signal, AbortSignal.timeout(120000)]) })
       .then(async response => { const text = await response.text(); if (!response.ok) throw new Error(parseApiError(text, response.status)); return JSON.parse(text) as Packet; })
       .then(body => { if (!controller.signal.aborted) setPacket(body); })
       .catch(cause => { if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "Could not load research inputs."); })
@@ -73,7 +73,7 @@ export default function MarketResearch({ embedded = false }: Props) {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/wealth/health", { signal: AbortSignal.timeout(10000) }).then(response => response.json()).then(body => {
+    fetch("/api/research/health", { signal: AbortSignal.timeout(10000) }).then(response => response.json()).then(body => {
       if (active) { setService(wealthService(body)); setRuntimeModel(body.nim?.model || body.model || ""); }
     }).catch(() => { if (active) setService({ reachable: false }); });
     return () => { active = false; };
@@ -101,7 +101,7 @@ export default function MarketResearch({ embedded = false }: Props) {
     ledger.record(run);
     let recorded = false;
     try {
-      const response = await fetch("/api/wealth/market/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ticker: packet.ticker, packet_id: packet.packet_id, run_id: id }), signal: AbortSignal.timeout(260000) });
+      const response = await fetch("/api/research/market/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ticker: packet.ticker, packet_id: packet.packet_id, run_id: id }), signal: AbortSignal.timeout(260000) });
       const text = await response.text();
       const body = text ? JSON.parse(text) : {};
       ledger.record(observeWealth(run, response.status, body)); recorded = true;

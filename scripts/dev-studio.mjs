@@ -2,19 +2,12 @@
 // The studio dev server launches the Python services itself (scripts/studio-services.ts),
 // so Studio settings can restart them after credentials change.
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../', import.meta.url));
-for (const service of ['banking', 'fraud', 'briefing', 'wealth', 'sar', 'vulnerability']) {
-  if (!existsSync(`${root}services/${service}/.venv/bin/python`)) {
-    console.error(`Run npm run ${service}:install before starting the studio.`);
-    process.exit(1);
-  }
-}
 const studio = spawn(process.execPath, [`${root}node_modules/.bin/vinext`, 'dev', '--hostname', '127.0.0.1', '--port', process.env.STUDIO_PORT || '4200'], {
   cwd: root,
   stdio: 'inherit',
-  env: { ...process.env, WRANGLER_LOG_PATH: '.wrangler/wrangler.log', STUDIO_START_SERVICES: '1', STUDIO_PREVIEW: '0' },
+  env: { ...process.env, WRANGLER_LOG_PATH: '.wrangler/wrangler.log', STUDIO_START_SERVICES: '0', STUDIO_PREVIEW: '0' },
 });
 let stopping = false;
 function stop(code = 0) {

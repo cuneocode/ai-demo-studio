@@ -5,7 +5,6 @@
 services:
   fraud-gnn:
     image: ${FRAUD_TRAIN_IMAGE:-nvcr.io/nvidia/cugraph/financial-fraud-training:3.0.0}
-    container_name: fsi-fraud-gnn
     gpus: all
     shm_size: 8g
     ports:

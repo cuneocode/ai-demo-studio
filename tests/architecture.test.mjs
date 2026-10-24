@@ -104,43 +104,43 @@ test('Briefing capability keeps Defense off EDGAR/filesystem and on model hops',
   assert.ok(graph.note.includes('does not assert live SEC or OpenAI'));
  }
 });
-test('Live research keeps Defense off calc tools, the verifier, and policy checks',()=>{
+test('Research screens articles before assessment and keeps policy decisions explicit',()=>{
  const live=researchRuntime();
- const offInspection=new Set(['fixtures','cache','tools','grounding','scan','precheck','control','gate','store']);
- assert.ok(!live.edges.some(e=>offInspection.has(e.from)&&e.to==='defense'));
- assert.ok(!live.edges.some(e=>e.from==='defense'&&offInspection.has(e.to)));
- assert.ok(live.edges.some(e=>e.from==='news'&&e.to==='defense'),'news is inspected as a tool result');
- assert.ok(live.edges.some(e=>e.from==='api'&&e.to==='precheck'),'the restricted-list pre-check runs first');
- assert.ok(live.edges.some(e=>e.from==='precheck'&&e.to==='blocked'));
- assert.ok(live.nodes.some(n=>n.id==='gate'&&n.title.includes('Strategist publishes')));
- assert.ok(live.note.includes('does not assert live Yahoo, FRED, or model'));
- assert.ok(/not investment advice/i.test(live.note));
- assert.ok(!live.nodes.some(n=>/vector index|tavily|fixture pack/i.test(`${n.title} ${n.subtitle} ${n.detail}`)));
+ const local=new Set(['grounding','precheck','gate','timeline','compute']);
+ assert.ok(!live.edges.some(edge=>local.has(edge.from)&&edge.to==='defense'));
+ assert.ok(live.edges.some(edge=>edge.from==='news'&&edge.to==='defense'));
+ assert.ok(live.edges.some(edge=>edge.from==='defense'&&edge.to==='withheld'&&edge.kind==='control'));
+ assert.ok(live.edges.some(edge=>edge.from==='market'&&edge.to==='precheck'));
+ assert.ok(live.edges.some(edge=>edge.from==='precheck'&&edge.to==='unavailable'&&edge.kind==='control'));
+ assert.ok(live.edges.some(edge=>edge.from==='evidence'&&edge.to==='model'));
+ assert.match(live.nodes.find(node=>node.id==='api').detail,/independent Compose stack/);
 });
-test('Live research puts Defense on model hops and never dies without a model',()=>{
+test('Research verifies cited drafts and withholds unavailable assessments',()=>{
  const live=researchRuntime();
- assert.ok(live.edges.some(e=>e.from==='nim'&&e.to==='defense'));
- assert.ok(live.edges.some(e=>e.from==='model'&&e.to==='defense'));
- assert.ok(live.edges.some(e=>e.from==='defense'&&e.to==='omit'));
- assert.ok(live.edges.some(e=>e.from==='nim'&&e.to==='grounding'));
- assert.ok(live.edges.some(e=>e.from==='gate'&&e.to==='control'));
- assert.ok(/fixture summary|code-written/i.test(live.nodes.find(n=>n.id==='omit')?.detail||''));
- assert.ok(live.nodes.find(n=>n.id==='model')?.detail.includes('127.0.0.1:8003')||live.nodes.find(n=>n.id==='compute')?.detail.includes('127.0.0.1:8003'));
+ assert.ok(live.edges.some(edge=>edge.from==='model'&&edge.to==='grounding'));
+ assert.ok(live.edges.some(edge=>edge.from==='grounding'&&edge.to==='gate'));
+ assert.ok(live.edges.some(edge=>edge.from==='grounding'&&edge.to==='unavailable'));
+ assert.match(live.nodes.find(node=>node.id==='unavailable').detail,/withholds a recommendation/);
+ assert.ok(live.edges.some(edge=>edge.from==='model'&&edge.to==='compute'&&edge.kind==='placement'));
+ assert.match(live.nodes.find(node=>node.id==='compute').detail,/Studio settings/);
+ assert.ok(!live.nodes.some(node=>node.id==='omit'));
 });
-test('Research evidence map has no vector index and searches the filing by section',()=>{
- const knowledge=researchKnowledge();
- assert.ok(knowledge.nodes.some(n=>n.id==='snap'));
- assert.ok(knowledge.nodes.some(n=>n.id==='filing'));
- assert.ok(knowledge.note.includes('No vector index'));
- assert.ok(!knowledge.nodes.some(n=>/embedding model|vector index|tavily/i.test(`${n.title} ${n.detail}`)));
+test('Research evidence binds immutable packets to accepted fields and article text',()=>{
+ const graph=researchKnowledge();
+ assert.match(graph.nodes.find(node=>node.id==='market').detail,/immutable packet id/);
+ assert.match(graph.nodes.find(node=>node.id==='evidence').detail,/value, unit and display string/);
+ assert.match(graph.note,/services\/wealth\/data\/research\/NVDA.json/);
+ assert.match(graph.note,/hash identifies the exact packet/);
+ assert.ok(!graph.nodes.some(node=>/embedding model|vector index|tavily/i.test(`${node.title} ${node.detail}`)));
 });
-test('Research capability keeps Defense off evidence and the verifier and on the model hop',()=>{
+test('Research capabilities preserve screening, assessment, and verification routes',()=>{
  for(const step of [0,1,2,3]){
   const graph=capabilityDiagram(researchFrame,step,'market-research');
-  assert.ok(!graph.edges.some(e=>['evidence','grounding','precheck'].includes(e.from)&&e.to==='defense'));
-  assert.ok(graph.edges.some(e=>e.from==='nim'&&e.to==='defense'));
-  assert.ok(graph.edges.some(e=>e.from==='news'&&e.to==='defense'));
-  assert.ok(graph.note.includes('does not assert live Yahoo, FRED, or model'));
+  assert.ok(!graph.edges.some(edge=>['evidence','grounding','precheck'].includes(edge.from)&&edge.to==='defense'));
+  assert.ok(graph.edges.some(edge=>edge.from==='news'&&edge.to==='defense'));
+  assert.ok(graph.edges.some(edge=>edge.from==='evidence'&&edge.to==='model'));
+  assert.ok(graph.edges.some(edge=>edge.from==='model'&&edge.to==='compute'&&edge.kind==='placement'));
+  assert.match(graph.note,/structured research assessment/);
  }
 });
 test('Live advisory keeps Defense off rules, actions, and the verifier, and on CRM notes',()=>{
@@ -188,29 +188,19 @@ test('No diagram claims Cisco UCS / GPU inference as implemented',()=>{
   }
  }
 });
-test('Wealth model host is Sparky on a DGX Spark dev box, with Cisco AI POD proposed',()=>{
- const wealth=[researchRuntime(),advisoryRuntime(),...[0,3].flatMap(i=>[capabilityDiagram(researchFrame,i,'market-research'),capabilityDiagram(advisoryFrame,i,'client-advisory')])];
- for(const graph of wealth){
-  const compute=graph.nodes.find(n=>n.id==='compute');
-  assert.match(compute.title,/Sparky/);
-  assert.match(compute.detail,/DGX Spark/);
-  assert.match(compute.detail,/not Cisco hardware/);
-  assert.match(`${compute.subtitle} ${compute.detail}`,/proposed/i);
-  assert.notEqual(compute.kind,'cisco',`${graph.title}: the dev host is not a Cisco node`);
-  assert.match(graph.note,/Studio model chain/);
-  assert.ok(!graph.edges.some(e=>/implemented/i.test(e.label)),`${graph.title}: no edge calls the dev host implemented`);
+test('Wealth diagrams connect inference placement and label proposed Cisco hosting',()=>{
+ const graphs=[researchRuntime(),advisoryRuntime(),...[0,3].flatMap(step=>[capabilityDiagram(researchFrame,step,'market-research'),capabilityDiagram(advisoryFrame,step,'client-advisory')])];
+ for(const graph of graphs){
+  const compute=graph.nodes.find(node=>node.id==='compute');
+  assert.ok(compute);
+  assert.match(compute.detail,/proposed/i);
+  assert.notEqual(compute.kind,'cisco');
+  assert.ok(graph.edges.some(edge=>edge.from==='compute'||edge.to==='compute'));
  }
- for(const graph of [researchRuntime(),advisoryRuntime()]){
-  const model=graph.nodes.find(n=>n.id==='model');
-  assert.equal(model.title,'Studio model chain');
-  assert.match(model.subtitle,/Sparky vLLM → OpenAI API/);
- }
+ for(const graph of [researchRuntime(),advisoryRuntime()]) assert.equal(graph.nodes.find(node=>node.id==='model').title,'Studio model chain');
+ assert.match(researchRuntime().nodes.find(node=>node.id==='compute').detail,/host.docker.internal/);
  assert.match(advisoryRuntime().note,/only with AI Defense forced to enforce/);
- for(const id of ['market-research','client-advisory']){
-  assert.match(profiles[id].gpu,/Sparky vLLM/);
-  assert.match(profiles[id].gpu,/DGX Spark/);
-  assert.match(profiles[id].gpu,/proposed/);
- }
+ for(const id of ['market-research','client-advisory']) assert.match(profiles[id].gpu,/proposed/);
 });
 test('Wealth profiles describe evidence, publish, and approval gates',()=>{
  assert.ok(profiles['market-research'].store.toLowerCase().includes('cache'));
@@ -218,18 +208,15 @@ test('Wealth profiles describe evidence, publish, and approval gates',()=>{
  assert.ok(profiles['client-advisory'].gate.toLowerCase().includes('supervisor approves'));
  assert.ok(profiles['client-advisory'].right.toLowerCase().includes('suitability'));
 });
-test('Live research and advisory show optional Galileo / Splunk Agent Observability as telemetry',()=>{
- for(const graph of [researchRuntime(), advisoryRuntime()]){
-  const galileo=graph.nodes.find(n=>n.id==='galileo');
-  assert.ok(galileo?.title.includes('Splunk Agent Observability'));
-  assert.ok(/Galileo/i.test(galileo?.detail||''));
-  assert.ok(!/topic judge|stay-on-topic/i.test(`${galileo?.title} ${galileo?.subtitle}`));
-  assert.ok(!/dashboard was verified|live dashboard/i.test(galileo?.detail||''));
-  assert.ok(!graph.nodes.some(n=>n.id==='topic'));
-  assert.ok(graph.edges.some(e=>e.to==='galileo'&&e.kind==='telemetry'));
-  const splunk=graph.nodes.find(n=>n.id==='splunk');
-  assert.ok(splunk?.detail.includes('only when'));
-  assert.ok(graph.edges.some(e=>e.from==='api'&&e.to==='splunk'&&e.kind==='telemetry'));
+test('Wealth diagrams retain separate optional Agent Observability and OTLP paths',()=>{
+ for(const graph of [researchRuntime(),advisoryRuntime()]){
+  const observe=graph.nodes.find(node=>node.title.includes('Splunk Agent Observability'));
+  assert.ok(observe);
+  assert.match(observe.detail,/Galileo/);
+  assert.doesNotMatch(observe.detail,/dashboard was verified|live dashboard/);
+  assert.ok(graph.edges.some(edge=>edge.to===observe.id&&edge.kind==='telemetry'));
+  assert.match(graph.nodes.find(node=>node.id==='splunk').detail,/only when/);
+  assert.ok(graph.edges.some(edge=>edge.from==='api'&&edge.to==='splunk'&&edge.kind==='telemetry'));
  }
 });
 function zoomText(map) {
@@ -284,12 +271,12 @@ test('Zoom altitudes keep the live perimeters', () => {
   assert.equal(zoomMaps['company-briefing'].coreEdges.some(edge => edge.from === 'filings' && edge.to === 'defense'), false);
 
   const research = zoomText(zoomMaps['market-research']);
-  assert.match(research, /127\.0\.0\.1:8003/);
-  assert.match(research, /not investment advice/i);
-  assert.match(research, /No vector index/);
-  assert.match(research, /never enter Inspection/);
-  assert.match(research, /only when configured/i);
-  assert.match(research, /Agent Control/);
+  assert.match(research, /packet id binds/);
+  assert.match(research, /structured assessment/);
+  assert.match(research, /at least three verified/i);
+  assert.match(research, /Flagged or uninspected articles are excluded/);
+  assert.match(research, /actual trace delivery/);
+  assert.match(research, /research_precheck/);
 
   const advisory = zoomText(zoomMaps['client-advisory']);
   assert.match(advisory, /No household CRM catalog/);
@@ -299,7 +286,7 @@ test('Zoom altitudes keep the live perimeters', () => {
   assert.equal(zoomMaps['transaction-llm'].coreEdges.some(edge => edge.from === 'pipeline' && edge.to === 'defense'), false);
   assert.equal(zoomMaps['fraud-modeling'].interiors.observe.entities.some(entity => /eval model/i.test(entity.title)), false);
   // Services that evaluate Agent Control policies must not be drawn as "traces only".
-  for (const [id, policy] of [['fraud-modeling', 'fraud.take_action'], ['market-research', 'research.publish'], ['client-advisory', 'advisory.recommendation']]) {
+  for (const [id, policy] of [['fraud-modeling', 'fraud.take_action'], ['market-research', 'research_precheck'], ['client-advisory', 'advisory.recommendation']]) {
     const observe = zoomText({ cores: [], coreEdges: [], interiors: { observe: zoomMaps[id].interiors.observe } });
     assert.doesNotMatch(observe, /does not (run|call) Agent Control/, id);
     assert.match(observe, new RegExp(policy.replace('.', '\\.')), id);

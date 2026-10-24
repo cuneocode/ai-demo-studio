@@ -105,6 +105,7 @@ test("a recorded turn replays with its date and the refusal's Cisco evidence, ne
   await openBank(page);
   const demo = page.locator(".banking-demo");
   await expect(demo).toHaveAttribute("data-guide-source", "none");
+  await demo.locator(".demo-fallback > summary").click();
   await page.locator("#banking-replay").selectOption("scripted-prompts:success");
   const reply = page.locator(".chat-message.assistant").last();
   await expect(reply.locator("[data-provenance='recorded']")).toContainText(/Recorded run · Oct \d+, 2026 · OpenAI API/);

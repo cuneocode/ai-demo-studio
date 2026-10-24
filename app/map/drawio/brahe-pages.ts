@@ -63,7 +63,7 @@ export const braheDiagramPages: DiagramPage[] = [
     id: "system", title: "System architecture", level: 1, parentId: "journey", layers: ["security", "observability", "deployment"],
     flow: [["question", "check", "build", "release", "guidance"]],
     purpose: "The banking service owns inspection, agent execution, and release. Open a stage to see its components.",
-    groups: [{ id: "banking", label: "Banking service · FastAPI + LangGraph in Studio" }],
+    groups: [{ id: "banking", label: "Banking container · FastAPI + LangGraph" }],
     cells: [
       cell("question", "Question", "brahe.prepare", "question", 5, 235, 130, 85),
       cell("check", "Check question", "brahe.prepare", "check", 205, 235, 190, 85, { targetPageId: "check" }),

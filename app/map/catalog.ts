@@ -156,7 +156,7 @@ const research = journeyCase({
   purpose: "Load a company, screen its articles, and review a Buy, Hold or Sell opinion supported by verified facts and a peer comparison.",
   modes: ["implemented"],
   environment: [
-    "React calls the FastAPI wealth service on port 8014. GET /api/wealth/market/inputs/{ticker} loads a packet; POST /api/wealth/market/analyze analyzes that exact packet id.",
+    "React calls the independent Market Research container on port 8014 through /api/research. Its internal Wealth API loads a packet and analyzes that exact packet id.",
     "NVDA defaults to a dated public-data cache, including its earnings release. Other tickers and Refresh latest fetch Yahoo financials, earnings, peers and news from the past 30 days. Missing data remains visible.",
     "Every ticker includes the same synthetic prompt-injection article. AI Defense and the local instruction screen run before article text enters the model; flagged or uninspected articles are excluded.",
     "The workflow uses structured model calls, not a Deep Agent. At least three supporting facts must verify. One repair attempt is allowed; if some facts are rejected, the opinion is regenerated from verified facts only.",

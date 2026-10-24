@@ -53,7 +53,7 @@ async function openLab(page: Page) {
 
 test("the banks and their records are labelled fictional and synthetic", async ({ page }) => {
   await openLab(page);
-  await expect(page.locator(".ib-synthetic-note")).toContainText("Fictional banks · synthetic settlement records");
+  await expect(page.locator(".ib-synthetic-note")).toContainText("Fictional banks · synthetic records");
 });
 
 test("replaying a past run labels it as recorded with its date, never as live", async ({ page }) => {
@@ -96,6 +96,8 @@ test("with the lab down a committed recording still replays, labelled recorded",
   await expect(page.locator(".ib-controls .banking-error").first()).toContainText("Recorded runs still replay");
   const demo = page.locator(".interbank-demo");
   await expect(demo).toHaveAttribute("data-guide-source", "none");
+  await demo.locator(".demo-fallback > summary").click();
+  await demo.locator(".demo-replay-options > summary").click();
   await page.locator("#interbank-replay").selectOption("trd-847-blocked");
   const report = page.locator(".ib-report");
   await expect(report).toContainText("Blocked at Bank A's gateway", { timeout: 15_000 });

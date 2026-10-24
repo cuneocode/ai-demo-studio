@@ -129,9 +129,9 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
   const [deciding, setDeciding] = useState(false);
   const [focus, setFocus] = useState<Focus>(null);
   const ledger = useRunLedger();
-  const timeline = useRun({ pageUrl: (id, after) => `/api/wealth/runs/${encodeURIComponent(id)}?after=${after}` });
+  const timeline = useRun({ pageUrl: (id, after) => `/api/advisory/runs/${encodeURIComponent(id)}?after=${after}` });
   const { links, openUseCase } = useStudioNav();
-  const stats = useMemo(() => wealthStats(service, "/api/wealth/advisory/brief", links?.agentObservability, ADVISORY_DEFENSE), [service, links?.agentObservability]);
+  const stats = useMemo(() => wealthStats(service, "/api/advisory/advisory/brief", links?.agentObservability, ADVISORY_DEFENSE), [service, links?.agentObservability]);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const focusResult = useRef(false);
 
@@ -145,7 +145,7 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
     let active = true;
     let timer: ReturnType<typeof setTimeout>;
     const refreshHealth = () => {
-    fetch("/api/wealth/health", { signal: AbortSignal.timeout(10000) })
+    fetch("/api/advisory/health", { signal: AbortSignal.timeout(10000) })
       .then((response) => (response.ok ? response.json() : Promise.reject(new Error("unavailable"))))
       .then((body) => { setService(wealthService(body)); })
       .catch(() => { setService({ reachable: false }); })
@@ -215,7 +215,7 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
     ledger.record(run);
     let settled = false;
     try {
-      const response = await fetch("/api/wealth/advisory/brief", {
+      const response = await fetch("/api/advisory/advisory/brief", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ household_id: householdId, research: published ? rawResearchNote() : null, briefing: briefingPayload(companyProfile),
           service_events: serviceEvent ? [serviceEvent] : null, run_id: runId }),
@@ -261,7 +261,7 @@ export default function ClientAdvisory({ embedded = false, inStory = false, comp
     setError("");
     try {
       const posted = { ...raw, approval: { ...(raw.approval as object), ...(shownApproval ? { status: shownApproval.status } : {}) } };
-      const response = await fetch("/api/wealth/advisory/approve", {
+      const response = await fetch("/api/advisory/advisory/approve", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ run_id: origin.kind === "live" ? prep.runId : undefined, recording: origin.kind === "recorded" ? origin.name : undefined, stage, decision, action_ids: chosen, result: posted,
           by: stage === "advisor" ? ADVISOR : SUPERVISOR }),

@@ -8,12 +8,13 @@ work. Forks use their own credentials, model endpoints, and integration tenants.
 
 1. Check `git status` and preserve existing work. Inspect an established demo
    before changing or adding a workflow.
-2. Install with `npm ci` and `npm run studio:install`. Commit `package-lock.json`
-   and affected service `uv.lock` files when dependencies change. Keep service
-   environments separate because SDK versions differ.
-3. Run `npm run dev:studio`. For frontend work using manually started sidecars,
-   `npm run dev` starts only the frontend. Use `npm run studio:preview` to inspect
-   recordings without live dependencies.
+2. Install Studio with `npm ci`. Build selected stacks in Settings or prebuild all
+   images with `npm run studio:install`. Commit `package-lock.json` and affected
+   service `uv.lock` files when dependencies change.
+3. Run `npm run dev:studio` and start selected stacks in Settings. Stop stacks
+   explicitly when finished; closing Studio leaves them running. Optional source
+   development uses `npm run studio:install:source` and individual uvicorn commands.
+   Use `npm run studio:preview` for recordings without live dependencies.
 4. Reuse shared workspaces, live stats, run events, model routing, narratives,
    architecture scenes, and guide anchors. Describe runtime changes in the relevant
    service guide and audience materials.
@@ -32,7 +33,7 @@ work. Forks use their own credentials, model endpoints, and integration tenants.
 | `npm run platform:test` | Shared Python run handling and model routing, using the wealth environment |
 | `npm run map:drawio` | Regenerate editable draw.io architecture diagrams from the shared page definitions |
 | `npm run map:sources` | Regenerate highlighted architecture source evidence after source changes |
-| `npm run studio:doctor -- --live` | Check Node, npm dependencies, uv, and the six supported Python environments |
+| `npm run studio:doctor -- --live` | Check Node, npm dependencies, Docker Compose, engine, and package definitions |
 
 Run browser tests against a running Studio in a second terminal:
 
@@ -43,6 +44,7 @@ npm run test:browser
 npm run test:browser -- tests/settings.spec.ts
 ```
 
+Node tests and browser flows run sequentially by default to limit memory use.
 The default browser is Playwright's bundled Chromium. Set `CHROME_PATH` only to use
 a different executable. Set `STUDIO_URL` if the server uses another origin:
 
@@ -72,16 +74,22 @@ and current checkout failures.
 
 ## Adding or changing a demo
 
-Register a live Python service with the host service manager and proxies in
-`scripts/studio-services.ts`, `scripts/start-studio.mjs`, and `vite.config.ts`.
-Update install scripts, doctor checks, preview API blocking, and the README's demo
-table when service availability changes. Preview must disable every live API.
+Follow the [container package contract](docs/CONTAINERS.md). Register each live
+use case in `config/use-cases.ts` with its own Compose project, stable API mapping,
+health route, scoped environment, optional components, and persistent storage.
+Development and production proxies, the operator, and doctor consume this registry.
+An upstream blueprint can retain multiple containers behind its adapter. Preview
+must disable every live API and lifecycle action. Update the README demo table.
 
 Use `services/llm/studio_models.py` and the Studio model settings for model routing.
 Keep lifecycle and persisted run behavior aligned with `services/common/runs.py`
 and existing demos. Wire health reporting into `/api/studio/status` and retain
 measured provenance across refreshes. Use the existing story, architecture, guide,
 and presenter-note structures. See [ARCHITECTURE_MAPS.md](ARCHITECTURE_MAPS.md).
+
+Verify independent Start/Stop/Restart, persistence across recreation, configuration
+changes, readiness failures, and another stack remaining available. Build operations
+run sequentially. Preserve volumes and unrelated Docker workloads.
 
 Each service guide should state its port, prerequisites, root configuration,
 startup and shutdown commands, health check, policy setup, fallback behavior,

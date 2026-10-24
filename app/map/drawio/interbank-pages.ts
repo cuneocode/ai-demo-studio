@@ -102,7 +102,7 @@ export function interbankDiagram(catalog: Catalog): { catalog: Catalog; pages: D
   report.cells.forEach((item) => { if (item.id !== "ib.approve") item.boundaryId = "gateway"; });
   report.flow = [["ib.report.draft", "ib.report.inspect", "ib.report.deliver", "ib.approve"], ["", "ib.report.stop"]];
   const hosting = detail("hosting", "Runtime and inference", [G.investigation, G.exchange, G.hosting], ["ib.host.runtime", "ib.host.endpoint"], {
-    purpose: "The local Docker lab separates each bank's agent, gateway, policy, and collector. Proposed mode shows the private inference option.",
+    purpose: "Studio manages the Interbank Compose stack. Each bank retains its agent, gateway, policy, and collector. Stop preserves evidence. Proposed mode shows the private inference option.",
     note: "Source evidence describes local configuration. Hosted deployment and inference remain proposed options.",
   });
   hosting.cells.find((item) => item.id === "ib.host.endpoint")!.labelByMode = { implemented: "Configured model endpoint", proposed: "Proposed private inference" };

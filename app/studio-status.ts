@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Readiness } from "./studio-settings";
+import { useCasePackages } from "../config/use-cases";
 
 export type UseCaseHealth = {
   id: string;
@@ -38,16 +39,7 @@ export type StudioStatus = {
 export type Tone = "mint" | "amber" | "violet" | "blue";
 
 /** The service behind each live use case. */
-export const USE_CASE_SERVICE: Record<string, string> = {
-  "brahe-bank": "banking",
-  "fraud-modeling": "fraud",
-  "company-briefing": "briefing",
-  "market-research": "wealth",
-  "client-advisory": "wealth",
-  "sar-support": "sar",
-  "code-vulnerability": "vulnerability",
-  "interbank-a2a": "interbank",
-};
+export const USE_CASE_SERVICE: Record<string, string> = Object.fromEntries(useCasePackages.flatMap(item => item.runtime ? [[item.id, item.runtime.id]] : []));
 
 /** Polls the studio status; null until the first answer, or when the studio API is unavailable. */
 export function useStudioStatus(intervalMs = 10000) {

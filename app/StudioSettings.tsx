@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, CircleAlert, CircleCheck, Cpu, KeyRound, PlugZap, Plus, RefreshCw, RotateCcw, Save, ServerCog, Trash2, X } from "lucide-react";
 import { KEY_NAMES, MODEL_USE_CASES, POLICY_LABEL, PROVIDER_ID, chainFor, defaultPolicy, policyFor, validateRegistry, type ExternalPolicy, type ModelProvider, type ModelRegistry } from "./studio-models";
 import { SETTING_GROUPS, settingProblem, type Readiness, type SettingGroup, type SettingState } from "./studio-settings";
+import type { ServicesSnapshot } from "./runtime-contract";
 import "./studio-settings.css";
 
 const MODELS_API = "/api/studio/models";
@@ -17,11 +18,6 @@ export type ModelSnapshot = {
   unconfigured?: Record<string, string>; health?: Record<string, ProviderHealth>; routes?: Record<string, Route>;
 };
 type SettingsSnapshot = { file: string; settings: Record<string, SettingState>; readiness: Readiness[] };
-type ServiceRow = { id: string; label: string; port: number; up: boolean; detail?: string; managed: boolean; installed: boolean; install: string; pending: string[] | null };
-type ServicesSnapshot = {
-  services: ServiceRow[];
-  interbank: { id: string; label: string; port: number; up: boolean; pending: string[] | null; job: { state: "idle" | "running" | "succeeded" | "failed"; log: string[]; finishedAt?: string } };
-};
 type Check = { state: "running" } | { state: "done"; ok: boolean; text: string };
 
 const KIND_LABEL = { openai: "OpenAI API", vllm: "vLLM" } as const;
@@ -72,7 +68,7 @@ export default function StudioSettings() {
         <div>
           <span className="breadcrumb">FSI AI Demo Studio <span>/</span> Studio settings</span>
           <h1>Studio settings</h1>
-          <p>Bring your own models and credentials. Everything is saved to <code>{settings.file}</code> on this machine, which every demo service reads. Keys are write-only: once saved, the studio shows only whether each one is set.</p>
+          <p>Bring your own models and credentials. Everything is saved to <code>{settings.file}</code> on this machine. The operator supplies scoped settings to each container stack. Keys are write-only: once saved, the studio shows only whether each one is set.</p>
         </div>
       </div>
       <ReadinessPanel rows={settings.readiness} />
@@ -107,72 +103,66 @@ function ServicesPanel() {
   const [status, setStatus] = useState<ServicesSnapshot | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
+  const [logs, setLogs] = useState<Record<string, string>>({});
+  const runningJob = status?.services.some(row => row.job?.state === "running");
   const refresh = useCallback(() => {
-    getJson<ServicesSnapshot>(SERVICES_API).then((next) => { setStatus(next); setError(null); }).catch(() => setError("The studio is restarting or unreachable; retrying."));
+    getJson<ServicesSnapshot>(SERVICES_API).then(setStatus).catch(() => setError("The Studio operator is unreachable. Retrying."));
   }, []);
   useEffect(() => {
     refresh();
-    const timer = setInterval(refresh, status?.interbank.job.state === "running" ? 1500 : 4000);
+    const timer = setInterval(refresh, runningJob ? 1500 : 4000);
     return () => clearInterval(timer);
-  }, [refresh, status?.interbank.job.state]);
-
-  const act = async (action: string, ids?: string[]) => {
-    setBusy(action);
-    setError(null);
-    try { setStatus(await sendJson<ServicesSnapshot>(SERVICES_API, "POST", { action, ids })); } catch (failure) { setError((failure as Error).message); } finally { setBusy(null); }
+  }, [refresh, runningJob]);
+  const act = async (action: string, ids?: string[], component?: string) => {
+    setBusy(action); setError(null);
+    try {
+      if (action === "logs" && ids) {
+        const result = await sendJson<{ log: string }>(SERVICES_API, "POST", { action, ids });
+        setLogs(previous => ({ ...previous, [ids[0]]: result.log || "No container logs yet." }));
+      } else setStatus(await sendJson<ServicesSnapshot>(SERVICES_API, "POST", { action, ids, ...(component ? { component } : {}) }));
+    } catch (failure) { setError((failure as Error).message); }
+    finally { setBusy(null); }
   };
-
-  const pendingCount = status?.services.reduce((total, row) => total + (row.managed && row.pending ? row.pending.length : 0), 0) ?? 0;
-  const job = status?.interbank.job;
-  const dockerUnavailable = job?.state === "failed" && job.log.some((line) => /Docker is not|Cannot connect to the Docker daemon|docker daemon running/i.test(line));
-
-  return (
-    <section className="st-section" aria-labelledby="st-services">
-      <div className="section-heading">
-        <div><span className="eyebrow">APPLY CHANGES</span><h2 id="st-services">Services</h2></div>
-        <button className="primary-button" disabled={!status || busy !== null} onClick={() => act("apply")}><RefreshCw size={16} /> {busy === "apply" ? "Restarting…" : pendingCount ? `Apply ${pendingCount} change${pendingCount === 1 ? "" : "s"}` : "Restart services"}</button>
-      </div>
-      <p className="st-muted st-intro">Services read their credentials when they start. Apply restarts the services this studio launched and starts any that are stopped; services started elsewhere must be restarted where they run.</p>
-      {error && <div className="st-banner"><CircleAlert size={18} /><span>{error}</span></div>}
-      <div className="st-table" role="table" aria-label="Services">
-        {status?.services.map((row) => (
-          <div className="st-row services" role="row" key={row.id}>
-            <strong role="cell">{row.label}</strong>
-            <span role="cell" className="st-muted">:{row.port}</span>
-            <span role="cell" className={`st-state ${row.up ? "up" : "down"}`}>
-              <ServerCog size={15} />
-              {!row.installed ? <>Not installed · <code>{row.install}</code></>
-                : row.up ? (row.managed ? "Running (started by the studio)" : "Running outside the studio") : row.managed ? "Starting…" : "Stopped"}
-            </span>
-            <span role="cell" className="st-muted">
-              {row.managed && row.pending?.length ? <span className="st-pending">{row.pending.length} change{row.pending.length === 1 ? "" : "s"} to apply</span>
-                : row.up && !row.managed ? "Restart it to apply settings" : row.managed ? "Up to date" : ""}
-            </span>
-          </div>
-        ))}
-        {status && (
-          <div className="st-row services" role="row">
-            <strong role="cell">{status.interbank.label}</strong>
-            <span role="cell" className="st-muted">:{status.interbank.port}</span>
-            <span role="cell" className={`st-state ${status.interbank.up ? "up" : "down"}`}><ServerCog size={15} />{job?.state === "running" ? "Rebuilding…" : status.interbank.up ? "Running" : "Stopped"}</span>
+  const pendingCount = status?.services.reduce((total, row) => total + (row.up ? row.pending?.length ?? 0 : 0), 0) ?? 0;
+  const available = status?.docker?.ready !== false;
+  return <section className="st-section" aria-labelledby="st-services">
+    <div className="section-heading">
+      <div><span className="eyebrow">USE-CASE CONTAINERS</span><h2 id="st-services">Services</h2></div>
+      <button className="primary-button" disabled={!status || !available || busy !== null || runningJob} onClick={() => act("apply")}><RefreshCw size={16} />{pendingCount ? `Apply ${pendingCount} change${pendingCount === 1 ? "" : "s"}` : "Apply to running stacks"}</button>
+    </div>
+    <p className="st-muted st-intro">Start the demos you need. Each stack has its own containers and saved data. Stop preserves saved runs. Apply recreates running stacks with your saved credentials.</p>
+    {status?.docker && !available && <p className="st-banner" role="alert">{status.docker.detail}</p>}
+    {error && <p className="st-banner" role="alert">{error}</p>}
+    <div className="st-table" role="table" aria-label="Services">
+      {status?.services.map(row => {
+        const working = row.job?.state === "running";
+        const disabled = !available || busy !== null || working;
+        return <div className="st-stack" key={row.id}>
+          <div className="st-row services" role="row" aria-label={`${row.label} stack`}>
+            <strong role="cell">{row.label}</strong><span role="cell" className="st-muted">:{row.port}</span>
+            <span role="cell" className={`st-state ${row.up ? "up" : "down"}`}><ServerCog size={15} />{row.state ?? (row.up ? "Running" : "Stopped")}{row.up && !row.managed ? " · external service" : ""}</span>
             <span role="cell" className="st-actions">
-              {status.interbank.pending?.length ? <span className="st-pending">{status.interbank.pending.length} to apply</span> : status.interbank.pending === null ? <span className="st-muted">Rebuild to apply settings</span> : <span className="st-muted">Up to date</span>}
-              <button className="secondary-button" disabled={job?.state === "running" || busy !== null} onClick={() => act("rebuild-interbank")}><RefreshCw size={15} /> {status.interbank.up ? "Rebuild lab" : "Start lab"}</button>
+              {!!row.pending?.length && <span className="st-pending">{row.pending.length} change{row.pending.length === 1 ? "" : "s"} to apply</span>}
+              {!row.up && <button className="secondary-button" disabled={disabled} onClick={() => act("start", [row.id])}>Start</button>}
+              {row.managed && <button className="secondary-button" disabled={disabled} onClick={() => act("stop", [row.id])}>Stop</button>}
+              {row.managed && <button className="secondary-button" disabled={disabled} onClick={() => act("restart", [row.id])}>Restart</button>}
+              <button className="secondary-button" disabled={disabled || (row.up && !row.managed)} onClick={() => act("build", [row.id])}>Build</button>
+              <button className="secondary-button" disabled={disabled || !row.managed} onClick={() => act("logs", [row.id])}>Logs</button>
+              {row.controls && <button className="secondary-button" disabled={disabled} onClick={() => act("controls", [row.id])}>Register hosted controls</button>}
             </span>
           </div>
-        )}
-      </div>
-      {!status?.interbank.up && <p className="st-note">Interbank needs Docker Desktop running. Start its engine, then select Start lab. The other demos run directly on this machine.</p>}
-      {dockerUnavailable && !status?.interbank.up && <p className="st-banner" role="alert">Docker is not running or cannot be reached. Open Docker Desktop, wait for the engine to be ready, then select Start lab again.</p>}
-      {job && job.state !== "idle" && (
-        <details className="st-log" open={job.state !== "succeeded" && !status?.interbank.up && !dockerUnavailable}>
-          <summary>{job.state === "running" ? "Interbank rebuild running (about a minute)" : job.state === "succeeded" ? "Interbank lab rebuilt" : status?.interbank.up ? "Previous startup attempt · lab is now running" : "Startup details"}</summary>
-          <pre>{job.log.join("\n")}</pre>
-        </details>
-      )}
-    </section>
-  );
+          {row.detail && <p className="st-muted">{row.detail}</p>}
+          {row.components?.map(component => <div key={component.id} className="st-note"><strong>{component.label}</strong>: {component.requirements}. <button className="secondary-button" disabled={disabled} onClick={() => act("start-component", [row.id], component.id)}>Start {component.label}</button> <button className="secondary-button" disabled={disabled} onClick={() => act("stop-component", [row.id], component.id)}>Stop {component.label}</button></div>)}
+          {row.job && row.job.state !== "idle" && <details className="st-log" open={working || row.job.state === "failed"}>
+            <summary>{row.label}: {row.job.operation} {row.job.state}</summary><pre>{row.job.log.join("\n")}</pre>
+          </details>}
+          {logs[row.id] && <details className="st-log" open><summary>{row.label} container logs</summary><pre>{logs[row.id]}</pre></details>}
+        </div>;
+      })}
+    </div>
+    {status?.packages?.filter(item => item.mode === "illustrative").map(item => <p key={item.id} className="st-note">{item.title}: illustrative module with no executable backend.</p>)}
+    <p className="st-note">Stacks keep running when Studio closes. Interbank hosted controls are registered separately through the explicit button above.</p>
+  </section>;
 }
 
 function SettingsGroupPanel({ group, states, onSaved }: { group: SettingGroup; states: Record<string, SettingState>; onSaved: (next: SettingsSnapshot) => void }) {
@@ -360,7 +350,7 @@ function ModelsPanel({ modelKeys, onKeysSaved, onModelsSaved }: { modelKeys: Rec
           <button className="primary-button" disabled={(!dirty && snapshot.saved) || saving || Boolean(problem)} onClick={save}><Save size={16} /> {saving ? "Saving…" : "Save models"}</button>
         </div>
       </div>
-      <p className="st-muted st-intro">Every live use case tries its chain in order and uses the first backend that answers a health check, so one setting serves all demos: for example Sparky when it is up, otherwise OpenAI. Each response reports which model answered. Changes apply on the next request; no restart needed (interbank needs one lab rebuild).</p>
+      <p className="st-muted st-intro">Every live use case tries its chain in order and uses the first backend that answers a health check, so one setting serves all demos: for example Sparky when it is up, otherwise OpenAI. Each response reports which model answered. Model routes apply on the next request. Apply saved credential changes to running stacks.</p>
 
       {snapshot.problem ? <div className="st-banner danger"><CircleAlert size={18} /><span>The saved file at <code>{snapshot.file}</code> was rejected ({snapshot.problem}). Services use the committed defaults until you save again.</span></div>
         : !snapshot.saved ? <div className="st-banner"><CircleAlert size={18} /><span>Nothing saved yet, so every service uses the committed defaults in <code>{snapshot.defaultsFile ?? "config/studio-models.default.json"}</code>, shown below. Saving writes <code>{snapshot.file}</code>.</span></div>

@@ -32,8 +32,8 @@ function serviceHealth(id: string, label: string, raw: unknown): UseCaseHealth {
   const model = object(health.nim ?? health.model);
   const answering = object(object(health.backend).answering);
   const fallbackModel = model.fallback ? model : answering.fallback ? answering : null;
-  const ready = health.ready !== false;
-  const detail = ready ? "" : text(health.detail) || (text(model.status) === "down" ? "Model endpoint is not answering" : text(health.error) || "Not ready");
+  const ready = health.ready !== false && controls.status !== "unavailable";
+  const detail = ready ? "" : text(health.detail) || text(controls.detail) || (controls.status === "unavailable" ? "Hosted controls are unavailable" : text(model.status) === "down" ? "Model endpoint is not answering" : text(health.error) || "Not ready");
   return {
     id, label, up: true, ready, detail,
     fallback: id === "fraud" && health.backend && health.backend !== "live" ? text(health.backend_label) || "Sample scores" : fallbackModel ? text(fallbackModel.label) || "Secondary model" : null,

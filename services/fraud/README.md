@@ -8,17 +8,27 @@ an SSH tunnel, or replays recorded scores.
 Everything generated lives in the git-ignored `services/fraud/.cache/`. Never commit raw data,
 graphs, or weights.
 
-## Studio adapter setup
+## Setup and startup
 
-Complete the [live Studio setup](../../README.md#start-the-live-studio), then run
-`npm run dev:studio` and open **Card fraud triage**. `npm run fraud:install`
-reinstalls this adapter. It listens on `127.0.0.1:8012` behind `/api/fraud` and
-reads root `.env`. Stop the managed runtime with Ctrl+C.
+Follow the [Studio setup](../../README.md#start-studio-and-selected-demos), then
+start **Card fraud triage** in **Settings → Services**. Node and Docker Compose 2.30+
+are required; Python runs inside the image. The API uses loopback port 8012
+and Studio's `/api/fraud` proxy in development and production.
 
-For standalone development, run
+```sh
+npm run studio:containers -- start fraud
+npm run studio:containers -- logs fraud
+npm run studio:containers -- stop fraud
+```
+
+Health is at `http://localhost:4200/api/fraud/health`. Stop preserves the
+stack's data volume; closing Studio leaves its containers running. Credentials
+come from the operator's scoped root configuration and shared model settings.
+
+For optional source development, install with `npm run fraud:install`, run
 `(cd services/fraud && .venv/bin/python -m uvicorn server:app --host 127.0.0.1 --port 8012)`
-and `npm run dev` in separate terminals. Stop each with Ctrl+C. Health is at
-`http://localhost:4200/api/fraud/health`; tests use `npm run fraud:test`.
+and `npm run dev` in separate terminals. Stop each with Ctrl+C. Source tests use
+`npm run fraud:test`. Container data and source-mode `.cache/` are separate.
 
 The adapter and recorded/sample scoring work on the Studio CPU. Live graph scores
 require the separate NVIDIA scorer described below. Set `FRAUD_SCORE_URL` to its
@@ -39,10 +49,10 @@ To enable hosted controls, create your observability project/stream, review
 `controls.py`, and run the explicit tenant-changing command:
 
 ```sh
-(cd services/fraud && .venv/bin/python setup_controls.py)
+npm run studio:containers -- controls fraud
 ```
 
-Restart through **Services → Apply**. The run identifies local checks or hosted
+Use **Services → Apply to running stacks** or Restart. The run identifies local checks or hosted
 controls and reports actual trace export. See
 [configuration](../../docs/CONFIGURATION.md) for shared settings.
 

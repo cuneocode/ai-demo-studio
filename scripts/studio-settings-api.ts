@@ -4,7 +4,7 @@ import { SETTING_FIELDS, readiness, settingProblem, type SettingState } from "..
 import { modelState } from "./studio-models-api.ts";
 import { envValue, updateEnvFile } from "./studio-env.ts";
 import { fetchText, networkProblem, readJson, send, writeRefusal } from "./studio-http.ts";
-import { SERVICES, apply, rebuildInterbank, serviceStatus, startMissing } from "./studio-services.ts";
+import { apply, queueOperation, runtimeLogs, serviceStatus, type Operation } from "./studio-services.ts";
 
 function settingStates(): Record<string, SettingState> {
   return Object.fromEntries(Object.values(SETTING_FIELDS).map((field) => {
@@ -91,14 +91,19 @@ async function check(input: unknown) {
 }
 
 async function services(input: unknown) {
-  const body = input as { action?: string; ids?: unknown[] } | null;
-  const ids = (body?.ids ?? SERVICES.map((spec) => spec.id)).filter((id): id is string => typeof id === "string" && SERVICES.some((spec) => spec.id === id));
-  if (body?.action === "apply") return { status: 200, body: { ...(await apply(ids)), ...(await serviceStatus()) } };
-  if (body?.action === "start") return { status: 200, body: { started: await startMissing(ids), ...(await serviceStatus()) } };
-  if (body?.action === "rebuild-interbank") {
-    return rebuildInterbank() ? { status: 202, body: await serviceStatus() } : { status: 409, body: { error: "A rebuild is already running." } };
-  }
-  return { status: 422, body: { error: "Unknown action." } };
+  const body = input as { action?: string; ids?: unknown[]; component?: string } | null;
+  if (process.env.STUDIO_PREVIEW === "1") return { status: 409, body: { error: "Container controls are disabled in recorded preview." } };
+  if (body?.ids && (!Array.isArray(body.ids) || body.ids.some(id => typeof id !== "string"))) return { status: 422, body: { error: "Choose registered runtime ids." } };
+  const ids = body?.ids as string[] | undefined;
+  try {
+    if (body?.action === "apply") return { status: 202, body: { ...(await apply(ids)), ...(await serviceStatus()) } };
+    if (body?.action === "logs" && ids?.length === 1) return { status: 200, body: { log: await runtimeLogs(ids[0]) } };
+    if (["start", "stop", "restart", "build", "controls", "start-component", "stop-component"].includes(body?.action ?? "") && ids?.length) {
+      queueOperation(ids, body!.action as Operation, body?.component);
+      return { status: 202, body: await serviceStatus() };
+    }
+    return { status: 422, body: { error: "Choose a stack and Start, Stop, Restart, Build, or Logs." } };
+  } catch (error) { return { status: 409, body: { error: (error as Error).message } }; }
 }
 
 export async function handleSettings(request: IncomingMessage, response: ServerResponse, route: "settings" | "check" | "services") {

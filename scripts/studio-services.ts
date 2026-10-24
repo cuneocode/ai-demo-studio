@@ -1,164 +1,225 @@
-// The Python services and the interbank lab, as the studio sees them: health,
-// start and restart for services the studio launched, and the lab rebuild job.
-import { spawn, type ChildProcess } from "node:child_process";
+// Trusted host operator. Only registered Compose projects can be controlled by the dashboard.
+import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync } from "node:fs";
-import { SETTING_FIELDS } from "../app/studio-settings.ts";
+import { existsSync, mkdirSync, readFileSync, statfsSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { createConnection } from "node:net";
+import { runtimes, useCasePackages, type RuntimeSpec } from "../config/use-cases.ts";
 import { ROOT, envValue, readEnvFile, shellEnv } from "./studio-env.ts";
 import { fetchText } from "./studio-http.ts";
+import { prepareContainerConfig, runtimeDirectory } from "./studio-container-config.ts";
 
-export type ServiceSpec = { id: string; label: string; port: number; health: string; directory?: string; reads: string[] };
+export const SERVICES = runtimes.filter(spec => spec.id !== "interbank");
+export const INTERBANK = runtimes.find(spec => spec.id === "interbank")!;
+export type ServiceSpec = RuntimeSpec;
+export type Operation = "start" | "stop" | "restart" | "build" | "controls" | "start-component" | "stop-component";
+type Job = { state: "running" | "succeeded" | "failed"; operation: Operation; log: string[]; startedAt: string; finishedAt?: string };
+type State = { jobs: Map<string, Job>; active: Map<string, Promise<void>>; queue?: Promise<void> };
+const globalState = globalThis as typeof globalThis & { __studioContainers?: State };
+const state: State = globalState.__studioContainers ??= { jobs: new Map(), active: new Map() };
+const checkout = createHash("sha256").update(ROOT).digest("hex").slice(0, 8);
+export const projectName = (spec: RuntimeSpec) => `fsi-${checkout}-${spec.id}`;
+const snapshotFile = (spec: RuntimeSpec) => path.join(runtimeDirectory(), `${spec.id}.applied.json`);
 
-const MODEL_KEYS = ["OPENAI_API_KEY", "VLLM_API_KEY", "NIM_API_KEY", "NVIDIA_API_KEY"];
-const AIDEFENSE = ["AIDEFENSE_API_KEY", "AIDEFENSE_REGION"];
-const OTEL = ["SPLUNK_REALM", "SPLUNK_ACCESS_TOKEN"];
-const GALILEO = ["GALILEO_API_KEY", "GALILEO_CONSOLE_URL", "GALILEO_PROJECT", "GALILEO_LOG_STREAM"];
-
-export const SERVICES: ServiceSpec[] = [
-  { id: "vulnerability", label: "Code vulnerability analysis", port: 8016, health: "/api/vulnerability/health", directory: "vulnerability", reads: [...GALILEO, "AGENT_CONTROL_URL", ...OTEL, ...MODEL_KEYS] },
-  { id: "banking", label: "Brahe Bank", port: 8011, health: "/api/banking/health", directory: "banking", reads: [...GALILEO, "AGENT_CONTROL_URL", ...AIDEFENSE, "AIDEFENSE_MODE", ...OTEL, ...MODEL_KEYS, "PINECONE_API_KEY"] },
-  { id: "fraud", label: "Card fraud triage", port: 8012, health: "/api/fraud/health", directory: "fraud", reads: [...GALILEO, "AGENT_CONTROL_URL", ...AIDEFENSE, "AIDEFENSE_MODE", ...OTEL, ...MODEL_KEYS] },
-  { id: "briefing", label: "Company briefing", port: 8013, health: "/api/briefing/health", directory: "briefing", reads: [...AIDEFENSE, "BRIEFING_AIDEFENSE_MODE", ...OTEL, ...MODEL_KEYS, "SEC_USER_AGENT"] },
-  { id: "wealth", label: "Wealth research and advisory", port: 8014, health: "/api/wealth/health", directory: "wealth", reads: [...GALILEO, ...AIDEFENSE, "WEALTH_AIDEFENSE_MODE", ...OTEL, ...MODEL_KEYS, "FRED_API_KEY"] },
-  { id: "sar", label: "SAR investigation", port: 8015, health: "/api/sar/health", directory: "sar", reads: [...GALILEO, "AGENT_CONTROL_URL", ...AIDEFENSE, "AIDEFENSE_MODE", "SAR_AIDEFENSE_MODE", ...OTEL, ...MODEL_KEYS] },
-];
-export const INTERBANK: ServiceSpec = {
-  id: "interbank", label: "Interbank lab (Docker)", port: 8088, health: "/api/health",
-  reads: ["GALILEO_API_KEY", "GALILEO_CONSOLE_URL", "AGENT_CONTROL_URL", ...AIDEFENSE, ...MODEL_KEYS],
-};
-const SPECS = new Map([...SERVICES, INTERBANK].map((spec) => [spec.id, spec]));
-
-type Job = { state: "idle" | "running" | "succeeded" | "failed"; log: string[]; startedAt?: string; finishedAt?: string };
-
-type State = {
-  children: Map<string, ChildProcess>;
-  applied: Map<string, Record<string, string>>;
-  interbank: Job;
-  exitHook?: boolean;
-};
-
-// Survives Vite config reloads within one process.
-const globalState = globalThis as typeof globalThis & { __studioServices?: State };
-const state: State = globalState.__studioServices ??= { children: new Map(), applied: new Map(), interbank: { state: "idle", log: [] } };
-if (!state.exitHook) {
-  state.exitHook = true;
-  process.on("exit", () => state.children.forEach((child) => child.kill("SIGTERM")));
-}
-
-/** Hashes of the settings a process started with, never the values. */
-function settingHashes(): Record<string, string> {
-  return Object.fromEntries(Object.keys(SETTING_FIELDS).map((name) => [name, createHash("sha256").update(envValue(name)).digest("hex")]));
-}
-
-/** Settings changed since the process last started from the studio, or null if unknown. */
-function pendingFor(id: string): string[] | null {
-  const applied = state.applied.get(id);
-  if (!applied) return null;
-  const now = settingHashes();
-  return (SPECS.get(id)?.reads ?? Object.keys(now)).filter((name) => now[name] !== applied[name]);
-}
-
-const python = (spec: ServiceSpec) => `${ROOT}services/${spec.directory}/.venv/bin/python`;
-
-async function healthy(spec: ServiceSpec): Promise<{ up: boolean; detail: string }> {
-  try {
-    const { status } = await fetchText(`http://127.0.0.1:${spec.port}${spec.health}`, { timeout: 1500 });
-    return { up: status >= 200 && status < 500, detail: status < 500 ? "" : `Health answered ${status}` };
-  } catch {
-    return { up: false, detail: "" };
+function logRedactor() {
+  const names = new Set([...readEnvFile().keys(), ...Object.keys(shellEnv())]);
+  const secrets: string[] = [];
+  for (const name of names) {
+    if (!/(?:KEY|TOKEN|SECRET|PASSWORD)/.test(name)) continue;
+    const value = envValue(name);
+    if (value.length >= 4) secrets.push(value);
   }
-}
-
-function launch(spec: ServiceSpec) {
-  // Services load .env themselves, so they get the shell environment without its keys.
-  const env: NodeJS.ProcessEnv = { ...shellEnv(), PYTHONUNBUFFERED: "1" };
-  for (const name of readEnvFile().keys()) delete env[name];
-  const child = spawn(python(spec), ["-m", "uvicorn", "server:app", "--host", "127.0.0.1", "--port", String(spec.port)], {
-    cwd: `${ROOT}services/${spec.directory}`, stdio: "inherit", env,
-  });
-  state.children.set(spec.id, child);
-  state.applied.set(spec.id, settingHashes());
-  child.on("exit", () => { if (state.children.get(spec.id) === child) state.children.delete(spec.id); });
-}
-
-function stop(id: string): Promise<void> {
-  const child = state.children.get(id);
-  if (!child || child.exitCode !== null) return Promise.resolve();
-  return new Promise((resolve) => {
-    const timer = setTimeout(() => child.kill("SIGKILL"), 5000);
-    child.once("exit", () => { clearTimeout(timer); resolve(); });
-    child.kill("SIGTERM");
-  });
-}
-
-export async function stopAll() {
-  await Promise.all([...state.children.keys()].map(stop));
-}
-
-/** Starts every installed service that is not already answering. */
-export async function startMissing(ids = SERVICES.map((spec) => spec.id)) {
-  const started: string[] = [];
-  for (const spec of SERVICES.filter((item) => ids.includes(item.id))) {
-    if (state.children.has(spec.id) || !existsSync(python(spec)) || (await healthy(spec)).up) continue;
-    launch(spec);
-    started.push(spec.id);
-  }
-  return started;
-}
-
-/** Restarts the services this studio launched and starts the rest; others are left alone. */
-export async function apply(ids = SERVICES.map((spec) => spec.id)) {
-  const restarted: string[] = [];
-  for (const spec of SERVICES.filter((item) => ids.includes(item.id) && state.children.has(item.id))) {
-    await stop(spec.id);
-    launch(spec);
-    restarted.push(spec.id);
-  }
-  return { restarted, started: await startMissing(ids) };
-}
-
-const ANSI = /\u001b\[[0-9;]*[A-Za-z]/g;
-
-/** npm run interbank:up: rebuilds the image, refreshes vendor settings, recreates containers. */
-export function rebuildInterbank() {
-  if (state.interbank.state === "running") return false;
-  const job: Job = { state: "running", log: [], startedAt: new Date().toISOString() };
-  state.interbank = job;
-  const snapshot = settingHashes();
-  const child = spawn("npm", ["run", "interbank:up"], { cwd: ROOT, env: shellEnv(), stdio: ["ignore", "pipe", "pipe"] });
-  const secrets = Object.values(SETTING_FIELDS).filter((field) => field.secret).map((field) => envValue(field.name)).filter((value) => value.length >= 8);
-  const redact = (line: string) => secrets.reduce((text, secret) => text.split(secret).join("[redacted]"), line);
-  const collect = (chunk: Buffer) => {
-    job.log.push(...chunk.toString("utf8").replace(ANSI, "").split(/\r?\n/).filter((line) => line.trim()).map(redact));
-    if (job.log.length > 200) job.log.splice(0, job.log.length - 200);
+  return (value: string) => {
+    for (const secret of secrets) value = value.split(secret).join("[redacted]");
+    return value.replace(/\u001b\[[0-9;]*[A-Za-z]/g, "");
   };
-  child.stdout.on("data", collect);
-  child.stderr.on("data", collect);
-  child.on("error", () => { job.state = "failed"; job.finishedAt = new Date().toISOString(); });
-  child.on("exit", (code) => {
-    job.state = code === 0 ? "succeeded" : "failed";
-    job.finishedAt = new Date().toISOString();
-    if (code === 0) state.applied.set(INTERBANK.id, snapshot);
-  });
-  return true;
 }
+const redact = (value: string) => logRedactor()(value);
 
-export async function serviceStatus() {
-  const services = await Promise.all(SERVICES.map(async (spec) => {
-    const health = await healthy(spec);
-    const child = state.children.get(spec.id);
-    return {
-      id: spec.id, label: spec.label, port: spec.port, up: health.up, detail: health.detail,
-      managed: Boolean(child), installed: existsSync(python(spec)),
-      install: `npm run ${spec.directory}:install`, pending: pendingFor(spec.id),
+function execute(args: string[], job?: Job, timeout = 1_800_000): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.env.STUDIO_DOCKER_BIN || "docker", args, {
+      cwd: ROOT, env: { ...shellEnv(), STUDIO_RUNTIME_DIR: runtimeDirectory(), LAB_UID: String(process.getuid?.() ?? 10001), LAB_GID: String(process.getgid?.() ?? 10001), COMPOSE_BAKE: "false", COMPOSE_PARALLEL_LIMIT: "1" },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let output = "";
+    let pendingLine = "";
+    const cleanLog = logRedactor();
+    const append = (value: string) => {
+      const clean = cleanLog(value);
+      output = (output + clean).slice(-500_000);
+      if (job) { job.log.push(...clean.split(/\r?\n/).filter(Boolean)); job.log.splice(0, Math.max(0, job.log.length - 150)); }
     };
-  }));
-  const lab = await healthy(INTERBANK);
-  return {
-    services,
-    interbank: {
-      id: INTERBANK.id, label: INTERBANK.label, port: INTERBANK.port, up: lab.up, pending: pendingFor(INTERBANK.id),
-      job: { state: state.interbank.state, startedAt: state.interbank.startedAt, finishedAt: state.interbank.finishedAt, log: state.interbank.log.slice(-40) },
-    },
-  };
+    const collect = (chunk: Buffer) => {
+      pendingLine += chunk.toString("utf8");
+      const end = pendingLine.lastIndexOf("\n");
+      if (end >= 0) { append(pendingLine.slice(0, end + 1)); pendingLine = pendingLine.slice(end + 1); }
+      if (pendingLine.length > 500_000) pendingLine = "[Oversized log line omitted]";
+    };
+    child.stdout.on("data", collect); child.stderr.on("data", collect);
+    const timer = setTimeout(() => { child.kill("SIGTERM"); reject(new Error("Docker operation timed out. Check the stack logs.")); }, timeout);
+    child.on("error", () => { clearTimeout(timer); reject(new Error("Docker is unavailable. Install Docker with Compose and start its engine.")); });
+    child.on("close", code => { clearTimeout(timer); append(pendingLine); if (code === 0) resolve(output); else reject(new Error(output.trim().split("\n").slice(-8).join("\n") || `Docker exited with status ${code}.`)); });
+  });
 }
+
+export const composeArgs = (spec: RuntimeSpec, args: string[]) => ["compose", "--project-name", projectName(spec), "--project-directory", path.dirname(path.join(ROOT, spec.compose)), "--file", path.join(ROOT, spec.compose), ...args];
+const compose = (spec: RuntimeSpec, args: string[], job?: Job) => execute(composeArgs(spec, args), job, ["ps", "logs", "config"].includes(args[0]) ? 10_000 : 1_800_000);
+
+function hashes(spec: RuntimeSpec) {
+  const keys = new Set([...readEnvFile().keys(), ...Object.keys(shellEnv())]);
+  return Object.fromEntries([...keys].filter(key => spec.environment.some(rule => rule.endsWith("_") ? key.startsWith(rule) : key === rule)).sort().map(key => [key, createHash("sha256").update(envValue(key)).digest("hex")]));
+}
+function pending(spec: RuntimeSpec): string[] | null {
+  try {
+    const applied = JSON.parse(readFileSync(snapshotFile(spec), "utf8")) as Record<string, string>;
+    const current = hashes(spec);
+    return [...new Set([...Object.keys(applied), ...Object.keys(current)])].filter(key => applied[key] !== current[key]);
+  } catch { return null; }
+}
+
+async function health(spec: RuntimeSpec) {
+  try {
+    const response = await fetchText(`http://127.0.0.1:${spec.port}${spec.health}`, { timeout: 2000 });
+    const body = response.status === 200 ? JSON.parse(response.text) : null;
+    const controlsBlocked = body?.controls?.status === "unavailable";
+    return { up: Boolean(body && typeof body === "object"), ready: Boolean(body && body.ready !== false && !controlsBlocked), detail: body?.error || body?.detail || (controlsBlocked ? body.controls.detail || "Hosted controls are unavailable." : "") };
+  } catch { return { up: false, ready: false, detail: "" }; }
+}
+
+function portInUse(port: number): Promise<boolean> {
+  return new Promise(resolve => {
+    const socket = createConnection({ host: "127.0.0.1", port });
+    const finish = (open: boolean) => { socket.destroy(); resolve(open); };
+    socket.once("connect", () => finish(true));
+    socket.once("error", () => finish(false));
+    socket.setTimeout(1000, () => finish(false));
+  });
+}
+
+type Container = { Service: string; State: string; Health?: string; Name?: string };
+async function containers(spec: RuntimeSpec): Promise<Container[]> {
+  // Discovery must work before scoped env files exist on a fresh checkout.
+  const output = await execute(["ps", "--all", "--filter", `label=com.docker.compose.project=${projectName(spec)}`, "--format", "{{json .}}"], undefined, 10_000);
+  if (!output.trim()) return [];
+  return output.trim().split("\n").flatMap(line => {
+    const value = JSON.parse(line);
+    const rows: Record<string, unknown>[] = Array.isArray(value) ? value : [value];
+    return rows.map(row => ({
+      Service: String(row.Labels ?? "").split(",").find(label => label.startsWith("com.docker.compose.service="))?.split("=")[1] ?? "",
+      State: String(row.State ?? ""), Name: String(row.Names ?? ""),
+    }));
+  });
+}
+
+async function prepare(spec: RuntimeSpec, job?: Job, initialize = true) {
+  prepareContainerConfig(spec);
+  if (spec.id !== "interbank") return;
+  const directory = path.join(ROOT, "services/interbank/.runtime");
+  mkdirSync(directory, { recursive: true });
+  for (const relative of ["runs", "telemetry/bank-a", "telemetry/bank-b"]) mkdirSync(path.join(ROOT, "services/interbank/evidence", relative), { recursive: true });
+  for (const file of ["vendor.env", "model.env"]) if (!existsSync(path.join(directory, file))) writeFileSync(path.join(directory, file), "", { mode: 0o600 });
+  // The Python services share one image. Build it once before the helper runs.
+  await compose(spec, ["build", "bank-a-agent"], job);
+  if (initialize) await compose(spec, ["run", "--rm", "--no-deps", "setup"], job);
+}
+
+/** Stop preserves named volumes and saved runs. Registration of hosted controls is explicit. */
+export async function perform(spec: RuntimeSpec, operation: Operation, job?: Job, componentId?: string) {
+  if (state.active.size > 1) job?.log.push("Queued behind the current container operation.");
+  const active = (state.queue ?? Promise.resolve()).then(() => performNow(spec, operation, job, componentId));
+  state.queue = active.catch(() => {});
+  return active;
+}
+
+async function performNow(spec: RuntimeSpec, operation: Operation, job?: Job, componentId?: string) {
+  if (process.env.STUDIO_PREVIEW === "1") throw new Error("Container controls are disabled in recorded preview.");
+  await execute(["info", "--format", "{{.ServerVersion}}"], undefined, 10_000);
+  if (operation !== "stop" && operation !== "stop-component") {
+    const disk = statfsSync(ROOT);
+    const available = disk.bavail * disk.bsize / 1024 ** 3;
+    const minimum = Number(process.env.STUDIO_MIN_FREE_GB ?? 15);
+    if (available < minimum) throw new Error(`Free disk space is ${available.toFixed(1)} GB. Container operations require at least ${minimum} GB free; allow 30 GB for the full suite.`);
+  }
+  if (operation === "stop") { await compose(spec, ["--profile", "*", "stop", "--timeout", "25"], job); return; }
+  if (operation === "stop-component") {
+    const component = spec.components?.find(item => item.id === componentId);
+    if (!component) throw new Error("Choose a registered component.");
+    await compose(spec, ["--profile", component.profile, "stop", "--timeout", "25", ...component.services], job);
+    return;
+  }
+  if (operation === "start" || operation === "restart" || operation === "controls") {
+    const owned = await containers(spec);
+    const ownsApi = owned.some(container => container.Service === spec.service && container.State === "running");
+    if (!ownsApi && await portInUse(spec.port)) throw new Error(`Port ${spec.port} is used by a service outside this stack. Stop that service before starting this package.`);
+  }
+  await prepare(spec, job, operation !== "build");
+  if (operation === "start-component") {
+    const component = spec.components?.find(item => item.id === componentId);
+    if (!component) throw new Error("Choose a registered component.");
+    await compose(spec, ["--profile", component.profile, "up", "--detach", ...component.services], job);
+    return;
+  }
+  if (operation === "build") { if (spec.id !== "interbank") await compose(spec, ["build"], job); return; }
+  if (operation === "controls") {
+    if (!spec.controls) throw new Error("This package has no hosted policy registration.");
+    await compose(spec, ["run", "--build", "--rm", "--no-deps", spec.id === "interbank" ? "setup" : spec.service, ...spec.controls], job);
+    return;
+  }
+  await compose(spec, ["up", "--detach", spec.id === "interbank" ? "--no-build" : "--build", "--wait", "--wait-timeout", "240", ...(operation === "restart" ? ["--force-recreate"] : [])], job);
+  if (!(await health(spec)).up) throw new Error("Containers started, but the application API is not responding. Open the stack logs.");
+  writeFileSync(snapshotFile(spec), JSON.stringify(hashes(spec)), { mode: 0o600 });
+}
+
+export function queueOperation(ids: string[], operation: Operation, componentId?: string) {
+  const selected = runtimes.filter(spec => ids.includes(spec.id));
+  if (!selected.length || ids.some(id => !runtimes.some(spec => spec.id === id))) throw new Error("Choose a registered use-case runtime.");
+  if (selected.some(spec => state.active.has(spec.id))) throw new Error("A selected stack already has an operation in progress.");
+  for (const spec of selected) {
+    const job: Job = { state: "running", operation, log: [], startedAt: new Date().toISOString() };
+    state.jobs.set(spec.id, job);
+    const active = perform(spec, operation, job, componentId).then(() => { job.state = "succeeded"; }).catch(error => { job.state = "failed"; job.log.push(redact((error as Error).message)); }).finally(() => { job.finishedAt = new Date().toISOString(); state.active.delete(spec.id); });
+    state.active.set(spec.id, active);
+  }
+  return selected.map(spec => spec.id);
+}
+
+export async function runtimeLogs(id: string) {
+  const spec = runtimes.find(item => item.id === id);
+  if (!spec) throw new Error("Unknown use-case runtime.");
+  return redact(await compose(spec, ["logs", "--no-color", "--tail", "80"]));
+}
+
+let statusRequest: Promise<Awaited<ReturnType<typeof loadServiceStatus>>> | undefined;
+export function serviceStatus() {
+  if (!statusRequest) {
+    statusRequest = loadServiceStatus().finally(() => { statusRequest = undefined; });
+  }
+  return statusRequest;
+}
+
+async function loadServiceStatus() {
+  let docker = { ready: true, detail: "Docker Compose available" };
+  if (process.env.STUDIO_PREVIEW === "1") docker = { ready: false, detail: "Recorded preview" };
+  else try { await execute(["info", "--format", "{{.ServerVersion}}"], undefined, 5000); }
+  catch (error) { docker = { ready: false, detail: (error as Error).message }; }
+  const services = await Promise.all(runtimes.map(async spec => {
+    const [current, owned] = await Promise.all([process.env.STUDIO_PREVIEW === "1" ? Promise.resolve({ up: false, ready: false, detail: "Recorded preview" }) : health(spec), docker.ready ? containers(spec).catch(() => []) : Promise.resolve([])]);
+    const job = state.jobs.get(spec.id);
+    return { id: spec.id, label: spec.label, port: spec.port, ...current, managed: owned.length > 0, installed: true,
+      project: projectName(spec), pending: owned.length ? pending(spec) : null, containers: owned, controls: Boolean(spec.controls), components: spec.components,
+      state: job?.state === "running" ? job.operation === "stop" ? "stopping" : job.operation === "build" ? "building" : "starting" : owned.some(item => item.State === "running") ? current.ready ? "ready" : "blocked" : "stopped",
+      job: job ?? { state: "idle", log: [] }, install: "npm run studio:install" };
+  }));
+  return { docker, services, interbank: services.find(spec => spec.id === "interbank")!, packages: useCasePackages.map(({ id, title, mode, runtime }) => ({ id, title, mode, runtime: runtime?.id ?? null })) };
+}
+
+// Every demo starts through an explicit dashboard action. Containers outlive the dashboard.
+export async function startMissing(ids: string[] = []) { return ids.length ? queueOperation(ids, "start") : []; }
+export async function apply(ids?: string[]) {
+  const status = await serviceStatus();
+  const selected = status.services.filter(row => row.managed && row.up && (!ids || ids.includes(row.id))).map(row => row.id);
+  return { restarted: selected.length ? queueOperation(selected, "restart") : [], started: [] };
+}
+export async function stopAll() { /* Stop is an explicit per-stack operation. */ }
+export function rebuildInterbank() { return queueOperation(["interbank"], "restart").length > 0; }

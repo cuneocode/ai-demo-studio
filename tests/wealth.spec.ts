@@ -57,11 +57,11 @@ type Routes = {
   extraEvents?: () => object[];
 };
 
-/** Every /api/wealth call is mocked: nothing in this spec reaches the live service or a paid model. */
+/** Research and Advisor API calls use fixtures in this spec. */
 async function mockWealth(page: Page, routes: Routes = {}) {
   await page.route("**/api/studio/status", (route) => route.fulfill({ json: STATUS }));
-  await page.route("**/api/wealth/**", (route) => route.fulfill({ status: 404, json: { detail: "Not mocked" } }));
-  await page.route("**/api/wealth/health", (route) => (routes.health === null
+  await page.route("**/api/{research,advisory}/**", (route) => route.fulfill({ status: 404, json: { detail: "Not mocked" } }));
+  await page.route("**/api/{research,advisory}/health", (route) => (routes.health === null
     ? route.fulfill({ status: 503, body: "" })
     : route.fulfill({ json: routes.health ?? health(HOSTED_MODEL) })));
   await page.route("**/api/studio/recordings/wealth/*", (route) => {
@@ -69,7 +69,7 @@ async function mockWealth(page: Page, routes: Routes = {}) {
     return RECORDED[name] ? route.fulfill({ json: RECORDED[name] }) : route.fulfill({ status: 404, json: { detail: "No recording." } });
   });
   await page.route("**/api/studio/examples/wealth/households", (route) => route.fulfill({ json: { households: HOUSEHOLDS.map(card), synthetic: true } }));
-  await page.route("**/api/wealth/runs/**", (route) => {
+  await page.route("**/api/{research,advisory}/runs/**", (route) => {
     const id = new URL(route.request().url()).pathname.split("/").pop();
     return route.fulfill({ json: {
       run: { id, status: "completed", started_at: "2026-10-09T12:00:00Z", finished_at: "2026-10-09T12:00:02Z" },
@@ -77,10 +77,10 @@ async function mockWealth(page: Page, routes: Routes = {}) {
       total: 1 + (routes.extraEvents?.().length ?? 0),
     } });
   });
-  if (routes.analyze) await page.route("**/api/wealth/research/analyze", routes.analyze);
-  if (routes.publish) await page.route("**/api/wealth/research/publish", routes.publish);
-  if (routes.brief) await page.route("**/api/wealth/advisory/brief", routes.brief);
-  if (routes.approve) await page.route("**/api/wealth/advisory/approve", routes.approve);
+  if (routes.analyze) await page.route("**/api/research/research/analyze", routes.analyze);
+  if (routes.publish) await page.route("**/api/research/research/publish", routes.publish);
+  if (routes.brief) await page.route("**/api/advisory/advisory/brief", routes.brief);
+  if (routes.approve) await page.route("**/api/advisory/advisory/approve", routes.approve);
 }
 
 const RESEARCH_TITLE = "Market research";
@@ -90,7 +90,6 @@ async function open(page: Page, title: string) {
   await page.goto("/", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: `Open ${title} experience` }).first().click();
   await expect(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
-  if (title !== RESEARCH_TITLE) await page.locator(".advisory-demo > details").first().locator("summary").click();
 }
 
 const result = (page: Page) => page.locator(".rx-result");
@@ -110,8 +109,8 @@ const marketPacket = (ticker = "NVDA") => ({
 });
 async function mockMarket(page: Page, analyze?: (route: Route) => unknown) {
   await mockWealth(page);
-  await page.route("**/api/wealth/market/inputs/*", route => route.fulfill({ json: marketPacket(new URL(route.request().url()).pathname.split("/").pop()) }));
-  if (analyze) await page.route("**/api/wealth/market/analyze", analyze);
+  await page.route("**/api/research/market/inputs/*", route => route.fulfill({ json: marketPacket(new URL(route.request().url()).pathname.split("/").pop()) }));
+  if (analyze) await page.route("**/api/research/market/analyze", analyze);
 }
 
 test.describe("Market research", () => {
@@ -201,7 +200,7 @@ test.describe("Advisor meeting prep", () => {
     const context = page.getByRole("region", { name: "Meeting context" });
     await expect(context).toContainText("Research update · none published this session");
     await expect(context).toContainText("Company briefing · not loaded");
-    await expect(page.getByText("Private inference is down · client data may reach OpenAI API only with AI Defense in enforce")).toBeVisible();
+    await expect(page.locator("#advisory-run")).toBeEnabled();
   });
 
   test("advisor submits, supervisor approves; an unsuitable action is denied by the supervisor's policy", async ({ page }) => {
@@ -226,15 +225,15 @@ test.describe("Advisor meeting prep", () => {
     await open(page, ADVISORY_TITLE);
     await page.locator("#advisory-run").click();
     await expect(result(page).getByRole("heading", { name: "Chuck Robbins", level: 2 })).toBeFocused();
-    await expect(result(page)).toContainText("Reg BI care obligation");
-    await expect(result(page).locator(".ax-findings li").first()).toContainText("Single issuer above policy");
+    await expect(result(page)).toContainText("Care: concentration risk against the stated risk profile and horizon.");
+    await expect(result(page).locator(".ax-findings li").first()).toContainText("R-CONC-01");
 
-    await expect(page.getByRole("heading", { name: "Portfolio findings & proposed actions", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Choose proposed actions/ })).toBeVisible();
     const exchange = page.getByRole("checkbox", { name: "Include Exchange fund for low-basis HCYN shares" });
     await expect(exchange).not.toBeChecked();
     await expect(page.getByRole("checkbox", { name: /Include Rebalance back/ })).toBeChecked();
     await exchange.check();
-    await expect(result(page).locator(".ax-action.is-unsuitable")).toContainText("the supervisor's policy check will deny it");
+    await expect(result(page).locator(".ax-action.is-unsuitable")).toContainText("Not suitable:");
 
     const bar = page.getByRole("region", { name: "Approval" });
     await expect(bar).toContainText("Step 1 · Advisor review");
@@ -288,7 +287,7 @@ test.describe("Advisor meeting prep", () => {
       } }),
     });
     await open(page, ADVISORY_TITLE);
-    await expect(page.getByText("Private inference is down · client data will not leave the bank")).toBeVisible();
+    await expect(page.locator("#advisory-run")).toBeEnabled();
     await page.getByRole("radio", { name: /Okafor/ }).check();
     await page.locator("#advisory-run").click();
     await expect(result(page).locator(".ax-refused")).toContainText("Client data stayed in the bank");

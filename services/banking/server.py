@@ -147,7 +147,10 @@ async def chat(request: Request):
     if not graph:
         raise HTTPException(503, "Banking dependencies are unavailable. Check local service configuration.")
     if not any(entry[1].locked() for entry in sessions.values()):
-        ensure_graph()
+        try:
+            ensure_graph()
+        except model_backend.EgressDenied as exc:
+            raise HTTPException(403, str(exc)) from None
     if not request.message.strip():
         raise HTTPException(422, "Enter a message.")
     now = time.monotonic()

@@ -7,6 +7,7 @@ import {
   type SceneNode,
   type SceneSpec,
 } from "./scene-model.ts";
+import type { ElkExtendedEdge } from "elkjs/lib/elk-api";
 
 export type LayoutResult = {
   nodes: SceneNode[];
@@ -164,7 +165,7 @@ export async function layoutScene(scene: SceneSpec): Promise<LayoutResult> {
     const elkEdges = new Map<string, Point[]>();
     const portAlong: Record<string, Record<string, number>> = {};
     for (const edge of graph.edges ?? []) {
-      const section = edge.sections?.[0];
+      const section = (edge as ElkExtendedEdge).sections?.[0];
       if (!section) continue;
       const points = [section.startPoint, ...(section.bendPoints ?? []), section.endPoint].map((point) => ({
         x: round(point.x + dx),

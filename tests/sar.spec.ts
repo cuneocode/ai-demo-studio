@@ -165,8 +165,8 @@ test("the injection case withholds the flagged text and the typology rules still
   await expect(panel.locator(".sar-evidence li.is-withheld").first()).toContainText("Withheld from the agent");
   await expect(panel.locator(".sar-evidence li.is-flagged")).toContainText("Memo withheld from the agent · AI Defense · Prompt Injection");
   await expect(panel.locator(".sar-evidence")).not.toContainText(/ignore (all )?(previous|prior) instructions/i);
-  await expect(panel.locator(".sar-run")).toContainText("Prompt Injection");
-  await expect(panel.locator(".sar-run")).toContainText("AI DEFENSE");
+  await expect(panel.getByLabel("SAR investigation steps", { exact: true })).toContainText("Prompt Injection");
+  await expect(panel.getByLabel("SAR investigation steps", { exact: true })).toContainText("AI DEFENSE");
 });
 
 test("a fraud referral shows in the inbox and goes to the agent with the money-mule case", async ({ page }) => {
@@ -187,27 +187,30 @@ test("a fraud referral shows in the inbox and goes to the agent with the money-m
 test("never dead: service down, model down, sample narrative, and a labelled recorded replay", async ({ page }) => {
   await mockSar(page, { down: true });
   let panel = await openSar(page);
-  await expect(panel).toContainText("The SAR investigation service is not running");
+  await expect(panel).toContainText("Source records could not be loaded");
+  await expect(panel.getByText("Fallback: recorded demo", { exact: true })).toBeVisible();
 
   await page.unrouteAll({ behavior: "ignoreErrors" });
   const mock = await mockSar(page, { model: DOWN });
   panel = await openSar(page);
-  const banner = panel.locator(".sar-layout").getByText("No model can draft the narrative right now");
-  await expect(banner).toBeVisible();
+  await expect(panel.getByRole("region", { name: "SAR runtime" })).toContainText("No model reachable");
   await expect(panel.locator("#sar-investigate")).toBeDisabled();
 
+  await panel.locator(".sar-actions").getByText("Fallback: sample narrative", { exact: true }).click();
   await panel.locator(".sar-actions").getByRole("button", { name: "Run with sample narrative" }).click();
   await expect.poll(() => mock.starts[0]?.input.mode).toBe("sample");
 
+  await page.evaluate(() => localStorage.clear());
   await page.reload({ waitUntil: "networkidle" });
   panel = await openSar(page);
-  await panel.locator(".sar-layout").getByRole("button", { name: "Replay a recorded run" }).first().click();
+  await panel.getByText("Fallback: recorded demo", { exact: true }).click();
+  await panel.getByRole("button", { name: "Replay recording", exact: true }).click();
   await panel.getByRole("button", { name: "Skip replay" }).click();
   const narrative = panel.locator(".sar-narrative");
   await expect(narrative.locator(".sar-tag")).toHaveText("Recorded run");
   await expect(narrative.locator('.rt-badge[data-provenance="recorded"]')).toContainText("Recorded run");
   await expect(panel.locator(".sar-decision .sar-filed")).toContainText("SIM-BSA-", { timeout: 30000 });
-  await expect(panel.locator(".sar-band")).not.toContainText("Measured now");
+  await expect(panel.getByRole("region", { name: "SAR runtime" })).not.toContainText("Measured now");
   const stats = page.getByRole("region", { name: "Live run stats" });
   await expect(stats).not.toContainText(/Recorded in Splunk AO|OTLP export/);
   await expect(stats.locator(".run-stats-kicker")).toHaveText("RUN STATS · RECORDED RUN");

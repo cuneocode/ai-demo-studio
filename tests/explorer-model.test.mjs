@@ -5,7 +5,7 @@ import { evidence } from '../app/map/evidence.ts';
 
 test('Architecture scopes reference real entities, children, and evidence', () => {
   assert.ok(caseMaps['brahe-bank']);
-  assert.equal(Object.keys(caseMaps).length, 8);
+  assert.equal(Object.keys(caseMaps).length, 9);
   for (const map of Object.values(caseMaps)) {
     assert.ok(map.scopes[map.root], map.id);
     for (const scope of Object.values(map.scopes)) {

@@ -6,6 +6,9 @@ name: interbank-a2a
 
 x-python: &python
   image: interbank-a2a-demo:0.2.0
+  build:
+    context: .
+    secrets: [studio_ca]
   user: "${LAB_UID:-1000}:${LAB_GID:-1000}"
   init: true
   read_only: true
@@ -13,7 +16,7 @@ x-python: &python
   security_opt: [no-new-privileges:true]
   tmpfs: ["/tmp:rw,noexec,nosuid,size=128m"]
   restart: unless-stopped
-  env_file: [.runtime/vendor.env]
+  env_file: [{path: .runtime/vendor.env, format: raw}]
 
 x-agent-env: &agent-env
   SPLUNK_AO_HOME_DIR: /tmp/.splunk
@@ -35,15 +38,37 @@ x-collector: &collector
   image: quay.io/signalfx/splunk-otel-collector:0.161.0@sha256:6cc58d3dca1e76464a043e060aca36fb44e0c7e283e7ad900aec873646014b84
   user: "${LAB_UID:-1000}:${LAB_GID:-1000}"
   command: ["--config=/etc/otel/collector.yaml"]
-  env_file: [.runtime/vendor.env]
+  env_file: [{path: .runtime/vendor.env, format: raw}]
   restart: unless-stopped
 
 services:
+  # One-off configuration helper. The operator owns Docker; this helper has no Docker socket.
+  setup:
+    <<: *python
+    profiles: [setup]
+    network_mode: bridge
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    working_dir: /workspace/services/interbank
+    entrypoint: []
+    command: [python, labctl.py, prepare]
+    environment:
+      SPLUNK_AO_HOME_DIR: /tmp/.splunk
+      STUDIO_CONTAINER: "1"
+      FSI_ENV: /run/studio/source.env
+      EXTRA_CA_FILE: /run/studio/ca.pem
+      SSL_CERT_FILE: /run/studio/ca.pem
+      PYTHONPATH: /app
+    volumes:
+      - ./labctl.py:/workspace/services/interbank/labctl.py:ro
+      - ./.runtime:/workspace/services/interbank/.runtime
+      - ${STUDIO_RUNTIME_DIR:-../../.studio/runtime}/models:/workspace/.studio:ro
+      - ${STUDIO_RUNTIME_DIR:-../../.studio/runtime}/interbank.env:/run/studio/source.env:ro
+      - ${STUDIO_RUNTIME_DIR:-../../.studio/runtime}/ca.pem:/run/studio/ca.pem:ro
   # ---------------------------------------------------------------- Bank A ----
   bank-a-agent:
     <<: *python
     command: bank_a.agent
-    env_file: [.runtime/vendor.env, .runtime/model.env]
+    env_file: [{path: .runtime/vendor.env, format: raw}, {path: .runtime/model.env, format: raw}]
     environment:
       <<: *agent-env
       ORGANIZATION: bank-a
@@ -56,7 +81,7 @@ services:
       TLS_KEY_FILE: /runtime/agent.key
       TLS_CLIENT_CA_FILE: /runtime/bank-a-ca.crt
       GATEWAY_JWKS_FILE: /runtime/gateway-jwks.json
-    volumes: [./.runtime/roles/bank-a-agent:/runtime:ro, ../../.studio:/studio:ro, ../../config:/config:ro]
+    volumes: [./.runtime/roles/bank-a-agent:/runtime:ro, "${STUDIO_RUNTIME_DIR:-../../.studio/runtime}/models:/studio:ro", ../../config:/config:ro]
     # A studio model endpoint on this machine (Sparky's vLLM) is host.docker.internal.
     extra_hosts: ["host.docker.internal:host-gateway"]
     networks: [bank-a-internal, bank-a-egress, events]
@@ -96,7 +121,7 @@ services:
   bank-b-agent:
     <<: *python
     command: bank_b.agent
-    env_file: [.runtime/vendor.env, .runtime/model.env]
+    env_file: [{path: .runtime/vendor.env, format: raw}, {path: .runtime/model.env, format: raw}]
     environment:
       <<: *agent-env
       ORGANIZATION: bank-b
@@ -109,7 +134,7 @@ services:
       TLS_KEY_FILE: /runtime/agent.key
       TLS_CLIENT_CA_FILE: /runtime/bank-b-ca.crt
       GATEWAY_JWKS_FILE: /runtime/gateway-jwks.json
-    volumes: [./.runtime/roles/bank-b-agent:/runtime:ro, ../../.studio:/studio:ro, ../../config:/config:ro]
+    volumes: [./.runtime/roles/bank-b-agent:/runtime:ro, "${STUDIO_RUNTIME_DIR:-../../.studio/runtime}/models:/studio:ro", ../../config:/config:ro]
     extra_hosts: ["host.docker.internal:host-gateway"]
     networks: [bank-b-internal, bank-b-egress, events]
     healthcheck:
@@ -146,6 +171,11 @@ services:
   demo:
     <<: *python
     command: demo.server
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8090/api/health',timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 40
     environment:
       ORGANIZATION: bank-a
       SERVICE_NAME: operations-console
@@ -157,7 +187,7 @@ services:
       STUDIO_MODELS_DEFAULT_FILE: /config/studio-models.default.json
     volumes:
       - ./.runtime/roles/console:/runtime:ro
-      - ../../.studio:/studio:ro
+      - ${STUDIO_RUNTIME_DIR:-../../.studio/runtime}/models:/studio:ro
       - ../../config:/config:ro
       - ./evidence:/evidence
       - ./gateways:/app/gateways:ro
@@ -180,3 +210,7 @@ networks:
   bank-b-egress: {}
   interbank: {internal: true}
   events: {internal: true}
+
+secrets:
+  studio_ca:
+    file: ${STUDIO_RUNTIME_DIR:-../../.studio/runtime}/ca.pem

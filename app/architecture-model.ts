@@ -425,7 +425,7 @@ export function researchRuntime():Diagram {
   {title:'Measured execution',x:28,y:724,width:1464,height:192},
  ],nodes:[
   wn('user','Researcher','NVDA or another ticker',0,0,'human'),
-  wn('api','Wealth API','GET /market/inputs/:ticker',1,0,'service','FastAPI on :8014. Public company sources; dated cache and provider gaps are visible.'),
+  wn('api','Research API','Research container · :8014',1,0,'service','Studio proxies /api/research to the Wealth adapter in this independent Compose stack. Public sources retain dates and provider gaps.'),
   wn('market','Input packet','Financials, earnings, peers, news',2,0,'store','An immutable packet id binds the displayed inputs to the analysis.'),
   wn('precheck','Restricted-list check','research.precheck',3,0,'cisco','Restricted names are refused. Hosted Agent Control or labelled local checks.'),
   wn('news','Article text','Full supplied contents',0,1,'store','Yahoo news and the cached NVIDIA earnings release. The same synthetic injection accompanies every ticker.'),
@@ -435,16 +435,19 @@ export function researchRuntime():Diagram {
   wn('model','Studio model chain','Structured assessment',0,2,'ai','The configured healthy model proposes an outlook, Buy/Hold/Sell opinion, cited facts and risks.'),
   wn('grounding','Claim verifier','Fields and verbatim quotes',1,2,'service','At least three supporting facts must verify. One repair attempt; any revised opinion uses verified facts only.'),
   wn('gate','Research report','Human review',2,2,'human','The user reviews the outlook, drivers, peer comparison and risks. Nothing is traded or published.'),
-  wn('unavailable','Incomplete evidence','Recommendation withheld',3,2,'failure','No fabricated recommendation when the model or verification fails.'),
-  wn('observe','Splunk Agent Observability','Model and tool spans',0,3,'cisco','Actual trace delivery is reported in Live run stats.',sources.splunk.url),
+  wn('unavailable','Assessment unavailable','Blocked or incomplete evidence',3,2,'failure','Blocked or failed runs release no assessment. Incomplete evidence withholds a recommendation.'),
+  wn('observe','Splunk Agent Observability','Model and tool spans',0,3,'cisco','Galileo tracing exports only when configured. Live run stats reports actual trace delivery.',sources.splunk.url),
   wn('timeline','Run timeline','Sources, verdicts, model calls',1,3,'store','One run id connects the analysis and inspection evidence.'),
-  wn('compute','Inference runtime','Configured Studio chain',2,3,'service',SPARKY_DETAIL),
+  wn('compute','Inference runtime','Configured Studio chain',2,3,'service','Studio settings select the inference host. Host-loopback URLs become host.docker.internal inside containers. Cisco UCS / AI POD placement remains proposed.'),
+  wn('splunk','Splunk OTLP export','Optional receiver',3,3,'cisco','Generic telemetry exports only when configured. Receiver acknowledgement is reported separately from dashboard visibility.',sources.splunk.url),
  ],edges:[
   e('user','api','load'),e('api','market','cache / public providers'),e('market','precheck','analyze packet'),
+  e('precheck','model','allow assessment',{kind:'control'}),e('precheck','unavailable','deny assessment',{kind:'control',ports:'down'}),
   e('market','news','article inputs',{ports:'down'}),e('news','defense','inspect'),e('defense','withheld','exclude',{kind:'control'}),
   e('defense','evidence','accepted sources',{via:[[556,450],[1316,450]]}),e('evidence','model','screened evidence',{ports:'down'}),
   e('model','grounding','cited draft'),e('grounding','gate','verified support'),e('grounding','unavailable','insufficient support',{kind:'control',via:[[556,700],[1316,700]]}),
   e('model','observe','usage / spans',{kind:'telemetry',ports:'down'}),e('grounding','timeline','verdicts',{kind:'telemetry',ports:'down'}),
+  e('model','compute','selected endpoint',{kind:'placement',ports:'down'}),e('api','splunk','optional OTLP',{kind:'telemetry',ports:'down'}),
  ]};
 }
 

@@ -73,6 +73,24 @@ def test_v1_file_resolves_as_before(isolated, live_server):
     assert sm.resolve("market-research").label == "B"
 
 
+def test_host_loopback_is_rewritten_only_inside_containers(monkeypatch):
+    monkeypatch.delenv("STUDIO_CONTAINER", raising=False)
+    assert sm.container_url("http://localhost:8003/v1") == "http://localhost:8003/v1"
+    monkeypatch.setenv("STUDIO_CONTAINER", "1")
+    assert sm.container_url("http://localhost:8003/v1") == "http://host.docker.internal:8003/v1"
+    assert sm.container_url("https://models.example/v1") == "https://models.example/v1"
+
+
+def test_require_egress_blocks_each_hosted_private_only_route(isolated, monkeypatch):
+    write(isolated, {"version": 2, "chain": ["hosted"],
+                     "useCases": {case: {"externalPolicy": "deny"} for case in ("brahe-bank", "company-briefing", "interbank-a2a")},
+                     "providers": {"hosted": provider("https://model.invalid/v1", private=False)}})
+    monkeypatch.setattr(sm, "healthy", lambda backend: (True, "mock"))
+    for case in ("brahe-bank", "company-briefing", "interbank-a2a"):
+        with pytest.raises(sm.EgressDenied):
+            sm.require_egress(case, sm.pick(case))
+
+
 def test_v2_chain_fails_over_to_the_second_backend(isolated, live_server):
     write(isolated, {"version": 2, "chain": ["down", "up"],
                      "providers": {"down": provider(closed_port(), label="Sparky"), "up": provider(live_server, label="Up")}})

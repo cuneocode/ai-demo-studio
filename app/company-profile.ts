@@ -449,7 +449,7 @@ function normalizeMetrics(value: unknown): BriefingMetric[] {
     : isRecord(value)
       ? asArray(value.facts ?? value.items ?? value.metrics)
       : [];
-  return rows.map((item) => {
+  return rows.map((item): BriefingMetric | null => {
     if (!isRecord(item)) return null;
     const label = asString(item.label) || asString(item.concept) || asString(item.name);
     if (!label) return null;
@@ -495,7 +495,7 @@ function normalizeGrounding(value: unknown): GroundingSummary | undefined {
 }
 
 function normalizeNodesRead(value: unknown): NodeRead[] {
-  return asArray(value).map((item) => {
+  return asArray(value).map((item): NodeRead | null => {
     if (typeof item === "string" && item.trim()) return { title: item.trim(), id: item.trim() };
     if (!isRecord(item)) return null;
     const title = asString(item.title) || asString(item.name) || asString(item.id);

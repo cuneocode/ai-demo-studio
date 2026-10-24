@@ -1,5 +1,45 @@
 # Setup verification
 
+## Container migration validation, October 23, 2026
+
+The working branch migrates all eight executable demos to independent Compose
+projects. The new README describes this target runtime. The October 22 checks
+below document the earlier source-mode implementation.
+
+Validated on macOS Apple Silicon with Node 24.11.1, Docker Engine 28.1.1,
+and 7.7 GiB assigned to Docker. Builds and tests ran sequentially.
+
+| Check | Result |
+| --- | --- |
+| Production build, TypeScript, and lint | Passed |
+| Compose packages | All eight executable packages built and started through the operator |
+| Full Node suite | 228 passed, including updated Research architecture coverage |
+| Shared Python and service suites | 344 passed across shared code and seven source environments |
+| Affected browser flows | 57 passed with mocked APIs and one browser worker, covering container controls, Settings, architecture, stats, Banking, Briefing, Fraud, SAR, Interbank, Research, Advisor, and cross-demo handoffs |
+| Real production dashboard | Eight stacks displayed; Research Start/Stop and public/legacy proxies passed; Advisor stayed stopped |
+| Research/Advisor isolation | Separate volumes confirmed; stopping Research left Advisor available |
+| SAR persistence | Recreation preserved a synthetic run's identity, result, provenance, and event identities |
+| Live Research | Two model calls, 12,277 input tokens, 620 output tokens, ready report, and acknowledged Agent Observability upload |
+| Live Research restoration | The same 14 events and measured usage survived recreation |
+| Live Interbank | Synthetic investigation completed with model calls, A2A, database tools, AI Defense, and hosted control decisions |
+| Interbank trace delivery | Destination query confirmed 133 correlated spans, including 11 LLM and three control spans; verifier passed |
+| Interbank evidence | All 35 earlier investigations remained available after migration |
+| Vulnerability | Visa 1.5.0 scan/remediation imports passed inside the image; local sample checks reproduced the expected vulnerable baseline; live readiness reports unregistered hosted controls |
+| Architecture source capture | All 93 excerpts regenerate |
+
+Banking's hosted controls are unavailable in this configuration. Vulnerability
+requires its explicit hosted-policy setup before a live scan. Fraud used labelled
+fixture scores; local NVIDIA scoring was not exercised. Generic Splunk OTLP export
+was unconfigured during Research; Agent Observability delivery was verified.
+
+An earlier image extraction exhausted host disk and stalled Docker. Recovery
+preserved saved data. The operator now queues operations, limits Compose and
+installer concurrency, and checks for 15 GB of free host disk. Retired Interbank
+containers and networks were removed after verifying checkout ownership; PKI,
+configuration, and evidence were retained. All test stacks were stopped afterward.
+
+## Source-mode verification, October 22, 2026
+
 Verified on October 22, 2026 using macOS on Apple Silicon, Node 24.11.1,
 npm 11.6.2, uv 0.11.23, and uv-managed Python 3.12.13. This is the verified local
 configuration. Linux, WSL2, other CPU architectures, and lower memory/disk budgets
@@ -35,7 +75,7 @@ HTML smoke test now verifies the real Studio shell instead of the removed starte
 screen. Playwright uses its installed Chromium by default; `CHROME_PATH` remains
 an optional override.
 
-## Current checkout failures
+## Source-mode checkout failures, October 22
 
 The broader checks expose outstanding application/test issues beyond the onboarding
 changes. They remain visible to contributors:

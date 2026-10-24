@@ -1,8 +1,9 @@
 import vinext from "vinext";
-import { defineConfig } from "vite";
+import { defineConfig, type ViteDevServer } from "vite";
 import hostingConfig from "./.openai/hosting.json";
 import { sites } from "./build/sites-vite-plugin";
 import { handleStudioApi, startMissing } from "./scripts/studio-api.ts";
+import { proxyRuntimes, rewriteRuntimePath } from "./config/use-cases.ts";
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
   "00000000-0000-4000-8000-000000000000";
@@ -51,22 +52,16 @@ export default defineConfig(async () => {
       host: "127.0.0.1",
       port: Number(process.env.STUDIO_PORT || 4200),
       strictPort: true,
-      proxy: {
-        "/api/banking": { target: "http://127.0.0.1:8011", changeOrigin: false, timeout: 120000, proxyTimeout: 120000 },
-        "/api/fraud": { target: "http://127.0.0.1:8012", changeOrigin: false, timeout: 180000, proxyTimeout: 180000 },
-        "/api/briefing": { target: "http://127.0.0.1:8013", changeOrigin: false, timeout: 240000, proxyTimeout: 240000 },
-        "/api/wealth": { target: "http://127.0.0.1:8014", changeOrigin: false, timeout: 180000, proxyTimeout: 180000 },
-        "/api/vulnerability": { target: "http://127.0.0.1:8016", changeOrigin: false },
-        "/api/sar": { target: "http://127.0.0.1:8015", changeOrigin: false, timeout: 180000, proxyTimeout: 180000 },
-        // The interbank lab runs in Docker (npm run interbank:up); its dashboard serves /api/* on 8088.
-        "/api/interbank": { target: "http://127.0.0.1:8088", changeOrigin: false, timeout: 30000, proxyTimeout: 30000, rewrite: (path: string) => path.replace(/^\/api\/interbank/, "/api") },
-      },
+      proxy: Object.fromEntries(proxyRuntimes.map(spec => [spec.prefix, {
+        target: `http://127.0.0.1:${spec.port}`, changeOrigin: false,
+        timeout: spec.timeout, proxyTimeout: spec.timeout, rewrite: (path: string) => rewriteRuntimePath(spec, path),
+      }])),
       ...(isCodexSeatbeltSandbox ? { watch: { useFsEvents: false, usePolling: true } } : {}),
     },
     plugins: [
       {
         name: "studio-api",
-        configureServer(viteServer) {
+        configureServer(viteServer: ViteDevServer) {
           // npm run dev:studio launches the Python services through the studio so Studio settings can restart them.
           if (process.env.STUDIO_START_SERVICES === "1") void startMissing();
           viteServer.middlewares.use((req, res, next) => {
@@ -76,7 +71,7 @@ export default defineConfig(async () => {
       },
       {
         name: "briefing-upload-limit",
-        configureServer(viteServer) {
+        configureServer(viteServer: ViteDevServer) {
           viteServer.middlewares.use((req, res, next) => {
             if (!req.url?.startsWith("/api/briefing")) {
               next();

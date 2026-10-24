@@ -392,7 +392,7 @@ export function projectBraheSystem(expandedGroupIds: readonly string[], mode: Mo
 export function normalizeBraheExpansion(current: readonly string[], groupId: string) {
   const next = new Set(current);
   next.add(BRAHE_GROUPS.assistant);
-  const stageGroups = [BRAHE_GROUPS.check, BRAHE_GROUPS.build, BRAHE_GROUPS.return];
+  const stageGroups: readonly string[] = [BRAHE_GROUPS.check, BRAHE_GROUPS.build, BRAHE_GROUPS.return];
   if (stageGroups.includes(groupId as BraheGroupId)) {
     for (const id of stageGroups) if (id !== groupId) next.delete(id);
     next.delete(BRAHE_GROUPS.requestInspection);

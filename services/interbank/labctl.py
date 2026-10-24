@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Interbank A2A settlement demo control.
 
-  python3 labctl.py up                 # credentials, controls, build, start
+  python3 labctl.py up                 # build/start through the Studio operator
   python3 labctl.py kickoff allowed    # investigation that runs to completion
   python3 labctl.py kickoff blocked    # kickoff Cisco AI Defense blocks at Bank A's gateway
   python3 labctl.py verify <run-id> [blocked]  # check the trace in Splunk Agent Observability
@@ -40,7 +40,6 @@ FSI_ENV = Path(os.environ.get("FSI_ENV", ROOT.parents[1] / ".env"))
 # The model chosen in Studio settings; the agents and console mount this directory read-only.
 STUDIO = ROOT.parents[1] / ".studio"
 MODEL_KEYS = ("OPENAI_API_KEY", "VLLM_API_KEY", "NIM_API_KEY", "NVIDIA_API_KEY")
-IMAGE = "interbank-a2a-demo:0.2.0"
 DEMO_URL = "http://127.0.0.1:8088"
 PROJECT = "Interbank A2A Settlement Demo"
 AGENT_STREAM = "Interbank settlement investigations"
@@ -51,8 +50,11 @@ def sh(*command: str, check: bool = True, capture: bool = False) -> subprocess.C
     return subprocess.run(command, cwd=ROOT, check=check, text=True, capture_output=capture)
 
 
-def compose(*args: str, **kwargs) -> subprocess.CompletedProcess:
-    return sh("docker", "compose", "--env-file", str(ROOT / ".env"), *args, **kwargs)
+def studio(action: str) -> None:
+    """Keep legacy host commands on the registered Node operator path."""
+    repository = ROOT.parents[1]
+    subprocess.run(["node", str(repository / "scripts/studio-containers.mjs"), action, "interbank"],
+                   cwd=repository, check=True)
 
 
 def write_private(path: Path, data: bytes | str) -> None:
@@ -244,52 +246,23 @@ def extra_egress_roots() -> str:
 
 def write_egress_bundle() -> None:
     """Public roots plus any proxy roots, for the agents' calls to the OpenAI API."""
-    public = sh("docker", "run", "--rm", "--entrypoint", "python", IMAGE, "-c",
-                "import certifi; print(open(certifi.where()).read())", capture=True).stdout
+    import certifi
+    public = Path(certifi.where()).read_text()
     bundle = public + extra_egress_roots()
     for bank in BANKS:
         write_private(ROLES / f"{bank}-agent" / "egress-ca-bundle.pem", bundle)
 
 
-def run_tool(module: str, *args: str) -> None:
-    sh("docker", "run", "--rm", "--user", f"{os.getuid()}:{os.getgid()}", "--env-file",
-       str(RUNTIME / "vendor.env"), "-e", "SPLUNK_AO_HOME_DIR=/tmp/.splunk", "--tmpfs", "/tmp",
-       IMAGE, module, *args)
+def prepare(_: argparse.Namespace) -> None:
+    """Prepare local credentials and configuration. Hosted controls use an explicit command."""
+    RUNTIME.mkdir(mode=0o700, exist_ok=True)
+    import_vendor_env()
+    generate_credentials()
+    write_egress_bundle()
 
 
 def up(_: argparse.Namespace) -> None:
-    # Check the engine before generating credentials or trying a build.
-    try:
-        engine = subprocess.run(["docker", "info", "--format", "{{.ServerVersion}}"],
-                                cwd=ROOT, capture_output=True, text=True, timeout=15)
-    except FileNotFoundError:
-        raise SystemExit("Docker is not installed. Install Docker Desktop, start it, then select Start lab again.") from None
-    except subprocess.TimeoutExpired:
-        raise SystemExit("Docker is not responding. Open Docker Desktop and wait for the engine to be ready, then select Start lab again.") from None
-    if engine.returncode:
-        raise SystemExit("Docker is not ready. Open Docker Desktop (or start your Docker engine), wait until it is running, then select Start lab again. No lab changes were made.")
-    RUNTIME.mkdir(mode=0o700, exist_ok=True)
-    STUDIO.mkdir(mode=0o700, exist_ok=True)
-    for folder in ("runs", "telemetry/bank-a", "telemetry/bank-b"):
-        (ROOT / "evidence" / folder).mkdir(parents=True, exist_ok=True)
-    write_private(ROOT / ".env", f"LAB_UID={os.getuid()}\nLAB_GID={os.getgid()}\n")
-    import_vendor_env()
-    generate_credentials()
-    sh("docker", "build", "-t", IMAGE, ".")
-    write_egress_bundle()
-    run_tool("tools.setup_controls")
-    compose("up", "-d", "--remove-orphans", "--force-recreate")
-    for _ in range(90):
-        try:
-            if httpx.get(f"{DEMO_URL}/health", timeout=2).status_code == 200:
-                ok = compose("ps", "--format", "{{.Service}} {{.Health}}", capture=True).stdout
-                if "starting" not in ok and "unhealthy" not in ok:
-                    print(f"Dashboard: {DEMO_URL}")
-                    return
-        except httpx.HTTPError:
-            pass
-        time.sleep(2)
-    raise SystemExit("Services did not become healthy; run: python3 labctl.py logs")
+    studio("start")
 
 
 def kickoff(args: argparse.Namespace) -> None:
@@ -311,25 +284,29 @@ def kickoff(args: argparse.Namespace) -> None:
 
 
 def verify(args: argparse.Namespace) -> None:
-    run_tool("tools.verify_splunk", args.run_id, *([args.mode] if args.mode else []))
+    repository = ROOT.parents[1]
+    subprocess.run(["node", str(repository / "scripts/studio-interbank-verify.mjs"), args.run_id,
+                    *([args.mode] if args.mode else [])], cwd=repository, check=True)
 
 
 def status(_: argparse.Namespace) -> None:
-    compose("ps")
+    studio("status")
 
 
 def logs(_: argparse.Namespace) -> None:
-    compose("logs", "--tail", "80")
+    studio("logs")
 
 
 def down(_: argparse.Namespace) -> None:
-    compose("down", "--remove-orphans")
+    studio("stop")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     commands = parser.add_subparsers(required=True)
     commands.add_parser("up").set_defaults(func=up)
+    commands.add_parser("prepare").set_defaults(func=prepare)
+    commands.add_parser("controls").set_defaults(func=lambda _: studio("controls"))
     start = commands.add_parser("kickoff")
     start.add_argument("prompt", help="'allowed', 'blocked', or your own kickoff text")
     start.set_defaults(func=kickoff)

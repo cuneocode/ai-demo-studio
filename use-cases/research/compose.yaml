@@ -1,0 +1,41 @@
+# Managed by the trusted Studio operator. Configuration is prepared by studio:containers.
+services:
+  api:
+    image: fsi-studio/wealth:local
+    build:
+      context: ../..
+      dockerfile: services/common/Dockerfile
+      args:
+        SERVICE: wealth
+      secrets: [studio_ca]
+    init: true
+    restart: unless-stopped
+    env_file:
+      - path: ${STUDIO_RUNTIME_DIR:-../../.studio/runtime}/research.env
+        format: raw
+    environment:
+      STUDIO_CONTAINER: "1"
+      STUDIO_USE_CASE: market-research
+      STUDIO_MODELS_FILE: /run/studio/models/models.json
+      SSL_CERT_FILE: /run/studio/ca.pem
+      REQUESTS_CA_BUNDLE: /run/studio/ca.pem
+    ports: ["127.0.0.1:8014:8000"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes:
+      - data:/app/services/wealth/.cache
+      - ${STUDIO_RUNTIME_DIR:-../../.studio/runtime}/models:/run/studio/models:ro
+      - ${STUDIO_RUNTIME_DIR:-../../.studio/runtime}/ca.pem:/run/studio/ca.pem:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/wealth/health', timeout=10)"]
+      interval: 10s
+      timeout: 12s
+      start_period: 45s
+      retries: 6
+    stop_grace_period: 25s
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+volumes:
+  data:
+secrets:
+  studio_ca:
+    file: ${STUDIO_RUNTIME_DIR:-../../.studio/runtime}/ca.pem

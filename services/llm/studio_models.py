@@ -26,6 +26,7 @@ import urllib.request
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Awaitable, Callable, TypeVar
+from urllib.parse import urlsplit, urlunsplit
 
 # The only environment variables a provider may name as its key.
 KEY_NAMES = frozenset({"OPENAI_API_KEY", "VLLM_API_KEY", "NIM_API_KEY", "NVIDIA_API_KEY"})
@@ -200,13 +201,23 @@ def _backend(provider_id: str, provider: dict) -> Backend:
         provider=provider_id,
         label=str(provider.get("label") or provider_id),
         kind=kind,
-        base_url=str(provider["baseUrl"]).rstrip("/"),
+        base_url=container_url(str(provider["baseUrl"]).rstrip("/")),
         model=str(provider["model"]),
         api_key=os.getenv(key_name, "") if key_name in KEY_NAMES else "",
         responses_api=bool(provider.get("responsesApi")),
         private=bool(private) if isinstance(private, bool) else kind == "vllm",
         key_name=key_name if key_name in KEY_NAMES else "",
     )
+
+
+def container_url(url: str) -> str:
+    """A configured host-loopback model remains reachable from a Docker runtime."""
+    if os.getenv("STUDIO_CONTAINER") != "1":
+        return url
+    parts = urlsplit(url)
+    if parts.hostname not in {"localhost", "127.0.0.1", "::1"}:
+        return url
+    return urlunsplit(parts._replace(netloc="host.docker.internal" + (f":{parts.port}" if parts.port else "")))
 
 
 def chain_ids(registry: dict, use_case: str) -> list[str]:
@@ -417,3 +428,13 @@ def egress_decision(use_case: str, selection: Selection, ai_defense_configured: 
                               "is not configured to inspect it first, so the request was not sent."}
         return {"allowed": True, "force_enforce": True, "policy": policy, "reason": ""}
     return {"allowed": True, "force_enforce": False, "policy": policy, "reason": ""}
+
+
+class EgressDenied(RuntimeError):
+    pass
+
+
+def require_egress(use_case: str, selection: Selection, *, ai_defense_enforcing: bool = False) -> None:
+    decision = egress_decision(use_case, selection, ai_defense_enforcing)
+    if not decision["allowed"]:
+        raise EgressDenied(decision["reason"])
