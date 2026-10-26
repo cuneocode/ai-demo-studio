@@ -71,6 +71,48 @@ shared mode, then enforces hosted case-data egress. Per-service overrides are
 `BRIEFING_AIDEFENSE_MODE`, `WEALTH_AIDEFENSE_MODE`, and `SAR_AIDEFENSE_MODE`.
 Vulnerability leaves inspection disabled. Interbank always enforces at gateways.
 
+## Capacity planning
+
+The Capacity planning tab loads a versioned planner ES module at runtime. Studio
+builds independently of the private planner repository and packages. Configure
+these public browser URLs in ignored root `.env`:
+
+```dotenv
+STUDIO_PLANNER_BUNDLE_URL=https://www.ai-infrastructure-planner.com/embed/1.0.0/planner.js
+STUDIO_PLANNER_API_BASE_URL=https://www.ai-infrastructure-planner.com
+```
+
+The production host serves the complete versioned artifact directory, including
+CSS and adjacent module chunks. Its API accepts HTTPS and loopback HTTP Studio
+origins. For private planner development, override the bundle URL with
+`http://localhost:4173/embed/1.0.0/planner.js` and the API base with
+`http://localhost:3101`. Remote connections require HTTPS. If a private API uses a
+restricted allowlist, add Studio's exact origin to
+`PLANNER_EMBED_ALLOWED_ORIGINS` and restart that API. For Studio on port 4318 at
+127.0.0.1, use `http://127.0.0.1:4318`.
+
+The native component follows Studio's theme and section controls. Opening the tab
+initializes one assessment per use case using its title, objective and latest
+run when completed. Available model-call and token totals retain their provenance.
+Recorded observations remain labelled as reported measurements. Unknown measured
+values stay blank, and sample runs supply no measurements. Each new workload uses
+the use-case name and defaults to the editable GLM 5.3 planning model. Demo model
+configuration remains independent. Observed call and token totals describe the
+demo sample. The planner supplies its editable production assumptions for omitted
+demand fields; users should review those assumptions for their intended deployment.
+
+Planner drafts persist in browser storage under stable use-case and assessment
+IDs. Switching tabs preserves the editor; reopening the use case restores saved
+edits. **New assessment** creates a separate draft using the latest available run.
+Older drafts receive generated workload names and untouched model defaults on
+restore. Edited names, model selections and demand values stay intact. The open
+**Current planning inputs** panel shows the values used for the estimate; its
+**Demo observations** disclosure retains the original imported evidence.
+New run measurements do not overwrite an open assessment. Studio stores the active
+assessment ID and reads calculation status from planner events. The planner owns
+its draft contents. Embedded analytics are disabled during local integration;
+assessment content and planner errors are excluded from Studio analytics.
+
 ## Register hosted controls
 
 Create your configured Agent Observability project and stream first. Review each

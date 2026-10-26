@@ -5,6 +5,11 @@ use cases. A trusted operator configures shared integrations and starts individu
 Docker Compose stacks from the dashboard. Banking data and customer scenarios are
 synthetic. Recordings are labelled and remain available with live stacks stopped.
 
+Every use case includes Use case demo, Architecture, and Capacity planning tabs.
+Capacity planning loads a configured AI Infrastructure Planner browser component.
+It starts from the use case and available run measurements, with production demand
+entered separately. See [planner configuration](docs/CONFIGURATION.md#capacity-planning).
+
 ## System requirements
 
 | Requirement | Recording preview | Live container demos |
@@ -38,7 +43,9 @@ npm run dev:studio
 
 Open [http://localhost:4200](http://localhost:4200), then open **Studio settings**:
 
-1. Save your provider credentials and configure/test the model endpoint.
+1. Save your provider credentials and configure/test the model endpoint. For the
+   OpenAI API, select the OpenAI provider at `https://api.openai.com/v1` and choose
+   an available model with tool calling. Use a per-use-case route to select it directly.
 2. Configure AI Defense, Splunk, Agent Observability, and Agent Control as required
    by the selected demo. Use your own tenant, project, and stream.
 3. Under **Services**, select **Start** for a use case. The first start builds its
@@ -151,6 +158,7 @@ controls require a separate deployment design; Cloudflare bindings remain empty.
 | Docker unavailable | Start Docker and run `npm run studio:doctor -- --live` |
 | Low disk or stalled image extraction | Free host and Docker VM disk space; inspect Docker before retrying; preserve saved-data volumes |
 | Stack starts but is blocked | Inspect readiness, configuration, and Logs; running containers and live integration readiness are distinct |
+| Hosted controls unavailable | Check the effective Agent Control URL, credentials, project/stream and existing bindings before registering policies; use the intended tenant endpoint explicitly |
 | Port occupied | Stop the conflicting external process or stack; Studio preserves services it does not own |
 | Credential change has no effect | Save, then Apply to running stacks or Restart the selected stack |
 | Model unreachable inside Docker | Check the selected URL; host loopback is translated automatically; remote hosts must be reachable from Docker |
@@ -161,7 +169,22 @@ controls require a separate deployment design; Cloudflare bindings remain empty.
 ## Development and extension
 
 Read [AGENTS.md](AGENTS.md), [CONTRIBUTING.md](CONTRIBUTING.md), and the
-[container package contract](docs/CONTAINERS.md). The package registry is
+[use-case authoring guide](docs/ADDING_USE_CASES.md) before adding a demo. The guide
+maps the required files, identifies reference demos, and defines the shared visual
+and execution patterns. Start with SAR for a case-review workflow, Banking for
+chat, or Interbank for a multi-container agent workflow. Keep the existing shell,
+three tabs, themes, story renderer, run stats and architecture viewer.
+
+A coding-agent request can start with:
+
+> Read AGENTS.md and docs/ADDING_USE_CASES.md. Add a use case for [workflow and
+> intended user]. Follow the closest reference demo and the shared visual design.
+> Use my configured model routes and integrations. Complete the registration,
+> story, architecture, guided tour and relevant checks, then report what was
+> verified live and what remains unconfigured.
+
+The [container package contract](docs/CONTAINERS.md) covers runtime isolation,
+configuration and lifecycle. The package registry is
 `config/use-cases.ts`; Compose definitions live in `use-cases/` and the Interbank
 service directory. Agents and application code remain in `services/` and execute
 inside their images. `app/` owns Studio UI, run components, narratives, and guides.

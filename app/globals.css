@@ -336,6 +336,18 @@ kbd { border: 1px solid #344653; background: #17232e; color: var(--muted); font:
 .case-tabs [role="tab"][aria-selected="true"] { border-color: #2563eb; background: #2563eb; color: #ffffff; box-shadow: 0 6px 18px rgba(37,99,235,.3); cursor: default; }
 .case-tabpanel { display: grid; gap: 18px; min-width: 0; }
 .case-tabpanel[hidden] { display: none; }
+.capacity-planning { min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.capacity-planning-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 20px; border-bottom: 1px solid var(--border); }
+.capacity-planning h2 { margin: 0; color: var(--text); font-size: 19px; line-height: 1.45; }
+.capacity-planning p { margin: 4px 0 0; color: var(--muted); font-size: var(--font-body); }
+.capacity-planning-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.capacity-planning-sections { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 20px; border-bottom: 1px solid var(--border); }
+.capacity-planning-sections button { padding: 9px 12px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; font-size: var(--font-control); }
+.capacity-planning-sections button:hover:enabled { background: var(--surface-2); color: var(--text); }
+.capacity-planning-sections button:disabled { cursor: default; opacity: .6; }
+.capacity-planning-status { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 0; padding: 24px 20px; color: var(--muted); }
+.capacity-planning-host { min-width: 0; }
+.capacity-planning-host ai-infrastructure-planner { display: block; min-height: 600px; }
 .prototype-chip { min-height: 34px; display: inline-flex; align-items: center; gap: 7px; padding: 0 11px; border: 1px solid rgba(209,168,91,.25); border-radius: 6px; background: rgba(209,168,91,.07); color: #bba475; font-size: var(--font-meta); white-space: nowrap; }
 .system-map { position: relative; isolation: isolate; overflow-x: auto; padding: 22px; border: 1px solid rgba(108,132,173,.28); border-radius: 12px; background: radial-gradient(ellipse at 78% 100%,rgba(112,72,166,.13),transparent 48%),rgba(13,19,29,.84); box-shadow: inset 0 1px rgba(255,255,255,.035); backdrop-filter: blur(16px) saturate(110%); }
 .system-map-header { min-width: 760px; display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; padding-bottom: 17px; border-bottom: 1px solid rgba(104,126,158,.22); }

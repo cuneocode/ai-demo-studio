@@ -12,6 +12,7 @@ import InterbankDemo from "./InterbankDemo";
 import CodeVulnerability from "./CodeVulnerability";
 import { vulnerabilityStory } from "./vulnerability-story";
 import ArchitectureMap from "./ArchitectureMap";
+import CapacityPlanning from "./CapacityPlanning";
 import StudioSettings from "./StudioSettings";
 import InferenceIndicator from "./InferenceIndicator";
 import DemoNarrativeLayout from "./DemoNarrative";
@@ -19,8 +20,9 @@ import { demoNarratives } from "./demo-narratives";
 import { ControlsPage, HelpDrawer, PresenterBar, ServiceBell, TelemetryPage } from "./StudioShell";
 import { presenterNotes } from "./presenter-notes";
 import { momentReady, platformSummary, presenterStatus, useStudioStatus, type StudioStatus, type Tone } from "./studio-status";
-import { StudioNavContext } from "./studio-nav";
-import { IllustrativeRunStats } from "./RunStats";
+import { StudioNavContext, USE_CASE_TABS, type UseCaseTab as CaseTab } from "./studio-nav";
+import { IllustrativeRunStats, type ObservedRun } from "./RunStats";
+import { PlanningRunContext } from "./planning-evidence";
 import { setTheme, useTheme } from "./theme";
 import { loadCompanyProfile, type StoredCompanyProfile } from "./company-profile";
 import { loadResearchNote, switcherContextLabel, type StoredResearchNote } from "./research-note";
@@ -592,8 +594,6 @@ function focusLiveExperience(experience: LiveExperience) {
   control?.focus({ preventScroll: true });
 }
 
-type CaseTab = "demo" | "architecture";
-
 /** Brings the tab row back below the top bar when a switch left it scrolled off screen. */
 function scrollTabsIntoView(tablist: HTMLElement | null) {
   if (!tablist) return;
@@ -803,10 +803,12 @@ function UseCaseWorkspace({
     : { title: row.name, summary: `${row.stage}: ${row.signal}.`, evidence: [row.stage, row.signal, `Status: ${row.status}`] };
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
-  // Both panels stay mounted so a run started in the demo keeps going while the
-  // architecture is shown. The explorer mounts on first open, when it can measure.
+  // Panels stay mounted so runs and diagrams survive tab switches.
+  // The explorer mounts on first open, when it can measure.
   const [tab, setTab] = useState<CaseTab>("demo");
   const [architectureOpened, setArchitectureOpened] = useState(false);
+  const [capacityOpened, setCapacityOpened] = useState(false);
+  const [planningRun, setPlanningRun] = useState<ObservedRun>();
   const tabScroll = useRef<Partial<Record<CaseTab, number>>>({});
   const revealTabs = useRef(false);
   const shownTab = useRef<CaseTab>("demo");
@@ -814,6 +816,7 @@ function UseCaseWorkspace({
   const selectTab = (next: CaseTab, options: { reveal?: boolean } = {}) => {
     revealTabs.current = Boolean(options.reveal);
     if (next === "architecture") setArchitectureOpened(true);
+    if (next === "capacity") setCapacityOpened(true);
     if (next === tab) {
       if (options.reveal) scrollTabsIntoView(tablistRef.current);
       return;
@@ -830,12 +833,11 @@ function UseCaseWorkspace({
     revealTabs.current = false;
   }, [tab]);
   const onTabKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
-    const order: CaseTab[] = ["demo", "architecture"];
-    const index = order.indexOf(tab);
-    const next = event.key === "ArrowRight" ? order[(index + 1) % order.length]
-      : event.key === "ArrowLeft" ? order[(index + order.length - 1) % order.length]
-      : event.key === "Home" ? order[0]
-      : event.key === "End" ? order[order.length - 1]
+    const index = USE_CASE_TABS.findIndex(({ id }) => id === tab);
+    const next = event.key === "ArrowRight" ? USE_CASE_TABS[(index + 1) % USE_CASE_TABS.length].id
+      : event.key === "ArrowLeft" ? USE_CASE_TABS[(index + USE_CASE_TABS.length - 1) % USE_CASE_TABS.length].id
+      : event.key === "Home" ? USE_CASE_TABS[0].id
+      : event.key === "End" ? USE_CASE_TABS[USE_CASE_TABS.length - 1].id
       : null;
     if (!next) return;
     event.preventDefault();
@@ -875,10 +877,11 @@ function UseCaseWorkspace({
         </div>
       </header>
 
+      <PlanningRunContext.Provider value={setPlanningRun}>
       <DemoNarrativeLayout narrative={useCase.id === "code-vulnerability" ? vulnerabilityStory : demoNarratives[useCase.id]}>
       <div className="case-tab-row" {...guideAnchor("case.tabs")}>
       <div className="case-tabs" role="tablist" aria-label={`${useCase.title} views`} ref={tablistRef}>
-        {([["demo", "Use case demo"], ["architecture", "Architecture"]] as const).map(([id, label]) => (
+        {USE_CASE_TABS.map(({ id, label }) => (
           <button
             key={id}
             id={`case-tab-${id}`}
@@ -889,7 +892,7 @@ function UseCaseWorkspace({
             tabIndex={tab === id ? 0 : -1}
             onClick={() => selectTab(id)}
             onKeyDown={onTabKeyDown}
-            {...(id === "architecture" ? guideAnchor("case.tab.architecture") : {})}
+            {...(id === "architecture" ? guideAnchor("case.tab.architecture") : id === "capacity" ? guideAnchor("case.tab.capacity") : {})}
           >
             {label}
           </button>
@@ -991,7 +994,11 @@ function UseCaseWorkspace({
       <div className="case-tabpanel" id="case-panel-architecture" role="tabpanel" aria-labelledby="case-tab-architecture" hidden={tab !== "architecture"}>
         {architectureOpened && <div id="architecture-explorer"><ArchitectureMap key={useCase.id} caseId={useCase.id} title={useCase.title} frame={frame} /></div>}
       </div>
+      <div className="case-tabpanel" id="case-panel-capacity" role="tabpanel" aria-labelledby="case-tab-capacity" hidden={tab !== "capacity"}>
+        {capacityOpened && <CapacityPlanning useCaseId={useCase.id} title={useCase.title} objective={useCase.outcome} run={planningRun} />}
+      </div>
       </DemoNarrativeLayout>
+      </PlanningRunContext.Provider>
     </div>
   );
 }

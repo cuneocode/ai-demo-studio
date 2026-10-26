@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import type { StudioStatus } from "../app/studio-status.ts";
+import { useCasePackages } from "../config/use-cases.ts";
+import { mockPlanner } from "./planner-fixture";
 
 const ready = (id: string, title: string) => ({ id, title, ready: true, missing: [], notes: [] });
 
@@ -10,7 +12,7 @@ const STATUS: StudioStatus = {
     { id: "banking", label: "Brahe Bank", up: true, ready: true, detail: "", aiDefense: { status: "configured", mode: "enforce" }, agentControl: { status: "enforcing", names: ["Banking scope"] }, tracing: "configured", otel: "missing_configuration" },
     { id: "fraud", label: "Fraud scoring", up: true, ready: false, detail: "Start scripts/serve.sh.", aiDefense: { status: "configured", mode: "enforce" }, agentControl: null, tracing: null, otel: "missing_configuration" },
     { id: "briefing", label: "Company briefing", up: false, ready: false, detail: "Not running", aiDefense: null, agentControl: null, tracing: null, otel: null },
-    { id: "wealth", label: "Wealth research and advisory", up: true, ready: true, detail: "", aiDefense: { status: "disabled", mode: "off" }, agentControl: null, tracing: "configured", otel: "exporting" },
+    { id: "research", label: "Market research", up: true, ready: true, detail: "", aiDefense: { status: "disabled", mode: "off" }, agentControl: null, tracing: "configured", otel: "exporting" },
     { id: "sar", label: "SAR investigation", up: true, ready: true, detail: "", aiDefense: null, agentControl: null, tracing: null, otel: null },
   ],
   interbank: {
@@ -30,6 +32,7 @@ const STATUS: StudioStatus = {
 };
 
 async function open(page: Page) {
+  await mockPlanner(page);
   await page.route("**/api/studio/status", (route) => route.fulfill({ json: STATUS }));
   await page.goto("/", { waitUntil: "networkidle" });
 }
@@ -154,10 +157,10 @@ test("prototype queue rows select the workbench item", async ({ page }) => {
   await open(page);
   await page.locator(".side-nav").getByRole("button", { name: "Use case library" }).click();
   const card = page.getByRole("button", { name: /Open KYC processing/ });
-  await expect(card.locator(".stage-label")).toHaveText("Prototype");
-  await expect(card).toContainText("In development");
+  await expect(card.locator(".stage-label")).toHaveText("Planned");
+  await expect(card.locator(".card-dev-overlay")).toHaveText("Planned");
   await card.click();
-  await expect(page.locator(".live-status-chip")).toContainText("Illustrative prototype · no live service");
+  await expect(page.locator(".live-status-chip")).toContainText("Planned");
   await expect(page.locator(".case-metrics small")).toHaveText([/Illustrative$/, /Illustrative$/, /Illustrative$/]);
   await expect(page.locator(".workbench-body h3")).toHaveText("Chuck Robbins (fictional demo profile)");
   await page.getByRole("row", { name: /Avery Chen/ }).click();
@@ -175,13 +178,37 @@ test("prototype queue rows select the workbench item", async ({ page }) => {
   await expect(page.locator(".workbench-body h3")).toHaveText("Avery Chen");
 });
 
+test("capacity planning is the third view for every use case", async ({ page }) => {
+  await open(page);
+  await page.locator(".side-nav").getByRole("button", { name: "Use case library" }).click();
+  for (const { title } of useCasePackages) {
+    await page.locator(".library-grid").getByRole("button", { name: `Open ${title} experience` }).click();
+    const tabs = page.getByRole("tablist", { name: `${title} views` });
+    await expect(tabs.getByRole("tab")).toHaveText(["Use case demo", "Architecture", "Capacity planning"]);
+    await expect(page.locator("ai-infrastructure-planner")).toHaveCount(0);
+    await tabs.getByRole("tab", { name: "Capacity planning" }).click();
+    const panel = page.getByRole("tabpanel", { name: "Capacity planning" });
+    await expect(panel).toBeVisible();
+    await expect(panel.getByRole("heading", { name: `Capacity planning for ${title}` })).toBeVisible();
+    await expect(panel.locator("iframe")).toHaveCount(0);
+    await expect(panel.getByRole("link", { name: "Open AI Infrastructure Planner in a new tab" })).toHaveAttribute("href", "https://www.ai-infrastructure-planner.com/");
+    await expect(panel.locator("ai-infrastructure-planner").getByRole("heading", { name: "Requirements" })).toBeVisible();
+    await expect(page.locator("#case-panel-demo")).toBeHidden();
+    await expect(page.locator("#case-panel-architecture")).toBeHidden();
+    await expect(page.getByTestId("architecture-explorer")).toHaveCount(0);
+    await page.getByRole("button", { name: "Back to library" }).click();
+  }
+});
+
 test("use case tabs are a keyboard tablist and opening another case resets to the demo", async ({ page }) => {
   await open(page);
   await page.getByRole("button", { name: "Open Transaction intelligence experience" }).click();
   const demo = page.getByRole("tab", { name: "Use case demo" });
   const architecture = page.getByRole("tab", { name: "Architecture" });
+  const capacity = page.getByRole("tab", { name: "Capacity planning" });
   await expect(demo).toHaveAttribute("aria-selected", "true");
   await expect(page.getByTestId("architecture-explorer")).toHaveCount(0);
+  await expect(page.locator("ai-infrastructure-planner")).toHaveCount(0);
 
   await demo.focus();
   await page.keyboard.press("ArrowRight");
@@ -189,9 +216,28 @@ test("use case tabs are a keyboard tablist and opening another case resets to th
   await expect(architecture).toHaveAttribute("aria-selected", "true");
   await expect(page.getByRole("tabpanel", { name: "Architecture" })).toBeVisible();
   await expect(page.getByTestId("architecture-explorer")).toHaveAttribute("data-system-id", "transaction-llm");
+  await page.keyboard.press("ArrowRight");
+  await expect(capacity).toBeFocused();
+  await expect(capacity).toHaveAttribute("aria-selected", "true");
+  await expect(capacity).toHaveAttribute("tabindex", "0");
+  await expect(architecture).toHaveAttribute("tabindex", "-1");
+  await expect(page.getByRole("tabpanel", { name: "Capacity planning" })).toBeVisible();
+  await expect(page.getByTestId("architecture-explorer")).toBeHidden();
+  const assessmentName = page.locator("ai-infrastructure-planner").getByLabel("Assessment name");
+  await assessmentName.fill("Transaction intelligence plan");
+  await capacity.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(demo).toBeFocused();
+  await page.keyboard.press("ArrowLeft");
+  await expect(capacity).toBeFocused();
   await page.keyboard.press("Home");
+  await expect(demo).toBeFocused();
   await expect(demo).toHaveAttribute("aria-selected", "true");
   await expect(page.locator("#illustrative-experience")).toBeVisible();
+  await page.keyboard.press("End");
+  await expect(capacity).toBeFocused();
+  await expect(capacity).toHaveAttribute("aria-selected", "true");
+  await expect(assessmentName).toHaveValue("Transaction intelligence plan");
 
   await page.keyboard.press("ControlOrMeta+k");
   await page.getByLabel("Search demos and pages").fill("KYC processing");
@@ -200,7 +246,7 @@ test("use case tabs are a keyboard tablist and opening another case resets to th
   await expect(page.getByRole("tab", { name: "Use case demo" })).toHaveAttribute("aria-selected", "true");
 });
 
-test("a run started in the demo keeps going on the Architecture tab and is intact on return", async ({ page }) => {
+test("a run started in the demo keeps going across workspace tabs and is intact on return", async ({ page }) => {
   const golden = JSON.parse(readFileSync("services/fraud/data/recorded/cpp-orbit-scripted.json", "utf8")) as { run: Record<string, unknown>; events: { kind: string }[] };
   const pause = golden.events.findIndex((event) => event.kind === "hitl.request");
   let startedAt = 0;
@@ -228,8 +274,12 @@ test("a run started in the demo keeps going on the Architecture tab and is intac
   const explorer = page.getByTestId("architecture-explorer");
   await expect(explorer).toBeVisible();
   await expect(explorer).toHaveAttribute("data-system-id", "fraud-modeling");
+  await page.getByRole("tab", { name: "Capacity planning" }).click();
+  await expect(explorer).toBeHidden();
+  await expect(page.getByRole("tabpanel", { name: "Capacity planning" })).toBeVisible();
   await expect.poll(() => served, { timeout: 10_000 }).toBe(true);
   await expect(demoPanel.locator(".fx-aha")).toHaveText(/Rules approve what the graph model flags/);
+  await page.getByRole("tab", { name: "Architecture" }).click();
   await expect(explorer).toHaveAttribute("data-phase", "idle");
   const currentScope = await explorer.getAttribute("data-scope-id");
 

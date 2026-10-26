@@ -74,7 +74,10 @@ and current checkout failures.
 
 ## Adding or changing a demo
 
-Follow the [container package contract](docs/CONTAINERS.md). Register each live
+Start with the [use-case authoring guide](docs/ADDING_USE_CASES.md). Choose its
+closest reference implementation and follow the registration map, visual design,
+and acceptance checklist. The [container package contract](docs/CONTAINERS.md)
+covers runtime packaging. Register each live
 use case in `config/use-cases.ts` with its own Compose project, stable API mapping,
 health route, scoped environment, optional components, and persistent storage.
 Development and production proxies, the operator, and doctor consume this registry.

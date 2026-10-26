@@ -105,6 +105,10 @@ and data for the next session.
 
 ## Add a blueprint or use case
 
+Follow the [use-case authoring guide](ADDING_USE_CASES.md) for UI registration,
+shared visual design, stories, architecture, and acceptance checks. This section
+covers the runtime package.
+
 1. Pin the upstream source revision and image versions; retain its license notices.
 2. Add its Dockerfile and Compose definition. Existing upstream images and multiple
    containers are supported. Keep internal databases and workers on package networks.

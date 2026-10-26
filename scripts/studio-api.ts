@@ -9,6 +9,7 @@ import { handleModels } from "./studio-models-api.ts";
 import { handleSettings } from "./studio-settings-api.ts";
 import { reviewedRecording } from "./recording-review.ts";
 import { handleStatus } from "./studio-status-api.ts";
+import { handlePlanner } from "./studio-planner-api.ts";
 import { runtimeForPath } from "../config/use-cases.ts";
 
 export { startMissing, stopAll } from "./studio-services.ts";
@@ -19,6 +20,7 @@ const ROUTES = {
   "/api/studio/settings/check": (request: IncomingMessage, response: ServerResponse) => handleSettings(request, response, "check"),
   "/api/studio/services": (request: IncomingMessage, response: ServerResponse) => handleSettings(request, response, "services"),
   "/api/studio/status": (request: IncomingMessage, response: ServerResponse) => handleStatus(request, response),
+  "/api/studio/planner": (request: IncomingMessage, response: ServerResponse) => handlePlanner(request, response),
 } as const;
 
 // Serve committed recordings without requiring the corresponding live services.

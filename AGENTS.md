@@ -2,6 +2,8 @@
 
 These instructions apply to this repository and its forks. Read [README.md](README.md)
 for setup and [CONTRIBUTING.md](CONTRIBUTING.md) for validation and change conventions.
+Before adding a use case, follow [Adding a use case](docs/ADDING_USE_CASES.md) for
+reference implementations, registration points, UI conventions, and acceptance checks.
 
 ## Working in this checkout
 
@@ -48,11 +50,20 @@ These standards apply to new use cases and changes to existing ones. Inspect an 
 
 ## Use case experience
 
+- Keep the shared shell, story panel, and `USE_CASE_TABS` order: Use case demo, Architecture, Capacity planning. Render the demo inside the existing workspace. Capacity planning is supplied by the shell and receives observations through shared `RunStats`.
 - Reuse `OperatorWorkspace`, `RunStats`, `RunTimeline`, provenance badges, and shared controls where applicable. Extend shared components when a capability belongs across demos.
 - Every live agent use case includes the shared Live run stats panel. Update model calls, tool calls, provider tokens, latency, control decisions, and trace delivery during execution. Leave unreported measurements unknown.
 - Keep loading, running, completed, blocked, failed, and cancelled states consistent. Support cancellation for long operations and recovery from errors. Preserve run identity, provenance, and measured stats across tab switches, refreshes, and saved-run history without double counting.
 - Use supported agent SDKs and shared Studio model routing. Integrate shared settings, health reporting, service management, run events, and guide anchors.
 - Report actual integration state and delivery evidence. Identify live execution, recordings, synthetic data, local policy checks, and hosted enforcement accurately.
+
+## Visual design
+
+- Follow the visual contract and CSS tokens in `app/globals.css`. Preserve the ink/navy/slate surfaces, cobalt and violet accents, semantic status colors, typography, spacing, and shared button classes. Avoid cyan, neon styling, and new theme systems.
+- Use the shared `--font-meta`, `--font-body`, and `--font-control` sizes for new metadata, body text, and controls. Keep content readable during screen sharing; reflow or scroll long content instead of shrinking it.
+- Scope use-case CSS under its component. Dark styles are the source for generated light styles through `scripts/postcss-light-theme.mjs`; add only necessary exceptions to `app/theme-light.css`. Verify both themes.
+- Use Lucide icons in application UI and the shared Carbon symbols in architecture diagrams. Keep labels, focus indicators, keyboard behavior, and status text accessible; color alone must not carry meaning.
+- Compare the completed demo with its chosen reference at desktop and narrow widths. Preserve the reference's input, result, human-decision, and execution-evidence hierarchy.
 
 ## Architecture design
 

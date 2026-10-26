@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { mockPlanner } from "./planner-fixture";
 
 const STATUS = {
   checkedAt: "2026-10-08T12:00:00.000Z",
@@ -10,6 +11,7 @@ const STATUS = {
 };
 
 async function openCase(page: Page, title: string) {
+  await mockPlanner(page);
   await page.route("**/api/studio/status", (route) => route.fulfill({ json: STATUS }));
   await page.goto("/", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: `Open ${title} experience` }).first().click();
@@ -20,7 +22,7 @@ async function openCase(page: Page, title: string) {
 const card = (stats: Locator, name: "Splunk Agent Observability" | "Cisco AI Defense") => stats.getByRole("article", { name: `${name} stats` });
 const tile = (scope: Locator, label: string) => scope.locator(".run-stats-tiles > div").filter({ has: scope.page().locator("dt", { hasText: new RegExp(`^${label}$`) }) }).locator("dd");
 
-test("Brahe Bank's stats show the turn in flight, then the service's numbers, across a tab switch", async ({ page }) => {
+test("Brahe Bank's stats persist across Architecture and Capacity planning tabs", async ({ page }) => {
   let turns = 0;
   await page.route("**/api/banking/health", (route) => route.fulfill({ json: {
     ready: true, model: "gpt-test", retrieval: "Local document search", galileo: "configured",
@@ -59,6 +61,9 @@ test("Brahe Bank's stats show the turn in flight, then the service's numbers, ac
   await expect(ao.locator(".run-stats-chip")).toContainText("In flight");
 
   await page.getByRole("tab", { name: "Architecture" }).click();
+  await expect(stats).toBeHidden();
+  await page.getByRole("tab", { name: "Capacity planning" }).click();
+  await expect(page.getByRole("tabpanel", { name: "Capacity planning" })).toBeVisible();
   await expect(stats).toBeHidden();
   await expect.poll(() => turns).toBe(1);
   await page.waitForTimeout(1800);

@@ -1,6 +1,7 @@
 import type { AnchorId } from "./anchors";
+import type { UseCaseTab } from "../studio-nav";
 
-export type GuideTab = "demo" | "architecture";
+export type GuideTab = UseCaseTab;
 export type RunState = "idle" | "starting" | "running" | "awaiting-human" | "done" | "failed" | "blocked";
 export type Source = "live" | "recorded" | "sample" | "scripted" | "illustrative" | "none";
 export type ServiceId = "banking" | "fraud" | "briefing" | "wealth" | "sar" | "vulnerability" | "interbank";

@@ -5,7 +5,7 @@
  */
 export const ANCHORS = [
   "vulnerability.intro", "vulnerability.source", "vulnerability.run", "vulnerability.findings", "vulnerability.patch", "vulnerability.checks", "vulnerability.evidence", "vulnerability.publication", "vulnerability.hec",
-  "case.status", "case.tabs", "case.tab.architecture", "guide.launch",
+  "case.status", "case.tabs", "case.tab.architecture", "case.tab.capacity", "guide.launch",
   "stats", "stats.observability", "stats.defense",
   "present.bar", "present.guide",
   "arch.explorer", "arch.mode", "arch.rail", "arch.focus", "arch.canvas", "arch.env",

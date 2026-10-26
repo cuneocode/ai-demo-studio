@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { PlanningRunContext } from "./planning-evidence";
 import { Activity, ArrowUpRight, Loader2, RotateCcw, Settings2, ShieldCheck } from "lucide-react";
 import { useStudioNav } from "./studio-nav";
 import { guideAnchor } from "./guide/anchors";
@@ -321,6 +322,8 @@ export default function RunStats({ ledger, observability, defense, empty = "Stat
 }) {
   const { runs, reset } = ledger;
   const last = runs.at(-1);
+  const observePlanningRun = useContext(PlanningRunContext);
+  useEffect(() => { observePlanningRun?.(last); }, [observePlanningRun, last]);
   const elapsed = useElapsed(last);
   const duration = elapsed ?? last?.durationMs;
   const provenance = last ? runProvenance(last) : null;
