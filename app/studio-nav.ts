@@ -13,6 +13,11 @@ export type UseCaseTab = (typeof USE_CASE_TABS)[number]["id"];
 
 /** What a demo can ask of the studio shell without being handed props for it. */
 export type StudioNav = {
+  /** Null selects shared platform views; a demo retains its owning app while cached. */
+  appId?: string | null;
+  demoId?: string;
+  /** Cached demos keep running while their interaction surface is inactive. */
+  active?: boolean;
   preview?: boolean;
   openSettings?: (section?: string) => void;
   links?: StudioStatus["links"] | null;

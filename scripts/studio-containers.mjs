@@ -1,19 +1,23 @@
-import { runtimes, runtimeById, runtimeForUseCase } from '../config/use-cases.ts';
+import { runtimes } from '../config/use-cases.ts';
+import { selectRuntimes } from './studio-selection.ts';
 import { perform, runtimeLogs, serviceStatus } from './studio-services.ts';
 
 const [action = 'status', ...ids] = process.argv.slice(2);
-if (!['build', 'start', 'stop', 'restart', 'status', 'logs', 'controls'].includes(action)) {
-  console.error('Use studio:containers -- build|start|stop|restart|status|logs|controls [runtime ids]');
+if (!['prepare', 'build', 'start', 'stop', 'restart', 'status', 'logs', 'controls'].includes(action)) {
+  console.error('Use studio:containers -- prepare|build|start|stop|restart|status|logs|controls [runtime ids] [--app id | --all]');
   process.exit(1);
 }
-const selected = ids.length ? ids.map(id => runtimeById(id) ?? runtimeForUseCase(id)) : action === 'build' ? runtimes : [];
-if (selected.some(spec => !spec) || (!selected.length && action !== 'status')) {
+let selected, scope;
+try { ({ selected, scope } = selectRuntimes(ids, action === 'build')); }
+catch (error) { console.error(error.message); process.exit(1); }
+if (selected.some(spec => !spec) || (!selected.length && action !== 'status' && !ids.includes('--app'))) {
   console.error('Choose one or more live runtimes: ' + runtimes.map(spec => spec.id).join(', '));
   process.exit(1);
 }
 try {
+  const built = new Set();
   if (action === 'status') {
-    const status = await serviceStatus();
+    const status = await serviceStatus(scope);
     console.log(status.docker.detail);
     for (const row of status.services.filter(row => !selected.length || selected.some(spec => spec.id === row.id))) console.log(`${row.id}: ${row.state}${row.detail ? ` (${row.detail})` : ''}`);
   } else for (const spec of selected) {
@@ -22,7 +26,7 @@ try {
       const job = { state: 'running', operation: action, log: [], startedAt: new Date().toISOString() };
       console.log(`${action}: ${spec.label}`);
       const timer = setInterval(() => { for (const line of job.log.splice(0)) console.log(line); }, 500);
-      try { await perform(spec, action, job); }
+      try { await perform(spec, action, job, undefined, built); }
       finally { clearInterval(timer); for (const line of job.log) console.log(line); }
     }
   }

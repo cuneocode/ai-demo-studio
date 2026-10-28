@@ -1,3 +1,4 @@
+import { appStorageKey, readStored, writeStored } from "./studio/storage.ts";
 import type { ObservedRun } from "./RunStats";
 
 /** Browser contract v1. The planner implementation is loaded from its own release. */
@@ -55,14 +56,14 @@ export function plannerInitialization(useCaseId: string, assessmentId: string, t
 }
 
 const ASSESSMENT_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
-export function plannerAssessmentId(storage: Pick<Storage, "getItem" | "setItem"> | null, useCaseId: string, fresh = false, uuid = () => crypto.randomUUID()): string {
-  const key = `fsi-studio.planner.v1:${useCaseId}:assessment`;
+export function plannerAssessmentId(storage: Pick<Storage, "getItem" | "setItem"> | null, useCaseId: string, fresh = false, uuid = () => crypto.randomUUID(), appId = "fsi"): string {
+  const key = appId === "fsi" ? `fsi-studio.planner.v1:${useCaseId}:assessment` : appStorageKey(appId, "planner-assessment", useCaseId);
   try {
-    const saved = storage?.getItem(key);
+    const saved = readStored(storage, key);
     if (!fresh && saved && ASSESSMENT_ID.test(saved)) return saved;
   } catch { /* A session can still use the planner when browser storage is unavailable. */ }
   const id = uuid();
-  try { storage?.setItem(key, id); } catch { /* The planner handles its own draft-storage status. */ }
+  try { writeStored(storage, key, id); } catch { /* The planner handles its own draft-storage status. */ }
   return id;
 }
 

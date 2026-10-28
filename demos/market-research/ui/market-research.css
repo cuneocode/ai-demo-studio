@@ -1,0 +1,64 @@
+.mr-demo { display: grid; gap: 20px; color: var(--text); }
+.mr-demo button { cursor: pointer; }
+.mr-demo button:disabled { opacity: .5; cursor: default; }
+.mr-start, .mr-inputs, .mr-report { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; }
+.mr-start, .mr-start-actions, .mr-ticker > div, .mr-section-head { display: flex; align-items: center; gap: 12px; }
+.mr-start, .mr-section-head { justify-content: space-between; flex-wrap: wrap; }
+.mr-ticker label { display: block; font-size: 12px; font-weight: 650; margin-bottom: 8px; }
+.mr-ticker input { width: 100px; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: inherit; font-weight: 650; }
+.mr-demo button, .mr-dialog button { border: 1px solid var(--border); padding: 9px 12px; border-radius: 6px; color: inherit; background: transparent; font: inherit; font-size: 13px; }
+.mr-demo .primary { background: var(--blue, #225bfa); border-color: var(--blue, #225bfa); color: white; display: inline-flex; align-items: center; gap: 7px; }
+.mr-label { font-size: 11px; font-weight: 700; color: var(--blue, #225bfa); letter-spacing: .09em; }
+.mr-demo h2 { font-size: 21px; margin: 6px 0; }
+.mr-demo h2 span { font-size: 13px; color: var(--muted); margin-left: 8px; }
+.mr-demo h3 { font-size: 14px; margin: 0 0 13px; }
+.mr-section-head p, .mr-source-note { color: var(--muted); font-size: 12px; margin: 6px 0; }
+.mr-metrics { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 15px; padding: 20px 0; border-bottom: 1px solid var(--border); }
+.mr-metrics dt, .mr-facts dt { color: var(--muted); font-size: 12px; }
+.mr-metrics dd { margin: 6px 0 0; font-size: 21px; font-weight: 650; overflow-wrap: anywhere; }
+.mr-input-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 10px 0 24px; }
+.mr-facts { margin: 0; display: grid; gap: 12px; }
+.mr-facts > div { display: flex; justify-content: space-between; gap: 16px; }
+.mr-facts dd { margin: 0; font-size: 13px; text-align: right; }
+.mr-demo table { width: 100%; font-size: 12px; border-collapse: collapse; }
+.mr-demo td, .mr-demo th { text-align: right; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.mr-demo td:first-child, .mr-demo th:first-child { text-align: left; }
+.mr-demo th { color: var(--muted); font-weight: 500; }
+.mr-news h3 span { font-weight: 400; font-size: 12px; color: var(--muted); margin-left: 8px; }
+.mr-articles { display: grid; gap: 6px; }
+.mr-demo .mr-article { width: 100%; display: flex; gap: 12px; text-align: left; align-items: center; padding: 13px; }
+.mr-article > svg { flex-shrink: 0; color: var(--muted); }
+.mr-article > span:nth-child(2) { flex: 1; }
+.mr-article strong { display: block; font-size: 13px; font-weight: 550; }
+.mr-article small { display: block; color: var(--muted); margin-top: 5px; font-size: 11px; }
+.mr-article-state { color: var(--muted); font-size: 11px; max-width: 170px; }
+.mr-demo .mr-article.is-attack { border-color: #c69040; }
+.mr-article.is-attack .mr-article-state { color: #b47618; }
+.mr-rating { padding: 8px 22px; border-radius: 30px; font-size: 22px; background: #e7eefb; color: #2353a1; }
+.mr-report { scroll-margin-top: 85px; }
+.mr-decision { display: grid; justify-items: start; gap: 8px; }
+.mr-rating.rating-buy { color: #167043; background: #e1f4e8; }
+.mr-rating.rating-sell { color: #a63535; background: #fbeaea; }
+.mr-outlook { font-size: 17px; line-height: 1.6; max-width: 850px; }
+.mr-drivers { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; padding: 12px 0; }
+.mr-drivers article { border-top: 2px solid var(--border); padding-top: 14px; }
+.mr-drivers p { font-size: 14px; line-height: 1.6; }
+.mr-drivers button { display: inline-flex; align-items: center; gap: 5px; }
+.mr-risks { padding: 16px 0; font-size: 13px; }
+.mr-risks ul { padding-left: 18px; line-height: 1.7; margin-bottom: 0; }
+.mr-excluded { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; }
+.mr-activity, .mr-runtime { border: 1px solid var(--border); border-radius: 9px; padding: 16px; }
+.mr-activity summary, .mr-runtime summary { cursor: pointer; font-size: 13px; font-weight: 600; }
+.mr-runtime[open] summary, .mr-activity[open] summary { margin-bottom: 16px; }
+.mr-disclaimer { color: var(--muted); font-size: 11px; margin: 0; }
+.mr-error { color: #b53535; }
+.mr-dialog { width: min(760px, calc(100vw - 40px)); max-height: 85vh; padding: 0; border: 1px solid var(--border); border-radius: 14px; background: var(--surface, white); color: var(--text, #16243e); box-shadow: 0 20px 100px #0004; }
+.mr-dialog::backdrop { background: #101a32a8; }
+.mr-dialog-content { padding: 28px; }
+.mr-dialog header { display: flex; justify-content: space-between; align-items: start; gap: 20px; }
+.mr-dialog h2 { font-size: 21px; line-height: 1.4; }
+.mr-dialog header p { color: var(--muted); font-size: 12px; }
+.mr-document-body { white-space: pre-wrap; line-height: 1.7; font-size: 14px; margin: 24px 0; overflow-wrap: anywhere; }
+.mr-dialog a { display: inline-flex; align-items: center; gap: 6px; }
+.mr-notice { border-left: 3px solid #bd8a32; padding: 12px; font-size: 13px; background: #bd8a3212; }
+@media (max-width: 700px) { .mr-start, .mr-inputs, .mr-report { padding: 16px; } .mr-start-actions { flex-wrap: wrap; } .mr-input-columns, .mr-drivers { grid-template-columns: 1fr; } .mr-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); } .mr-metrics dd { font-size: 17px; } .mr-article { flex-wrap: wrap; } .mr-article-state { width: 100%; margin-left: 30px; max-width: none; } .mr-dialog-content { padding: 20px; } }

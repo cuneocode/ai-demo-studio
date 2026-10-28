@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, Compass, Loader2, MoreHorizontal, X } from "lucide-react";
 import type { StudioStatus } from "../studio-status";
+import { useStudioNav } from "../studio-nav";
 import { provenanceText } from "../run/ProvenanceBadge";
 import { demoRoot, evaluate, findAnchors, resolveFit, resolveStep, type ConditionContext, type ResolvedFit } from "./conditions";
 import { loadPosition, loadPrefs, readDeepLink, savePosition, savePrefs, writeDeepLink, type GuidePosition, type GuidePrefs } from "./persistence";
@@ -58,31 +59,32 @@ export function useGuideControls() {
 }
 
 /** The use case workspace registers its tab switcher so steps can change tabs. */
-export function useGuideHost(caseId: string, tab: GuideTab, selectTab: (tab: GuideTab) => void) {
+export function useGuideHost(caseId: string, tab: GuideTab, selectTab: (tab: GuideTab) => void, active = true) {
   const guide = useContext(GuideControlContext);
   const register = guide?.registerHost;
   const unregister = guide?.unregisterHost;
   const selectRef = useRef(selectTab);
   useLayoutEffect(() => { selectRef.current = selectTab; });
   useEffect(() => {
-    register?.({ caseId, tab, selectTab: (next) => selectRef.current(next) });
-  }, [register, caseId, tab]);
-  useEffect(() => () => unregister?.(caseId), [unregister, caseId]);
+    if (active) register?.({ caseId, tab, selectTab: (next) => selectRef.current(next) });
+  }, [register, caseId, tab, active]);
+  useEffect(() => { if (active) return () => unregister?.(caseId); }, [unregister, caseId, active]);
 }
 
 /** Demos register the same functions their own controls call. */
 export function useGuideActions(caseId: string, actions: GuideActions) {
+  const { active } = useStudioNav();
   const guide = useContext(GuideControlContext);
   const register = guide?.registerActions;
   const ref = useRef(actions);
   useLayoutEffect(() => { ref.current = actions; });
-  useEffect(() => register?.(caseId, {
+  useEffect(() => active === false ? undefined : register?.(caseId, {
     run: (arg) => ref.current.run?.(arg),
     canRun: () => Boolean(ref.current.canRun?.()),
     replay: (arg) => ref.current.replay?.(arg),
     skipReplay: () => ref.current.skipReplay?.(),
     selectScenario: (id) => ref.current.selectScenario?.(id),
-  }), [register, caseId]);
+  }), [register, caseId, active]);
 }
 
 const typing = (target: EventTarget | null) =>

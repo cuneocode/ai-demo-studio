@@ -2,11 +2,11 @@
 import { existsSync, statfsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { runtimes } from '../config/use-cases.ts';
+import { selectRuntimes } from './studio-selection.ts';
 const args = process.argv.slice(2);
-if (args.some(arg => !['--live', '--interbank', '--source', '--help'].includes(arg))) {
-  console.error('Use studio:doctor [--live] [--interbank] [--source].'); process.exit(1);
-}
+let runtimes;
+try { ({ selected: runtimes } = selectRuntimes(args.filter(arg => !['--live', '--interbank', '--source', '--help'].includes(arg)), true)); }
+catch (error) { console.error(error.message); process.exit(1); }
 if (args.includes('--help')) {
   console.log('Checks Studio dependencies. --live requires Docker Compose 2.30+ and a running engine. --source checks optional Python development environments.'); process.exit(0);
 }

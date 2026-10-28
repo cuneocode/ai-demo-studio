@@ -11,10 +11,10 @@ test("operator starts and stops independent demo stacks and keeps illustrative m
   const actions: { action: string; ids?: string[] }[] = [];
   const snapshot = () => ({ docker: { ready: true, detail: "Docker available" }, services: rows,
     packages: useCasePackages.map(item => ({ ...item, runtime: item.runtime?.id ?? null })) });
-  await page.route("**/api/studio/status", route => route.fulfill({ json: { checkedAt: "2026-10-23", services: [], interbank: { up: false, runs: [] }, models: [], links: {}, readiness: [] } }));
-  await page.route("**/api/studio/settings", route => route.fulfill({ json: { file: ".env", settings: {}, readiness: [] } }));
-  await page.route("**/api/studio/models", route => route.fulfill({ json: { registry: { version: 2, chain: ["test"], providers: { test: { label: "Test model", kind: "vllm", baseUrl: "http://model:8000/v1", model: "test", private: true, apiKeyEnv: "", responsesApi: false } }, useCases: {} }, keys: {}, health: {}, saved: true } }));
-  await page.route("**/api/studio/services", async route => {
+  await page.route(/\/api\/studio\/status(?:\?.*)?$/, route => route.fulfill({ json: { checkedAt: "2026-10-23", services: [], interbank: { up: false, runs: [] }, models: [], links: {}, readiness: [] } }));
+  await page.route(/\/api\/studio\/settings(?:\?.*)?$/, route => route.fulfill({ json: { file: ".env", settings: {}, readiness: [] } }));
+  await page.route(/\/api\/studio\/models(?:\?.*)?$/, route => route.fulfill({ json: { registry: { version: 2, chain: ["test"], providers: { test: { label: "Test model", kind: "vllm", baseUrl: "http://model:8000/v1", model: "test", private: true, apiKeyEnv: "", responsesApi: false } }, useCases: {} }, keys: {}, health: {}, saved: true } }));
+  await page.route(/\/api\/studio\/services(?:\?.*)?$/, async route => {
     if (route.request().method() === "POST") {
       const body = route.request().postDataJSON(); actions.push(body);
       const row = rows.find(item => item.id === body.ids?.[0]);
@@ -27,7 +27,7 @@ test("operator starts and stops independent demo stacks and keeps illustrative m
     }
     return route.fulfill({ json: snapshot() });
   });
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
   await page.locator(".side-nav").getByRole("button", { name: "Studio settings" }).click();
   const advisory = page.getByRole("row", { name: "Advisor meeting prep stack", exact: true });
   const research = page.getByRole("row", { name: "Market research stack", exact: true });

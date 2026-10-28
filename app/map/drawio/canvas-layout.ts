@@ -39,11 +39,16 @@ export function visibleCanvasEdges(doc: CanvasDocument, expanded: string[], mode
   const candidates = doc.edges.filter(edge => active(edge) && canvasScopePath(doc, edge.scopeId).slice(1).every(id => expanded.includes(id)))
     .map(edge => ({ ...edge, from: terminal(edge.from), to: terminal(edge.to), original: edge }))
     .filter((edge): edge is typeof edge & { from: string; to: string } => Boolean(edge.from && edge.to && edge.from !== edge.to));
-  const labels = new Set<string>();
+  const labels = new Set<string>(), routes = new Set<string>();
   return candidates.filter(edge => !candidates.some(inner => inner.id !== edge.id && inner.kind === edge.kind && (
     inner.to === edge.to && descendant(inner.original.from, edge.original.from)
     || inner.from === edge.from && descendant(inner.original.to, edge.original.to)
-  ))).map(edge => {
+  ))).filter(edge => {
+    const key = JSON.stringify([edge.from, edge.to, edge.kind, edge.layer, edge.label, edge.bidirectional]);
+    if (routes.has(key)) return false;
+    routes.add(key);
+    return true;
+  }).map(edge => {
     if (edge.layer !== "deployment" || edge.kind !== "request") return edge;
     const key = `${edge.to}:${edge.label}`;
     const label = labels.has(key) ? "" : edge.label;

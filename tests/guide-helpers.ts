@@ -10,7 +10,8 @@ export const STATUS_LIVE = {
     { id: "banking", label: "Brahe Bank", up: true, ready: true, detail: "", aiDefense: { status: "configured", mode: "enforce" }, agentControl: { status: "enforcing", names: ["Banking scope"] }, tracing: "configured", otel: "missing_configuration" },
     { id: "fraud", label: "Fraud scoring", up: true, ready: true, detail: "", aiDefense: { status: "configured", mode: "enforce" }, agentControl: { status: "enforcing", names: ["fraud.take_action"] }, tracing: "configured", otel: "missing_configuration" },
     { id: "briefing", label: "Company briefing", up: true, ready: true, detail: "", aiDefense: { status: "disabled", mode: "off" }, agentControl: null, tracing: null, otel: null },
-    { id: "wealth", label: "Wealth research and advisory", up: true, ready: true, detail: "", aiDefense: { status: "disabled", mode: "off" }, agentControl: { status: "not_started", names: [] }, tracing: "configured", otel: "missing_configuration" },
+    { id: "research", label: "Market research", up: true, ready: true, detail: "", aiDefense: { status: "disabled", mode: "off" }, agentControl: { status: "not_started", names: [] }, tracing: "configured", otel: "missing_configuration" },
+    { id: "advisory", label: "Advisor meeting prep", up: true, ready: true, detail: "", aiDefense: { status: "disabled", mode: "off" }, agentControl: { status: "not_started", names: [] }, tracing: "configured", otel: "missing_configuration" },
     { id: "sar", label: "SAR investigation", up: true, ready: true, detail: "", aiDefense: { status: "configured", mode: "enforce" }, agentControl: { status: "enforcing", names: ["sar.file_requires_approval"] }, tracing: "configured", otel: "missing_configuration" },
   ],
   interbank: {
@@ -23,7 +24,7 @@ export const STATUS_LIVE = {
 };
 
 export function statusWith(serviceId: string, patch: Record<string, unknown>) {
-  return { ...STATUS_LIVE, services: STATUS_LIVE.services.map((service) => (service.id === serviceId ? { ...service, ...patch } : service)) };
+  return { ...STATUS_LIVE, services: STATUS_LIVE.services.map((service) => ((service.id === serviceId || (serviceId === "wealth" && ["research", "advisory"].includes(service.id))) ? { ...service, ...patch } : service)) };
 }
 
 const RECORDED_DIRS: Record<string, string> = {
@@ -41,7 +42,7 @@ function listing(dir: string) {
 /** Endpoints that call a model or start an agent; a guided tour on recorded runs must never reach them. */
 const PAID = [
   /\/api\/banking\/chat$/, /\/api\/briefing\/(analyze|search)/, /\/api\/fraud\/runs$/, /\/api\/sar\/runs$/,
-  /\/api\/wealth\/research\/analyze$/, /\/api\/wealth\/advisory\/brief$/, /\/api\/interbank\/(runs|kickoff)$/,
+  /\/api\/(?:wealth\/research|research\/market)\/analyze$/, /\/api\/(?:wealth|advisory)\/advisory\/brief$/, /\/api\/interbank\/(runs|kickoff)$/,
 ];
 
 /** Mocks studio status and serves committed recordings from disk; returns the paid calls the page attempted. */
@@ -66,7 +67,7 @@ export async function mockStudio(page: Page, status: object = STATUS_LIVE) {
     const file = resolve(dir, `${decodeURIComponent(name)}.json`);
     return existsSync(file) ? route.fulfill({ json: reviewedRecording(service, name, JSON.parse(readFileSync(file, "utf8"))) }) : route.fulfill({ status: 404, json: { detail: "Not found." } });
   });
-  await page.route("**/api/studio/status", (route) => route.fulfill({ json: status }));
+  await page.route(/\/api\/studio\/status(?:\?.*)?$/, (route) => route.fulfill({ json: status }));
   return paid;
 }
 
@@ -144,7 +145,7 @@ export async function walk(page: Page, { act = false, maxSteps = 40 }: { act?: b
   return seen;
 }
 
-export async function openLibrary(page: Page, path = "/") {
+export async function openLibrary(page: Page, path = "/apps/fsi") {
   await page.goto(path, { waitUntil: "networkidle" });
   await expect(page.locator(".card-guide").first()).toBeVisible({ timeout: 30_000 });
 }

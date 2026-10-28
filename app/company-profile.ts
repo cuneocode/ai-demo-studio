@@ -1,3 +1,4 @@
+import { readStored, writeStored, removeStored } from "./studio/storage.ts";
 export const COMPANY_PROFILE_STORAGE_KEY = "fsi-demo-studio.company-profile";
 export const MAX_UPLOAD_BYTES = 40 * 1024 * 1024;
 export const EXAMPLE_TICKERS = ["JPM", "GS", "BLK", "V"] as const;
@@ -166,7 +167,7 @@ export function allowedUploadName(name: string) {
 export function loadCompanyProfile(): StoredCompanyProfile | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(COMPANY_PROFILE_STORAGE_KEY);
+    const raw = readStored(window.localStorage, COMPANY_PROFILE_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as unknown;
     const profile = normalizeStoredProfile(parsed);
@@ -178,12 +179,12 @@ export function loadCompanyProfile(): StoredCompanyProfile | null {
 
 export function saveCompanyProfile(profile: StoredCompanyProfile) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(COMPANY_PROFILE_STORAGE_KEY, JSON.stringify(profile));
+  writeStored(window.localStorage, COMPANY_PROFILE_STORAGE_KEY, JSON.stringify(profile));
 }
 
 export function clearCompanyProfile() {
   if (typeof window === "undefined") return;
-  window.localStorage.removeItem(COMPANY_PROFILE_STORAGE_KEY);
+  removeStored(window.localStorage, COMPANY_PROFILE_STORAGE_KEY);
 }
 
 function normalizeStoredProfile(value: unknown): StoredCompanyProfile | null {

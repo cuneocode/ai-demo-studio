@@ -1,0 +1,93 @@
+{
+  "demos": [
+    {
+      "id": "code-vulnerability",
+      "mode": "live",
+      "runtimeId": "vulnerability",
+      "port": 8016,
+      "prefix": "/api/vulnerability",
+      "modelUseCase": "code-vulnerability"
+    },
+    {
+      "id": "brahe-bank",
+      "mode": "live",
+      "runtimeId": "banking",
+      "port": 8011,
+      "prefix": "/api/banking",
+      "modelUseCase": "brahe-bank"
+    },
+    {
+      "id": "fraud-modeling",
+      "mode": "live",
+      "runtimeId": "fraud",
+      "port": 8012,
+      "prefix": "/api/fraud",
+      "modelUseCase": "fraud-modeling"
+    },
+    {
+      "id": "company-briefing",
+      "mode": "live",
+      "runtimeId": "briefing",
+      "port": 8013,
+      "prefix": "/api/briefing",
+      "modelUseCase": "company-briefing"
+    },
+    {
+      "id": "market-research",
+      "mode": "live",
+      "runtimeId": "research",
+      "port": 8014,
+      "prefix": "/api/research",
+      "modelUseCase": "market-research"
+    },
+    {
+      "id": "client-advisory",
+      "mode": "live",
+      "runtimeId": "advisory",
+      "port": 8017,
+      "prefix": "/api/advisory",
+      "modelUseCase": "client-advisory"
+    },
+    {
+      "id": "kyc-processing",
+      "mode": "illustrative",
+      "runtimeId": null,
+      "port": null,
+      "prefix": null,
+      "modelUseCase": null
+    },
+    {
+      "id": "sar-support",
+      "mode": "live",
+      "runtimeId": "sar",
+      "port": 8015,
+      "prefix": "/api/sar",
+      "modelUseCase": "sar-support"
+    },
+    {
+      "id": "transaction-llm",
+      "mode": "illustrative",
+      "runtimeId": null,
+      "port": null,
+      "prefix": null,
+      "modelUseCase": null
+    },
+    {
+      "id": "interbank-a2a",
+      "mode": "live",
+      "runtimeId": "interbank",
+      "port": 8088,
+      "prefix": "/api/interbank",
+      "modelUseCase": "interbank-a2a"
+    }
+  ],
+  "story": [
+    "kyc-processing",
+    "fraud-modeling",
+    "sar-support",
+    "client-advisory"
+  ],
+  "apiAliases": {
+    "/api/wealth": "research"
+  }
+}

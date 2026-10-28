@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { appStorageKey, readStored, writeStored } from "./studio/storage.ts";
 import { PlanningRunContext } from "./planning-evidence";
 import { Activity, ArrowUpRight, Loader2, RotateCcw, Settings2, ShieldCheck } from "lucide-react";
 import { useStudioNav } from "./studio-nav";
@@ -84,7 +85,25 @@ export function startRun(prefix: string, label: string): ObservedRun {
 
 /** Session ledger for one demo: lives in the demo, so it survives tab switches. */
 export function useRunLedger() {
+  const { appId, demoId } = useStudioNav();
+  const sessionKey = demoId ? appStorageKey(appId ?? "fsi", "run-ledger", demoId) : null;
   const [runs, setRuns] = useState<ObservedRun[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      try {
+        const saved = sessionKey ? JSON.parse(readStored(sessionStorage, sessionKey) ?? "[]") : [];
+        if (Array.isArray(saved)) setRuns(current => {
+          const all = new Map(saved.filter(item => item && typeof item.id === "string" && typeof item.startedAt === "number").map(item => [item.id, item]));
+          for (const item of current) all.set(item.id, item);
+          return [...all.values()].slice(-MAX_RUNS);
+        });
+      } catch { /* A damaged session ledger starts empty. */ }
+      setLoaded(true);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [sessionKey]);
+  useEffect(() => { if (loaded && sessionKey) writeStored(sessionStorage, sessionKey, JSON.stringify(runs)); }, [runs, loaded, sessionKey]);
   const record = useCallback((run: ObservedRun) => setRuns((previous) => {
     const index = previous.findIndex((item) => item.id === run.id);
     if (index < 0) return [...previous, run].slice(-MAX_RUNS);

@@ -1,5 +1,8 @@
 "use client";
 
+import { readStored, writeStored } from "./studio/storage.ts";
+
+
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { ArrowUpRight, BookOpen, ChevronDown, PanelRightClose, X } from "lucide-react";
 import { obligationReferences, type DemoNarrative } from "./demo-narratives";
@@ -70,7 +73,7 @@ export default function DemoNarrativeLayout({ narrative, children }: { narrative
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
-      try { setExpanded(localStorage.getItem(PREFERENCE_KEY) !== "0"); } catch { /* Storage is optional. */ }
+      try { setExpanded(readStored(localStorage, PREFERENCE_KEY) !== "0"); } catch { /* Storage is optional. */ }
     });
     return () => cancelAnimationFrame(frame);
   }, []);
@@ -106,7 +109,7 @@ export default function DemoNarrativeLayout({ narrative, children }: { narrative
 
   const changeExpanded = (next: boolean) => {
     setExpanded(next);
-    try { localStorage.setItem(PREFERENCE_KEY, next ? "1" : "0"); } catch { /* Storage is optional. */ }
+    try { writeStored(localStorage, PREFERENCE_KEY, next ? "1" : "0"); } catch { /* Storage is optional. */ }
     if (!next) requestAnimationFrame(() => launchRef.current?.focus());
   };
   return <div className={`narrative-workspace${wide && expanded ? " narrative-workspace-open" : ""}`}>

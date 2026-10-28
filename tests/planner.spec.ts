@@ -24,7 +24,7 @@ const seedOf = (page: Page) => page.locator("ai-infrastructure-planner").evaluat
 test("native planner initializes once, follows theme, navigates and restores isolated drafts", async ({ page }) => {
   await mockStudio(page);
   await mockPlanner(page);
-  await page.goto("/");
+  await page.goto("/apps/fsi");
   await openCase(page);
   const planner = await openPlanner(page);
   const seed = await seedOf(page);
@@ -68,7 +68,7 @@ test("native planner initializes once, follows theme, navigates and restores iso
 test("completed recorded usage reaches initialization without production assumptions", async ({ page }) => {
   await mockStudio(page);
   await mockPlanner(page);
-  await page.goto("/");
+  await page.goto("/apps/fsi");
   await openCase(page);
   await replaySar(page);
   await openPlanner(page);
@@ -87,7 +87,7 @@ test("unconfigured connection and planner errors recover without replacing the d
   await mockPlanner(page);
   let configured = false;
   await page.route("**/api/studio/planner**", route => configured ? route.fallback() : route.fulfill({ json: { configured: false } }));
-  await page.goto("/");
+  await page.goto("/apps/fsi");
   await openCase(page);
   await page.getByRole("tab", { name: "Capacity planning", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText("Configure the planner");
@@ -110,7 +110,7 @@ test("configured planner bundle accepts Studio evidence and restores real edits"
   await page.addInitScript(() => localStorage.setItem("fsi-studio.theme", "dark"));
   const metrics: string[] = [];
   page.on("request", request => { if (request.url().includes("/api/business-events")) metrics.push(request.url()); });
-  await page.goto("/");
+  await page.goto("/apps/fsi");
   await openCase(page);
   await replaySar(page);
   const planner = await openPlanner(page);
@@ -194,7 +194,7 @@ test("configured planner bundle accepts Studio evidence and restores real edits"
 test("older planner drafts receive generated names and current model defaults while retaining edits", async ({ page }) => {
   test.skip(process.env.STUDIO_PLANNER_LIVE !== "1", "Requires a configured planner bundle and API.");
   await mockStudio(page);
-  await page.goto("/");
+  await page.goto("/apps/fsi");
   await openCase(page, "Code vulnerability analysis");
   const planner = await openPlanner(page);
   await planner.getByRole("spinbutton", { name: "Maximum input tokens", exact: true }).fill("12000");

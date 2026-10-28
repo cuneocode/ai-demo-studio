@@ -1,3 +1,13 @@
+import { presenter_notes as code_vulnerability } from "../demos/code-vulnerability/presenter-notes.ts";
+import { presenter_notes as kyc_processing } from "../demos/kyc-processing/presenter-notes.ts";
+import { presenter_notes as fraud_modeling } from "../demos/fraud-modeling/presenter-notes.ts";
+import { presenter_notes as sar_support } from "../demos/sar-support/presenter-notes.ts";
+import { presenter_notes as client_advisory } from "../demos/client-advisory/presenter-notes.ts";
+import { presenter_notes as market_research } from "../demos/market-research/presenter-notes.ts";
+import { presenter_notes as company_briefing } from "../demos/company-briefing/presenter-notes.ts";
+import { presenter_notes as brahe_bank } from "../demos/brahe-bank/presenter-notes.ts";
+import { presenter_notes as transaction_llm } from "../demos/transaction-llm/presenter-notes.ts";
+import { presenter_notes as interbank_a2a } from "../demos/interbank-a2a/presenter-notes.ts";
 /**
  * Present-mode talk track per use case, in three acts: the business problem, what AI changes, and where Cisco
  * adds value. Presenter-only; never rendered to the audience outside Present mode. Claims match what is built:
@@ -6,59 +16,14 @@
 export type PresenterNote = { problem: string; ai: string; cisco: string; lifecycle?: string };
 
 export const presenterNotes: Record<string, PresenterNote> = {
-  "code-vulnerability": {
-    problem: "Payment security findings consume engineering time to reproduce, triage, and fix.",
-    ai: "Visa VVAH uses DeepAgents on LangGraph to investigate synthetic payments code. The scoped Foundry profile mechanically checks source citations and independently reproduces cross-merchant disclosure over loopback HTTP. A reviewer requests, inspects, and applies a patch, then checks and rescans the source.",
-    cisco: "Show the three evidence legs, the two-goal coverage checklist, and the invalid-citation publication denial in Agent Control. Splunk Agent Observability receives execution traces. The main workspace previews HEC envelopes with stable finding IDs, evidence hashes, and trace correlation. Download the prepared batch; HEC delivery is unconfigured. Live run stats retain measured usage across history and refresh.",
-  },
-  "kyc-processing": {
-    problem: "Onboarding and periodic KYC refreshes queue behind manual document, registry, and screening checks.",
-    ai: "Illustrative prototype, no live service: document extraction, entity resolution, and exception routing are proposed. Say Illustrative out loud.",
-    cisco: "Proposed: AI Defense on document text and model hops; Splunk Agent Observability traces; Cisco AI infrastructure for the document models.",
-    lifecycle: "Meet Chuck Robbins, Cisco’s Chair and CEO, in a hypothetical banking scenario. All screening and financial details are invented. KYC is an illustrative introduction, not a live handoff.",
-  },
-  "fraud-modeling": {
-    problem: "Rules approve fraud that hides in a compromised merchant's network and flood analysts with false positives elsewhere. Chuck's clean card makes one purchase at Orbit Digital Goods; rules approve it.",
-    ai: "GraphSAGE + XGBoost scores the account–merchant neighborhood, exact TreeSHAP explains it, and a triage agent gathers evidence and drafts a cited summary. The analyst decides; the score is evidence, not a verdict.",
-    cisco: "AI Defense inspects the dispute note and the agent's prompt (try the injection scenario); Agent Control denies card actions without analyst approval; Splunk Agent Observability traces each run. The GNN runs on Sparky, an NVIDIA DGX Spark dev box; Cisco UCS / AI POD is the proposed production placement.",
-    lifecycle: "Choose Escalate to investigations. The card is still blocked and reissued; Escalate to SAR hands the case to the SAR team. Only \"card compromised and reissued\" is shared with the advisor.",
-  },
-  "sar-support": {
-    problem: "A SAR narrative takes an investigator hours, and quality varies by author. The referral links the compromised merchant to Kendall Reyes’s separate account. Transfers from other compromised cards arrived; the attempted transfer from Chuck’s card was declined. Chuck is the victim, not the subject.",
-    ai: "An investigation agent assembles the case, deterministic typology rules flag indicators, and the agent drafts a FinCEN-style narrative where every sentence cites evidence. The investigator decides file or no SAR; a separate QA reviewer approves.",
-    cisco: "AI Defense inspects untrusted memos and documents (the injected explanation letter) and every model hop. Agent Control enforces cited narratives, no tipping off, and approval before filing. A hosted model runs only with AI Defense forced to enforce. Splunk Agent Observability traces each live investigation. E-filing is simulated.",
-    lifecycle: "Open the fraud referral from the inbox. Explain the change of subject: Kendall Reyes is investigated; Chuck is the hypothetical victim. The recorded investigation is a saved example, not recomputed from this referral.",
-  },
-  "client-advisory": {
-    problem: "Advisors spend hours preparing each review across CRM notes, holdings, and research, and Reg BI care has to be documented.",
-    ai: "Code rules compare profile and portfolio and size next-best actions in dollars; a meeting-prep Deep Agent drafts a one-page brief whose every statement is checked against evidence.",
-    cisco: "AI Defense screens CRM notes for PII and injected instructions before any model call; a supervisor approves under advisory.recommendation; a hosted model runs only with AI Defense forced to enforce.",
-    lifecycle: "The advisor sees only the customer-visible card replacement. The saved sample brief is written by code and is not recalculated from the current handoff; it cannot be approved. A live model-generated brief requires advisor and supervisor review.",
-  },
-  "market-research": {
-    problem: "When an issuer reports, strategists must update the house view quickly, with every number sourced and restricted issuers respected.",
-    ai: "A cached NVDA packet or fresh ticker data supplies earnings, recent news, metrics and peers. A structured assessment produces a Buy, Hold or Sell outlook; code verifies its supporting facts and withholds the recommendation when evidence is insufficient.",
-    cisco: "Issuer restrictions are checked before retrieval and analysis. AI Defense screens each article before model use, including the synthetic attack article. Agent Control gates the analysis precheck; run evidence reports model calls, tokens and screening results.",
-    lifecycle: "HCYN is a fictional investment in the sample portfolio, unrelated to Chuck’s public role at Cisco. Published research can inform a live review; replay uses saved context.",
-  },
-  "company-briefing": {
-    problem: "Account teams need a defensible company profile before a meeting; filings are long, and facts get misquoted.",
-    ai: "A Deep Agent navigates the filing table of contents, reads titled sections, and pulls XBRL facts. No open-web browsing.",
-    cisco: "AI Defense inspects model hops and uploaded documents; Splunk Agent Observability traces each tool call. Nothing is stored until the presenter clicks Use this company.",
-  },
-  "brahe-bank": {
-    problem: "Customers piece together card eligibility from product documents and separate score checks.",
-    ai: "A supervisor routes the question to product and score specialists, then combines their evidence into one explanation.",
-    cisco: "AI Defense inspects questions, model calls, and answers; Splunk Agent Observability traces the supervisor and specialists. OpenAI hosts inference today; private GPU inference is a deployment option.",
-  },
-  "transaction-llm": {
-    problem: "Payment text arrives unstructured, so operations teams re-key purpose codes and counterparties by hand.",
-    ai: "Proposed concept: batched extraction into structured fields, with only low-confidence exceptions reaching an agent.",
-    cisco: "Proposed: Splunk spans on the extraction path and AI Defense on the exception hop only. Not connected in this demo.",
-  },
-  "interbank-a2a": {
-    problem: "Settlement fails are chased by email and phone between banks, each re-keying the other's records.",
-    ai: "Each bank's Deep Agent investigates its own records and asks the other bank's agent over A2A.",
-    cisco: "Each bank's AI gateway inspects the A2A traffic with AI Defense, and an outbound control stops data that must not leave; Splunk Agent Observability traces both sides. Agents are read-only; named teams approve fixes.",
-  },
+  "code-vulnerability": code_vulnerability,
+  "kyc-processing": kyc_processing,
+  "fraud-modeling": fraud_modeling,
+  "sar-support": sar_support,
+  "client-advisory": client_advisory,
+  "market-research": market_research,
+  "company-briefing": company_briefing,
+  "brahe-bank": brahe_bank,
+  "transaction-llm": transaction_llm,
+  "interbank-a2a": interbank_a2a,
 };

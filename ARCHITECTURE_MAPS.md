@@ -45,6 +45,23 @@ remain services that call the shared endpoint. Fraud scoring has a separate mode
 and scorer runtime. Agent Control emits telemetry from its security gates.
 Cross-scope calls follow the same endpoint as its owning group expands or folds.
 
+`platform-connections.ts` requires an explicit connection contract for every use
+case. Its inspection and telemetry paths identify concrete callers and source
+evidence. Interbank gateways invoke local ExtProc policy services, which call
+AI Defense; the gateways enforce the verdict. Agents export through the GenAI
+span processor, and each gateway exports through its bank's collector to Agent
+Observability. Other live demos inspect through application clients. Briefing
+exports run spans to its configured OTLP destination. Agent Control evaluations
+use Security control edges separately from telemetry export.
+Wealth and SAR show independent Galileo SDK and Splunk GenAI OTLP paths. Fraud's
+OTLP helper reports configuration status only; its agent traces use the SDK path.
+
+Author these cross-scope connections on the system scope with `fromScopeId` and
+`toScopeId` referencing the actual components. Folding a group projects its edges
+onto the visible owner. Expansion restores the concrete endpoints. Duplicate
+collapsed routes merge until their components become visible. A workflow group
+must never substitute for a known inspection caller or telemetry producer.
+
 Supported modes come from the catalog. KYC and transaction intelligence open in
 **Proposed** mode. Market research offers **Implemented** only. Brahe and Interbank
 distinguish configured model endpoints from proposed private inference. Source
@@ -123,7 +140,11 @@ npm run lint
 Checks cover all ten use cases, every expansion, one-model identity, nested
 containment, sibling spacing, canonical evidence, editable asset parity,
 supported modes and layers, camera restoration, source panels, keyboard access,
-interrupted navigation, reduced motion, themes, retry, and guided entry. Shell
-checks verify that a mocked run continues while Architecture is open and survives
+interrupted navigation, reduced motion, themes, retry, and guided entry.
+
+Platform checks require a contract per catalog, source evidence for implemented
+paths, concrete inspection and telemetry terminals, gateway and collector paths,
+and correct endpoint projection during collapse and expansion.
+Shell checks verify that a mocked run continues while Architecture is open and survives
 returning to the demo. Runtime changes require the affected service checks in
 `CONTRIBUTING.md`.

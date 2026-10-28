@@ -33,13 +33,13 @@ function answer(splunk: Record<string, unknown>) {
 }
 
 async function openBank(page: Page, health: Record<string, unknown> = HEALTH) {
-  await page.route("**/api/studio/status", (route) => route.fulfill({ json: STATUS }));
+  await page.route(/\/api\/studio\/status(?:\?.*)?$/, (route) => route.fulfill({ json: STATUS }));
   await page.route("**/api/banking/health", (route) => route.fulfill({ json: health }));
   await page.route("**/api/banking/observability", (route) => route.fulfill({ json: {
     tracing: { status: "traces_present", transport: "Galileo SDK", stream: "brahe" },
     evaluators: { status: "none_configured", names: [], results: "not_verified" }, controls: HEALTH.controls,
   } }));
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Open Brahe Bank assistant experience" }).first().click();
   await expect(page.getByLabel("Message Brahe Bank")).toBeVisible();
 }

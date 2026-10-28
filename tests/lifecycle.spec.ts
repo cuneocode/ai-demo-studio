@@ -10,7 +10,7 @@ const TIPPING_OFF = /\bSARs?\b|suspicious activity|escalat|investigat|referral|F
 const ADVISORY_RECORDING = JSON.parse(readFileSync(join(process.cwd(), "services/wealth/data/recorded/advisory-chuck-robbins.json"), "utf8"));
 
 async function freshStudio(page: Page) {
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
   await page.evaluate(() => localStorage.removeItem("fsi-studio.handoffs"));
   await page.reload({ waitUntil: "networkidle" });
 }

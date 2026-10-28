@@ -5,7 +5,7 @@ import { canvasScopePath } from "../app/map/drawio/canvas-layout.ts";
 export const diagram = (page: Page) => page.frameLocator('iframe[src="/diagrams/viewer.html"]');
 export const component = (page: Page, id: string) => diagram(page).locator(`[data-cell-id="${id}"]`);
 export async function openCanvas(page: Page, title = "Brahe Bank assistant") {
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: new RegExp(`^Open ${title} experience`) }).click();
   await page.getByRole("tab", { name: "Architecture", exact: true }).click();
   const explorer = page.getByTestId("architecture-explorer");

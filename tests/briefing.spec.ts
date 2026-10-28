@@ -39,14 +39,14 @@ function briefing(extra: Record<string, unknown> = {}) {
 }
 
 async function extract(page: Page, payload: Record<string, unknown>) {
-  await page.route("**/api/studio/status", (route) => route.fulfill({ json: STATUS }));
+  await page.route(/\/api\/studio\/status(?:\?.*)?$/, (route) => route.fulfill({ json: STATUS }));
   await page.route("**/api/briefing/health", (route) => route.fulfill({ json: {
     ready: true, model: "gpt-test", sec: { status: "configured", user_agent_set: true }, security: { status: "disabled", mode: "off", fail_open: false },
     splunk: { status: "missing_configuration" }, perimeter: "EDGAR + upload only",
   } }));
   await page.route("**/api/briefing/search*", (route) => route.fulfill({ json: { query: "JPM", candidates: [{ cik: "0000019617", ticker: "JPM", name: "JPMORGAN CHASE & CO" }] } }));
   await page.route("**/api/briefing/analyze", (route) => route.fulfill({ json: payload }));
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Open Company briefing experience" }).first().click();
   await page.getByLabel("Company name or ticker").fill("JPM");
   await page.getByRole("tabpanel", { name: "Use case demo" }).getByRole("button", { name: "Extract briefing" }).click();
@@ -90,7 +90,7 @@ test("a real filing carries no synthetic label", async ({ page }) => {
 });
 
 test("the committed recorded extract replays as recorded, runs no model, and can still be accepted", async ({ page }) => {
-  await page.route("**/api/studio/status", (route) => route.fulfill({ json: STATUS }));
+  await page.route(/\/api\/studio\/status(?:\?.*)?$/, (route) => route.fulfill({ json: STATUS }));
   await page.route("**/api/briefing/health", (route) => route.fulfill({ json: {
     ready: true, model: "gpt-test", sec: { status: "configured", user_agent_set: true }, security: { status: "disabled", mode: "off", fail_open: false },
     splunk: { status: "missing_configuration" }, perimeter: "EDGAR + upload only",
@@ -99,7 +99,7 @@ test("the committed recorded extract replays as recorded, runs no model, and can
   await page.route(`**/api/briefing/recordings/${RECORDED.name}`, (route) => route.fulfill({ json: RECORDED }));
   let analyzed = 0;
   await page.route("**/api/briefing/analyze", (route) => { analyzed += 1; return route.fulfill({ status: 500, json: { detail: "not expected" } }); });
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Open Company briefing experience" }).first().click();
   await expect(page.locator(".briefing-demo")).toHaveAttribute("data-guide-source", "none");
   await page.locator(".briefing-demo .demo-fallback > summary").click();

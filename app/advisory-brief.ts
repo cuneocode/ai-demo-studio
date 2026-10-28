@@ -1,3 +1,4 @@
+import { readStored, writeStored, removeStored } from "./studio/storage.ts";
 import type { StoredCompanyProfile } from "./company-profile";
 import {
   RESEARCH_NOTE_STORAGE_KEY, normalizeClaims, normalizeEvaluation, normalizeEvidence, normalizePolicy, normalizeSecurity, normalizeUsage,
@@ -156,7 +157,7 @@ export function normalizeMeetingPrep(value: unknown): MeetingPrep | null {
 export function loadAdvisoryBrief(): StoredAdvisoryBrief | null {
   if (typeof window === "undefined") return null;
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(ADVISORY_BRIEF_STORAGE_KEY) || "null") as unknown;
+    const parsed = JSON.parse(readStored(window.localStorage, ADVISORY_BRIEF_STORAGE_KEY) || "null") as unknown;
     if (!isRecord(parsed) || !isRecord(parsed.brief) || !isRecord(parsed.brief.brief)) return null;
     const brief = normalizeMeetingPrep(parsed.brief);
     if (!brief) return null;
@@ -170,12 +171,12 @@ export function loadAdvisoryBrief(): StoredAdvisoryBrief | null {
 /** Stores the raw service body so a reload normalizes it the same way. */
 export function saveAdvisoryBrief(value: Omit<StoredAdvisoryBrief, "brief">, raw: unknown) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(ADVISORY_BRIEF_STORAGE_KEY, JSON.stringify({ ...value, brief: raw }));
+  writeStored(window.localStorage, ADVISORY_BRIEF_STORAGE_KEY, JSON.stringify({ ...value, brief: raw }));
 }
 
 export function clearAdvisoryBrief() {
   if (typeof window === "undefined") return;
-  window.localStorage.removeItem(ADVISORY_BRIEF_STORAGE_KEY);
+  removeStored(window.localStorage, ADVISORY_BRIEF_STORAGE_KEY);
 }
 
 /** What the meeting-prep run gets from the Company briefing demo: who it covered, not the whole record. */

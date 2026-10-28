@@ -11,10 +11,12 @@ import { reviewedRecording } from "./recording-review.ts";
 import { handleStatus } from "./studio-status-api.ts";
 import { handlePlanner } from "./studio-planner-api.ts";
 import { runtimeForPath } from "../config/use-cases.ts";
+import { requestScope, ScopeError } from "./studio-scope.ts";
 
 export { startMissing, stopAll } from "./studio-services.ts";
 
 const ROUTES = {
+  "/api/studio/catalog": async (request: IncomingMessage, response: ServerResponse) => { send(response, 200, requestScope(request)); },
   "/api/studio/models": (request: IncomingMessage, response: ServerResponse) => handleModels(request, response),
   "/api/studio/settings": (request: IncomingMessage, response: ServerResponse) => handleSettings(request, response, "settings"),
   "/api/studio/settings/check": (request: IncomingMessage, response: ServerResponse) => handleSettings(request, response, "check"),
@@ -38,6 +40,9 @@ const EXAMPLES: Record<string, string> = {
 };
 async function handleExample(request: IncomingMessage, response: ServerResponse, path: string) {
   if (request.method !== "GET") return send(response, 405, { error: "Method not allowed." });
+  const owner = path.includes("/fraud/") ? "fraud" : path.includes("/sar/") ? "sar" : "research";
+  const scope = requestScope(request);
+  if (!scope.runtimeIds.includes(owner) && !(owner === "research" && scope.runtimeIds.includes("advisory"))) throw new ScopeError("These examples are outside this app's library.", 403);
   const value = JSON.parse(await readFile(new URL(EXAMPLES[path], import.meta.url), "utf8"));
   return send(response, 200, path.endsWith("/cases") ? { cases: value, synthetic: true } : value);
 }
@@ -74,6 +79,8 @@ async function recordingMetas(directory: URL) {
 
 async function handleRecordings(request: IncomingMessage, response: ServerResponse, service: string, name?: string) {
   if (request.method !== "GET") return send(response, 405, { error: "Method not allowed." });
+  const scope = requestScope(request);
+  if (!scope.runtimeIds.includes(service) && !(service === "wealth" && scope.runtimeIds.some(id => ["research", "advisory"].includes(id)))) throw new ScopeError("These recordings are outside this app's library.", 403);
   const directory = RECORDINGS[service];
   if (!directory) return send(response, 404, { error: "No recordings for that service." });
   if (name === undefined) return send(response, 200, { recordings: await recordingMetas(directory) });
@@ -84,6 +91,18 @@ async function handleRecordings(request: IncomingMessage, response: ServerRespon
 /** Handles the request when it targets the studio API; returns false otherwise. */
 export function handleStudioApi(request: IncomingMessage, response: ServerResponse): boolean {
   const path = request.url?.split("?")[0] ?? "";
+  const runtime = runtimeForPath(path);
+  if (runtime) {
+    try {
+      if (!requestScope(request).runtimeIds.includes(runtime.id)) {
+        send(response, 403, { detail: "This runtime is outside the enabled app catalog." });
+        return true;
+      }
+    } catch (error) {
+      send(response, error instanceof ScopeError ? error.status : 422, { error: (error as Error).message });
+      return true;
+    }
+  }
   if (process.env.STUDIO_PREVIEW === "1" && (runtimeForPath(path) || /^\/api\/wealth(?:\/|$)/.test(path))) {
     send(response, 503, { detail: "Recorded preview: live execution is disabled. Start npm run dev:studio for live services." });
     return true;
@@ -93,8 +112,8 @@ export function handleStudioApi(request: IncomingMessage, response: ServerRespon
     ? (req: IncomingMessage, res: ServerResponse) => handleRecordings(req, res, recordings[1], recordings[2])
     : ROUTES[path as keyof typeof ROUTES];
   if (!route) return false;
-  route(request, response).catch(() => {
-    if (!response.headersSent) send(response, 500, { error: "The studio could not complete that request." });
+  route(request, response).catch((error) => {
+    if (!response.headersSent) send(response, error instanceof ScopeError ? error.status : 500, { error: error instanceof ScopeError ? error.message : "The studio could not complete that request." });
   });
   return true;
 }

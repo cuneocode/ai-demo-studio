@@ -47,7 +47,7 @@ type Mock = { starts: { scenario: string; input: { mode: string; handoff?: { cas
 async function mockSar(page: Page, { model = HOSTED as object, down = false } = {}): Promise<Mock> {
   const mock: Mock = { starts: [], decisions: [], contacts: 0 };
   const runs = new Map<string, Recording>();
-  await page.route("**/api/studio/status", (route) => route.fulfill({ json: STATUS }));
+  await page.route(/\/api\/studio\/status(?:\?.*)?$/, (route) => route.fulfill({ json: STATUS }));
   await page.route("**/api/sar/health", (route) => down ? route.fulfill({ status: 502, body: "down" }) : route.fulfill({ json: health(model) }));
   await page.route("**/api/sar/scenarios", (route) => route.fulfill({ json: {
     scenarios: ORDER.map((id) => golden(id).card), media_source: { name: "FinCrime Wire (fictional newswire)" },
@@ -89,7 +89,7 @@ async function mockSar(page: Page, { model = HOSTED as object, down = false } = 
 }
 
 async function openSar(page: Page) {
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Open SAR investigation experience" }).first().click();
   const panel = page.locator("#case-panel-demo");
   await expect(panel.getByRole("heading", { name: "Does this case need a report?" })).toBeVisible();
@@ -187,7 +187,9 @@ test("a fraud referral shows in the inbox and goes to the agent with the money-m
 test("never dead: service down, model down, sample narrative, and a labelled recorded replay", async ({ page }) => {
   await mockSar(page, { down: true });
   let panel = await openSar(page);
-  await expect(panel).toContainText("Source records could not be loaded");
+  await expect(panel.getByRole("heading", { name: "Choose a flagged case" })).toBeVisible();
+  await expect(panel.getByRole("region", { name: "SAR runtime" })).toContainText("Service offline");
+  await expect(panel.locator("#sar-investigate")).toBeDisabled();
   await expect(panel.getByText("Fallback: recorded demo", { exact: true })).toBeVisible();
 
   await page.unrouteAll({ behavior: "ignoreErrors" });

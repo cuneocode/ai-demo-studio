@@ -38,7 +38,7 @@ export async function mockFraud(page: Page, { healthDown = false } = {}): Promis
   const mock: Mock = { decisions: [], notes: [] };
   const runs = new Map<string, Recording>();
   const decisionCounts = new Map<string, number>();
-  await page.route("**/api/studio/status", (route) => route.fulfill({ json: STATUS }));
+  await page.route(/\/api\/studio\/status(?:\?.*)?$/, (route) => route.fulfill({ json: STATUS }));
   await page.route("**/api/fraud/health", (route) => healthDown ? route.fulfill({ status: 502, body: "down" }) : route.fulfill({ json: HEALTH }));
   await page.route("**/api/fraud/scenarios", (route) => route.fulfill({ json: SCENARIOS }));
   await page.route("**/api/fraud/cases", (route) => route.fulfill({ json: { cases: [], threshold: 0.5 } }));

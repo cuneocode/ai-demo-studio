@@ -33,8 +33,8 @@ const STATUS: StudioStatus = {
 
 async function open(page: Page) {
   await mockPlanner(page);
-  await page.route("**/api/studio/status", (route) => route.fulfill({ json: STATUS }));
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.route(/\/api\/studio\/status(?:\?.*)?$/, (route) => route.fulfill({ json: STATUS }));
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
 }
 
 test("top bar tabs open live Controls and Telemetry pages", async ({ page }) => {
@@ -50,7 +50,7 @@ test("top bar tabs open live Controls and Telemetry pages", async ({ page }) => 
   await expect(page.getByRole("table", { name: "Telemetry by use case" }).getByRole("row", { name: /Market research/ })).toContainText("exporting");
   await expect(page.getByRole("table", { name: "Recent interbank investigations" })).toContainText("inv-1");
 
-  await page.getByRole("button", { name: "Open", exact: true }).first().click();
+  await page.getByRole("table", { name: "Telemetry by use case" }).getByRole("row", { name: /Brahe Bank assistant/ }).getByRole("button", { name: "Open", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Brahe Bank assistant", level: 1 })).toBeVisible();
 });
 
@@ -69,7 +69,7 @@ test("the bell lists what is down and help shows the setup checklist", async ({ 
   const help = page.getByRole("dialog", { name: "Run this demo" });
   await expect(help).toContainText("Needs OPENAI_API_KEY");
   await help.getByRole("button", { name: "Open Studio settings" }).click();
-  await expect(page.getByRole("heading", { name: "Studio settings", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Financial Services settings", level: 1 })).toBeVisible();
 });
 
 test("Cisco platform rows navigate and the sidebar collapse persists", async ({ page }) => {
@@ -304,8 +304,7 @@ test("a run started in the demo keeps going across workspace tabs and is intact 
   const refit = await camera();
 
   await page.reload({ waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Open Card fraud triage experience" }).click();
-  await page.getByRole("tab", { name: "Architecture" }).click();
+  await expect(page.getByRole("tab", { name: "Architecture" })).toHaveAttribute("aria-selected", "true");
   await expect.poll(camera).toBe(refit);
 });
 

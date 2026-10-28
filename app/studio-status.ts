@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import type { Readiness } from "./studio-settings";
 import { useCasePackages } from "../config/use-cases";
+import { useStudioNav } from "./studio-nav";
 
 export type UseCaseHealth = {
   id: string;
@@ -20,6 +21,7 @@ export type UseCaseHealth = {
 export type InterbankRun = { id: string; status: string; startedAt: string; traceId: string | null; prompt: string };
 
 export type StudioStatus = {
+  scope?: { appId: string | null; useCaseIds: string[]; runtimeIds: string[] };
   mode?: "preview" | "live";
   checkedAt: string;
   services: UseCaseHealth[];
@@ -42,20 +44,42 @@ export type Tone = "mint" | "amber" | "violet" | "blue";
 export const USE_CASE_SERVICE: Record<string, string> = Object.fromEntries(useCasePackages.flatMap(item => item.runtime ? [[item.id, item.runtime.id]] : []));
 
 /** Polls the studio status; null until the first answer, or when the studio API is unavailable. */
-export function useStudioStatus(intervalMs = 10000) {
-  const [status, setStatus] = useState<StudioStatus | null>(null);
-  const [tick, setTick] = useState(0);
-  useEffect(() => {
-    let live = true;
-    const load = () => fetch("/api/studio/status", { cache: "no-store" })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((next) => { if (live) setStatus(next); })
-      .catch(() => { if (live) setStatus(null); });
-    load();
-    const timer = setInterval(load, intervalMs);
-    return () => { live = false; clearInterval(timer); };
-  }, [intervalMs, tick]);
-  return { status, refresh: () => setTick((value) => value + 1) };
+const serverStatus = () => null;
+function createStatusStore(scope: string | null, intervalMs: number) {
+  let value: StudioStatus | null = null;
+  let loading: Promise<void> | undefined;
+  let timer: ReturnType<typeof setInterval> | undefined;
+  const listeners = new Set<() => void>();
+  const refresh = () => {
+    if (loading) return loading;
+    loading = fetch(`/api/studio/status${scope ? `?app=${encodeURIComponent(scope)}` : ""}`, { cache: "no-store" })
+      .then(response => response.ok ? response.json() : null)
+      .then(next => { value = next; })
+      .catch(() => { value = null; })
+      .finally(() => { loading = undefined; for (const notify of listeners) notify(); });
+    return loading;
+  };
+  return {
+    refresh, getSnapshot: () => value,
+    subscribe: (notify: () => void) => {
+      listeners.add(notify);
+      if (!timer) { void refresh(); timer = setInterval(refresh, intervalMs); }
+      return () => { listeners.delete(notify); if (!listeners.size) { clearInterval(timer); timer = undefined; } };
+    },
+  };
+}
+const stores = new Map<string, ReturnType<typeof createStatusStore>>();
+function statusStore(scope: string | null, intervalMs: number) {
+  const key = scope ?? "platform";
+  let store = stores.get(key);
+  if (!store) { store = createStatusStore(scope, intervalMs); stores.set(key, store); }
+  return store;
+}
+export function useStudioStatus(intervalMs = 10000, explicitScope?: string | null) {
+  const nav = useStudioNav();
+  const scope = explicitScope === undefined ? nav.appId ?? null : explicitScope;
+  const store = useMemo(() => statusStore(scope, intervalMs), [scope, intervalMs]);
+  return { status: useSyncExternalStore(store.subscribe, store.getSnapshot, serverStatus), refresh: store.refresh };
 }
 
 export const humanize = (value: string) => value.replace(/_/g, " ");
@@ -67,7 +91,7 @@ export function serviceRows(status: StudioStatus) {
     ok: service.up && service.ready,
     detail: !service.up ? "Not running" : service.ready ? service.fallback ? `Live with fallback · ${service.fallback}` : "Live ready" : service.detail,
   }));
-  rows.push({ id: "interbank", label: "Interbank lab (Docker)", ok: status.interbank.up, detail: status.interbank.up ? "Ready" : "Not running · npm run interbank:up" });
+  if (!status.scope || status.scope.runtimeIds.includes("interbank")) rows.push({ id: "interbank", label: "Interbank lab (Docker)", ok: status.interbank.up, detail: status.interbank.up ? "Ready" : "Not running · npm run interbank:up" });
   for (const model of status.models) rows.push({ id: `model-${model.id}`, label: model.label, ok: model.up, detail: model.up ? `Serving at ${model.host}` : `Nothing answering at ${model.host}` });
   return rows;
 }

@@ -12,8 +12,8 @@ const STATUS = {
 
 async function openCase(page: Page, title: string) {
   await mockPlanner(page);
-  await page.route("**/api/studio/status", (route) => route.fulfill({ json: STATUS }));
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.route(/\/api\/studio\/status(?:\?.*)?$/, (route) => route.fulfill({ json: STATUS }));
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: `Open ${title} experience` }).first().click();
   await expect(page.getByRole("region", { name: "Live run stats" })).toBeVisible();
   return page.getByRole("region", { name: "Live run stats" });
@@ -111,12 +111,13 @@ test("integrations that are off say so, never show zeros, and link to Studio set
   await expect(defense).toContainText("AI Defense is off for this use case. Enable it in Studio settings.");
   await expect(defense.locator(".run-stats-tiles")).toHaveCount(0);
   await defense.getByRole("button", { name: "Studio settings" }).click();
+  await expect(page).toHaveURL("/settings#st-ai-defense");
   await expect(page.getByRole("heading", { name: "Cisco AI Defense", level: 2 })).toBeVisible();
 });
 
 test("prototype use cases label their run stats as illustrative", async ({ page }) => {
-  await page.route("**/api/studio/status", (route) => route.fulfill({ json: STATUS }));
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.route(/\/api\/studio\/status(?:\?.*)?$/, (route) => route.fulfill({ json: STATUS }));
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Open KYC processing experience" }).first().click();
   await expect(page.getByRole("region", { name: "Live run stats" })).toHaveCount(0);
   const stats = page.getByRole("region", { name: "Illustrative run stats" });

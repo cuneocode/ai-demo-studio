@@ -1,0 +1,3 @@
+# Preserve upstream relative paths, PKI, evidence, and the multi-container blueprint.
+include:
+  - ../../../services/interbank/compose.yaml

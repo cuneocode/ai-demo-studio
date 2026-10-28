@@ -131,3 +131,7 @@
 @media (max-width: 900px) {
   .st-row.st-route { grid-template-columns: 1fr; }
 }
+
+.st-shared-config { margin: 0; padding: 0; border: 0; min-width: 0; }
+.st-shared-config:disabled input, .st-shared-config:disabled select { opacity: .7; }
+.st-prepare { margin: 18px 0; flex-wrap: wrap; }

@@ -55,6 +55,9 @@ test('assessment IDs survive remounts and remain isolated by use case', () => {
   assert.equal(plannerAssessmentId(storage, 'brahe-bank', false, () => 'second'), 'second');
   assert.equal(plannerAssessmentId(storage, 'sar-support', true, () => 'new-assessment'), 'new-assessment');
   assert.equal(plannerAssessmentId(storage, 'brahe-bank'), 'second');
+  assert.equal(plannerAssessmentId(storage, 'brahe-bank', false, () => 'healthcare-assessment', 'healthcare'), 'healthcare-assessment');
+  assert.equal(plannerAssessmentId(storage, 'brahe-bank'), 'second');
+  assert.equal(plannerAssessmentId(storage, 'brahe-bank', false, () => 'unused', 'healthcare'), 'healthcare-assessment');
   assert.equal(plannerAssessmentId({ getItem() { throw Error(); }, setItem() { throw Error(); } }, 'sar-support', false, () => 'session-only'), 'session-only');
 });
 

@@ -1,9 +1,19 @@
-# Financial Services AI Demo Studio
+# AI Demo Studio
 
-A local Studio for eight executable financial-services demos and two illustrative
-use cases. A trusted operator configures shared integrations and starts individual
-Docker Compose stacks from the dashboard. Banking data and customer scenarios are
-synthetic. Recordings are labelled and remain available with live stacks stopped.
+AI Demo Studio brings Financial Services, Healthcare, Manufacturing, Retail, and
+Public Sector apps into one installation. Each app has its own use-case library,
+stories, model overrides, and runtime controls. Financial Services contains the
+existing eight executable demos and two illustrative use cases. The other four
+libraries are ready for their domain demos.
+
+A trusted local operator configures shared model endpoints, Cisco AI Defense,
+Splunk Agent Observability, and credentials. Demo stacks retain independent
+lifecycle and storage. App navigation keeps running demos available for the next
+presentation. All bundled customer scenarios and case data are synthetic.
+
+Open `/` for industry apps and `/apps/fsi` for the Financial Services workspace.
+See [platform structure and operation](docs/AI_DEMO_STUDIO.md) for package ownership,
+scoped settings, preparation, persistence, and migration details.
 
 Every use case includes Use case demo, Architecture, and Capacity planning tabs.
 Capacity planning loads a configured AI Infrastructure Planner browser component.
@@ -75,8 +85,9 @@ npm run studio:containers -- stop sar briefing
 ```
 
 Closing Studio leaves containers running. Stop them through **Services** or the
-CLI. Stop preserves volumes and existing Interbank evidence. Each checkout owns
-separate Compose projects. API ports remain fixed, so stop another checkout's
+CLI. Stop preserves volumes and existing Interbank evidence. Each installation owns
+separate Compose projects through `.studio/installation.json`. Preserve that file
+when moving an installation. API ports remain fixed, so stop another checkout's
 conflicting services before starting the same demo here.
 
 ## Shared configuration
@@ -101,13 +112,13 @@ controls** for that package. Build and Start do not register tenant resources.
 
 | Demo | Runtime / host port | Live prerequisites | Guide |
 | --- | --- | --- | --- |
-| Brahe Bank assistant | `banking` / 8011 | Model; registered banking controls and Agent Observability; AI Defense when enabled; Pinecone optional | [Banking](services/banking/README.md) |
-| Card fraud triage | `fraud` / 8012 | Model for triage; optional NVIDIA scorer for live graph scores; recorded/sample scores retain provenance | [Fraud](services/fraud/README.md) |
-| Company briefing | `briefing` / 8013 | Model; SEC contact for lookup or an uploaded filing; AI Defense and OTLP optional | [Briefing](services/briefing/README.md) |
+| Brahe Bank assistant | `banking` / 8011 | Model; registered banking controls and Agent Observability; AI Defense when enabled; Pinecone optional | [Banking](demos/brahe-bank/backend/README.md) |
+| Card fraud triage | `fraud` / 8012 | Model for triage; optional NVIDIA scorer for live graph scores; recorded/sample scores retain provenance | [Fraud](demos/fraud-modeling/backend/README.md) |
+| Company briefing | `briefing` / 8013 | Model; SEC contact for lookup or an uploaded filing; AI Defense and OTLP optional | [Briefing](demos/company-briefing/backend/README.md) |
 | Market research | `research` / 8014 | Model, market-data access, inspected news; FRED optional | [Wealth](services/wealth/README.md) |
 | Advisor meeting prep | `advisory` / 8017 | Model and holdings/context; hosted client-data inference requires AI Defense | [Wealth](services/wealth/README.md) |
-| SAR investigation | `sar` / 8015 | Model; hosted client-data inference requires AI Defense | [SAR](services/sar/README.md) |
-| Code vulnerability analysis | `vulnerability` / 8016 | Model; pinned Visa harness is included in its image | [Vulnerability](services/vulnerability/README.md) |
+| SAR investigation | `sar` / 8015 | Model; hosted client-data inference requires AI Defense | [SAR](demos/sar-support/backend/README.md) |
+| Code vulnerability analysis | `vulnerability` / 8016 | Model; pinned Visa harness is included in its image | [Vulnerability](demos/code-vulnerability/backend/README.md) |
 | Interbank settlement investigation | `interbank` / 8088 | Model, AI Defense, Agent Observability, explicit hosted control setup | [Interbank](services/interbank/README.md) |
 | KYC processing | Illustrative package | Proposed workflow with no executable backend | Library story and architecture |
 | Transaction intelligence | Illustrative package | Proposed workflow with no executable backend | Library story and architecture |
@@ -166,28 +177,72 @@ controls require a separate deployment design; Cloudflare bindings remain empty.
 | Corporate TLS failure | Set `EXTRA_CA_FILE` to the public corporate CA bundle before building/starting; Studio also exports system trust roots |
 | Browser test cannot launch | Run `npx playwright install chromium`; `CHROME_PATH` is an optional override |
 
-## Development and extension
+## Add your own demo
 
 Read [AGENTS.md](AGENTS.md), [CONTRIBUTING.md](CONTRIBUTING.md), and the
 [use-case authoring guide](docs/ADDING_USE_CASES.md) before adding a demo. The guide
-maps the required files, identifies reference demos, and defines the shared visual
-and execution patterns. Start with SAR for a case-review workflow, Banking for
-chat, or Interbank for a multi-container agent workflow. Keep the existing shell,
-three tabs, themes, story renderer, run stats and architecture viewer.
+provides the registration map, a Manufacturing registration example, reference
+implementations, and acceptance checks. Start with SAR for case review, Banking
+for chat, or Interbank for a multi-container agent workflow.
+
+```text
+verticals/<app-id>/app.ts     Industry categories, demo membership, default story
+demos/<demo-id>/
+  definition.ts             Public identity, assets, model and runtime metadata
+  workspace.ts              Shared workspace copy and workflow framing
+  narrative.ts              Audience story and references
+  presenter-notes.ts         Presenter guidance
+  tours.ts                  Guided walkthrough, when applicable
+  ui/                       Workspace.tsx adapter, components, scoped styles
+  backend/                  Dedicated backend, locked dependencies, tests, data
+  deploy/                   Dockerfile and compose.yaml for a live runtime
+config/demos.ts             Definition index
+config/use-cases.ts          Runtime specifications
+app/studio/                 Shared shell, workspace indexes, routes, storage
+services/common/            Shared run handling
+services/llm/               Shared model routing
+```
+
+Illustrative demos omit the backend and deployment stack. Research and Advisory
+explicitly share `services/wealth/`; Interbank retains its upstream implementation
+in `services/interbank/`. Existing service symlinks and `use-cases/` Compose files
+preserve compatibility. New demo source belongs in its canonical package.
+
+1. Choose an industry, stable demo ID, reference workflow, inputs, human decisions,
+   and live or illustrative behavior. Keep new verticals free of FSI-specific
+   company context and lifecycle assumptions.
+2. Create the package and register its definition and industry membership. Wire
+   its workspace adapter, narrative, presenter notes, tour, and architecture into
+   the explicit indexes listed in the authoring guide. Generic routes expose it
+   at `/apps/<app-id>/demos/<demo-id>`.
+3. For live execution, register its runtime and isolated dependencies. Reuse the
+   installation's model endpoints, credentials, AI Defense, and observability
+   configuration; implement the corresponding runtime integrations. Select a
+   different model through the demo's route override when needed.
+4. Verify the workflow on a running Studio, including failure, decisions, run
+   stats, app/tab navigation, refresh, saved runs, themes, and independent container
+   lifecycle. Update catalog/empty-library tests for the new membership while
+   retaining the original FSI compatibility assertions.
 
 A coding-agent request can start with:
 
-> Read AGENTS.md and docs/ADDING_USE_CASES.md. Add a use case for [workflow and
-> intended user]. Follow the closest reference demo and the shared visual design.
-> Use my configured model routes and integrations. Complete the registration,
-> story, architecture, guided tour and relevant checks, then report what was
-> verified live and what remains unconfigured.
+> Read AGENTS.md, README.md, CONTRIBUTING.md, and docs/ADDING_USE_CASES.md.
+> Add [demo name and stable ID] to the [industry app ID] library for [intended
+> user and workflow]. Inputs are [synthetic evidence]; the human decides
+> [approval or action]; the result is [expected output]. Use [live or illustrative]
+> execution and inspect the closest reference demo. Keep domain files in the demo
+> package and reuse the shared shell, model routes, integrations, run handling,
+> and app-scoped storage. Complete all explicit registrations, story, presenter
+> notes, architecture, guided tour, documentation, and relevant tests. Exercise
+> the workflow on a running dev server and report mocked coverage, live execution,
+> and confirmed integration delivery separately.
 
 The [container package contract](docs/CONTAINERS.md) covers runtime isolation,
-configuration and lifecycle. The package registry is
-`config/use-cases.ts`; Compose definitions live in `use-cases/` and the Interbank
-service directory. Agents and application code remain in `services/` and execute
-inside their images. `app/` owns Studio UI, run components, narratives, and guides.
+configuration and lifecycle. Public manifests contain portable metadata. Backend
+SDK dependencies remain isolated in their runtime images. Shared components and
+platform behavior belong in `app/` and `services/common/` or `services/llm/`.
+
+## Source development and validation
 
 Source development remains available with `npm run studio:install:source`, an
 individual sidecar command from its service guide, and `npm run dev`. Install uv
@@ -199,5 +254,5 @@ Validation includes `npm test`, typecheck, lint, affected browser flows, Python
 checks, and real container lifecycle checks. See [setup verification](docs/SETUP_VERIFICATION.md).
 
 Preserve build support in `worker/`, `db/`, `drizzle/`, `build/`, and `.openai/`.
-Upstream notices remain with adapted code, including [banking's MIT notice](services/banking/LICENSE).
+Upstream notices remain with adapted code, including [banking's MIT notice](demos/brahe-bank/backend/LICENSE).
 The repository owner controls the root license decision.

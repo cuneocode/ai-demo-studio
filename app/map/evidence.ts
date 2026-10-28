@@ -1,8 +1,10 @@
 import { interbankEvidence } from "./interbank-evidence.ts";
+import { platformEvidence } from "./platform-evidence.ts";
 import type { EvidenceRef } from "./types.ts";
 
 /** Allowlisted excerpts. Line ranges are 1-based and inclusive. */
 export const evidence: Record<string, EvidenceRef> = {
+  ...platformEvidence,
   "platform.vulnerability-profile": {
     id: "platform.vulnerability-profile", file: "services/vulnerability/engine.py", symbol: "make_config", start: 75, end: 86,
     proves: "The worker profile binds discovery, verification, and remediation roles to one selected model using the DeepAgents backend.", proofRole: "Setup", evidenceKind: "source",
@@ -36,7 +38,7 @@ export const evidence: Record<string, EvidenceRef> = {
     proves: "Each bank's Deep Agent selects its configured backend and rebuilds its graph when that endpoint changes.", proofRole: "Setup", evidenceKind: "source",
   },
   "platform.runtime": {
-    id: "platform.runtime", file: "config/use-cases.ts", symbol: "useCasePackages", start: 23, end: 36,
+    id: "platform.runtime", file: "config/use-cases.ts", symbol: "useCasePackages", start: 25, end: 39,
     proves: "The registry assigns each executable demo an independent Compose stack, API route, host port, and scoped configuration. Illustrative modules have no live runtime.", proofRole: "Setup", evidenceKind: "configuration",
   },
   "platform.model-routing": {
@@ -91,6 +93,7 @@ export const evidence: Record<string, EvidenceRef> = {
     start: 170,
     end: 209,
     proves: "The request is inspected before Agent Control and the graph. The final answer is inspected before the post-answer control. A block deletes the checkpoint and releases no answer.",
+    evidenceKind: "source",
   },
   "brahe.defense.inspect": {
     id: "brahe.defense.inspect",
@@ -110,6 +113,7 @@ export const evidence: Record<string, EvidenceRef> = {
     start: 124,
     end: 140,
     proves: "Each async model hop is inspected on the way in and on the completed output before tools continue. Sync generation is rejected.",
+    evidenceKind: "source",
   },
   "brahe.controls.check": {
     id: "brahe.controls.check",
@@ -126,6 +130,7 @@ export const evidence: Record<string, EvidenceRef> = {
     start: 148,
     end: 159,
     proves: "The application judge is a ProtectedChatOpenAI call that returns a boolean schema. It is not the Agent Control engine.",
+    evidenceKind: "source",
   },
   "brahe.controls.enforce": {
     id: "brahe.controls.enforce",

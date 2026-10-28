@@ -9,7 +9,7 @@ const status = (overrides: { services?: ReturnType<typeof service>[]; interbankU
   checkedAt: "2026-10-08T12:00:00.000Z",
   services: overrides.services ?? [
     service("banking", "Brahe Bank"), service("fraud", "Fraud scoring"),
-    service("briefing", "Company briefing"), service("wealth", "Wealth"),
+    service("briefing", "Company briefing"), service("research", "Market research"), service("advisory", "Advisor meeting prep"), service("sar", "SAR investigation"),
   ],
   interbank: { up: overrides.interbankUp ?? true, aiDefense: null, agentControl: null, project: null, stream: null, runs: [] },
   models: [],
@@ -18,8 +18,8 @@ const status = (overrides: { services?: ReturnType<typeof service>[]; interbankU
 });
 
 async function openCase(page: Page, title: string, json: unknown = status()) {
-  await page.route("**/api/studio/status", (route) => route.fulfill({ json }));
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.route(/\/api\/studio\/status(?:\?.*)?$/, (route) => route.fulfill({ json }));
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: `Open ${title} experience` }).first().click();
   await expect(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
 }
@@ -33,7 +33,8 @@ for (const title of LIVE_CASES) {
     await openCase(page, title);
     await expect(heading(page).locator(".primary-button")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Replay recording", exact: true })).toBeHidden();
-    await expect(page.getByText(/^Fallback: recorded (demo|extract)$/).first()).toBeVisible();
+    if (title === "Market research") await expect(page.getByText(/^Fallback: recorded (demo|extract)$/)).toHaveCount(0);
+    else await expect(page.getByText(/^Fallback: recorded (demo|extract)$/).first()).toBeVisible();
     await expect(page.getByRole("button", { name: "Guided overview", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Full walkthrough", exact: true })).toBeVisible();
     const stats = page.getByRole("region", { name: "Live run stats", exact: true });
@@ -43,8 +44,8 @@ for (const title of LIVE_CASES) {
 }
 
 test("'meeting prep' + Enter in the launcher opens Advisor meeting prep", async ({ page }) => {
-  await page.route("**/api/studio/status", (route) => route.fulfill({ json: status() }));
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.route(/\/api\/studio\/status(?:\?.*)?$/, (route) => route.fulfill({ json: status() }));
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
   await page.keyboard.press("ControlOrMeta+k");
   await page.getByLabel("Search demos and pages").fill("meeting prep");
   await expect(page.getByRole("list", { name: "Search results" }).getByRole("listitem").first()).toContainText("Advisor meeting prep");
@@ -54,36 +55,36 @@ test("'meeting prep' + Enter in the launcher opens Advisor meeting prep", async 
 
 test("the header says Live only when the use case's service is up and ready", async ({ page }) => {
   await openCase(page, "Market research");
-  await expect(chip(page)).toHaveText(/^\s*Live ready/);
+  await expect(chip(page)).toHaveText(/^\s*Ready/);
 });
 
 test("a downed service never shows Live in the header", async ({ page }) => {
-  const down = status({ services: [service("banking", "Brahe Bank", false), service("wealth", "Wealth", false), service("fraud", "Fraud scoring", true, false)], interbankUp: false });
+  const down = status({ services: [service("banking", "Brahe Bank", false), service("research", "Market research", false), service("fraud", "Fraud scoring", true, false)], interbankUp: false });
 
   await openCase(page, "Market research", down);
-  await expect(chip(page)).toHaveText(/Live unavailable/);
-  await expect(chip(page)).not.toHaveText(/^\s*Live ready/);
+  await expect(chip(page)).toHaveAttribute("title", /not running|unavailable|not answering/i);
+  await expect(chip(page)).not.toHaveText(/^\s*Ready/);
 
   await page.getByRole("button", { name: "Back to library" }).click();
   await page.getByRole("button", { name: "Open Brahe Bank assistant experience" }).first().click();
-  await expect(chip(page)).toHaveText(/^\s*Live unavailable/);
+  await expect(chip(page)).toHaveAttribute("title", /not running|unavailable/i);
   await expect(chip(page)).toHaveAttribute("title", /not running/);
 
   await page.getByRole("button", { name: "Back to library" }).click();
   await page.getByRole("button", { name: "Open Card fraud triage experience" }).first().click();
-  await expect(chip(page)).not.toHaveText(/^\s*Live ready/);
+  await expect(chip(page)).not.toHaveText(/^\s*Ready/);
   await expect(chip(page)).toHaveAttribute("title", /not answering/);
 
   await page.getByRole("button", { name: "Back to library" }).click();
   await page.getByRole("button", { name: "Open Interbank settlement investigation experience" }).first().click();
-  await expect(chip(page)).toHaveText(/^\s*Live unavailable/);
+  await expect(chip(page)).toHaveAttribute("title", /not running|unavailable/i);
 });
 
 test("an unreachable studio status API does not claim Live", async ({ page }) => {
-  await page.route("**/api/studio/status", (route) => route.fulfill({ status: 503, body: "" }));
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.route(/\/api\/studio\/status(?:\?.*)?$/, (route) => route.fulfill({ status: 503, body: "" }));
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Open Company briefing experience" }).first().click();
-  await expect(chip(page)).toHaveText(/Live unavailable/);
+  await expect(chip(page)).toHaveAttribute("title", /not running|unavailable|not answering/i);
 });
 
 

@@ -4,6 +4,7 @@ import { SETTING_FIELDS, readiness, settingProblem, type SettingState } from "..
 import { modelState } from "./studio-models-api.ts";
 import { envValue, updateEnvFile } from "./studio-env.ts";
 import { fetchText, networkProblem, readJson, send, writeRefusal } from "./studio-http.ts";
+import { requestScope, requireGlobalScope, scopedRuntimeIds, type StudioScope } from "./studio-scope.ts";
 import { apply, queueOperation, runtimeLogs, serviceStatus, type Operation } from "./studio-services.ts";
 
 function settingStates(): Record<string, SettingState> {
@@ -13,9 +14,9 @@ function settingStates(): Record<string, SettingState> {
   }));
 }
 
-export function settingsSnapshot() {
+export function settingsSnapshot(scope?: StudioScope) {
   const settings = settingStates();
-  return { file: ".env", settings, readiness: readiness(settings, modelState) };
+  return { file: ".env", settings, scope, readiness: readiness(settings, modelState).filter(row => !scope || scope.useCaseIds.includes(row.id)) };
 }
 
 function save(input: unknown) {
@@ -90,30 +91,32 @@ async function check(input: unknown) {
   }
 }
 
-async function services(input: unknown) {
+async function services(input: unknown, scope: StudioScope) {
   const body = input as { action?: string; ids?: unknown[]; component?: string } | null;
   if (process.env.STUDIO_PREVIEW === "1") return { status: 409, body: { error: "Container controls are disabled in recorded preview." } };
   if (body?.ids && (!Array.isArray(body.ids) || body.ids.some(id => typeof id !== "string"))) return { status: 422, body: { error: "Choose registered runtime ids." } };
-  const ids = body?.ids as string[] | undefined;
+  const ids = scopedRuntimeIds(body?.ids, scope);
   try {
-    if (body?.action === "apply") return { status: 202, body: { ...(await apply(ids)), ...(await serviceStatus()) } };
+    if (body?.action === "apply") return { status: 202, body: { ...(await apply(ids)), ...(await serviceStatus(scope)) } };
     if (body?.action === "logs" && ids?.length === 1) return { status: 200, body: { log: await runtimeLogs(ids[0]) } };
-    if (["start", "stop", "restart", "build", "controls", "start-component", "stop-component"].includes(body?.action ?? "") && ids?.length) {
+    if (["prepare", "start", "stop", "restart", "build", "controls", "start-component", "stop-component"].includes(body?.action ?? "") && ids?.length) {
       queueOperation(ids, body!.action as Operation, body?.component);
-      return { status: 202, body: await serviceStatus() };
+      return { status: 202, body: await serviceStatus(scope) };
     }
     return { status: 422, body: { error: "Choose a stack and Start, Stop, Restart, Build, or Logs." } };
   } catch (error) { return { status: 409, body: { error: (error as Error).message } }; }
 }
 
 export async function handleSettings(request: IncomingMessage, response: ServerResponse, route: "settings" | "check" | "services") {
-  if (request.method === "GET" && route === "settings") return send(response, 200, settingsSnapshot());
-  if (request.method === "GET" && route === "services") return send(response, 200, await serviceStatus());
+  if (request.method === "GET" && route === "settings") return send(response, 200, settingsSnapshot(requestScope(request)));
+  if (request.method === "GET" && route === "services") return send(response, 200, await serviceStatus(requestScope(request)));
   if (request.method !== (route === "settings" ? "PUT" : "POST")) return send(response, 405, { error: "Method not allowed." });
   const refusal = writeRefusal(request);
   if (refusal) return send(response, refusal.status, { error: refusal.error });
   const body = await readJson(request);
+  const scope = requestScope(request, body);
+  if (route !== "services") requireGlobalScope(scope);
   if (route === "check") return send(response, 200, await check(body));
-  const result = route === "settings" ? save(body) : await services(body);
+  const result = route === "settings" ? save(body) : await services(body, scope);
   send(response, result.status, result.body);
 }

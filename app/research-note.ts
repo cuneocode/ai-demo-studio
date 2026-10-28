@@ -1,3 +1,4 @@
+import { readStored, writeStored, removeStored } from "./studio/storage.ts";
 import type { SecuritySummary, StoredCompanyProfile } from "./company-profile";
 import type { RunEvent, RunInfo, ServedBy } from "./run/events";
 
@@ -434,7 +435,7 @@ export async function loadWealthRecording(name: string): Promise<WealthRecording
 export function loadResearchNote(): StoredResearchNote | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(RESEARCH_NOTE_STORAGE_KEY);
+    const raw = readStored(window.localStorage, RESEARCH_NOTE_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as unknown;
     if (!isRecord(parsed) || !isRecord(parsed.analyze) || !isRecord(parsed.analyze.update)) return null;
@@ -450,13 +451,13 @@ export function loadResearchNote(): StoredResearchNote | null {
 /** Stores the published update with the raw service body, which meeting prep posts back as research context. */
 export function saveResearchNote(note: StoredResearchNote, raw?: unknown) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(RESEARCH_NOTE_STORAGE_KEY, JSON.stringify({ ...note, raw }));
+  writeStored(window.localStorage, RESEARCH_NOTE_STORAGE_KEY, JSON.stringify({ ...note, raw }));
 }
 
 export function rawResearchNote(): unknown {
   if (typeof window === "undefined") return null;
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(RESEARCH_NOTE_STORAGE_KEY) || "null") as unknown;
+    const parsed = JSON.parse(readStored(window.localStorage, RESEARCH_NOTE_STORAGE_KEY) || "null") as unknown;
     return isRecord(parsed) ? parsed.raw ?? null : null;
   } catch {
     return null;
@@ -465,7 +466,7 @@ export function rawResearchNote(): unknown {
 
 export function clearResearchNote() {
   if (typeof window === "undefined") return;
-  window.localStorage.removeItem(RESEARCH_NOTE_STORAGE_KEY);
+  removeStored(window.localStorage, RESEARCH_NOTE_STORAGE_KEY);
 }
 
 export function tickerFromProfile(profile?: StoredCompanyProfile | null) {

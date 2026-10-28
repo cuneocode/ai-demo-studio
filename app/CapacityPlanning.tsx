@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, Loader2, Plus, RotateCcw } from "lucide-react";
 import type { ObservedRun } from "./RunStats";
 import { useTheme } from "./theme";
+import { useStudioNav } from "./studio-nav";
 import { PLANNER_SECTIONS, plannerAssessmentId, plannerInitialization, type PlannerConnection, type PlannerElement, type PlannerInitialization, type PlannerSection } from "./planner-integration";
 
 const bundles = new Map<string, Promise<void>>();
@@ -39,11 +40,12 @@ type Session = { connection: PlannerConnection; seed: PlannerInitialization };
 type Phase = "loading" | "ready" | "error" | "unconfigured";
 
 export default function CapacityPlanning({ useCaseId, title, objective, run }: { useCaseId: string; title: string; objective: string; run?: ObservedRun }) {
+  const { appId = "fsi" } = useStudioNav();
   const theme = useTheme();
   const themeRef = useRef(theme);
   const host = useRef<HTMLDivElement>(null);
   const element = useRef<PlannerElement | null>(null);
-  const [input] = useState({ useCaseId, title, objective, run });
+  const [input] = useState({ useCaseId, title, objective, run, appId });
   const [session, setSession] = useState<Session | null>(null);
   const [phase, setPhase] = useState<Phase>("loading");
   const [error, setError] = useState("");
@@ -68,7 +70,7 @@ export default function CapacityPlanning({ useCaseId, title, objective, run }: {
           setPhase("unconfigured");
           return;
         }
-        const id = plannerAssessmentId(browserStorage(), input.useCaseId);
+        const id = plannerAssessmentId(browserStorage(), input.useCaseId, false, undefined, input.appId ?? "fsi");
         setSession({ connection, seed: plannerInitialization(input.useCaseId, id, input.title, input.objective, input.run) });
       } catch {
         if (!controller.signal.aborted) { setError("Studio could not read the planner connection. Retry to reconnect."); setPhase("error"); }
@@ -121,7 +123,7 @@ export default function CapacityPlanning({ useCaseId, title, objective, run }: {
   const retry = () => { setSession(null); setPhase("loading"); setError(""); setAttempt(value => value + 1); };
   const newAssessment = () => {
     if (!session) return;
-    const id = plannerAssessmentId(browserStorage(), useCaseId, true);
+    const id = plannerAssessmentId(browserStorage(), useCaseId, true, undefined, appId ?? "fsi");
     setPhase("loading"); setError(""); setCurrent(false);
     setSession({ connection: session.connection, seed: plannerInitialization(useCaseId, id, title, objective, run) });
   };

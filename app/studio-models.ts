@@ -1,3 +1,4 @@
+import { demoDefinitions } from "../config/demos.ts";
 /**
  * Model backends: the ordered chain of OpenAI-compatible endpoints each live use case
  * tries, first healthy one wins. Saved to .studio/models.json (git-ignored) and read
@@ -41,16 +42,7 @@ export const POLICY_LABEL: Record<ExternalPolicy, string> = {
 };
 
 /** `experience` matches the use case frame's liveExperience in page.tsx. `clientData` use cases never reach a hosted model uninspected. */
-export const MODEL_USE_CASES: { id: string; experience: string; title: string; calls: string; applies: string; clientData?: boolean }[] = [
-  { id: "brahe-bank", experience: "banking", title: "Brahe Bank assistant", calls: "Supervisor, both specialists, and the quality judge", applies: "Next message; open conversations restart" },
-  { id: "company-briefing", experience: "briefing", title: "Company briefing", calls: "Deep Agent supervisor and theme subagents", applies: "Next briefing" },
-  { id: "fraud-modeling", experience: "fraud", title: "Card fraud triage", calls: "Triage Deep Agent and analyst summary (the score never uses an LLM)", applies: "Next triage run" },
-  { id: "market-research", experience: "research", title: "Market research", calls: "Evidence-packet assessment and verified-fact recommendation", applies: "Next run" },
-  { id: "client-advisory", experience: "advisory", title: "Advisor meeting prep", calls: "Meeting-prep Deep Agent", applies: "Next run", clientData: true },
-  { id: "sar-support", experience: "sar", title: "SAR investigation", calls: "Investigation Deep Agent and narrative draft", applies: "Next investigation", clientData: true },
-  { id: "code-vulnerability", experience: "vulnerability", title: "Code vulnerability analysis", calls: "Visa discovery, verification, and patch proposal", applies: "Next operation" },
-  { id: "interbank-a2a", experience: "interbank", title: "Interbank settlement investigation", calls: "Both banks' Deep Agents", applies: "Next investigation" },
-];
+export const MODEL_USE_CASES: { id: string; experience: string; title: string; calls: string; applies: string; clientData?: boolean }[] = demoDefinitions.flatMap(demo => demo.model && demo.workspaceKey ? [{ id: demo.id, title: demo.title, experience: demo.workspaceKey, ...demo.model }] : []);
 
 export const PROVIDER_ID = /^[a-z0-9][a-z0-9-]{0,39}$/;
 

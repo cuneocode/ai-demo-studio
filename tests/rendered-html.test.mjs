@@ -31,9 +31,9 @@ test("server-renders the Studio shell and navigation", async () => {
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>FSI AI Demo Studio<\/title>/);
+  assert.match(html, /<title>AI Demo Studio<\/title>/);
   assert.match(html, /aria-label="Main navigation"/);
-  assert.match(html, /Use case library/);
+  assert.match(html, /Industry apps/);
   assert.match(html, /Studio settings/);
   assert.doesNotMatch(html, /Your site is taking shape|Codex is building the first version/);
 });
@@ -42,7 +42,8 @@ test("wealth UI and service messages carry no env-var names, script paths, or ra
   const banned = /FRED_API_KEY|serve\.sh|BEAT_VS_SPY/;
   const ui = ["MarketResearch.tsx", "ClientAdvisory.tsx", "research-note.ts", "advisory-brief.ts", "wealth-stats.ts", "wealth-evidence.tsx"];
   for (const name of ui) {
-    const source = await readFile(new URL(`app/${name}`, templateRoot), "utf8");
+    const uiPath = name === "MarketResearch.tsx" ? "demos/market-research/ui/MarketResearch.tsx" : name === "ClientAdvisory.tsx" ? "demos/client-advisory/ui/ClientAdvisory.tsx" : `app/${name}`;
+    const source = await readFile(new URL(uiPath, templateRoot), "utf8");
     assert.doesNotMatch(source, banned, name);
     assert.doesNotMatch(source, /NIM meeting brief|Entitled context|ENTITLED CONTEXT|>Conflicts</, name);
   }

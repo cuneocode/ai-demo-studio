@@ -4,6 +4,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "./theme-light.css";
 import { THEME_BOOT } from "./theme";
+import StudioApplication from "./studio/StudioApplication";
+import { PRODUCT_NAME, PRODUCT_DESCRIPTION } from "../config/product.ts";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,9 +21,8 @@ const geistMono = Geist_Mono({
 // dev error overlay so it cannot cover a demo mid-presentation.
 const QUIET_RESIZE_NOTICE = `window.addEventListener("error",function(e){if(/^ResizeObserver loop/.test(e.message||""))e.stopImmediatePropagation();});`;
 
-const title = "FSI AI Demo Studio";
-const description =
-  "A modular financial services AI demo platform showing how Cisco secures, observes, and scales AI-powered business workflows.";
+const title = PRODUCT_NAME;
+const description = PRODUCT_DESCRIPTION;
 
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
@@ -70,6 +71,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <StudioApplication />
         {children}
       </body>
     </html>

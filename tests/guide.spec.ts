@@ -1,12 +1,13 @@
+import { mockResearchGuide } from "./research-fixtures";
 import { expect, test } from "@playwright/test";
 import { mockStudio, openLibrary, setTheme, snapshot, statusWith, walk } from "./guide-helpers";
 
-/** Each demo's main tour, launched from its library card. Recorded runs only; any model call is blocked and fails the test. */
+/** Main tours use deterministic API fixtures or reviewed recordings. External model calls are blocked. */
 const TOURS = [
   { title: "Brahe Bank assistant", id: "brahe-bank", recorded: true },
   { title: "Card fraud triage", id: "fraud-modeling", recorded: true },
   { title: "Company briefing", id: "company-briefing", recorded: true },
-  { title: "Market research", id: "market-research", recorded: true },
+  { title: "Market research", id: "market-research", recorded: false },
   { title: "Advisor meeting prep", id: "client-advisory", recorded: true },
   { title: "KYC processing", id: "kyc-processing", recorded: false },
   { title: "SAR investigation", id: "sar-support", recorded: true },
@@ -29,6 +30,7 @@ for (const tour of TOURS) {
       await page.setViewportSize({ width: layout.width, height: 900 });
       await setTheme(page, layout.theme);
       const paid = await mockStudio(page);
+      if (tour.id === "market-research") await mockResearchGuide(page);
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
       await openLibrary(page);
@@ -36,13 +38,14 @@ for (const tour of TOURS) {
       await page.getByRole("button", { name: "Full walkthrough", exact: true }).click();
       await expect(page.getByRole("heading", { name: tour.title, level: 1 })).toBeVisible();
 
-      const seen = await walk(page);
+      const seen = await walk(page, { act: tour.id === "market-research" });
       expect(seen.length).toBeGreaterThan(4);
       expect(seen.at(-1)?.title).toBeTruthy();
-      if (tour.id === "client-advisory") expect(seen.some((step) => step.source === "Sample data · no model call")).toBe(true);
+      if (tour.id === "market-research") expect(seen.some(step => step.source === "Live run")).toBe(true);
+      else if (tour.id === "client-advisory") expect(seen.some((step) => step.source === "Sample data · no model call")).toBe(true);
       else if (tour.recorded) expect(seen.some((step) => /^Recorded run · /.test(step.source)), "a recorded run is labelled with its date").toBe(true);
       else expect(seen.every((step) => step.source === "Illustrative prototype · no live service")).toBe(true);
-      expect(seen.some((step) => step.fits.some((fit) => fit.endsWith("=proposed") || fit.endsWith("=running") || fit.endsWith("=when-configured")))).toBe(true);
+      if (tour.id !== "market-research") expect(seen.some((step) => step.fits.some((fit) => fit.endsWith("=proposed") || fit.endsWith("=running") || fit.endsWith("=when-configured")))).toBe(true);
       await expect(page.locator(".guide-card")).toHaveCount(0);
       expect(paid, "no model or agent calls during a guided tour").toEqual([]);
       expect(errors).toEqual([]);
@@ -61,10 +64,13 @@ test("keys move through the tour, the architecture step switches tabs, and Esc r
   await expect(card).toContainText("Step 1 of");
   await page.keyboard.press("ArrowRight");
   await expect(card).toContainText("Step 2 of");
+  await expect(card).toHaveAttribute("data-guide-ready", "true");
   await page.keyboard.press("ArrowLeft");
   await expect(card).toContainText("Step 1 of");
+  await expect(card).toHaveAttribute("data-guide-ready", "true");
   await page.keyboard.press("Enter");
   await expect(card).toContainText("Step 2 of");
+  await expect(card).toHaveAttribute("data-guide-ready", "true");
   await page.keyboard.press("Home");
   await expect(card).toContainText("Step 1 of");
 
@@ -98,6 +104,7 @@ test("a deep link opens the tour at a step and the URL follows the tour", async 
   const card = page.getByRole("dialog");
   await expect(card).toHaveAttribute("data-guide-step", "banking.prompts");
   await expect(page.getByRole("heading", { name: "Brahe Bank assistant", level: 1 })).toBeVisible();
+  await expect(card).toHaveAttribute("data-guide-ready", "true");
   await page.keyboard.press("ArrowRight");
   await expect(page).toHaveURL(/guide=brahe-bank&step=banking\.ask/);
   await page.keyboard.press("Escape");
@@ -178,7 +185,7 @@ test("leaving the demo mid-tour offers to resume where you were", async ({ page 
   await expect(page.getByRole("dialog")).toHaveAttribute("data-guide-step", step!);
   await expect(page.getByRole("heading", { name: "KYC processing", level: 1 })).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(page.locator(".case-guide-resume")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Resume at step/ })).toHaveCount(0);
 });
 
 test("an encore starts from the last card", async ({ page }) => {

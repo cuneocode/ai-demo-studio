@@ -74,15 +74,28 @@ and current checkout failures.
 
 ## Adding or changing a demo
 
+Read the [AI Demo Studio source map](docs/AI_DEMO_STUDIO.md). Choose the owning
+industry app and stable demo/runtime IDs. `demos/<demo-id>/` owns UI, workspace
+copy, narrative, presenter notes, tours, and dedicated backend/deployment files.
+`verticals/<app-id>/app.ts` owns category, library membership, and default story.
+
 Start with the [use-case authoring guide](docs/ADDING_USE_CASES.md). Choose its
 closest reference implementation and follow the registration map, visual design,
 and acceptance checklist. The [container package contract](docs/CONTAINERS.md)
-covers runtime packaging. Register each live
-use case in `config/use-cases.ts` with its own Compose project, stable API mapping,
-health route, scoped environment, optional components, and persistent storage.
+covers runtime packaging. Index its definition in `config/demos.ts` and wire the
+workspace, story, tour, and architecture through the guide's explicit indexes.
+Register each live runtime in `config/use-cases.ts` with its own Compose project,
+stable API mapping, health route, scoped environment, optional components, and
+persistent storage.
 Development and production proxies, the operator, and doctor consume this registry.
 An upstream blueprint can retain multiple containers behind its adapter. Preview
 must disable every live API and lifecycle action. Update the README demo table.
+
+Reuse shared endpoints, credentials, and integration defaults. Scope persisted
+state and run references by the owning app/demo. Keep FSI company context and
+lifecycle assumptions in their app. Update initial catalog counts and empty-state
+tests when a library gains demos; preserve the frozen FSI compatibility baseline.
+Register new browser filenames in `playwright.config.ts`.
 
 Use `services/llm/studio_models.py` and the Studio model settings for model routing.
 Keep lifecycle and persisted run behavior aligned with `services/common/runs.py`

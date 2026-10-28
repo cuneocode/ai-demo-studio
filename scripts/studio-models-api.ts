@@ -1,6 +1,7 @@
 // /api/studio/models: the model registry. Python services read the saved file (or the
 // committed defaults) from disk, so this module applies the same rules as
 // services/llm/studio_models.py: same defaults file, same .env overrides, same probe.
+import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import path from "node:path";
@@ -8,6 +9,7 @@ import { KEY_NAMES, MODEL_USE_CASES, baseUrlProblem, chainFor, chainLabel, valid
 import type { ModelState } from "../app/studio-settings.ts";
 import { ROOT, envValue } from "./studio-env.ts";
 import { fetchText, networkProblem, readJson, send, writeRefusal } from "./studio-http.ts";
+import { requestScope, requireGlobalScope, ScopeError, scopedUseCaseIds, type StudioScope } from "./studio-scope.ts";
 import { syncContainerModels } from "./studio-container-config.ts";
 
 export const STUDIO_MODELS_PATH = "/api/studio/models";
@@ -93,22 +95,42 @@ function routes(registry: ModelRegistry, unconfigured: Record<string, string>, h
   }));
 }
 
-async function snapshot() {
+export const registryRevision = (registry: ModelRegistry) => createHash("sha256").update(JSON.stringify(registry)).digest("hex");
+
+async function snapshot(scope: StudioScope) {
   const loaded = loadRegistry();
   const health = await providerHealth(loaded.registry, loaded.unconfigured);
   return {
     ...loaded,
+    scope, revision: registryRevision(loaded.registry),
     file: path.relative(ROOT, registryFile()) || registryFile(),
     defaultsFile: path.relative(ROOT, defaultsFile()),
     keys: Object.fromEntries(KEY_NAMES.map((name) => [name, Boolean(keyValue(name))])),
-    useCases: MODEL_USE_CASES,
+    useCases: MODEL_USE_CASES.filter(item => scope.useCaseIds.includes(item.id)),
     health,
-    routes: routes(loaded.registry, loaded.unconfigured, health),
+    routes: Object.fromEntries(Object.entries(routes(loaded.registry, loaded.unconfigured, health)).filter(([id]) => scope.useCaseIds.includes(id))),
   };
 }
 
-async function save(input: unknown) {
-  const result = validateRegistry(input);
+export function mergeModelUpdate(input: unknown, current: ModelRegistry, scope: StudioScope, method: "PUT" | "PATCH") {
+  if (!input || typeof input !== "object" || Array.isArray(input)) throw new ScopeError("Expected a model update.");
+  const body = input as { revision?: string; registry?: unknown; routes?: Record<string, unknown> };
+  if (!body.revision) throw new ScopeError("Reload models before saving. A registry revision is required.", 428);
+  if (body.revision !== registryRevision(current)) throw new ScopeError("Models changed in another window. Reload models and reapply your changes.", 409);
+  if (method === "PUT") { requireGlobalScope(scope); return body.registry; }
+  if (Object.keys(body).some(key => !["revision", "routes", "appId"].includes(key))) throw new ScopeError("App updates can change model routes only.");
+  if (!body.routes || typeof body.routes !== "object" || Array.isArray(body.routes)) throw new ScopeError("Provide the changed use-case routes.");
+  scopedUseCaseIds(Object.keys(body.routes), scope);
+  const useCases = { ...current.useCases };
+  for (const [id, route] of Object.entries(body.routes)) {
+    if (route === null) delete useCases[id];
+    else useCases[id] = route as ModelRegistry["useCases"][string];
+  }
+  return { ...current, useCases };
+}
+
+async function save(input: unknown, scope: StudioScope, method: "PUT" | "PATCH") {
+  const result = validateRegistry(mergeModelUpdate(input, loadRegistry().registry, scope, method));
   if ("error" in result) return { status: 422, body: { error: result.error } };
   const file = registryFile();
   mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
@@ -117,7 +139,7 @@ async function save(input: unknown) {
   renameSync(temporary, file);
   syncContainerModels();
   healthCache = null;
-  return { status: 200, body: await snapshot() };
+  return { status: 200, body: await snapshot(scope) };
 }
 
 /** Checks a provider before saving: lists its models with the named key. */
@@ -146,11 +168,13 @@ async function check(input: unknown) {
 }
 
 export async function handleModels(request: IncomingMessage, response: ServerResponse) {
-  if (request.method === "GET") return send(response, 200, await snapshot());
-  if (request.method !== "PUT" && request.method !== "POST") return send(response, 405, { error: "Use GET, PUT, or POST." });
+  if (request.method === "GET") return send(response, 200, await snapshot(requestScope(request)));
+  if (request.method !== "PUT" && request.method !== "POST" && request.method !== "PATCH") return send(response, 405, { error: "Use GET, PUT, PATCH, or POST." });
   const refusal = writeRefusal(request);
   if (refusal) return send(response, refusal.status, { error: refusal.error });
   const body = await readJson(request);
-  const result = request.method === "PUT" ? await save(body) : await check(body);
+  const scope = requestScope(request, body);
+  if (request.method === "POST") requireGlobalScope(scope);
+  const result = request.method === "PUT" || request.method === "PATCH" ? await save(body, scope, request.method) : await check(body);
   send(response, result.status, result.body);
 }

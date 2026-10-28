@@ -19,7 +19,7 @@ function walk(dir, out = []) {
   }
   return out;
 }
-const appFiles = walk(join(ROOT, "app")).filter((path) => !path.includes("/guide/tours/") && !path.endsWith("/guide/anchors.ts"));
+const appFiles = [...walk(join(ROOT, "app")), ...readdirSync(join(ROOT, "demos")).flatMap(id => { const dir = join(ROOT, "demos", id, "ui"); return existsSync(dir) ? walk(dir) : []; })].filter((path) => !path.includes("/guide/tours/") && !path.endsWith("/guide/anchors.ts"));
 const appSource = appFiles.map((path) => readFileSync(path, "utf8")).join("\n");
 const componentSource = appFiles.filter((path) => path.endsWith(".tsx")).map((path) => readFileSync(path, "utf8")).join("\n");
 

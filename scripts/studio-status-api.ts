@@ -8,6 +8,7 @@ import { fetchText, send } from "./studio-http.ts";
 import { loadRegistry, providerHealth } from "./studio-models-api.ts";
 import { settingsSnapshot } from "./studio-settings-api.ts";
 import { INTERBANK, SERVICES } from "./studio-services.ts";
+import { requestScope, type StudioScope } from "./studio-scope.ts";
 
 type Json = Record<string, unknown>;
 const object = (value: unknown): Json => (value && typeof value === "object" && !Array.isArray(value) ? value as Json : {});
@@ -53,24 +54,27 @@ async function probeModels() {
     .map(([id, provider]) => ({ id, label: provider.label, host: new URL(provider.baseUrl).host, up: Boolean(health[id]?.up) }));
 }
 
-async function build(): Promise<StudioStatus> {
+async function build(scope: StudioScope): Promise<StudioStatus> {
+  const servicesInScope = SERVICES.filter(spec => scope.runtimeIds.includes(spec.id));
+  const includesInterbank = scope.runtimeIds.includes("interbank");
   if (process.env.STUDIO_PREVIEW === "1") return {
-    mode: "preview", checkedAt: new Date().toISOString(),
-    services: SERVICES.map(spec => serviceHealth(spec.id, spec.label, null)),
+    scope, mode: "preview", checkedAt: new Date().toISOString(),
+    services: servicesInScope.map(spec => serviceHealth(spec.id, spec.label, null)),
     interbank: { up: false, aiDefense: null, agentControl: null, project: null, stream: null, runs: [] },
     models: [], links: { agentObservability: "https://console.multitenant.galileocloud.io", splunkObservability: null }, readiness: [],
   };
   const [services, lab, runtime, runs, models] = await Promise.all([
-    Promise.all(SERVICES.map(async (spec) => serviceHealth(spec.id, spec.label, await getJson(`http://127.0.0.1:${spec.port}${spec.health}`)))),
-    getJson(`http://127.0.0.1:${INTERBANK.port}${INTERBANK.health}`),
-    getJson(`http://127.0.0.1:${INTERBANK.port}/api/runtime`),
-    getJson(`http://127.0.0.1:${INTERBANK.port}/api/runs`),
+    Promise.all(servicesInScope.map(async (spec) => serviceHealth(spec.id, spec.label, await getJson(`http://127.0.0.1:${spec.port}${spec.health}`)))),
+    includesInterbank ? getJson(`http://127.0.0.1:${INTERBANK.port}${INTERBANK.health}`) : null,
+    includesInterbank ? getJson(`http://127.0.0.1:${INTERBANK.port}/api/runtime`) : null,
+    includesInterbank ? getJson(`http://127.0.0.1:${INTERBANK.port}/api/runs`) : null,
     probeModels(),
   ]);
   const defense = object(object(runtime).ai_defense);
   const observability = object(object(runtime).observability);
   const realm = envValue("SPLUNK_REALM");
   return {
+    scope,
     checkedAt: new Date().toISOString(),
     services,
     interbank: {
@@ -89,15 +93,20 @@ async function build(): Promise<StudioStatus> {
       agentObservability: envValue("GALILEO_CONSOLE_URL") || "https://console.multitenant.galileocloud.io",
       splunkObservability: /^[a-z]+\d+$/.test(realm) ? `https://app.${realm}.signalfx.com/#/apm` : null,
     },
-    readiness: settingsSnapshot().readiness,
+    readiness: settingsSnapshot().readiness.filter(row => scope.useCaseIds.includes(row.id)),
   };
 }
 
 // The shell polls from several places; one probe round serves them all.
-let cached: { at: number; value: Promise<StudioStatus> } | null = null;
+const cached = new Map<string, { at: number; value: Promise<StudioStatus> }>();
 
 export async function handleStatus(request: IncomingMessage, response: ServerResponse) {
   if (request.method !== "GET") return send(response, 405, { error: "Method not allowed." });
-  if (!cached || Date.now() - cached.at > 3000) cached = { at: Date.now(), value: build() };
-  send(response, 200, await cached.value);
+  const scope = requestScope(request);
+  let entry = cached.get(scope.key);
+  if (!entry || Date.now() - entry.at > 3000) {
+    entry = { at: Date.now(), value: build(scope) };
+    cached.set(scope.key, entry);
+  }
+  send(response, 200, await entry.value);
 }

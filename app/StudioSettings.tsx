@@ -4,6 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, CircleAlert, CircleCheck, Cpu, KeyRound, PlugZap, Plus, RefreshCw, RotateCcw, Save, ServerCog, Trash2, X } from "lucide-react";
 import { KEY_NAMES, MODEL_USE_CASES, POLICY_LABEL, PROVIDER_ID, chainFor, defaultPolicy, policyFor, validateRegistry, type ExternalPolicy, type ModelProvider, type ModelRegistry } from "./studio-models";
 import { SETTING_GROUPS, settingProblem, type Readiness, type SettingGroup, type SettingState } from "./studio-settings";
+import Link from "next/link";
+import { appById } from "../config/apps";
+import { useStudioNav } from "./studio-nav";
 import type { ServicesSnapshot } from "./runtime-contract";
 import "./studio-settings.css";
 
@@ -14,6 +17,7 @@ const SERVICES_API = "/api/studio/services";
 type ProviderHealth = { up: boolean; detail: string };
 type Route = { chain: string[]; active: string | null; fallback: boolean };
 export type ModelSnapshot = {
+  revision?: string; useCases?: typeof MODEL_USE_CASES;
   saved: boolean; problem: string | null; file: string; defaultsFile?: string; registry: ModelRegistry; keys: Record<string, boolean>;
   unconfigured?: Record<string, string>; health?: Record<string, ProviderHealth>; routes?: Record<string, Route>;
 };
@@ -28,7 +32,7 @@ async function getJson<T>(url: string): Promise<T> {
   return response.json();
 }
 
-async function sendJson<T>(url: string, method: "PUT" | "POST", body: unknown): Promise<T> {
+async function sendJson<T>(url: string, method: "PUT" | "POST" | "PATCH", body: unknown): Promise<T> {
   const response = await fetch(url, { method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
   const parsed = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(parsed.error ?? `The studio answered ${response.status}.`);
@@ -50,14 +54,25 @@ function CheckResult({ check }: { check?: Check }) {
   return <span className={`st-result ${check.ok ? "ok" : "bad"}`} role="status">{check.ok ? <CircleCheck size={16} /> : <CircleAlert size={16} />}{check.text}</span>;
 }
 
+const scopedApi = (url: string, appId?: string | null) => `${url}${appId ? `?app=${encodeURIComponent(appId)}` : ""}`;
+
 export default function StudioSettings() {
+  const { appId } = useStudioNav();
+  const app = appById(appId);
   const [settings, setSettings] = useState<SettingsSnapshot | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const reload = useCallback(() => {
-    getJson<SettingsSnapshot>(SETTINGS_API).then((next) => { setSettings(next); setLoadError(null); }).catch((error: Error) => setLoadError(error.message));
-  }, []);
+    getJson<SettingsSnapshot>(scopedApi(SETTINGS_API, appId)).then((next) => { setSettings(next); setLoadError(null); }).catch((error: Error) => setLoadError(error.message));
+  }, [appId]);
   useEffect(reload, [reload]);
+  useEffect(() => {
+    if (!settings) return;
+    const reveal = () => document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ behavior: "smooth", block: "start" });
+    reveal();
+    window.addEventListener("hashchange", reveal);
+    return () => window.removeEventListener("hashchange", reveal);
+  }, [settings]);
 
   if (loadError) return <div className="st-page"><div className="st-banner danger"><CircleAlert size={18} /><span>Studio settings are unavailable: {loadError} They are served by <code>npm run dev</code>, <code>npm run dev:studio</code>, or <code>npm run start:studio</code>.</span></div></div>;
   if (!settings) return <div className="st-page"><p className="st-muted">Loading studio settings…</p></div>;
@@ -66,15 +81,15 @@ export default function StudioSettings() {
     <div className="st-page">
       <div className="page-heading">
         <div>
-          <span className="breadcrumb">FSI AI Demo Studio <span>/</span> Studio settings</span>
-          <h1>Studio settings</h1>
-          <p>Bring your own models and credentials. Everything is saved to <code>{settings.file}</code> on this machine. The operator supplies scoped settings to each container stack. Keys are write-only: once saved, the studio shows only whether each one is set.</p>
+          <span className="breadcrumb">AI Demo Studio <span>/</span> {app ? `${app.shortName} settings` : "Studio settings"}</span>
+          <h1>{app ? `${app.name} settings` : "Studio settings"}</h1>
+          <p>{app ? <>Manage this app’s runtimes and model routes. Shared providers and credentials are managed in <Link href="/settings">platform settings</Link>. </> : "Bring your own models and credentials. "} Everything is saved to <code>{settings.file}</code> on this machine. The operator supplies scoped settings to each container stack. Keys are write-only: once saved, the studio shows only whether each one is set.</p>
         </div>
       </div>
       <ReadinessPanel rows={settings.readiness} />
-      <ServicesPanel />
-      <ModelsPanel modelKeys={settings.settings} onKeysSaved={setSettings} onModelsSaved={reload} />
-      {SETTING_GROUPS.filter((group) => group.id !== "models").map((group) => (
+      <ServicesPanel appId={appId} />
+      <ModelsPanel appId={appId} modelKeys={settings.settings} onKeysSaved={setSettings} onModelsSaved={reload} />
+      {!app && SETTING_GROUPS.filter((group) => group.id !== "models").map((group) => (
         <SettingsGroupPanel key={group.id} group={group} states={settings.settings} onSaved={setSettings} />
       ))}
     </div>
@@ -86,6 +101,7 @@ function ReadinessPanel({ rows }: { rows: Readiness[] }) {
     <section className="st-section" aria-labelledby="st-readiness">
       <div className="section-heading"><div><span className="eyebrow">LIVE DEMOS</span><h2 id="st-readiness">Live configuration</h2></div></div>
       <p className="st-muted">Configuration checks only. The library shows whether each live service is responding; recorded demos need no credentials.</p>
+      {rows.length === 0 && <p className="st-muted">This app has no live configuration requirements yet.</p>}
       <div className="st-readiness">
         {rows.map((row) => (
           <article key={row.id} className={row.ready ? "ready" : "missing"} aria-label={`${row.title} readiness`}>
@@ -99,15 +115,17 @@ function ReadinessPanel({ rows }: { rows: Readiness[] }) {
   );
 }
 
-function ServicesPanel() {
+function ServicesPanel({ appId }: { appId?: string | null }) {
+  const [selected, setSelected] = useState<string[]>([]);
+  const endpoint = scopedApi(SERVICES_API, appId);
   const [status, setStatus] = useState<ServicesSnapshot | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<Record<string, string>>({});
   const runningJob = status?.services.some(row => row.job?.state === "running");
   const refresh = useCallback(() => {
-    getJson<ServicesSnapshot>(SERVICES_API).then(setStatus).catch(() => setError("The Studio operator is unreachable. Retrying."));
-  }, []);
+    getJson<ServicesSnapshot>(endpoint).then(setStatus).catch(() => setError("The Studio operator is unreachable. Retrying."));
+  }, [endpoint]);
   useEffect(() => {
     refresh();
     const timer = setInterval(refresh, runningJob ? 1500 : 4000);
@@ -117,9 +135,9 @@ function ServicesPanel() {
     setBusy(action); setError(null);
     try {
       if (action === "logs" && ids) {
-        const result = await sendJson<{ log: string }>(SERVICES_API, "POST", { action, ids });
+        const result = await sendJson<{ log: string }>(endpoint, "POST", { action, ids });
         setLogs(previous => ({ ...previous, [ids[0]]: result.log || "No container logs yet." }));
-      } else setStatus(await sendJson<ServicesSnapshot>(SERVICES_API, "POST", { action, ids, ...(component ? { component } : {}) }));
+      } else setStatus(await sendJson<ServicesSnapshot>(endpoint, "POST", { action, ids, ...(component ? { component } : {}) }));
     } catch (failure) { setError((failure as Error).message); }
     finally { setBusy(null); }
   };
@@ -128,18 +146,20 @@ function ServicesPanel() {
   return <section className="st-section" aria-labelledby="st-services">
     <div className="section-heading">
       <div><span className="eyebrow">USE-CASE CONTAINERS</span><h2 id="st-services">Services</h2></div>
-      <button className="primary-button" disabled={!status || !available || busy !== null || runningJob} onClick={() => act("apply")}><RefreshCw size={16} />{pendingCount ? `Apply ${pendingCount} change${pendingCount === 1 ? "" : "s"}` : "Apply to running stacks"}</button>
+      <button className="primary-button" disabled={!status?.services.some(row => row.managed && row.up) || !available || busy !== null || runningJob} onClick={() => act("apply", status?.services.filter(row => row.managed && row.up).map(row => row.id))}><RefreshCw size={16} />{pendingCount ? `Apply ${pendingCount} change${pendingCount === 1 ? "" : "s"}` : "Apply to running stacks"}</button>
     </div>
-    <p className="st-muted st-intro">Start the demos you need. Each stack has its own containers and saved data. Stop preserves saved runs. Apply recreates running stacks with your saved credentials.</p>
+    <p className="st-muted st-intro">{appId ? `Operations affect this app’s library. ` : "Operations affect the selected platform runtimes. "}Start the demos you need. Each stack has its own containers and saved data. Stop preserves saved runs. Apply recreates running stacks with your saved credentials.</p>
     {status?.docker && !available && <p className="st-banner" role="alert">{status.docker.detail}</p>}
     {error && <p className="st-banner" role="alert">{error}</p>}
+    {!!status?.services.length && <div className="heading-actions st-prepare"><button className="secondary-button" disabled={!available || !selected.length || busy !== null || runningJob} onClick={() => act("prepare", selected)}>Prepare {selected.length || "selected"} demo{selected.length === 1 ? "" : "s"}</button><span className="st-muted">Ready stacks stay running. Preparation starts selected stopped stacks sequentially.</span></div>}
+    {status?.services.length === 0 && <p className="st-muted">This app has no executable demos yet.</p>}
     <div className="st-table" role="table" aria-label="Services">
       {status?.services.map(row => {
         const working = row.job?.state === "running";
         const disabled = !available || busy !== null || working;
         return <div className="st-stack" key={row.id}>
           <div className="st-row services" role="row" aria-label={`${row.label} stack`}>
-            <strong role="cell">{row.label}</strong><span role="cell" className="st-muted">:{row.port}</span>
+            <label role="cell" className="st-check"><input type="checkbox" aria-label={`Prepare ${row.label}`} checked={selected.includes(row.id)} onChange={event => setSelected(current => event.target.checked ? [...current, row.id] : current.filter(id => id !== row.id))} /><strong>{row.label}</strong></label><span role="cell" className="st-muted">:{row.port}</span>
             <span role="cell" className={`st-state ${row.up ? "up" : "down"}`}><ServerCog size={15} />{row.state ?? (row.up ? "Running" : "Stopped")}{row.up && !row.managed ? " · external service" : ""}</span>
             <span role="cell" className="st-actions">
               {!!row.pending?.length && <span className="st-pending">{row.pending.length} change{row.pending.length === 1 ? "" : "s"} to apply</span>}
@@ -161,7 +181,7 @@ function ServicesPanel() {
       })}
     </div>
     {status?.packages?.filter(item => item.mode === "illustrative").map(item => <p key={item.id} className="st-note">{item.title}: illustrative module with no executable backend.</p>)}
-    <p className="st-note">Stacks keep running when Studio closes. Interbank hosted controls are registered separately through the explicit button above.</p>
+    <p className="st-note">Stacks keep running when Studio closes. Hosted controls use the explicit registration action for each supported stack.</p>
   </section>;
 }
 
@@ -256,7 +276,7 @@ function SettingsGroupPanel({ group, states, onSaved }: { group: SettingGroup; s
   );
 }
 
-function ModelsPanel({ modelKeys, onKeysSaved, onModelsSaved }: { modelKeys: Record<string, SettingState>; onKeysSaved: (next: SettingsSnapshot) => void; onModelsSaved: () => void }) {
+function ModelsPanel({ appId, modelKeys, onKeysSaved, onModelsSaved }: { appId?: string | null; modelKeys: Record<string, SettingState>; onKeysSaved: (next: SettingsSnapshot) => void; onModelsSaved: () => void }) {
   const [snapshot, setSnapshot] = useState<ModelSnapshot | null>(null);
   const [draft, setDraft] = useState<ModelRegistry | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -265,8 +285,8 @@ function ModelsPanel({ modelKeys, onKeysSaved, onModelsSaved }: { modelKeys: Rec
   const [keyDrafts, setKeyDrafts] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    getJson<ModelSnapshot>(MODELS_API).then((next) => { setSnapshot(next); setDraft(next.registry); }).catch((error: Error) => setSaveError(error.message));
-  }, []);
+    getJson<ModelSnapshot>(scopedApi(MODELS_API, appId)).then((next) => { setSnapshot(next); setDraft(next.registry); }).catch((error: Error) => setSaveError(error.message));
+  }, [appId]);
 
   const dirty = useMemo(() => Boolean(snapshot && draft && JSON.stringify(snapshot.registry) !== JSON.stringify(draft)), [snapshot, draft]);
   const problem = useMemo(() => {
@@ -322,7 +342,8 @@ function ModelsPanel({ modelKeys, onKeysSaved, onModelsSaved }: { modelKeys: Rec
     setSaving(true);
     setSaveError(null);
     try {
-      const body = await sendJson<ModelSnapshot>(MODELS_API, "PUT", draft);
+      const routes = Object.fromEntries((snapshot.useCases ?? MODEL_USE_CASES).filter(item => JSON.stringify(snapshot.registry.useCases[item.id]) !== JSON.stringify(draft.useCases[item.id])).map(item => [item.id, draft.useCases[item.id] ?? null]));
+      const body = await sendJson<ModelSnapshot>(scopedApi(MODELS_API, appId), appId ? "PATCH" : "PUT", appId ? { revision: snapshot.revision, routes } : { revision: snapshot.revision, registry: draft });
       setSnapshot(body);
       setDraft(body.registry);
       onModelsSaved();
@@ -346,6 +367,7 @@ function ModelsPanel({ modelKeys, onKeysSaved, onModelsSaved }: { modelKeys: Rec
       <div className="section-heading">
         <div><span className="eyebrow">MODELS</span><h2 id="st-models">Model backends</h2></div>
         <div className="heading-actions">
+          <button className="secondary-button" disabled={saving} onClick={() => { getJson<ModelSnapshot>(scopedApi(MODELS_API, appId)).then(next => { setSnapshot(next); setDraft(next.registry); setSaveError(null); }).catch(error => setSaveError(error.message)); }}>Reload models</button>
           <button className="secondary-button" disabled={!dirty || saving} onClick={() => { setDraft(snapshot.registry); setSaveError(null); }}><RotateCcw size={16} /> Revert</button>
           <button className="primary-button" disabled={(!dirty && snapshot.saved) || saving || Boolean(problem)} onClick={save}><Save size={16} /> {saving ? "Saving…" : "Save models"}</button>
         </div>
@@ -358,13 +380,14 @@ function ModelsPanel({ modelKeys, onKeysSaved, onModelsSaved }: { modelKeys: Rec
         : null}
       {(saveError || (dirty && problem)) && <div className="st-banner danger" role="alert"><CircleAlert size={18} /><span>{saveError ?? problem}</span></div>}
 
-      <h3 className="st-subhead">Default chain for all use cases</h3>
-      <ChainEditor label="Default chain" chain={draft.chain} providers={draft.providers} status={providerStatus} onChange={(chain) => update({ ...draft, chain })} />
+      {appId && <p className="st-muted">Provider definitions and the default chain are shared. <Link href="/settings#st-models">Edit platform models</Link>.</p>}
+      <fieldset className="st-shared-config" disabled={Boolean(appId)}><h3 className="st-subhead">Default chain for all use cases</h3>
+      <ChainEditor label="Default chain" chain={draft.chain} providers={draft.providers} status={providerStatus} onChange={(chain) => update({ ...draft, chain })} /></fieldset>
 
       <h3 className="st-subhead">Per use case</h3>
       <div className="st-table" role="table" aria-label="Use case overrides">
         <div className="st-row head st-route" role="row"><span role="columnheader">Use case</span><span role="columnheader">Model calls</span><span role="columnheader">Chain</span><span role="columnheader">Hosted models</span></div>
-        {MODEL_USE_CASES.map((useCase) => {
+        {(snapshot.useCases ?? MODEL_USE_CASES).map((useCase) => {
           const current = chainFor(draft, useCase.id);
           const policy = policyFor(draft, useCase.id);
           const route = !dirty ? snapshot.routes?.[useCase.id] : undefined;
@@ -390,7 +413,7 @@ function ModelsPanel({ modelKeys, onKeysSaved, onModelsSaved }: { modelKeys: Rec
         })}
       </div>
 
-      <div className="st-subhead-row">
+      {!appId && <fieldset className="st-shared-config"><div className="st-subhead-row">
         <h3 className="st-subhead">Providers</h3>
         <button className="text-button" disabled={providers.length >= 8} onClick={addProvider}><Plus size={15} /> Add provider</button>
       </div>
@@ -450,7 +473,7 @@ function ModelsPanel({ modelKeys, onKeysSaved, onModelsSaved }: { modelKeys: Rec
             </article>
           );
         })}
-      </div>
+      </div></fieldset>}
     </section>
   );
 }

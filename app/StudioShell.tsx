@@ -122,7 +122,7 @@ function PageHeading({ crumb, title, summary, onOpenSettings }: { crumb: string;
   return (
     <div className="page-heading">
       <div>
-        <span className="breadcrumb">FSI AI Demo Studio <span>/</span> {crumb}</span>
+        <span className="breadcrumb">AI Demo Studio <span>/</span> {crumb}</span>
         <h1>{title}</h1>
         <p>{summary}</p>
       </div>
@@ -147,7 +147,7 @@ export function ControlsPage({ status, onOpenCase, onOpenSettings }: { status: S
           <div className="section-heading"><div><span className="eyebrow">PROTECT</span><h2>By use case</h2></div></div>
           <div className="st-table" role="table" aria-label="Runtime controls by use case">
             <div className="st-row head shell-row" role="row"><span role="columnheader">Use case</span><span role="columnheader">Cisco AI Defense</span><span role="columnheader">Agent Control</span><span role="columnheader" /></div>
-            {LIVE_CASES.map((useCase) => {
+            {LIVE_CASES.filter(item => !status.scope || status.scope.useCaseIds.includes(item.id)).map((useCase) => {
               if (useCase.service === "interbank") {
                 const lab = status.interbank;
                 return (
@@ -195,7 +195,7 @@ export function TelemetryPage({ status, onOpenCase, onOpenSettings }: { status: 
           <div className="section-heading"><div><span className="eyebrow">OBSERVE</span><h2>By use case</h2></div></div>
           <div className="st-table" role="table" aria-label="Telemetry by use case">
             <div className="st-row head shell-row" role="row"><span role="columnheader">Use case</span><span role="columnheader">Agent Observability</span><span role="columnheader">OpenTelemetry export</span><span role="columnheader" /></div>
-            {LIVE_CASES.map((useCase) => {
+            {LIVE_CASES.filter(item => !status.scope || status.scope.useCaseIds.includes(item.id)).map((useCase) => {
               const lab = status.interbank;
               const health = useCase.service === "interbank" ? null : healthFor(status, useCase.service);
               const up = useCase.service === "interbank" ? lab.up : Boolean(health?.up);
@@ -210,7 +210,7 @@ export function TelemetryPage({ status, onOpenCase, onOpenSettings }: { status: 
             })}
           </div>
         </section>
-        <section className="st-section">
+        {(!status.scope || status.scope.runtimeIds.includes("interbank")) && <section className="st-section">
           <div className="section-heading"><div><span className="eyebrow">TRACES</span><h2>Recent interbank investigations</h2></div></div>
           {status.interbank.runs.length === 0 ? <p className="shell-muted">{status.interbank.up ? "No investigations since the lab started." : "The interbank lab is not running."}</p> : (
             <div className="st-table" role="table" aria-label="Recent interbank investigations">
@@ -224,7 +224,7 @@ export function TelemetryPage({ status, onOpenCase, onOpenSettings }: { status: 
               ))}
             </div>
           )}
-        </section>
+        </section>}
       </>}
     </div>
   );

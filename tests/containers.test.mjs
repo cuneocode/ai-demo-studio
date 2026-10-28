@@ -14,7 +14,7 @@ test('all eight executable demos have independent registered stacks; illustrativ
   assert.equal(new Set(runtimes.map(spec => spec.id)).size, 8);
   assert.equal(new Set(runtimes.map(spec => spec.port)).size, 8);
   for (const spec of runtimes) {
-    const compose = readFileSync(new URL(`../${spec.compose}`, import.meta.url), 'utf8');
+    const compose = readFileSync(new URL(`../${spec.id === "interbank" ? "services/interbank/compose.yaml" : spec.compose}`, import.meta.url), 'utf8');
     assert.match(compose, /volumes:/);
     assert.ok(compose.includes('127.0.0.1:'));
     assert.ok(projectName(spec).endsWith(`-${spec.id}`));

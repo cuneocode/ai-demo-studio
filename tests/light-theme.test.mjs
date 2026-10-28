@@ -41,3 +41,9 @@ test("filled accent buttons stay filled with white text", () => {
   const fill = light.match(/background:(#[0-9a-f]{6})/)[1];
   assert.ok(lightness(fill) > 0.45 && lightness(fill) < 0.6);
 });
+
+
+test("demo package UI styles receive the shared generated light theme", () => {
+  const source = ".demo{background:#121a25;color:#eef2f8}";
+  assert.equal(run(source, "/repo/demos/sar-support/ui/sar.css"), run(source));
+});

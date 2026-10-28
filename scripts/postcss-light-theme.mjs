@@ -136,7 +136,7 @@ export default function lightTheme() {
     postcssPlugin: "fsi-light-theme",
     OnceExit(root) {
       const file = root.source?.input?.file ?? "";
-      if (!/\/app\//.test(file) || file.includes("/node_modules/")) return;
+      if (!/\/(?:app|demos\/[^/]+\/ui)\//.test(file) || file.includes("/node_modules/")) return;
       root.walkRules((rule) => {
         if (insideKeyframes(rule) || rule.selector.includes('data-theme="light"')) return;
         const decls = rule.nodes.filter((node) => node.type === "decl" && COLOR_PROPS.test(node.prop) && (!node.prop.startsWith("--") || hasColor(node.value)));

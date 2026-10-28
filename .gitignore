@@ -62,3 +62,7 @@ __pycache__/
 
 # studio model backends (provider choices only; keys stay in .env)
 /.studio/
+
+# Demo package source environments and local data
+/demos/**/.venv/
+/demos/**/.cache/

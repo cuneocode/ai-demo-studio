@@ -1,3 +1,4 @@
+import { readStored, writeStored, removeStored } from "../studio/storage.ts";
 export const POSITION_KEY = "fsi-studio.guide";
 export const PREFS_KEY = "fsi-studio.guide.prefs";
 
@@ -10,7 +11,7 @@ const POSITION_TTL = 6 * 60 * 60 * 1000;
 
 function read<T>(storage: Storage | undefined, key: string): T | null {
   try {
-    const raw = storage?.getItem(key);
+    const raw = readStored(storage, key);
     return raw ? (JSON.parse(raw) as T) : null;
   } catch {
     return null;
@@ -19,8 +20,8 @@ function read<T>(storage: Storage | undefined, key: string): T | null {
 
 function write(storage: Storage | undefined, key: string, value: unknown) {
   try {
-    if (value === null) storage?.removeItem(key);
-    else storage?.setItem(key, JSON.stringify(value));
+    if (value === null) removeStored(storage, key);
+    else writeStored(storage, key, JSON.stringify(value));
   } catch {
     // Storage can be full or disabled; the tour still works without it.
   }

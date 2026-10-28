@@ -5,6 +5,43 @@ import { component, diagram, openCanvas } from "./drawio-helpers";
 
 test.use({ actionTimeout: 15000 });
 
+test("Interbank platform lines follow gateways, agents and collectors through expansion", async ({ page }) => {
+  await mockStudio(page);
+  const explorer = await openCanvas(page, "Interbank settlement investigation");
+  await component(page, "journey::investigate").press("Enter");
+  await expect(explorer).toHaveAttribute("data-phase", "idle");
+  for (const name of ["Security", "Observability"]) {
+    await explorer.getByRole("button", { name, exact: true }).click();
+    await expect(explorer).toHaveAttribute("data-phase", "idle");
+  }
+  const route = (from: string, to: string, layer: string) => diagram(page).locator(`[data-edge-layer="${layer}"][data-source-id="${from}"][data-target-id="${to}"]`);
+  await expect(route("system::ib.stage.exchange", "system::ib.platform.defense", "security")).toHaveCount(1);
+  await component(page, "system::ib.stage.exchange").press("Enter");
+  await expect(explorer).toHaveAttribute("data-phase", "idle");
+  for (const bank of ["a", "b"]) {
+    await expect(route(`exchange::ib.${bank}.gateway`, `exchange::policy-${bank}`, "security")).toHaveCount(1);
+    await expect(route(`exchange::policy-${bank}`, "system::ib.platform.defense", "security")).toHaveCount(1);
+    await expect(route(`exchange::ib.${bank}.gateway`, "system::ib.platform.observe", "observability")).toHaveCount(1);
+  }
+  for (const agent of ["exchange::ib.a.coordinator", "exchange::ib.b.investigator"]) await expect(route(agent, "system::ib.platform.observe", "observability")).toHaveCount(1);
+  await expect(diagram(page).locator('[data-source-id="system::ib.stage.exchange"][data-edge-layer="security"]')).toHaveCount(0);
+  await mkdir("artifacts/drawio/continuous", { recursive: true });
+  await page.screenshot({ path: "artifacts/drawio/continuous/interbank-platform-paths.png" });
+  await component(page, "system::ib.platform.observe").press("Enter");
+  await expect(explorer).toHaveAttribute("data-phase", "idle");
+  for (const bank of ["a", "b"]) {
+    const collector = `trace::${bank === "a" ? "ib.trace.gateways" : "collector-b"}`;
+    // Opening the telemetry branch folds the exchange branch onto its owner.
+    await expect(route("system::ib.stage.exchange", collector, "observability")).toHaveCount(1);
+    await expect(route(collector, "trace::ib.trace.handoff", "observability")).toHaveCount(1);
+  }
+  await expect(diagram(page).locator("#canvas")).toHaveAttribute("data-model-loads", "1");
+  await explorer.getByRole("button", { name: "Exit full screen" }).click();
+  await page.getByRole("button", { name: "Switch to light theme" }).click();
+  await expect(explorer).toHaveAttribute("data-phase", "idle");
+  await page.screenshot({ path: "artifacts/drawio/continuous/interbank-collectors-light.png" });
+});
+
 test("Brahe expands real nested groups on one canvas and restores framing on collapse", async ({ page }) => {
   const explorer = await openCanvas(page);
   const native = diagram(page).locator("#canvas");
@@ -87,7 +124,7 @@ test("layers, modes, source facets and themes preserve the shared camera and gra
 test("a missing canvas retries and reduced motion remains responsive during interrupted expansion", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.route("**/diagrams/brahe.drawio", route => route.fulfill({ status: 503, body: "Unavailable" }));
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Open Brahe Bank assistant experience", exact: true }).click();
   await page.getByRole("tab", { name: "Architecture", exact: true }).click();
   const explorer = page.getByTestId("architecture-explorer");

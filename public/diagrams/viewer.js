@@ -73,7 +73,13 @@ function describeCells() {
   }
   for (const edge of documentModel.edges) {
     const state = graph.view.getState(model.getCell(edge.id));
-    state?.shape?.node?.setAttribute('data-edge-id', edge.id);
+    if (state?.shape?.node) {
+      state.shape.node.setAttribute('data-edge-id', edge.id);
+      state.shape.node.setAttribute('data-source-id', model.getTerminal(model.getCell(edge.id), true)?.id ?? '');
+      state.shape.node.setAttribute('data-target-id', model.getTerminal(model.getCell(edge.id), false)?.id ?? '');
+      state.shape.node.setAttribute('data-edge-kind', edge.kind ?? 'request');
+      state.shape.node.setAttribute('data-edge-layer', edge.layer ?? '');
+    }
   }
   canvas.dataset.modelLoads = String(modelLoads);
   canvas.dataset.expanded = current.expanded.join(',');

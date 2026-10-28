@@ -6,19 +6,20 @@ import path from "node:path";
 import { createConnection } from "node:net";
 import { runtimes, useCasePackages, type RuntimeSpec } from "../config/use-cases.ts";
 import { ROOT, envValue, readEnvFile, shellEnv } from "./studio-env.ts";
+import { installationNamespace } from "./studio-installation.ts";
+import type { StudioScope } from "./studio-scope.ts";
 import { fetchText } from "./studio-http.ts";
 import { prepareContainerConfig, runtimeDirectory } from "./studio-container-config.ts";
 
 export const SERVICES = runtimes.filter(spec => spec.id !== "interbank");
 export const INTERBANK = runtimes.find(spec => spec.id === "interbank")!;
 export type ServiceSpec = RuntimeSpec;
-export type Operation = "start" | "stop" | "restart" | "build" | "controls" | "start-component" | "stop-component";
+export type Operation = "prepare" | "start" | "stop" | "restart" | "build" | "controls" | "start-component" | "stop-component";
 type Job = { state: "running" | "succeeded" | "failed"; operation: Operation; log: string[]; startedAt: string; finishedAt?: string };
 type State = { jobs: Map<string, Job>; active: Map<string, Promise<void>>; queue?: Promise<void> };
 const globalState = globalThis as typeof globalThis & { __studioContainers?: State };
 const state: State = globalState.__studioContainers ??= { jobs: new Map(), active: new Map() };
-const checkout = createHash("sha256").update(ROOT).digest("hex").slice(0, 8);
-export const projectName = (spec: RuntimeSpec) => `fsi-${checkout}-${spec.id}`;
+export const projectName = (spec: RuntimeSpec) => `${installationNamespace()}-${spec.id}`;
 const snapshotFile = (spec: RuntimeSpec) => path.join(runtimeDirectory(), `${spec.id}.applied.json`);
 
 function logRedactor() {
@@ -112,7 +113,7 @@ async function containers(spec: RuntimeSpec): Promise<Container[]> {
   });
 }
 
-async function prepare(spec: RuntimeSpec, job?: Job, initialize = true) {
+async function prepare(spec: RuntimeSpec, job?: Job, initialize = true, build = true) {
   prepareContainerConfig(spec);
   if (spec.id !== "interbank") return;
   const directory = path.join(ROOT, "services/interbank/.runtime");
@@ -120,21 +121,28 @@ async function prepare(spec: RuntimeSpec, job?: Job, initialize = true) {
   for (const relative of ["runs", "telemetry/bank-a", "telemetry/bank-b"]) mkdirSync(path.join(ROOT, "services/interbank/evidence", relative), { recursive: true });
   for (const file of ["vendor.env", "model.env"]) if (!existsSync(path.join(directory, file))) writeFileSync(path.join(directory, file), "", { mode: 0o600 });
   // The Python services share one image. Build it once before the helper runs.
-  await compose(spec, ["build", "bank-a-agent"], job);
+  if (build) await compose(spec, ["build", "bank-a-agent"], job);
   if (initialize) await compose(spec, ["run", "--rm", "--no-deps", "setup"], job);
 }
 
 /** Stop preserves named volumes and saved runs. Registration of hosted controls is explicit. */
-export async function perform(spec: RuntimeSpec, operation: Operation, job?: Job, componentId?: string) {
+export async function perform(spec: RuntimeSpec, operation: Operation, job?: Job, componentId?: string, built?: Set<string>) {
   if (state.active.size > 1) job?.log.push("Queued behind the current container operation.");
-  const active = (state.queue ?? Promise.resolve()).then(() => performNow(spec, operation, job, componentId));
+  const active = (state.queue ?? Promise.resolve()).then(() => performNow(spec, operation, job, componentId, built));
   state.queue = active.catch(() => {});
   return active;
 }
 
-async function performNow(spec: RuntimeSpec, operation: Operation, job?: Job, componentId?: string) {
+async function performNow(spec: RuntimeSpec, operation: Operation, job?: Job, componentId?: string, built?: Set<string>) {
   if (process.env.STUDIO_PREVIEW === "1") throw new Error("Container controls are disabled in recorded preview.");
   await execute(["info", "--format", "{{.ServerVersion}}"], undefined, 10_000);
+  if (operation === "prepare") {
+    const owned = await containers(spec);
+    if (owned.some(container => container.Service === spec.service && container.State === "running") && (await health(spec)).ready) {
+      job?.log.push("Already ready. Kept existing containers and saved runs.");
+      return;
+    }
+  }
   if (operation !== "stop" && operation !== "stop-component") {
     const disk = statfsSync(ROOT);
     const available = disk.bavail * disk.bsize / 1024 ** 3;
@@ -148,25 +156,28 @@ async function performNow(spec: RuntimeSpec, operation: Operation, job?: Job, co
     await compose(spec, ["--profile", component.profile, "stop", "--timeout", "25", ...component.services], job);
     return;
   }
-  if (operation === "start" || operation === "restart" || operation === "controls") {
+  if (operation === "prepare" || operation === "start" || operation === "restart" || operation === "controls") {
     const owned = await containers(spec);
     const ownsApi = owned.some(container => container.Service === spec.service && container.State === "running");
     if (!ownsApi && await portInUse(spec.port)) throw new Error(`Port ${spec.port} is used by a service outside this stack. Stop that service before starting this package.`);
   }
-  await prepare(spec, job, operation !== "build");
+  const reuseBuild = built?.has(spec.buildIdentity) ?? false;
+  if (operation === "build" && reuseBuild) { job?.log.push(`Reusing the prepared image ${spec.buildIdentity}.`); return; }
+  await prepare(spec, job, operation !== "build", !reuseBuild);
   if (operation === "start-component") {
     const component = spec.components?.find(item => item.id === componentId);
     if (!component) throw new Error("Choose a registered component.");
     await compose(spec, ["--profile", component.profile, "up", "--detach", ...component.services], job);
     return;
   }
-  if (operation === "build") { if (spec.id !== "interbank") await compose(spec, ["build"], job); return; }
+  if (operation === "build") { if (spec.id !== "interbank") await compose(spec, ["build"], job); built?.add(spec.buildIdentity); return; }
   if (operation === "controls") {
     if (!spec.controls) throw new Error("This package has no hosted policy registration.");
     await compose(spec, ["run", "--build", "--rm", "--no-deps", spec.id === "interbank" ? "setup" : spec.service, ...spec.controls], job);
     return;
   }
-  await compose(spec, ["up", "--detach", spec.id === "interbank" ? "--no-build" : "--build", "--wait", "--wait-timeout", "240", ...(operation === "restart" ? ["--force-recreate"] : [])], job);
+  await compose(spec, ["up", "--detach", spec.id === "interbank" || reuseBuild ? "--no-build" : "--build", "--wait", "--wait-timeout", "240", ...(operation === "restart" ? ["--force-recreate"] : [])], job);
+  built?.add(spec.buildIdentity);
   if (!(await health(spec)).up) throw new Error("Containers started, but the application API is not responding. Open the stack logs.");
   writeFileSync(snapshotFile(spec), JSON.stringify(hashes(spec)), { mode: 0o600 });
 }
@@ -175,10 +186,11 @@ export function queueOperation(ids: string[], operation: Operation, componentId?
   const selected = runtimes.filter(spec => ids.includes(spec.id));
   if (!selected.length || ids.some(id => !runtimes.some(spec => spec.id === id))) throw new Error("Choose a registered use-case runtime.");
   if (selected.some(spec => state.active.has(spec.id))) throw new Error("A selected stack already has an operation in progress.");
+  const built = ["prepare", "build"].includes(operation) ? new Set<string>() : undefined;
   for (const spec of selected) {
     const job: Job = { state: "running", operation, log: [], startedAt: new Date().toISOString() };
     state.jobs.set(spec.id, job);
-    const active = perform(spec, operation, job, componentId).then(() => { job.state = "succeeded"; }).catch(error => { job.state = "failed"; job.log.push(redact((error as Error).message)); }).finally(() => { job.finishedAt = new Date().toISOString(); state.active.delete(spec.id); });
+    const active = perform(spec, operation, job, componentId, built).then(() => { job.state = "succeeded"; }).catch(error => { job.state = "failed"; job.log.push(redact((error as Error).message)); }).finally(() => { job.finishedAt = new Date().toISOString(); state.active.delete(spec.id); });
     state.active.set(spec.id, active);
   }
   return selected.map(spec => spec.id);
@@ -191,11 +203,15 @@ export async function runtimeLogs(id: string) {
 }
 
 let statusRequest: Promise<Awaited<ReturnType<typeof loadServiceStatus>>> | undefined;
-export function serviceStatus() {
+export async function serviceStatus(scope?: StudioScope) {
   if (!statusRequest) {
     statusRequest = loadServiceStatus().finally(() => { statusRequest = undefined; });
   }
-  return statusRequest;
+  const snapshot = await statusRequest;
+  if (!scope) return snapshot;
+  return { ...snapshot, scope, services: snapshot.services.filter(row => scope.runtimeIds.includes(row.id)),
+    interbank: scope.runtimeIds.includes("interbank") ? snapshot.interbank : undefined,
+    packages: snapshot.packages.filter(item => scope.useCaseIds.includes(item.id)) };
 }
 
 async function loadServiceStatus() {

@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockFraud } from "./fraud-fixtures";
 
 async function openFraud(page: Page) {
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Open Card fraud triage experience" }).first().click();
   const panel = page.locator("#case-panel-demo");
   await expect(panel.getByRole("region", { name: "Business problem" })).toBeVisible();
@@ -133,7 +133,7 @@ test("never dead: a replay is labelled recorded and cannot decide; a down servic
   await page.unrouteAll({ behavior: "ignoreErrors" });
   await mockFraud(page, { healthDown: true });
   await page.reload({ waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Open Card fraud triage experience" }).first().click();
+  await expect(page.getByRole("heading", { name: "Card fraud triage", level: 1 })).toBeVisible();
   await expect(page.locator("#case-panel-demo .runtime-details")).toContainText("Not reported");
   await expect(page.locator("#case-panel-demo .demo-fallback")).toBeVisible();
   await expect(page.locator(".side-nav").getByRole("button", { name: "Studio settings" })).toBeVisible();

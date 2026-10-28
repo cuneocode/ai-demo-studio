@@ -26,7 +26,7 @@ async function mockStudio(page: Page) {
     file: ".env", settings: settings(),
     readiness: readiness(settings(), () => ({ label: "OpenAI API (.env)", ok: Boolean(state.values.OPENAI_API_KEY), detail: "OPENAI_API_KEY (Model backends)" })),
   });
-  const modelSnapshot = () => ({ saved: state.saved, problem: null, file: ".studio/models.json", registry: state.registry, useCases: MODEL_USE_CASES,
+  const modelSnapshot = () => ({ revision: "test-revision", saved: state.saved, problem: null, file: ".studio/models.json", registry: state.registry, useCases: MODEL_USE_CASES,
     health: { openai: { up: true } }, routes: Object.fromEntries(MODEL_USE_CASES.map(item => [item.id, { active: "openai" }])),
     keys: { OPENAI_API_KEY: true, VLLM_API_KEY: false, NIM_API_KEY: false, NVIDIA_API_KEY: false } });
   const services = () => ({
@@ -37,10 +37,10 @@ async function mockStudio(page: Page) {
     interbank: { id: "interbank", label: "Interbank lab (Docker)", port: 8088, up: false, pending: null, job: { state: "idle", log: [] } },
   });
 
-  await page.route("**/api/studio/models", async (route) => {
+  await page.route(/\/api\/studio\/models(?:\?.*)?$/, async (route) => {
     const request = route.request();
     if (request.method() === "PUT") {
-      state.registry = request.postDataJSON();
+      state.registry = request.postDataJSON().registry;
       state.saved = true;
       state.puts.push(state.registry);
     } else if (request.method() === "POST") {
@@ -49,7 +49,7 @@ async function mockStudio(page: Page) {
     }
     return route.fulfill({ json: modelSnapshot() });
   });
-  await page.route("**/api/studio/settings", async (route) => {
+  await page.route(/\/api\/studio\/settings(?:\?.*)?$/, async (route) => {
     const request = route.request();
     if (request.method() === "PUT") {
       const body = request.postDataJSON();
@@ -63,7 +63,7 @@ async function mockStudio(page: Page) {
     state.settingChecks.push(route.request().postDataJSON());
     return route.fulfill({ json: { ok: true, detail: "Key accepted by api.multitenant.galileocloud.io." } });
   });
-  await page.route("**/api/studio/services", async (route) => {
+  await page.route(/\/api\/studio\/services(?:\?.*)?$/, async (route) => {
     if (route.request().method() === "POST") state.serviceActions.push(route.request().postDataJSON());
     return route.fulfill({ json: services() });
   });
@@ -71,7 +71,7 @@ async function mockStudio(page: Page) {
 }
 
 async function openSettings(page: Page) {
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/settings", { waitUntil: "networkidle" });
   await page.locator(".side-nav").getByRole("button", { name: "Studio settings" }).click();
   await expect(page.getByRole("heading", { name: "Studio settings", level: 1 })).toBeVisible();
 }
@@ -109,7 +109,7 @@ test("studio settings saves Splunk credentials write-only and applies them by re
   await expect(servicesPanel.getByRole("row", { name: /Brahe Bank/ })).toContainText("1 change to apply");
   await expect(servicesPanel.getByRole("row", { name: /Fraud scoring/ })).toContainText("external service");
   await servicesPanel.getByRole("button", { name: "Apply 1 change" }).click();
-  await expect.poll(() => state.serviceActions).toEqual([{ action: "apply" }]);
+  await expect.poll(() => state.serviceActions).toEqual([{ action: "apply", ids: ["banking"] }]);
 });
 
 test("studio settings clears a saved AI Defense key and changes a mode", async ({ page }) => {
@@ -188,11 +188,11 @@ test("a provider key is saved to .env from its card and an invalid provider bloc
 
 test("the header inference indicator opens model settings", async ({ page }) => {
   await mockStudio(page);
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
   await page.locator(".side-nav").getByRole("button", { name: "Use case library" }).click();
   await page.getByRole("button", { name: "Open Brahe Bank assistant experience" }).click();
   const chip = page.locator(".topbar .inference-indicator");
   await expect(chip).toHaveText("Cloud model");
   await chip.click();
-  await expect(page.getByRole("heading", { name: "Studio settings", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Financial Services settings", level: 1 })).toBeVisible();
 });

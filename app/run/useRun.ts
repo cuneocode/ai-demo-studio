@@ -1,11 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useStudioNav } from "../studio-nav";
+import { appStorageKey, readStored, writeStored, removeStored } from "../studio/storage.ts";
 import { replayDelay, type RunEvent, type RunInfo, type RunPage } from "./events";
 
 export type RunMode = "live" | "replay" | "recorded";
 
 export type UseRunOptions = {
+  demoId?: string;
   /** GET URL for a page of events after `after`, e.g. (id, after) => `/api/fraud/runs/${id}?after=${after}`. */
   pageUrl: (runId: string, after: number) => string;
   /** Poll interval while a run is live. */
@@ -24,8 +27,11 @@ export type UseRunOptions = {
  * the page already holds. `visible` is what the timeline shows right now.
  */
 export function useRun<R extends RunInfo = RunInfo, E extends RunEvent = RunEvent>({
-  pageUrl, interval = 1000, pace = "recorded", onSettled, lostContact = "Lost contact with the service.",
+  demoId, pageUrl, interval = 1000, pace = "recorded", onSettled, lostContact = "Lost contact with the service.",
 }: UseRunOptions) {
+  const { appId, preview } = useStudioNav();
+  const sessionKey = demoId ? appStorageKey(appId ?? "fsi", "run-reference", demoId) : null;
+  const [restored, setRestored] = useState(false);
   const [runId, setRunId] = useState<string | null>(null);
   const [mode, setMode] = useState<RunMode>("live");
   const [run, setRun] = useState<R | null>(null);
@@ -52,6 +58,7 @@ export function useRun<R extends RunInfo = RunInfo, E extends RunEvent = RunEven
         if (!live) return;
         total = body.total;
         setRun(body.run);
+        setError("");
         if (body.events.length) setEvents((previous) => {
           const seen = new Set(previous.map((event) => event.id));
           return [...previous, ...body.events.filter((event) => !seen.has(event.id))];
@@ -81,12 +88,21 @@ export function useRun<R extends RunInfo = RunInfo, E extends RunEvent = RunEven
   /** Follow a run by id: live (as it happens) or replayed from the start. */
   const open = useCallback((id: string, replay = false) => {
     clear();
+    if (sessionKey) writeStored(sessionStorage, sessionKey, id);
     setMode(replay ? "replay" : "live");
     setShown(replay ? 0 : null);
     setRunId(id);
     setPolling(true);
     setFollow((value) => value + 1);
-  }, []);
+  }, [sessionKey]);
+
+  useEffect(() => {
+    if (!sessionKey || preview) return;
+    const id = readStored(sessionStorage, sessionKey);
+    if (!id || !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,160}$/.test(id)) return;
+    const frame = requestAnimationFrame(() => { setRestored(true); open(id); });
+    return () => cancelAnimationFrame(frame);
+  }, [sessionKey, preview, open]);
 
   /** Poll a live run again (e.g. after a decision appended events), keeping what is on screen. */
   const resume = useCallback((id: string) => {
@@ -99,6 +115,7 @@ export function useRun<R extends RunInfo = RunInfo, E extends RunEvent = RunEven
 
   /** Play events the page already holds (a recording or fixture), with recorded pacing. */
   const play = useCallback((recorded: { run?: R | null; events: E[] }, animate = true) => {
+    if (sessionKey) removeStored(sessionStorage, sessionKey);
     setPolling(false);
     setRunId(recorded.run?.id ?? null);
     setMode("recorded");
@@ -106,16 +123,16 @@ export function useRun<R extends RunInfo = RunInfo, E extends RunEvent = RunEven
     setRun(recorded.run ?? null);
     setEvents(recorded.events);
     setShown(animate ? 0 : null);
-  }, []);
+  }, [sessionKey]);
 
   const skip = useCallback(() => setShown(null), []);
-  const reset = useCallback(() => { setPolling(false); setRunId(null); setShown(null); clear(); }, []);
+  const reset = useCallback(() => { if (sessionKey) removeStored(sessionStorage, sessionKey); setPolling(false); setRunId(null); setShown(null); clear(); }, [sessionKey]);
 
   const visible = useMemo(() => (shown === null ? events : events.slice(0, shown)), [events, shown]);
   const replaying = shown !== null && shown < events.length;
   const effectiveRun = useMemo(() => (run && replaying ? { ...run, status: "running" } as R : run), [run, replaying]);
 
-  return { runId, mode, run, effectiveRun, events, visible, replaying, error, setError, open, resume, play, skip, reset };
+  return { restored, runId, mode, run, effectiveRun, events, visible, replaying, error, setError, open, resume, play, skip, reset };
 }
 
 /** Keeps a scrolling list pinned to the newest item unless the reader scrolled up. */

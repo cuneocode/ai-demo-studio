@@ -42,9 +42,15 @@ export function visibleCanvasEdges(doc, expanded, mode, layers, visibleIds) {
     const candidates = doc.edges.filter(edge => active(edge) && canvasScopePath(doc, edge.scopeId).slice(1).every(id => expanded.includes(id)))
         .map(edge => ({ ...edge, from: terminal(edge.from), to: terminal(edge.to), original: edge }))
         .filter((edge) => Boolean(edge.from && edge.to && edge.from !== edge.to));
-    const labels = new Set();
+    const labels = new Set(), routes = new Set();
     return candidates.filter(edge => !candidates.some(inner => inner.id !== edge.id && inner.kind === edge.kind && (inner.to === edge.to && descendant(inner.original.from, edge.original.from)
-        || inner.from === edge.from && descendant(inner.original.to, edge.original.to)))).map(edge => {
+        || inner.from === edge.from && descendant(inner.original.to, edge.original.to)))).filter(edge => {
+        const key = JSON.stringify([edge.from, edge.to, edge.kind, edge.layer, edge.label, edge.bidirectional]);
+        if (routes.has(key))
+            return false;
+        routes.add(key);
+        return true;
+    }).map(edge => {
         if (edge.layer !== "deployment" || edge.kind !== "request")
             return edge;
         const key = `${edge.to}:${edge.label}`;

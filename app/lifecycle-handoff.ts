@@ -1,5 +1,7 @@
 "use client";
 
+import { readStored, writeStored, storageKey } from "./studio/storage.ts";
+
 import { useMemo, useSyncExternalStore } from "react";
 
 export type HandoffEvidence = { label: string; value: string; source: string };
@@ -75,13 +77,13 @@ function parse(raw: string | null): LifecycleHandoff[] {
 }
 
 function readAll(): LifecycleHandoff[] {
-  return parse(storage()?.getItem(HANDOFF_STORAGE_KEY) ?? null);
+  return parse(readStored(storage(), HANDOFF_STORAGE_KEY));
 }
 
 function writeAll(items: LifecycleHandoff[]) {
   const store = storage();
   if (!store) return;
-  store.setItem(HANDOFF_STORAGE_KEY, JSON.stringify(items.slice(0, 50)));
+  writeStored(store, HANDOFF_STORAGE_KEY, JSON.stringify(items.slice(0, 50)));
   window.dispatchEvent(new CustomEvent(HANDOFF_EVENT));
 }
 
@@ -103,7 +105,7 @@ export function clearHandoff(id: string) {
 
 function subscribe(onChange: () => void) {
   const onStorage = (event: StorageEvent) => {
-    if (event.key === null || event.key === HANDOFF_STORAGE_KEY) onChange();
+    if (event.key === null || (event.key === HANDOFF_STORAGE_KEY || event.key === storageKey(HANDOFF_STORAGE_KEY))) onChange();
   };
   window.addEventListener("storage", onStorage);
   window.addEventListener(HANDOFF_EVENT, onChange);

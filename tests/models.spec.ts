@@ -17,7 +17,7 @@ function committedRegistry(): ModelRegistry {
 async function mockModels(page: Page) {
   const registry = committedRegistry();
   const routes = Object.fromEntries(MODEL_USE_CASES.map((useCase) => [useCase.id, { chain: registry.chain, active: "openai", fallback: true }]));
-  await page.route("**/api/studio/models", (route) => route.fulfill({
+  await page.route(/\/api\/studio\/models(?:\?.*)?$/, (route) => route.fulfill({
     json: { saved: true, problem: null, file: ".studio/models.json", registry, useCases: MODEL_USE_CASES, health: SPARKY_DOWN, routes,
       keys: { OPENAI_API_KEY: true, VLLM_API_KEY: false, NIM_API_KEY: false, NVIDIA_API_KEY: false } },
   }));
@@ -30,7 +30,7 @@ const FALLBACK = {
 
 test("settings shows the chain's health and which backend answers each use case now", async ({ page }) => {
   await mockModels(page);
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
   await page.locator(".side-nav").getByRole("button", { name: "Studio settings" }).click();
 
   const chain = page.getByRole("list", { name: "Default chain" });
@@ -45,7 +45,7 @@ test("settings shows the chain's health and which backend answers each use case 
 
 test("the header indicates cloud inference without a model-chain warning", async ({ page }) => {
   await mockModels(page);
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
   await page.locator(".side-nav").getByRole("button", { name: "Use case library" }).click();
   await page.getByRole("button", { name: "Open Brahe Bank assistant experience" }).click();
   const chip = page.locator(".topbar .inference-indicator");
@@ -59,7 +59,7 @@ test("a banking answer and the stats row both say which model answered", async (
     json: { answer: "Card replacement takes five business days.", session_id: "s-1", sources: [], trace: [], duration_ms: 812,
       usage: { llm_calls: 2, input_tokens: 900, output_tokens: 120 }, served_by: FALLBACK },
   }));
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/apps/fsi", { waitUntil: "networkidle" });
   await page.locator(".side-nav").getByRole("button", { name: "Use case library" }).click();
   await page.getByRole("button", { name: "Open Brahe Bank assistant experience" }).click();
   await page.getByLabel("Message Brahe Bank").fill("How long does a replacement card take?");

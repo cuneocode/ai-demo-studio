@@ -1,0 +1,81 @@
+/* Meeting prep only; the shared wealth layout and claim styles are in research.css. */
+.ax-top { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr); gap: 12px; align-items: stretch; }
+.ax-households { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin: 0; padding: 0; border: 0; }
+.ax-households legend { margin-bottom: 8px; color: #9fadc1; font-size: 12px; font-weight: 760; letter-spacing: .12em; text-transform: uppercase; }
+.ax-households label {
+  position: relative; display: flex; flex-direction: column; gap: 4px; padding: 13px 14px; border: 1px solid #2a3748; border-radius: 10px;
+  background: #121a25; color: #dfe6f0; cursor: pointer;
+}
+.ax-households label:hover { border-color: #46608e; background: #152034; }
+.ax-households label.selected { border-color: #6a8fdc; background: #172640; box-shadow: inset 0 0 0 1px #6a8fdc; }
+.ax-households label:focus-within { outline: 2px solid #6a8fdc; outline-offset: 2px; }
+.ax-households input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.ax-households strong { font-size: var(--font-body); }
+.ax-households small { color: #9fadc1; font-size: 12.5px; }
+.ax-households span:not(.rx-kind) { color: #b8c4d4; font-size: 13px; line-height: 1.45; }
+
+.ax-context { padding: 12px 14px; border: 1px solid #2a3748; border-radius: 10px; background: #0f1824; }
+.ax-context h3 { display: flex; align-items: center; gap: 7px; margin: 0 0 8px; color: #dfe6f0; font-size: 14px; font-weight: 650; }
+.ax-context ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.ax-context li { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 8px; align-items: start; }
+.ax-context li svg { margin-top: 3px; }
+.ax-context li.is-ok svg { color: #8ad4b3; }
+.ax-context li.is-info svg { color: #9bb8ff; }
+.ax-context li.is-missing svg { color: #d1a85b; }
+.ax-context strong { display: block; color: #e3e9f2; font-size: 13.5px; font-weight: 620; }
+.ax-context small { display: block; color: #9fadc1; font-size: 12.5px; line-height: 1.45; }
+
+.rx-tag.is-cisco { border-color: #2f6f8f; background: #0f2633; color: #8fd3f2; }
+.ax-refused { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 12px; border: 1px solid #2f6f8f; border-radius: 8px; background: #0f2633; color: #bfe6f8; font-size: 13.5px; }
+
+.ax-findings { display: grid; gap: 8px; }
+.ax-findings li { padding: 10px 12px; border: 1px solid #263547; border-left: 3px solid #9bb8ff; border-radius: 8px; background: #0f1824; }
+.ax-findings li.is-high { border-left-color: #ff6b79; }
+.ax-findings li.is-medium { border-left-color: #d1a85b; }
+.ax-findings li p { margin: 6px 0 4px; color: #c8d3e2; font-size: 13.5px; line-height: 1.5; }
+.ax-finding { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ax-finding strong { color: #e3e9f2; font-size: 14.5px; }
+.ax-finding small { color: #8d9bb0; font-size: 12px; }
+.ax-severity { padding: 1px 7px; border-radius: 999px; background: #1c2a40; color: #b8ccff; font-size: 11.5px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; }
+.ax-findings li.is-high .ax-severity { background: #3a1820; color: #ff9aa5; }
+.ax-findings li.is-medium .ax-severity { background: #2e2410; color: #f0cf8e; }
+
+.ax-actions { display: grid; gap: 8px; }
+.ax-action label { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 10px 12px; border: 1px solid #263547; border-radius: 8px; background: #0f1824; cursor: pointer; }
+.ax-action.is-chosen label { border-color: #3b5584; background: #13213a; }
+.ax-action.is-unsuitable label { border-style: dashed; border-color: #5a3a42; }
+.ax-action.is-unsuitable.is-chosen label { border-style: solid; border-color: #ff6b79; background: #22111a; }
+.ax-action input { width: 16px; height: 16px; margin-top: 3px; accent-color: #6a8fdc; }
+.ax-action strong { display: block; color: #e3e9f2; font-size: 14.5px; }
+.ax-action span { display: block; margin-top: 2px; color: #b8c4d4; font-size: 13.5px; line-height: 1.45; }
+.ax-action em { color: #bff0d9; font-size: 15px; font-style: normal; font-weight: 700; text-align: right; white-space: nowrap; }
+.ax-action em small { display: block; color: #8d9bb0; font-size: 11.5px; font-weight: 500; }
+
+.ax-brief { padding: 14px 16px; border: 1px solid #2a3a50; border-radius: 10px; background: #0f1824; }
+.ax-brief-section + .ax-brief-section { margin-top: 12px; }
+.ax-brief h4 { margin: 0 0 6px; color: #9bb8ff; font-size: 12px; font-weight: 760; letter-spacing: .1em; text-transform: uppercase; }
+.rx-claim.is-agenda .rx-claim-mark, .rx-claim.is-question .rx-claim-mark { background: #1c2a40; color: #9bb8ff; }
+
+.ax-notes { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.ax-notes li { padding: 9px 11px; border: 1px solid #263547; border-radius: 8px; background: #0f1824; }
+.ax-notes li.is-masked { border-color: #5e4a23; }
+.ax-notes li.is-withheld { border-color: #6b3340; background: #22111a; }
+.ax-notes li.is-cited { border-color: #a4c95a; box-shadow: 0 0 0 2px rgba(164, 201, 90, .25); }
+.ax-notes small { color: #8d9bb0; font-size: 12px; }
+.ax-notes p { display: flex; gap: 6px; margin: 4px 0 0; color: #c8d3e2; font-size: 13px; line-height: 1.5; }
+.ax-notes li.is-withheld p { color: #ffb3bc; }
+.ax-masked { display: block; margin-top: 4px; color: #f0cf8e !important; }
+
+.ax-holdings { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ax-holdings th { padding: 5px 6px; border-bottom: 1px solid #2a3748; color: #8d9bb0; font-weight: 600; text-align: left; }
+.ax-holdings td { padding: 5px 6px; border-bottom: 1px solid #1c2735; color: #dfe6f0; }
+.ax-holdings td small { display: block; color: #8d9bb0; font-size: 11.5px; }
+.ax-holdings td:not(:first-child), .ax-holdings th:not(:first-child) { text-align: right; }
+
+@media (max-width: 1180px) {
+  .ax-top { grid-template-columns: minmax(0, 1fr); }
+}
+
+.ax-start { display: flex; flex-direction: column; gap: 10px; }
+.ax-start .rx-actions { margin: 0; }
+.ax-context { grid-column: 1 / -1; }
