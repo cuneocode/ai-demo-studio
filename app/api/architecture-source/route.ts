@@ -21,7 +21,7 @@ type Artifact = {
 const artifacts = (captured as { artifacts: Record<string, Artifact> }).artifacts;
 
 function repositoryRoot(relativeFile: string) {
-  const starts = [process.cwd(), "/home/cuneocode/FSI-AI-demo-platfrom"];
+  const starts = [process.cwd()];
   try { starts.push(path.dirname(fileURLToPath(import.meta.url))); } catch { /* bundled runtime */ }
   for (const start of starts) {
     let dir = start;

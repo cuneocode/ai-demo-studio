@@ -15,6 +15,9 @@ Open `/` for industry apps and `/apps/fsi` for the Financial Services workspace.
 See [platform structure and operation](docs/AI_DEMO_STUDIO.md) for package ownership,
 scoped settings, preparation, persistence, and migration details.
 
+Source repository: [cuneocode/ai-demo-studio](https://github.com/cuneocode/ai-demo-studio).
+Existing clones can keep their local folder names.
+
 Every use case includes Use case demo, Architecture, and Capacity planning tabs.
 Capacity planning loads a configured AI Infrastructure Planner browser component.
 It starts from the use case and available run measurements, with production demand
