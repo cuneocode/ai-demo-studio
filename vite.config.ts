@@ -4,6 +4,7 @@ import hostingConfig from "./.openai/hosting.json";
 import { sites } from "./build/sites-vite-plugin";
 import { handleStudioApi, startMissing } from "./scripts/studio-api.ts";
 import { proxyRuntimes, rewriteRuntimePath } from "./config/use-cases.ts";
+import postcssConfig from "./postcss.config.mjs";
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
   "00000000-0000-4000-8000-000000000000";
@@ -48,6 +49,9 @@ export default defineConfig(async () => {
   const { cloudflare } = await import("@cloudflare/vite-plugin");
 
   return {
+    // Track the theme transform as a Vite config dependency so edits restart
+    // the server and invalidate CSS compiled with the previous transform.
+    css: { postcss: postcssConfig },
     server: {
       host: "127.0.0.1",
       port: Number(process.env.STUDIO_PORT || 4200),

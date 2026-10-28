@@ -55,7 +55,7 @@ were expanded and inspected, including security/observability layers and source
 inspection. Visual checks covered dark and light themes at desktop and narrow
 widths.
 
-The registered suite now has 169 cases. All 169 passed across the full run and
+The initial app-restructure suite had 169 cases. All 169 passed across the full run and
 targeted reruns, including the approved external planner tests, responsive header,
 and industry navigation checks. The populated-app fixture is an additional isolated check.
 
@@ -172,3 +172,39 @@ themes, app switching, browser history, retained drafts, and in-progress demo
 responses. The affected development browser set passed 40 tests, and the
 production navigation/workspace set passed 18. Production build, all 258 Node
 checks, TypeScript, lint, and whitespace checks passed after the change.
+
+## Theme consistency and narrow demo layouts
+
+The long-running development server retained the earlier PostCSS transform after
+demo CSS moved into packages. Shared app styles received light rules while demo
+surfaces retained dark colors. A fresh transform generated the correct rules.
+Vite now imports the PostCSS configuration so changes to the transform restart
+the server and invalidate compiled CSS. The existing browser tab was refreshed
+and inspected in both themes.
+
+The light-theme mapper now darkens semantic accent text to meet 4.5:1 contrast
+against the light surface while preserving hue. Filled primary buttons retain
+white text. The shared demo tab grid uses a shrinkable column so Fraud's table
+scrolls inside its workspace at phone widths.
+
+`tests/theme.spec.ts` adds 16 cases across all eight executable demos at 1440px
+and 390px. They verify rendered surfaces, text contrast, light/dark switching,
+refresh persistence, and page overflow. Interbank also checks its synthetic-data
+label, action button, lab status, and idle text. The original screenshot's
+contrast failure was reproduced by the new browser check before the fix.
+
+| Check | Result |
+| --- | --- |
+| Production build and Node tests | 259 passed |
+| TypeScript and lint | Passed |
+| Development browser set | All 63 cases passed across the main run and architecture rerun |
+| Complete architecture rerun | 9 passed; resize assertions wait for the existing camera refit |
+| Production theme cases | 16 passed |
+| Direct live-browser review | Interbank inspected in both themes with configured service status |
+
+The browser set covers theme rendering, recorded and blocked flows, navigation,
+retained replies/drafts, responsive headers, and architecture layers/source
+inspection. Service-event fixtures cover execution behavior; these theme fixes
+introduce no model calls or integration-delivery changes. The registered browser
+suite now contains 185 cases. Final screenshots are kept in ignored
+`artifacts/theme-qa/production/` and `output/theme-qa/`.

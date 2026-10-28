@@ -77,6 +77,7 @@ These standards apply to new use cases and changes to existing ones. Inspect an 
 - Follow the visual contract and CSS tokens in `app/globals.css`. Preserve the ink/navy/slate surfaces, cobalt and violet accents, semantic status colors, typography, spacing, and shared button classes. Avoid cyan, neon styling, and new theme systems.
 - Use the shared `--font-meta`, `--font-body`, and `--font-control` sizes for new metadata, body text, and controls. Keep content readable during screen sharing; reflow or scroll long content instead of shrinking it.
 - Scope use-case CSS under its component. Dark styles are the source for generated light styles through `scripts/postcss-light-theme.mjs`; add only necessary exceptions to `app/theme-light.css`. Verify both themes.
+- Keep PostCSS configuration imported by `vite.config.ts` so theme-transform changes restart the dev server and invalidate stale demo CSS. For stylesheet or package-path changes, run `tests/theme.spec.ts` against the running server; verify actual surfaces, text contrast, theme persistence, and narrow layouts.
 - Use Lucide icons in application UI and the shared Carbon symbols in architecture diagrams. Keep labels, focus indicators, keyboard behavior, and status text accessible; color alone must not carry meaning.
 - Compare the completed demo with its chosen reference at desktop and narrow widths. Preserve the reference's input, result, human-decision, and execution-evidence hierarchy.
 

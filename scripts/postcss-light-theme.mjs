@@ -44,6 +44,21 @@ function fromHsl(h, s, l) {
 
 const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
 
+const luminance = (rgb) => rgb.map(value => {
+  const channel = value / 255;
+  return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+}).reduce((total, value, index) => total + value * [0.2126, 0.7152, 0.0722][index], 0);
+const LIGHT_SURFACE = luminance([243, 246, 250]);
+const TEXT_COLOR = /^(color|text-decoration-color|--(blue|blue-soft|violet|mint|amber|danger|integration))$/;
+
+function readableInk(rgb) {
+  const [h, s, initial] = toHsl(rgb);
+  for (let l = initial; l > 0 && (LIGHT_SURFACE + 0.05) / (luminance(rgb) + 0.05) < 4.5; l = Math.max(0, l - 0.01)) {
+    rgb = fromHsl(h, s, Math.max(0, l - 0.01));
+  }
+  return rgb;
+}
+
 function mapColor(rgba, prop) {
   const [r, g, b, alpha] = rgba;
   const [h, s, l] = toHsl([r, g, b]);
@@ -69,7 +84,7 @@ function mapColor(rgba, prop) {
     // Text and icons: light on dark becomes navy on light.
     rgb = fromHsl(h, Math.min(s, 0.45), clamp(0.1 + (1 - l) * 0.85, 0.1, 0.55));
   }
-  const [rr, gg, bb] = rgb;
+  const [rr, gg, bb] = TEXT_COLOR.test(prop) ? readableInk(rgb) : rgb;
   return a >= 1 ? `#${[rr, gg, bb].map((v) => v.toString(16).padStart(2, "0")).join("")}` : `rgba(${rr}, ${gg}, ${bb}, ${+a.toFixed(3)})`;
 }
 

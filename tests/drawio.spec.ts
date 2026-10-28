@@ -179,14 +179,17 @@ test("mouse panning, zoom, interrupted expansion and laptop framing keep one mod
   await expect(explorer).toHaveAttribute("data-scope-id", "build");
   await expect(explorer).toHaveAttribute("data-phase", "idle");
   await page.setViewportSize({ width: 1280, height: 800 });
-  const focused = await component(page, "system::build").evaluate(element => {
-    const rect = element.getBoundingClientRect();
-    return { x: rect.x, y: rect.y, right: rect.right, bottom: rect.bottom, width: window.innerWidth, height: window.innerHeight };
-  });
-  expect(focused.x).toBeGreaterThanOrEqual(0);
-  expect(focused.y).toBeGreaterThanOrEqual(0);
-  expect(focused.right).toBeLessThanOrEqual(focused.width);
-  expect(focused.bottom).toBeLessThanOrEqual(focused.height);
+  // ResizeObserver refits the existing camera after the viewport changes.
+  await expect(async () => {
+    const focused = await component(page, "system::build").evaluate(element => {
+      const rect = element.getBoundingClientRect();
+      return { x: rect.x, y: rect.y, right: rect.right, bottom: rect.bottom, width: window.innerWidth, height: window.innerHeight };
+    });
+    expect(focused.x).toBeGreaterThanOrEqual(0);
+    expect(focused.y).toBeGreaterThanOrEqual(0);
+    expect(focused.right).toBeLessThanOrEqual(focused.width);
+    expect(focused.bottom).toBeLessThanOrEqual(focused.height);
+  }).toPass({ timeout: 5000 });
   await page.screenshot({ path: "artifacts/drawio/continuous/brahe-laptop.png" });
   await component(page, "system::build").click({ position: { x: 24, y: 20 } });
   await expect(explorer).toHaveAttribute("data-scope-id", "system");

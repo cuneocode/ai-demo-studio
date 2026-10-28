@@ -20,6 +20,20 @@ test("accents keep their hue but darken enough to read on white", () => {
   assert.ok(b > r && lightness(blue) <= 0.5);
 });
 
+test("semantic accent text meets contrast on the light surface", () => {
+  const luminance = (rgb) => rgb.map(value => {
+    const channel = value / 255;
+    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+  }).reduce((total, value, index) => total + value * [0.2126, 0.7152, 0.0722][index], 0);
+  for (const color of ["#e4c48a", "#d1a85b", "#58b98e", "#ff6b79", "#9bb8ff"]) {
+    for (const prop of ["color", "--amber", "--mint", "--danger", "--integration"]) {
+      const mapped = lightValue(color, prop);
+      const rgb = [1, 3, 5].map(index => parseInt(mapped.slice(index, index + 2), 16));
+      assert.ok((luminance([243, 246, 250]) + 0.05) / (luminance(rgb) + 0.05) >= 4.5, `${color} as ${prop}: ${mapped}`);
+    }
+  }
+});
+
 test("shadows turn soft navy and non-colour values pass through", () => {
   assert.match(lightValue("0 8px 24px rgba(0,0,0,.26)", "box-shadow"), /rgba\(16, ?24, ?40, ?0\.1/);
   assert.equal(lightValue("var(--text)", "color"), "var(--text)");

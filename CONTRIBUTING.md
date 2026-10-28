@@ -58,6 +58,13 @@ model execution, policy enforcement, or trace delivery. For runtime changes, als
 exercise the real demo, cancellation or failure, tab switching, and saved runs.
 Record missing credentials or unavailable services in your validation results.
 
+For CSS, theme, or demo-package moves, run
+`npm run test:browser -- tests/theme.spec.ts`. It checks rendered panel colors,
+text contrast, theme switching and persistence, and page overflow at desktop and
+phone widths across all executable demos. Vite imports the shared PostCSS
+configuration so editing the theme transform restarts the server and clears its
+compiled CSS cache.
+
 Interbank's Python tests use a separate environment:
 
 ```sh
