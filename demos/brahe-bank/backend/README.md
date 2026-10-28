@@ -4,7 +4,7 @@ Adapted from [Galileo's LangGraph FSI agent](https://github.com/rungalileo/sdk-e
 
 ## Setup and startup
 
-Follow the [Studio setup](../../README.md#start-studio-and-selected-demos), then
+Follow the [Studio setup](../../../README.md#start-studio-and-selected-demos), then
 start **Brahe Bank assistant** in **Settings → Services**. Node and Docker Compose 2.30+
 are required; Python runs inside the image. The API uses loopback port 8011
 and Studio's `/api/banking` proxy in development and production.

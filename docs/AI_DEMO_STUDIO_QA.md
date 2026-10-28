@@ -208,3 +208,30 @@ inspection. Service-event fixtures cover execution behavior; these theme fixes
 introduce no model calls or integration-delivery changes. The registered browser
 suite now contains 185 cases. Final screenshots are kept in ignored
 `artifacts/theme-qa/production/` and `output/theme-qa/`.
+
+## Dependency security and MIT licensing
+
+The root package and standalone Interbank dashboard report zero npm audit
+findings. Studio updates Next.js, React, Vite, Cloudflare tooling, and their
+affected dependencies. Scoped overrides patch Drizzle's esbuild loader and
+vinext's image dependencies while preserving the existing local runtime.
+The root MIT license retains the existing third-party license notices. All eight
+broken backend README links are corrected.
+
+A clean source copy without local credentials passed `npm ci`, the production
+build, and all 259 Node tests. TypeScript and lint passed in the checkout.
+The dependency tree passed validation with npm 11.21.1. Database generation
+created the example SQLite migration in a temporary directory. Direct
+Satori/Resvg PNG rendering and image-size parsing passed.
+
+All 183 browser cases that use local fixtures or recordings passed across the
+full preview run and a four-case rerun against normal Studio mode. The rerun
+covered guided chat, live-mode inference labels, settings navigation, and
+cross-app API rejection. The two external planner checks were skipped. The
+normal-mode server had no credentials and used a disabled Docker socket. No
+paid model calls, container changes, or hosted control registration were made.
+
+A standalone import of the patched `@vercel/og` Node entry exposed an upstream
+HarfBuzz WASM packaging failure. Studio uses its static share image, and no
+application code imports `next/og`; dynamic Open Graph generation remains
+blocked in standalone Node use of that wrapper.

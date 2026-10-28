@@ -8,7 +8,7 @@ E-filing is simulated. It listens on `127.0.0.1:8015` behind `/api/sar`.
 
 ## Setup and startup
 
-Follow the [Studio setup](../../README.md#start-studio-and-selected-demos), then
+Follow the [Studio setup](../../../README.md#start-studio-and-selected-demos), then
 start **SAR investigation** in **Settings → Services**. Node and Docker Compose 2.30+
 are required; Python runs inside the image. The API uses loopback port 8015
 and Studio's `/api/sar` proxy in development and production.
@@ -69,4 +69,4 @@ calls or exports. Sample execution is labelled separately.
 npm run sar:test
 ```
 
-See the [configuration guide](../../docs/CONFIGURATION.md) for shared settings.
+See the [configuration guide](../../../docs/CONFIGURATION.md) for shared settings.

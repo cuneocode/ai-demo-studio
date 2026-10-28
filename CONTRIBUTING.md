@@ -133,6 +133,13 @@ Do not register policies, deploy infrastructure, or change hosted tenant resourc
 as a side effect of dependency installation or routine tests. Those operations
 belong in explicit commands documented by the relevant service.
 
-Retain upstream notices and pinned source revisions. The repository owner controls
-the root license decision. Keep pull requests focused and describe the user-visible
-result, the relevant checks, and any runtime prerequisite that remains unmet.
+The scoped overrides patch esbuild in Drizzle's legacy TypeScript loader and
+vinext's image-rendering dependencies, including Satori's ZIP decoder. Retain them
+until compatible upstream releases include the fixes. Verify database generation
+against a temporary output directory, image rendering, and local Studio startup
+when updating these overrides.
+
+Contributions use the repository's [MIT License](LICENSE). Retain upstream notices
+and pinned source revisions. Keep pull requests focused and describe the
+user-visible result, the relevant checks, and any runtime prerequisite that remains
+unmet.

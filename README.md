@@ -257,5 +257,11 @@ Validation includes `npm test`, typecheck, lint, affected browser flows, Python
 checks, and real container lifecycle checks. See [setup verification](docs/SETUP_VERIFICATION.md).
 
 Preserve build support in `worker/`, `db/`, `drizzle/`, `build/`, and `.openai/`.
-Upstream notices remain with adapted code, including [banking's MIT notice](demos/brahe-bank/backend/LICENSE).
-The repository owner controls the root license decision.
+
+## License
+
+AI Demo Studio is distributed under the [MIT License](LICENSE). Third-party
+components retain their own licenses and notices, including
+[banking's MIT notice](demos/brahe-bank/backend/LICENSE), the
+[draw.io viewer license](public/vendor/drawio/LICENSE), and the
+[Carbon symbols license](public/vendor/drawio/carbon/LICENSE).

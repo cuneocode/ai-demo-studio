@@ -1,5 +1,8 @@
 # Setup verification
 
+See [current Studio QA](AI_DEMO_STUDIO_QA.md) for later validation. The dated
+source-mode results below describe the implementation at that time.
+
 ## Container migration validation, October 23, 2026
 
 The working branch migrates all eight executable demos to independent Compose
@@ -107,8 +110,8 @@ register hosted controls, create an interbank deployment, call a paid model,
 train a GPU scorer, or establish telemetry delivery. Those procedures require
 the engineer's configured accounts and are documented in the service guides.
 
-The repository has no root license selection. Preserve upstream notices while
-the owner chooses the repository's redistribution terms.
+The repository now uses the [MIT License](../LICENSE). Preserve upstream licenses
+and notices when distributing adapted components.
 
 ## Foundry evidence verification
 

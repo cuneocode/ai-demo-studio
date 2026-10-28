@@ -10,7 +10,7 @@ graphs, or weights.
 
 ## Setup and startup
 
-Follow the [Studio setup](../../README.md#start-studio-and-selected-demos), then
+Follow the [Studio setup](../../../README.md#start-studio-and-selected-demos), then
 start **Card fraud triage** in **Settings → Services**. Node and Docker Compose 2.30+
 are required; Python runs inside the image. The API uses loopback port 8012
 and Studio's `/api/fraud` proxy in development and production.
@@ -54,7 +54,7 @@ npm run studio:containers -- controls fraud
 
 Use **Services → Apply to running stacks** or Restart. The run identifies local checks or hosted
 controls and reports actual trace export. See
-[configuration](../../docs/CONFIGURATION.md) for shared settings.
+[configuration](../../../docs/CONFIGURATION.md) for shared settings.
 
 ## Model, honestly
 

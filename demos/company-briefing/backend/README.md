@@ -6,7 +6,7 @@ Studio's `/api/briefing` proxy.
 
 ## Setup and startup
 
-Follow the [Studio setup](../../README.md#start-studio-and-selected-demos), then
+Follow the [Studio setup](../../../README.md#start-studio-and-selected-demos), then
 start **Company briefing** in **Settings → Services**. Node and Docker Compose 2.30+
 are required; Python runs inside the image. The API uses loopback port 8013
 and Studio's `/api/briefing` proxy in development and production.
@@ -56,5 +56,5 @@ npm run briefing:test
 ```
 
 Shared model routing is in `services/llm/studio_models.py`. The
-[configuration guide](../../docs/CONFIGURATION.md) covers file precedence and
+[configuration guide](../../../docs/CONFIGURATION.md) covers file precedence and
 integration readiness.
