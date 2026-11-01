@@ -1,7 +1,8 @@
 # AI Demo Studio
 
 AI Demo Studio brings Financial Services, Healthcare, Manufacturing, Retail, and
-Public Sector apps into one installation. Each app has its own use-case library,
+Public Sector use case libraries into one installation.
+Each app has its own use-case library,
 stories, model overrides, and runtime controls. Financial Services contains the
 existing eight executable demos and two illustrative use cases. The other four
 libraries are ready for their domain demos.
