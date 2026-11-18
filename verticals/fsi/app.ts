@@ -26,10 +26,6 @@ export const app = {
   ],
   "catalog": [
     {
-      "demoId": "code-vulnerability",
-      "categoryId": "risk-compliance"
-    },
-    {
       "demoId": "brahe-bank",
       "categoryId": "operations"
     },

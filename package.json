@@ -44,7 +44,9 @@
     "vulnerability:controls": "node scripts/studio-containers.mjs controls vulnerability",
     "studio:containers": "node scripts/studio-containers.mjs",
     "studio:install:source": "npm run banking:install && npm run fraud:install && npm run briefing:install && npm run wealth:install && npm run sar:install && npm run vulnerability:install",
-    "interbank:controls": "node scripts/studio-containers.mjs controls interbank"
+    "interbank:controls": "node scripts/studio-containers.mjs controls interbank",
+    "studio:content:export": "node scripts/studio-content-export.ts",
+    "studio:content:validate": "node scripts/studio-content-validate.ts"
   },
   "dependencies": {
     "@xyflow/react": "^12.11.6",

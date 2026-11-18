@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { appForDemo } from "../config/apps.ts";
 
 const demos = [
   { id: "interbank-a2a", ready: ".ib-controls", surfaces: [".ib-controls", ".ib-prompt textarea", ".ib-terminal", ".ib-terminal > header"] },
@@ -49,7 +50,7 @@ for (const width of [1440, 390]) {
         if (demo.id === "interbank-a2a") await assertSurfaces(page, [".ib-synthetic-note", ".ib-primary", ".ib-lab-state", ".ib-empty"]);
       };
       await page.setViewportSize({ width, height: 1000 });
-      await page.goto(`/apps/fsi/demos/${demo.id}`);
+      await page.goto(`/apps/${appForDemo(demo.id)!.id}/demos/${demo.id}`);
       await expect(page.locator(`#case-panel-demo ${demo.ready}`).first()).toBeVisible();
       await assertTheme(false);
       await page.getByRole("button", { name: "Switch to light theme", exact: true }).click();

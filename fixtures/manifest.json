@@ -191,6 +191,20 @@
       "description": "Presentation cards derived from hypothetical households; served without Python.",
       "demos": ["client-advisory"],
       "synthetic": true
+    },
+    {
+      "path": "fixtures/content/neil-dev-studios.json",
+      "description": "Synthetic Neil-format presentation package for JSON compatibility checks.",
+      "owner": "shell",
+      "demos": ["sar-support"],
+      "synthetic": true
+    },
+    {
+      "path": "fixtures/content/neil-industry-apps.json",
+      "description": "Synthetic Neil-format presentation package for JSON compatibility checks.",
+      "owner": "shell",
+      "demos": ["sar-support"],
+      "synthetic": true
     }
   ]
 }

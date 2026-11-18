@@ -3,16 +3,18 @@ import { app as healthcare } from "../verticals/healthcare/app.ts";
 import { app as manufacturing } from "../verticals/manufacturing/app.ts";
 import { app as retail } from "../verticals/retail/app.ts";
 import { app as publicSector } from "../verticals/public-sector/app.ts";
+import { app as cyberAiFoundry } from "../verticals/cyber-ai-foundry/app.ts";
+import { app as horizontal } from "../verticals/horizontal/app.ts";
 import { demoDefinitions } from "./demos.ts";
 import type { AppDefinition } from "./app-contract.ts";
 
-export const apps: readonly AppDefinition[] = [fsi, healthcare, manufacturing, retail, publicSector];
+export const apps: readonly AppDefinition[] = [fsi, healthcare, manufacturing, retail, publicSector, cyberAiFoundry, horizontal];
 export const appById = (id: string | null | undefined) => apps.find(app => app.id === id);
 export const appForDemo = (id: string) => apps.find(app => app.catalog.some(entry => entry.demoId === id));
 export const demoIdsForApp = (id: string | null | undefined): string[] => {
   if (id == null) return demoDefinitions.map(demo => demo.id);
   const app = appById(id);
-  if (!app) throw new Error("Unknown industry app.");
+  if (!app) throw new Error("Unknown use case library.");
   return app.catalog.map(entry => entry.demoId);
 };
 

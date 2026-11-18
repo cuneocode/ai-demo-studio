@@ -194,7 +194,7 @@ test("configured planner bundle accepts Studio evidence and restores real edits"
 test("older planner drafts receive generated names and current model defaults while retaining edits", async ({ page }) => {
   test.skip(process.env.STUDIO_PLANNER_LIVE !== "1", "Requires a configured planner bundle and API.");
   await mockStudio(page);
-  await page.goto("/apps/fsi");
+  await page.goto("/apps/cyber-ai-foundry");
   await openCase(page, "Code vulnerability analysis");
   const planner = await openPlanner(page);
   await planner.getByRole("spinbutton", { name: "Maximum input tokens", exact: true }).fill("12000");

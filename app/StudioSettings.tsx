@@ -9,6 +9,7 @@ import { appById } from "../config/apps";
 import { useStudioNav } from "./studio-nav";
 import type { ServicesSnapshot } from "./runtime-contract";
 import "./studio-settings.css";
+import { useStudioContent, withModule } from "./studio/content/ContentProvider";
 
 const MODELS_API = "/api/studio/models";
 const SETTINGS_API = "/api/studio/settings";
@@ -58,6 +59,7 @@ const scopedApi = (url: string, appId?: string | null) => `${url}${appId ? `?app
 
 export default function StudioSettings() {
   const { appId } = useStudioNav();
+  const content = useStudioContent();
   const app = appById(appId);
   const [settings, setSettings] = useState<SettingsSnapshot | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -83,7 +85,7 @@ export default function StudioSettings() {
         <div>
           <span className="breadcrumb">AI Demo Studio <span>/</span> {app ? `${app.shortName} settings` : "Studio settings"}</span>
           <h1>{app ? `${app.name} settings` : "Studio settings"}</h1>
-          <p>{app ? <>Manage this app’s runtimes and model routes. Shared providers and credentials are managed in <Link href="/settings">platform settings</Link>. </> : "Bring your own models and credentials. "} Everything is saved to <code>{settings.file}</code> on this machine. The operator supplies scoped settings to each container stack. Keys are write-only: once saved, the studio shows only whether each one is set.</p>
+          <p>{app ? <>Manage this app’s runtimes and model routes. Shared providers and credentials are managed in <Link href={withModule("/settings", content.moduleId)}>platform settings</Link>. </> : "Bring your own models and credentials. "} Everything is saved to <code>{settings.file}</code> on this machine. The operator supplies scoped settings to each container stack. Keys are write-only: once saved, the studio shows only whether each one is set.</p>
         </div>
       </div>
       <ReadinessPanel rows={settings.readiness} />

@@ -54,8 +54,9 @@ browser tests before implementing. Adapt its workflow and shared structures.
 | Conversational assistant | [Banking package](../demos/brahe-bank/README.md), [adapter](../demos/brahe-bank/ui/Workspace.tsx), [UI](../demos/brahe-bank/ui/BankingDemo.tsx), [backend](../demos/brahe-bank/backend/server.py), [browser flow](../tests/banking.spec.ts) | Embedded chat, sessions, tool evidence, control verdicts, measured turn stats |
 | Agents across service boundaries | [Interbank package](../demos/interbank-a2a/README.md), [UI](../demos/interbank-a2a/ui/InterbankDemo.tsx), [backend guide](../services/interbank/README.md), [browser flow](../tests/interbank.spec.ts) | Multiple containers, A2A timeline, shared trace identity, gateway boundaries |
 
-Choose `fsi`, `healthcare`, `manufacturing`, `retail`, or `public-sector` as the
-owning app. Adding a demo to these apps uses the existing generic routes.
+Choose `fsi`, `healthcare`, `manufacturing`, `retail`, `public-sector`,
+`cyber-ai-foundry`, or `horizontal` as the owning app. Cyber AI Foundry groups
+AI-driven security workflows; Horizontal groups cross-industry workflows. Adding a demo to these apps uses the existing generic routes.
 Introducing another industry requires extending `APP_IDS` in
 [app-contract.ts](../config/app-contract.ts), adding its manifest/import to
 [config/apps.ts](../config/apps.ts), and updating route, enablement, and catalog
@@ -377,3 +378,10 @@ rejects a use case without a platform connection contract.
 
 Record the chosen reference, files changed, commands run, results and any remaining
 integration dependency in the completion report.
+
+## JSON catalogs and hosted workspaces
+
+For presentation updates or an already deployed external application, follow
+[JSON presentation packages](CONTENT_PACKAGES.md). Approved JSON entries use the
+existing Studio shell and tabs. Native workspaces, runtimes, action tours, and
+draw.io architecture retain the registrations described above.

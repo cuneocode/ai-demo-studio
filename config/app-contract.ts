@@ -1,4 +1,4 @@
-export const APP_IDS = ["fsi", "healthcare", "manufacturing", "retail", "public-sector"] as const;
+export const APP_IDS = ["fsi", "healthcare", "manufacturing", "retail", "public-sector", "cyber-ai-foundry", "horizontal"] as const;
 export type AppId = (typeof APP_IDS)[number];
 export type AppDefinition = {
   id: AppId; name: string; shortName: string; description: string; iconKey: string;

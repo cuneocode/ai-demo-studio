@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, Copy, Download, FileJson2, Fingerprint, ShieldCheck } from "lucide-react";
 import { guideAnchor } from "./guide/anchors";
+import { useStudioNav } from "./studio-nav";
 import type { VulnerabilityControl } from "./vulnerability-stats";
 
 type Citation = { path: string; start: number; end: number; quote: string };
@@ -39,6 +40,8 @@ export default function FoundryEvidence(props: FoundryEvidenceProps) {
 }
 
 function EvidenceReview({ run, selected, busy, act }: FoundryEvidenceProps) {
+  const { appId } = useStudioNav();
+  const scoped = (url: string) => `${url}${url.includes("?") ? "&" : "?"}app=${encodeURIComponent(appId ?? "cyber-ai-foundry")}`;
   const [eventId, setEventId] = useState("");
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState("");
@@ -56,7 +59,7 @@ function EvidenceReview({ run, selected, busy, act }: FoundryEvidenceProps) {
     <section className="cv-panel cv-foundry" {...guideAnchor("vulnerability.evidence")}>
       <header><div><ShieldCheck size={17} /><h3>Foundry evidence review</h3></div><span>{bundle ? "Cisco Foundry profile · Brahe Payments" : "Available after analysis"}</span></header>
       {bundle ? <>
-        <div className="cv-foundry-meta"><span>Source revision <code title={bundle.revision}>{bundle.revision.slice(0, 12)}</code></span><span className={bundle.coverage.status === "complete" ? "cv-pass" : "cv-fail"}>{bundle.coverage.status === "complete" ? "2 evaluation goals covered" : "Coverage needs review"}</span><a href={bundle.artifact.uri} download="foundry-evidence.json">Evidence artifact <Download size={13} /></a></div>
+        <div className="cv-foundry-meta"><span>Source revision <code title={bundle.revision}>{bundle.revision.slice(0, 12)}</code></span><span className={bundle.coverage.status === "complete" ? "cv-pass" : "cv-fail"}>{bundle.coverage.status === "complete" ? "2 evaluation goals covered" : "Coverage needs review"}</span><a href={scoped(bundle.artifact.uri)} download="foundry-evidence.json">Evidence artifact <Download size={13} /></a></div>
         {run?.proposal?.applied && <p className="cv-notice">This evidence describes the scanned revision before the applied patch. Rescan the patched copy for a fresh assessment.</p>}
         <div className="cv-goals">{bundle.coverage.goals.map(goal => <div key={goal.id}><strong>{goal.title}</strong><span className={goal.status === "closed" ? "cv-pass" : "cv-fail"}>{goal.status === "closed" ? "Covered" : "Needs review"}</span><small>Independent HTTP probe: {goal.outcome.replaceAll("_", " ")}</small></div>)}</div>
         <details className="cv-details"><summary>Security map and evaluation scope</summary><p>The profile covers two settlement access goals in the synthetic API.</p>{bundle.security_map.map(entry => <div className="cv-security-entry" key={entry.id}><code>{entry.route}</code><span>Caller input: {entry.input} · {entry.handler}</span><small>{entry.boundary} · {entry.resolved ? "Source route resolved" : "Route needs review"}</small></div>)}</details>
@@ -82,7 +85,7 @@ function EvidenceReview({ run, selected, busy, act }: FoundryEvidenceProps) {
       <p className="cv-panel-copy">Inspect the events this evaluation would send to Splunk HTTP Event Collector. No HEC receiver is configured.</p>
       <div className="cv-hec-facts"><div><strong>{events.length}</strong><span>Prepared events</span></div><div><strong>{events.filter(row => row.event.channel === "security").length}</strong><span>Confirmed security events</span></div><div><strong>0</strong><span>Sent to HEC</span></div><div><strong>Unknown</strong><span>Indexed in Splunk</span></div></div>
       {item ? <>
-        <div className="cv-hec-toolbar"><label>Event<select aria-label="Evidence event" value={item.event.event_id} onChange={event => { setEventId(event.target.value); setCopied(false); }}>{events.map(row => <option key={row.event.event_id} value={row.event.event_id}>{labels[row.event.event_type] || row.event.event_type}{row.event.signature ? ` · ${row.event.signature}` : ""}</option>)}</select></label><div className="cv-actions"><button className="secondary-button" onClick={async () => { try { await navigator.clipboard.writeText(json); setCopied(true); setCopyError(""); } catch { setCopyError("Copy is unavailable. Download the event batch below."); } }}><Copy size={14} />{copied ? "Copied" : "Copy event"}</button><a className="secondary-button" href={`/api/vulnerability/runs/${run!.id}/hec`} download><Download size={14} />Download HEC batch</a></div></div>
+        <div className="cv-hec-toolbar"><label>Event<select aria-label="Evidence event" value={item.event.event_id} onChange={event => { setEventId(event.target.value); setCopied(false); }}>{events.map(row => <option key={row.event.event_id} value={row.event.event_id}>{labels[row.event.event_type] || row.event.event_type}{row.event.signature ? ` · ${row.event.signature}` : ""}</option>)}</select></label><div className="cv-actions"><button className="secondary-button" onClick={async () => { try { await navigator.clipboard.writeText(json); setCopied(true); setCopyError(""); } catch { setCopyError("Copy is unavailable. Download the event batch below."); } }}><Copy size={14} />{copied ? "Copied" : "Copy event"}</button><a className="secondary-button" href={scoped(`/api/vulnerability/runs/${run!.id}/hec`)} download><Download size={14} />Download HEC batch</a></div></div>
         <div className="cv-hec-event-meta"><span>{item.event.channel === "security" ? "Confirmed finding" : "Audit event"}</span><code>{item.event.event_type}</code><span>event_id {item.event.event_id.slice(0, 12)}</span></div>
         <pre className="cv-hec-json" aria-label="HEC formatted event JSON" tabIndex={0}>{json}</pre>
         <p className="cv-footnote" role="status">{copyError || "The download contains newline-delimited HEC event envelopes. Stable event IDs support downstream deduplication."}</p>

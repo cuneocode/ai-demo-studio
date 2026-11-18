@@ -1,18 +1,21 @@
 # AI Demo Studio
 
-AI Demo Studio brings Financial Services, Healthcare, Manufacturing, Retail, and
-Public Sector use case libraries into one installation.
-Each app has its own use-case library,
-stories, model overrides, and runtime controls. Financial Services contains the
-existing eight executable demos and two illustrative use cases. The other four
-libraries are ready for their domain demos.
+AI Demo Studio brings Financial Services, Healthcare, Manufacturing, Retail,
+Public Sector, Cyber AI Foundry, and Horizontal use case libraries into one installation.
+Each library has its own stories, model overrides, and runtime controls.
+Financial Services contains seven executable demos and two illustrative use cases.
+Cyber AI Foundry contains Code vulnerability analysis and represents AI-driven
+security use cases. Horizontal is ready for cross-industry workflows. The other
+four libraries are ready for their domain demos.
 
 A trusted local operator configures shared model endpoints, Cisco AI Defense,
 Splunk Agent Observability, and credentials. Demo stacks retain independent
 lifecycle and storage. App navigation keeps running demos available for the next
 presentation. All bundled customer scenarios and case data are synthetic.
 
-Open `/` for industry apps and `/apps/fsi` for the Financial Services workspace.
+Open `/` for all libraries, `/apps/fsi` for Financial Services,
+`/apps/cyber-ai-foundry` for AI-driven security, and `/apps/horizontal` for
+cross-industry use cases.
 See [platform structure and operation](docs/AI_DEMO_STUDIO.md) for package ownership,
 scoped settings, preparation, persistence, and migration details.
 
@@ -111,6 +114,13 @@ containers. See [configuration](docs/CONFIGURATION.md) and
 Hosted control registration is an explicit administrative action. Review the
 policies, create the intended project/stream, then select **Register hosted
 controls** for that package. Build and Start do not register tenant resources.
+
+## JSON presentation content
+
+Studio can load approved JSON catalogs and presentation copy through its existing
+frontend. Export installed packages for compatible consumers, or add links to
+external workspaces. See [content packages](docs/CONTENT_PACKAGES.md) for export,
+configuration, native bindings, session overrides, and Neil-format compatibility.
 
 ## Demo packages
 

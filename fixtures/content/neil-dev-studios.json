@@ -1,0 +1,62 @@
+{
+  "title": "Connected studios",
+  "headline": "Shared presentation catalog",
+  "subtitle": "Synthetic compatibility fixture using Neil's legacy format.",
+  "usecases": [
+    {
+      "id": "retail",
+      "title": "Retail operations",
+      "tagline": "Review store operations in the owning application.",
+      "who": "Store manager",
+      "data": "Synthetic store evidence",
+      "agent": "Operations assistant",
+      "gpu": "Workload supplied by the external application",
+      "repo": "example/retail-studio",
+      "url": "https://example.invalid/retail",
+      "story": [
+        [
+          "Store operations",
+          "A manager reviews a store finding and chooses the next action.",
+          ""
+        ]
+      ],
+      "workspaces": [
+        {
+          "name": "Queue review",
+          "url": "https://example.invalid/queue",
+          "repo": "example/retail-studio"
+        }
+      ]
+    },
+    {
+      "id": "payer",
+      "title": "Healthcare review",
+      "tagline": "Review a synthetic authorization request.",
+      "url": "http://example.invalid/payer",
+      "specialist": {
+        "tagline": "Inspect evidence retrieval and approval controls."
+      }
+    }
+  ],
+  "build": {
+    "repo": "example/studio",
+    "views": {
+      "customer": {
+        "label": "Customer",
+        "note": "Workflow and stakeholder outcomes."
+      }
+    },
+    "guide": [
+      {
+        "route": "uc/retail/demo",
+        "text": "Open the store manager's workspace."
+      },
+      {
+        "route": "uc/payer/demo",
+        "text": "Review the authorization workflow.",
+        "specialist": "Inspect the approval controls."
+      }
+    ]
+  },
+  "synthetic": true
+}

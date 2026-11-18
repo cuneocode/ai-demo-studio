@@ -7,7 +7,7 @@ import { narrative as sar_support } from "../demos/sar-support/narrative.ts";
 import { narrative as interbank_a2a } from "../demos/interbank-a2a/narrative.ts";
 import { narrative as kyc_processing } from "../demos/kyc-processing/narrative.ts";
 import { narrative as transaction_llm } from "../demos/transaction-llm/narrative.ts";
-import { runtimeForUseCase } from "../config/use-cases";
+import { runtimeForUseCase } from "../config/use-cases.ts";
 
 /** Audience-facing stories. References describe control alignment, never certification.
  * Keep claims tied to the demo implementation; deployment options are explicit.

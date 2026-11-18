@@ -14,6 +14,9 @@ export async function generateMetadata({ params }: Props) {
 }
 export default async function AppPage({ params }: Props) {
   const { segments } = await params;
-  if (!parseStudioRoute(`/apps/${segments.join("/")}`).valid) notFound();
+  // The host validates approved JSON membership after the shell mounts. Reserve
+  // its route namespace so a refreshed external workspace can fetch that snapshot.
+  const contentRoute = segments.length === 3 && appById(segments[0]) && segments[1] === "demos" && /^json-[a-z0-9-]+$/.test(segments[2]);
+  if (!parseStudioRoute(`/apps/${segments.join("/")}`).valid && !contentRoute) notFound();
   return null;
 }

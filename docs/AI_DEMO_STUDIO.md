@@ -6,14 +6,15 @@ See [validation results](AI_DEMO_STUDIO_QA.md) for browser coverage, observed li
 execution, image builds, and planner integration validation.
 
 The installation owns model providers, credentials, shared integration defaults,
-and the host operator. Industry apps own catalog membership, categories, optional
+and the host operator. Use case libraries own catalog membership, categories, optional
 business context, and stories. A demo owns its workflow and runtime package.
-Healthcare, Manufacturing, Retail, and Public Sector intentionally start with
-empty libraries. Add a reviewed workflow with synthetic evidence to populate one.
+Cyber AI Foundry owns Code vulnerability analysis and future AI-driven security
+workflows. Horizontal owns cross-industry workflows and starts empty alongside
+Healthcare, Manufacturing, Retail, and Public Sector. Add a reviewed workflow with synthetic evidence to populate one.
 
 | Area | Authoritative location |
 | --- | --- |
-| Industry apps and membership | `verticals/<app>/app.ts`, indexed by `config/apps.ts` |
+| Libraries and membership | `verticals/<app>/app.ts`, indexed by `config/apps.ts` |
 | FSI lifecycle and handoffs | `verticals/fsi/stories.ts` and `verticals/fsi/tours.ts` |
 | Demo metadata | `demos/<demo>/definition.ts`, indexed by `config/demos.ts` |
 | Workspace implementation and styles | `demos/<demo>/ui/` |
@@ -43,7 +44,7 @@ copying the checkout; Git clones retain them on supported development systems.
 
 | URL | Purpose |
 | --- | --- |
-| `/` or `/apps` | Industry app launcher |
+| `/` or `/apps` | Use case library launcher |
 | `/apps/<app>` | App overview |
 | `/apps/<app>/library` | App use-case library |
 | `/apps/<app>/stories` | App story builder |
@@ -52,10 +53,10 @@ copying the checkout; Git clones retain them on supported development systems.
 | `/apps/<app>/settings`, `/controls`, `/telemetry` | Scoped app views |
 | `/settings`, `/controls`, `/telemetry` | Shared platform views |
 
-Inside an industry app, the sidebar contains that app's workspace and domain
-navigation. Select **All industry apps** at the top of the sidebar to return to
+Inside a library, the sidebar contains that app's workspace and domain
+navigation. Select **All libraries** at the top of the sidebar to return to
 the Studio homepage. The AI Demo Studio logo also opens that homepage. Switch
-industries through the app launcher or the homepage cards.
+libraries through the app launcher or the homepage cards.
 
 Demo navigation retains mounted execution, forms, and transports. Inactive
 workspace DOM is detached to keep guide anchors, tab IDs, and planner elements
@@ -66,7 +67,8 @@ ledger IDs retain measured stats. Banking restores its browser conversation;
 a backend session reset remains an explicit service response. A page reload
 while a synchronous banking reply is pending offers a retry.
 
-Legacy `/?guide=...&step=...&source=...` links resolve to FSI. Existing tour,
+Legacy `/?guide=...&step=...&source=...` links resolve to the demo’s owning library
+for primary tours. Existing FSI encore and lifecycle tours retain their FSI scope. Existing tour,
 demo, model-route, architecture, API, and runtime IDs remain stable.
 
 ## Shared settings and app overrides
@@ -88,7 +90,7 @@ whole. App Apply sends explicit runtime IDs. Status caches and browser polling
 are scoped, and empty apps return no unrelated run prompts or readiness rows.
 
 Set `STUDIO_ENABLED_APPS=fsi,healthcare` in the launching environment or root
-`.env` to restrict the enabled catalog. Omission enables all five apps. The host
+`.env` to restrict the enabled catalog. Omission enables all seven libraries. The host
 blocks disabled runtime APIs, including the legacy Wealth alias, recordings,
 examples, and lifecycle operations. This is an organizational boundary within a
 trusted local installation. Hosted tenant isolation requires deployment access
@@ -129,7 +131,11 @@ Browser keys use `ai-demo-studio.v1:global:*` for appearance and
 guide preferences/position, planner assessment references, and vulnerability run
 references are copied once. Compatible FSI updates are also written to legacy
 keys. Migration markers prevent cleared values from being imported again.
-Story drafts and run references are scoped by app and demo.
+Story drafts and run references are scoped by app and demo. Vulnerability last-run,
+run-ledger, and planner assessment references migrate once from FSI to Cyber AI
+Foundry. Existing saved backend runs, model routes, API prefixes, ports, and
+container storage retain their identities. The current demo route is
+`/apps/cyber-ai-foundry/demos/code-vulnerability`; FSI rejects that membership.
 
 This release adds no model-route IDs or database migrations. Previous model
 registries remain compatible. Preserve `.env`, `.studio`, named volumes,

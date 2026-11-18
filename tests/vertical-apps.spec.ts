@@ -8,17 +8,38 @@ const failures = (page: import('@playwright/test').Page) => {
   return errors;
 };
 
-test('launcher exposes five apps, shared platform routes, and the new product identity', async ({ page }) => {
+test('launcher exposes seven libraries, shared platform routes, and the new product identity', async ({ page }) => {
   const errors = failures(page);
   await page.goto('/');
   await expect(page).toHaveTitle('AI Demo Studio');
-  await expect(page.getByRole('heading', { name: 'Industry apps', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Use case libraries', exact: true })).toBeVisible();
   for (const app of apps) await expect(page.getByRole('link', { name: `Open ${app.name} app`, exact: true })).toHaveAttribute('href', `/apps/${app.id}`);
   await expect(page.getByRole('region', { name: 'Shared platform services' })).toBeVisible();
   expect(errors).toEqual([]);
 });
 
-for (const app of apps.slice(1)) {
+test('Cyber AI Foundry owns vulnerability analysis with its shared workspace tabs', async ({ page }) => {
+  const errors = failures(page);
+  await page.goto('/apps/fsi/library');
+  await expect(page.getByRole('button', { name: 'Open Code vulnerability analysis experience', exact: true })).toHaveCount(0);
+  await switchIndustryApp(page, 'Cyber AI Foundry');
+  await expect(page).toHaveURL('/apps/cyber-ai-foundry');
+  await expect(page).toHaveTitle('Cyber AI Foundry | AI Demo Studio');
+  await expect(page.getByRole('button', { name: 'Open company briefing', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Open Code vulnerability analysis experience', exact: true }).click();
+  await expect(page).toHaveURL('/apps/cyber-ai-foundry/demos/code-vulnerability');
+  await expect(page.locator('.cv-panel').first()).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Live run stats', exact: true })).toBeVisible();
+  expect(await page.getByRole('tablist', { name: 'Code vulnerability analysis views' }).getByRole('tab').allTextContents()).toEqual(['Use case demo', 'Architecture', 'Capacity planning']);
+  await page.getByRole('tab', { name: 'Architecture', exact: true }).click();
+  await expect(page.locator('iframe[title*="architecture canvas"]')).toBeVisible();
+  await page.getByRole('tab', { name: 'Capacity planning', exact: true }).click();
+  await page.reload();
+  await expect(page.getByRole('tab', { name: 'Capacity planning', exact: true })).toHaveAttribute('aria-selected', 'true');
+  expect(errors).toEqual([]);
+});
+
+for (const app of apps.filter(app => !app.catalog.length)) {
   test(`${app.name} has scoped empty libraries, stories, controls, telemetry, and settings`, async ({ page }) => {
     const errors = failures(page);
     const mutations: string[] = [];
@@ -26,7 +47,7 @@ for (const app of apps.slice(1)) {
     await page.goto(`/apps/${app.id}`);
     await expect(page).toHaveTitle(`${app.name} | AI Demo Studio`);
     const navigation = page.locator('.side-nav');
-    await expect(navigation.getByRole('link', { name: 'All industry apps', exact: true })).toHaveAttribute('href', '/');
+    await expect(navigation.getByRole('link', { name: 'All libraries', exact: true })).toHaveAttribute('href', '/');
     for (const industry of apps) await expect(navigation.getByRole('button', { name: industry.name, exact: true })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'No use cases added yet' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Open company briefing', exact: true })).toHaveCount(0);
@@ -59,17 +80,17 @@ for (const width of [1440, 390]) {
     await page.goto('/apps/fsi');
     const navigation = page.locator('.side-nav');
     if (width < 901) await page.getByRole('button', { name: 'Toggle navigation', exact: true }).click();
-    await expect(navigation.getByRole('link', { name: 'All industry apps', exact: true })).toBeVisible();
-    await expect(navigation.getByText('Industry apps', { exact: true })).toHaveCount(0);
+    await expect(navigation.getByRole('link', { name: 'All libraries', exact: true })).toBeVisible();
+    await expect(navigation.getByText('Use case libraries', { exact: true })).toHaveCount(0);
     for (const industry of apps) await expect(navigation.getByRole('button', { name: industry.name, exact: true })).toHaveCount(0);
     await expect(page.locator('.sidebar-platform')).not.toContainText('Status unavailable');
     await page.screenshot({ path: info.outputPath(`fsi-navigation-dark-${width}.png`) });
     await page.getByRole('button', { name: 'Switch to light theme', exact: true }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
     await page.screenshot({ path: info.outputPath(`fsi-navigation-light-${width}.png`) });
-    await navigation.getByRole('link', { name: 'All industry apps', exact: true }).click();
+    await navigation.getByRole('link', { name: 'All libraries', exact: true }).click();
     await expect(page).toHaveURL('/');
-    await expect(page.getByRole('heading', { name: 'Industry apps', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Use case libraries', exact: true })).toBeVisible();
     await expect(page.locator('.sidebar')).not.toHaveClass(/\bopen\b/);
     for (const industry of apps) await expect(page.getByRole('link', { name: `Open ${industry.name} app`, exact: true })).toBeVisible();
     await page.getByRole('link', { name: 'Open Financial Services app', exact: true }).click();
@@ -82,8 +103,8 @@ for (const width of [1440, 390]) {
     await expect(page.getByLabel('Message Brahe Bank')).toHaveValue('Keep this draft when I return to Studio home');
     if (width >= 901) {
       await page.getByRole('button', { name: 'Collapse navigation', exact: true }).click();
-      await expect(navigation.getByRole('link', { name: 'All industry apps', exact: true })).toBeVisible();
-      await navigation.getByRole('link', { name: 'All industry apps', exact: true }).click();
+      await expect(navigation.getByRole('link', { name: 'All libraries', exact: true })).toBeVisible();
+      await navigation.getByRole('link', { name: 'All libraries', exact: true }).click();
       await expect(page).toHaveURL('/');
     }
   });
@@ -92,14 +113,14 @@ for (const width of [1440, 390]) {
 test('app launcher and keyboard search expose the Studio homepage', async ({ page }) => {
   await page.goto('/apps/fsi');
   await page.getByRole('button', { name: 'Open app launcher', exact: true }).click();
-  await page.getByRole('dialog', { name: 'App launcher', exact: true }).getByRole('button', { name: 'All industry apps', exact: true }).click();
+  await page.getByRole('dialog', { name: 'App launcher', exact: true }).getByRole('button', { name: 'All libraries', exact: true }).click();
   await expect(page).toHaveURL('/');
   await page.getByRole('link', { name: 'Open Financial Services app', exact: true }).click();
   await page.keyboard.press('ControlOrMeta+k');
   await page.getByRole('textbox', { name: 'Search demos and pages', exact: true }).fill('dashboard');
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL('/');
-  await expect(page.getByRole('heading', { name: 'Industry apps', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Use case libraries', exact: true })).toBeVisible();
 });
 
 test('deep links and reload retain the demo tab; browser history returns to the owning app', async ({ page }) => {
@@ -160,13 +181,20 @@ test('host denies cross-app runtime, recording and settings writes without chang
   expect((await request.patch('/api/studio/models?app=healthcare', { data: { revision: before.revision, routes: { 'sar-support': { externalPolicy: 'deny' } } } })).status()).toBe(403);
   const after = await request.get('/api/studio/models').then(response => response.json());
   expect(after.revision).toEqual(before.revision);
+  for (const app of ['fsi', 'horizontal']) {
+    expect((await request.get(`/api/vulnerability/health?app=${app}`)).status()).toBe(403);
+    expect((await request.post(`/api/studio/services?app=${app}`, { data: { action: 'start', ids: ['vulnerability'] } })).status()).toBe(403);
+    expect((await request.patch(`/api/studio/models?app=${app}`, { data: { revision: before.revision, routes: { 'code-vulnerability': {} } } })).status()).toBe(403);
+  }
+  const cyber = await request.get('/api/studio/models?app=cyber-ai-foundry').then(response => response.json());
+  expect(cyber.useCases.map((item: { id: string }) => item.id)).toEqual(['code-vulnerability']);
 });
 
 test('unknown apps and cross-app deep links provide a usable recovery route', async ({ page }) => {
-  for (const route of ['/apps/missing', '/apps/healthcare/demos/sar-support']) {
+  for (const route of ['/apps/missing', '/apps/healthcare/demos/sar-support', '/apps/fsi/demos/code-vulnerability', '/apps/horizontal/demos/code-vulnerability']) {
     await page.goto(route);
     await expect(page.getByRole('heading', { name: 'Page unavailable', exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'All industry apps', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'All libraries', exact: true })).toBeVisible();
   }
 });
 

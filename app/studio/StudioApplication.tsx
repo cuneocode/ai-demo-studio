@@ -70,27 +70,30 @@ import Link from "next/link";
 import { useStudioLocation } from "./location";
 import { apps, appById, appForDemo } from "../../config/apps.ts";
 import { lifecycleStory } from "../../verticals/fsi/stories.ts";
-import { allUseCases, catalogForApp, iconFor, type UseCase, type Category } from "./catalog";
+import { allUseCases, resolvedCatalogForApp, iconFor, type UseCase, type Category } from "./catalog";
 import { useCaseFrames, type UseCaseFrame } from "./frames";
-import { parseStudioRoute, studioPath, type StudioView as View } from "./route";
+import { parseStudioRoute, studioPath as bundledStudioPath, type StudioView as View } from "./route";
 import { AppHome, EmptyApp } from "./AppHome";
 import DemoWorkspace from "./workspaces";
 import KeepAliveWorkspace from "./KeepAliveWorkspace";
 import "./studio-apps.css";
+import { ContentReview, ContentStatus, StudioContentProvider, useStudioContent, useContentAudience, withModule } from "./content/ContentProvider";
+import ExternalWorkspace from "./content/ExternalWorkspace";
+import { contentNarrative, contentPresenter, frameFor } from "./content/presentation";
 const useCases = allUseCases;
 
 export const storySteps = lifecycleStory.steps.map(step => ({ ...step, icon: iconFor(step.iconKey) }));
 
 /** Present mode's three acts for a moment, falling back to the frame's copy, then what is live right now. */
 function presenterTalk(item: UseCase, status: StudioStatus | null) {
-  const note = presenterNotes[item.id];
-  const frame = useCaseFrames[item.id];
+  const note = contentPresenter(item.content?.presenter) ?? presenterNotes[item.id];
+  const frame = frameFor(item);
   return [
     { label: "Problem", text: note?.problem ?? frame.transformation.friction },
     { label: "AI changes", text: note?.ai ?? frame.transformation.aiShift },
     { label: "Cisco value", text: note?.cisco ?? frame.transformation.humanControl },
     ...(note?.lifecycle ? [{ label: "In the story", text: note.lifecycle }] : []),
-    { label: "Right now", text: presenterStatus(status, item.id, Boolean(frame.liveExperience)) },
+    { label: "Right now", text: item.content && !item.content.nativeDemoId ? "External application. Execution readiness and integration delivery are unreported to Studio." : presenterStatus(status, item.id, Boolean(frame.liveExperience)) },
   ];
 }
 
@@ -177,7 +180,7 @@ function StatusDot({ tone = "mint" }: { tone?: "mint" | "blue" | "violet" | "amb
 function UseCaseCard({ useCase, onOpen, status }: { status: StudioStatus | null; useCase: UseCase; onOpen: (item: UseCase) => void }) {
   const Icon = useCase.icon;
   const developmentStage = useCase.stage === "Interactive" ? null : useCase.stage;
-  const availability = liveExperienceStatus(useCase.id, useCaseFrames[useCase.id]?.liveExperience, status);
+  const availability = useCase.content && !useCase.content.nativeDemoId ? { label: "External workspace", tone: "amber" as Tone, title: "Runtime readiness is reported by the external application." } : liveExperienceStatus(useCase.id, useCaseFrames[useCase.id]?.liveExperience, status);
   const guide = useGuideControls();
   const tour = mainTourFor(useCase.id);
 
@@ -356,8 +359,13 @@ function UseCaseWorkspace({
   routeTab?: CaseTab;
   onTabChange?: (tab: CaseTab) => void;
 }) {
-  const frame = useCaseFrames[useCase.id];
-  const liveStatus = liveExperienceStatus(useCase.id, frame.liveExperience, status);
+  const audience = useContentAudience();
+  const content = useCase.content;
+  const frame = frameFor(useCase);
+  const external = Boolean(content && !content.nativeDemoId);
+  const nativeNarrative = useCase.id === "code-vulnerability" ? vulnerabilityStory : demoNarratives[useCase.id];
+  const narrative = contentNarrative(content, audience) ?? nativeNarrative;
+  const liveStatus = external ? { label: "External workspace", tone: "amber" as Tone, title: "Execution and integrations are reported by the owning application." } : liveExperienceStatus(useCase.id, frame.liveExperience, status);
   const Icon = useCase.icon;
   const [selectedRow, setSelectedRow] = useState(0);
   const row = frame.rows[selectedRow];
@@ -445,12 +453,12 @@ function UseCaseWorkspace({
         <div className="heading-actions">
           <span className="prototype-chip live-status-chip" title={liveStatus.title} {...guideAnchor("case.status")}><StatusDot tone={liveStatus.tone} /> {liveStatus.label}</span>
           <button className="secondary-button" onClick={onAdd}>{inStory ? <><Check size={16} /> In story</> : <><Plus size={16} /> Add to story</>}</button>
-          {!frame.liveExperience && <button className="primary-button" onClick={startPrimaryAction}>Review example <ArrowRight size={16} /></button>}
+          {!external && !frame.liveExperience && <button className="primary-button" onClick={startPrimaryAction}>Review example <ArrowRight size={16} /></button>}
         </div>
       </header>
 
       <PlanningRunContext.Provider value={setPlanningRun}>
-      <DemoNarrativeLayout narrative={useCase.id === "code-vulnerability" ? vulnerabilityStory : demoNarratives[useCase.id]}>
+      <DemoNarrativeLayout narrative={narrative}>
       <div className="case-tab-row" {...guideAnchor("case.tabs")}>
       <div className="case-tabs" role="tablist" aria-label={`${useCase.title} views`} ref={tablistRef}>
         {USE_CASE_TABS.map(({ id, label }) => (
@@ -474,11 +482,12 @@ function UseCaseWorkspace({
       </div>
 
       <div className="case-tabpanel" id="case-panel-demo" role="tabpanel" aria-labelledby="case-tab-demo" hidden={tab !== "demo"}>
+      {external && content && <ExternalWorkspace entry={content} />}
       {frame.liveExperience && <DemoWorkspace workspaceKey={frame.liveExperience} inStory={inStory} onBack={onBack} onAdd={onAdd}
         companyProfile={companyProfile} onCompanyProfileChange={onCompanyProfileChange} researchNote={researchNote} onResearchNoteChange={onResearchNoteChange}
         advisoryBrief={advisoryBrief} onAdvisoryBriefChange={onAdvisoryBriefChange} />}
 
-      {!frame.liveExperience ? <>
+      {!external && !frame.liveExperience ? <>
       <div className="experience-label" id="illustrative-experience" {...guideAnchor("kyc.label")}>
         <div><span className="eyebrow">ILLUSTRATIVE EXPERIENCE</span><h2>How the use case could appear</h2></div>
         <span>Frontend and data are prototype-only</span>
@@ -542,7 +551,7 @@ function UseCaseWorkspace({
       </div>
 
       <div className="case-tabpanel" id="case-panel-architecture" role="tabpanel" aria-labelledby="case-tab-architecture" hidden={tab !== "architecture"}>
-        {architectureOpened && <div id="architecture-explorer"><ArchitectureMap key={useCase.id} caseId={useCase.id} title={useCase.title} frame={frame} /></div>}
+        {architectureOpened && (external ? <section className="studio-external-workspace"><h2>Architecture unavailable</h2><p>This content package supplies an external workspace. Its implementation architecture is maintained by the owning application.</p></section> : <div id="architecture-explorer"><ArchitectureMap key={useCase.id} caseId={useCase.id} title={useCase.title} frame={frame} /></div>)}
       </div>
       <div className="case-tabpanel" id="case-panel-capacity" role="tabpanel" aria-labelledby="case-tab-capacity" hidden={tab !== "capacity"}>
         {capacityOpened && <CapacityPlanning useCaseId={useCase.id} title={useCase.title} objective={useCase.outcome} run={planningRun} />}
@@ -585,10 +594,14 @@ function GuidedPresenterBar({ caseId, ...props }: Parameters<typeof PresenterBar
   );
 }
 
-export default function StudioApplication() {
+export default function StudioApplication() { return <StudioContentProvider><StudioSurface /></StudioContentProvider>; }
+function StudioSurface() {
   const { pathname, search } = useStudioLocation();
-  const router = useRouter();
-  const route = parseStudioRoute(pathname, search);
+  const content = useStudioContent();
+  const nextRouter = useRouter();
+  const router = useMemo(() => ({ ...nextRouter, push: (path: string, options?: { scroll?: boolean }) => nextRouter.push(withModule(path, content.moduleId), options) }), [nextRouter, content.moduleId]);
+  const studioPath = useCallback((appId: string | null, view: View = "overview", demoId?: string | null) => withModule(bundledStudioPath(appId, view, demoId, content.entries), content.moduleId), [content.entries, content.moduleId]);
+  const route = parseStudioRoute(pathname, search, content.entries);
   const [enabledApps, setEnabledApps] = useState<string[] | null>(null);
   useEffect(() => {
     const controller = new AbortController();
@@ -598,10 +611,10 @@ export default function StudioApplication() {
   const availableApps = apps.filter(app => !enabledApps || enabledApps.includes(app.id));
   const activeApp = appById(route.appId);
   const activeView = activeApp && enabledApps && !enabledApps.includes(activeApp.id) ? "unavailable" : route.view;
-  const useCases = catalogForApp(activeApp?.id ?? null);
+  const useCases = resolvedCatalogForApp(activeApp?.id ?? null, content.entries, content.audience);
   const selectedCase = activeView === "unavailable" ? null : useCases.find(item => item.id === route.demoId) ?? null;
   const navItems = activeApp ? baseNavItems.filter(item => item.id !== "briefing" || activeApp.context === "company") : [
-    { id: "apps" as View, label: "Industry apps", icon: Grid2X2 },
+    { id: "apps" as View, label: "Use case libraries", icon: Grid2X2 },
     { id: "settings" as View, label: "Studio settings", icon: Settings2 },
   ];
   const [hydrated, setHydrated] = useState(false);
@@ -619,14 +632,14 @@ export default function StudioApplication() {
   const [launcherOpen, setLauncherOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [appStories, setAppStories] = useState<Record<string, string[]>>({});
-  const storyItems = activeApp ? appStories[activeApp.id] ?? [...activeApp.defaultStory] : [];
+  const storyItems = activeApp ? appStories[`${content.moduleId ?? "bundled"}:${activeApp.id}`] ?? [...activeApp.defaultStory] : [];
   const setStoryItems = (update: string[] | ((previous: string[]) => string[])) => {
     if (!activeApp) return;
     setAppStories(previous => {
-      const current = previous[activeApp.id] ?? [...activeApp.defaultStory];
+      const current = previous[`${content.moduleId ?? "bundled"}:${activeApp.id}`] ?? [...activeApp.defaultStory];
       const next = typeof update === "function" ? update(current) : update;
-      writeStored(localStorage, appStorageKey(activeApp.id, "story"), JSON.stringify(next));
-      return { ...previous, [activeApp.id]: next };
+      writeStored(localStorage, appStorageKey(activeApp.id, content.moduleId ? `content:${content.moduleId}:story` : "story"), JSON.stringify(next));
+      return { ...previous, [`${content.moduleId ?? "bundled"}:${activeApp.id}`]: next };
     });
   };
   const [companyProfile, setCompanyProfile] = useState<StoredCompanyProfile | null>(null);
@@ -651,16 +664,26 @@ export default function StudioApplication() {
       setResearchNote(loadResearchNote());
       setAdvisoryBrief(loadAdvisoryBrief());
       setCollapsed(readStored(localStorage, COLLAPSED_KEY) === "1");
-      const drafts = Object.fromEntries(apps.flatMap(app => {
-        try {
-          const value = JSON.parse(readStored(localStorage, appStorageKey(app.id, "story")) ?? "null");
-          return Array.isArray(value) ? [[app.id, [...new Set(value.filter(id => typeof id === "string" && app.catalog.some(entry => entry.demoId === id)))]]] : [];
-        } catch { return []; }
-      }));
-      setAppStories(drafts);
+
     });
     return () => cancelAnimationFrame(frame);
   }, []);
+
+  useEffect(() => {
+    if (content.loading || content.error) return;
+    const frame = requestAnimationFrame(() => {
+      const drafts = Object.fromEntries(apps.map(app => {
+        const key = `${content.moduleId ?? "bundled"}:${app.id}`;
+        const members = new Set(resolvedCatalogForApp(app.id, content.entries).map(item => item.id));
+        try {
+          const saved = JSON.parse(readStored(localStorage, appStorageKey(app.id, content.moduleId ? `content:${content.moduleId}:story` : "story")) ?? "null");
+          return [key, Array.isArray(saved) ? [...new Set(saved.filter(id => typeof id === "string" && members.has(id)))] : [...app.defaultStory]];
+        } catch { return [key, [...app.defaultStory]]; }
+      }));
+      setAppStories(previous => ({ ...previous, ...drafts }));
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [content.moduleId, content.entries, content.loading, content.error]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -681,15 +704,16 @@ export default function StudioApplication() {
 
   const activeAppId = activeApp ? String(activeApp.id) : null;
   const openUseCase = useCallback((item: UseCase) => {
-    const owner = appById(activeAppId) ?? appForDemo(item.id);
-    if (!owner || !owner.catalog.some(entry => entry.demoId === item.id)) return;
+    const owner = appById(item.content?.appId) ?? appById(activeAppId) ?? appForDemo(item.id);
+    if (!owner || !resolvedCatalogForApp(owner.id, content.entries, content.audience).some(entry => entry.id === item.id)) return;
     setCachedCases(previous => previous.some(session => session.appId === owner.id && session.demoId === item.id) ? previous : [...previous, { appId: owner.id, demoId: item.id }]);
     const params = new URLSearchParams(window.location.search);
     params.delete("tab");
-    const suffix = params.has("guide") ? `?${params.toString()}` : "";
-    router.push(`${studioPath(owner.id, "overview", item.id)}${suffix}`, { scroll: false });
+    params.delete("module");
+    const suffix = params.toString() ? `?${params.toString()}` : "";
+    router.push(`${bundledStudioPath(owner.id, "overview", item.id, content.entries)}${suffix}`, { scroll: false });
     requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" })));
-  }, [activeAppId, router]);
+  }, [activeAppId, router, content.entries, content.audience]);
 
   const filteredCases = (() => {
     const normalized = query.trim().toLowerCase();
@@ -706,14 +730,14 @@ export default function StudioApplication() {
     router.push(studioPath(activeAppId, view), { scroll: false });
     setSidebarOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [activeAppId, router]);
+  }, [activeAppId, router, studioPath]);
 
   const openSettings = useCallback((section?: string) => {
     const shared = section && !["st-models", "st-services"].includes(section);
     const path = studioPath(shared ? null : activeAppId, "settings");
     router.push(`${path}${section ? `#${section}` : ""}`, { scroll: false });
     setSidebarOpen(false);
-  }, [activeAppId, router]);
+  }, [activeAppId, router, studioPath]);
 
   const openCaseById = (id: string) => {
     const item = useCases.find((candidate) => candidate.id === id);
@@ -726,7 +750,7 @@ export default function StudioApplication() {
   };
 
   const story = storyItems.map((id) => useCases.find((candidate) => candidate.id === id)).filter((item): item is UseCase => Boolean(item));
-  const storyStates = story.map((item) => momentReady(status, item.id, Boolean(useCaseFrames[item.id]?.liveExperience)));
+  const storyStates = story.map((item) => item.content && !item.content.nativeDemoId ? { ready: false, reason: "External application readiness is unreported" } : momentReady(status, item.id, Boolean(useCaseFrames[item.id]?.liveExperience)));
   const storyReady = story.length ? Math.round((storyStates.filter((state, index) => state.ready && useCaseFrames[story[index].id]?.liveExperience).length / story.length) * 100) : 0;
 
   const present = (index: number) => {
@@ -750,11 +774,11 @@ export default function StudioApplication() {
     else present(presenting + 1);
   };
   const openCaseForGuide = useCallback((id: string) => {
-    const item = catalogForApp(activeAppId).find((candidate) => candidate.id === id);
+    const item = resolvedCatalogForApp(activeAppId, content.entries, content.audience).find((candidate) => candidate.id === id);
     if (!item) return;
     setSidebarOpen(false);
     openUseCase(item);
-  }, [openUseCase, activeAppId]);
+  }, [openUseCase, activeAppId, content.entries, content.audience]);
 
   const moveStoryItem = (id: string, to: number) => setStoryItems((items) => {
     const from = items.indexOf(id);
@@ -782,9 +806,9 @@ export default function StudioApplication() {
   const launcherResults = (() => {
     const normalized = launcherQuery.trim().toLowerCase();
     if (!normalized) return [];
-    const appResults = availableApps.map(app => ({ key: `app-${app.id}`, icon: iconFor(app.iconKey), title: app.name, detail: "Industry app", open: () => { guideControl?.exit(); router.push(`/apps/${app.id}`); } }));
+    const appResults = availableApps.map(app => ({ key: `app-${app.id}`, icon: iconFor(app.iconKey), title: app.name, detail: "Use case library", open: () => { guideControl?.exit(); router.push(`/apps/${app.id}`); } }));
     const pages = [
-      ...(activeApp ? [{ key: "studio-home", icon: Grid2X2, title: "All industry apps", detail: "Studio home", open: openStudioHome, text: "dashboard home" }] : []),
+      ...(activeApp ? [{ key: "studio-home", icon: Grid2X2, title: "All libraries", detail: "Studio home", open: openStudioHome, text: "dashboard home" }] : []),
       ...[...navItems, ...shellPages].map((item) => ({ key: `view-${item.id}`, icon: item.icon, title: item.label, detail: "Page", open: () => switchView(item.id) })),
     ];
     const cases = useCases.map((item) => ({ key: `case-${item.id}`, icon: item.icon, title: item.title, detail: `${item.category} · ${liveExperienceStatus(item.id, useCaseFrames[item.id]?.liveExperience, status).label}`, open: () => openUseCase(item), text: `${item.description} ${item.solutions.join(" ")}` }));
@@ -832,9 +856,9 @@ export default function StudioApplication() {
       <header className="topbar">
         <div className="brand-lockup">
           <button className="mobile-menu" aria-label="Toggle navigation" onClick={() => setSidebarOpen(!sidebarOpen)}><Menu size={20} /></button>
-          <Link href="/" className="studio-brand-home" aria-label="AI Demo Studio home" title="All industry apps" onClick={resetForStudioHome}>
+          <Link href={withModule("/", content.moduleId)} className="studio-brand-home" aria-label="AI Demo Studio home" title="All libraries" onClick={resetForStudioHome}>
             <CiscoMark />
-            <div className="brand-copy"><strong>AI Demo Studio</strong><span>Industry applications</span></div>
+            <div className="brand-copy"><strong>AI Demo Studio</strong><span>Use case libraries</span></div>
           </Link>
           <span className="top-divider" />
           {activeApp?.context === "company" && <button className="tenant-switcher" onClick={() => switchView("briefing")} aria-label="Open company briefing">
@@ -849,7 +873,7 @@ export default function StudioApplication() {
           <button className={!selectedCase && activeView === "telemetry" ? "active" : ""} aria-current={!selectedCase && activeView === "telemetry" ? "page" : undefined} aria-label="Telemetry" onClick={() => switchView("telemetry")}><Activity size={17} /><span>Telemetry</span></button>
         </nav>
         <div className="top-actions">
-          <InferenceIndicator useCaseId={selectedCase ? (useCaseFrames[selectedCase.id]?.liveExperience ? selectedCase.id : "prototype") : activeView === "briefing" ? "company-briefing" : undefined} preview={status?.mode === "preview"} onOpen={() => openSettings("st-models")} />
+          {selectedCase?.content && !selectedCase.content.nativeDemoId ? <span className="prototype-chip studio-content-external-indicator">External application</span> : <InferenceIndicator useCaseId={selectedCase ? (useCaseFrames[selectedCase.id]?.liveExperience ? selectedCase.id : "prototype") : activeView === "briefing" ? "company-briefing" : undefined} preview={status?.mode === "preview"} onOpen={() => openSettings("st-models")} />}
           <button aria-label={theme === "light" ? "Switch to dark theme" : "Switch to light theme"} title={theme === "light" ? "Dark theme" : "Light theme"} onClick={() => setTheme(theme === "light" ? "dark" : "light")}>{theme === "light" ? <Moon size={18} /> : <Sun size={18} />}</button>
           <button aria-label="Help: run this demo" onClick={() => setHelpOpen(true)}><CircleHelp size={18} /></button>
           <ServiceBell status={status} onOpenSettings={() => openSettings("st-services")} />
@@ -859,7 +883,7 @@ export default function StudioApplication() {
       <div className="shell-body">
         <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
           <nav className="side-nav" aria-label="Main navigation">
-            {activeApp && <Link href="/" className="studio-home-link" aria-label="All industry apps" title="All industry apps" onClick={resetForStudioHome}><ArrowLeft size={18} /><span>All industry apps</span></Link>}
+            {activeApp && <Link href={withModule("/", content.moduleId)} className="studio-home-link" aria-label="All libraries" title="All libraries" onClick={resetForStudioHome}><ArrowLeft size={18} /><span>All libraries</span></Link>}
             <span className="nav-group-label">Workspace</span>
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -873,7 +897,7 @@ export default function StudioApplication() {
             {!!activeApp?.categories.length && <><span className="nav-separator" /><span className="nav-group-label">Explore by domain</span>
               {activeApp.categories.map(category => { const Icon = iconFor(category.iconKey); return <button key={category.id} title={collapsed ? category.label : undefined} onClick={() => { setFilter(category.label); switchView("library"); }}><Icon size={18} /><span>{category.label}</span></button>; })}
             </>}
-            {!activeApp && <><span className="nav-separator" /><span className="nav-group-label">Industry apps</span>
+            {!activeApp && <><span className="nav-separator" /><span className="nav-group-label">Use case libraries</span>
               {availableApps.map(app => { const Icon = iconFor(app.iconKey); return <button key={app.id} title={collapsed ? app.name : undefined} onClick={() => { guideControl?.exit(); setFilter("All"); setQuery(""); setPresenting(null); setSidebarOpen(false); router.push(`/apps/${app.id}`); }}><Icon size={18} /><span>{app.name}</span></button>; })}
             </>}
           </nav>
@@ -890,12 +914,15 @@ export default function StudioApplication() {
         {sidebarOpen && <button className="sidebar-scrim" aria-label="Close navigation" onClick={() => setSidebarOpen(false)} />}
 
         <main className="main-content">
+          <ContentStatus />
+          <ContentReview />
           {activeView === "apps" && <AppHome enabledApps={enabledApps} />}
-          {activeView === "unavailable" && <section className="industry-empty"><h1>Page unavailable</h1><p>This page or use case is outside the selected app library.</p><button className="primary-button" onClick={() => router.push("/")}>All industry apps</button></section>}
+          {activeView === "unavailable" && !content.loading && !content.error && <section className="industry-empty"><h1>Page unavailable</h1><p>This page or use case is outside the selected app library.</p><button className="primary-button" onClick={() => router.push("/")}>All libraries</button></section>}
           {workspaceSessions.map(session => {
             const id = session.demoId;
             const owner = appById(session.appId)!;
-            const item = catalogForApp(owner.id).find(candidate => candidate.id === id)!;
+            const item = resolvedCatalogForApp(owner.id, content.entries, content.audience).find(candidate => candidate.id === id);
+            if (!item) return null;
             const active = activeApp?.id === owner.id && selectedCase?.id === id;
             return <KeepAliveWorkspace key={`${owner.id}/${id}`} demoId={id} active={active}>
               <StudioNavContext.Provider value={{ ...studioNav, appId: owner.id, demoId: id, active }}>
@@ -909,7 +936,7 @@ export default function StudioApplication() {
                   const params = new URLSearchParams(window.location.search);
                   if (tab === "demo") params.delete("tab"); else params.set("tab", tab);
                   const suffix = params.toString();
-                  window.history.replaceState(window.history.state, "", `${studioPath(owner.id, "overview", id)}${suffix ? `?${suffix}` : ""}`);
+                  window.history.replaceState(window.history.state, "", `${bundledStudioPath(owner.id, "overview", id, content.entries)}${suffix ? `?${suffix}` : ""}`);
                 }}
                 inStory={storyItems.includes(id)}
                 onBack={() => switchView("library")}
@@ -1015,7 +1042,7 @@ export default function StudioApplication() {
               <section className="library-toolbar">
                 <label className="search-box"><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search use cases, outcomes, or Cisco solutions" aria-label="Search use cases" /><kbd title="Search everything">⌘ K</kbd></label>
                 <div className="filter-row" aria-label="Use case filters">
-                  {(["All", ...(activeApp?.categories.map(category => category.label) ?? [])] as Category[]).map((item) => (
+                  {(["All", ...new Set([...(activeApp?.categories.map(category => category.label) ?? []), ...useCases.map(item => item.category)])] as Category[]).map((item) => (
                     <button key={item} className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</button>
                   ))}
                 </div>
@@ -1134,8 +1161,8 @@ export default function StudioApplication() {
               </div>
             ) : (
               <div className="launcher-columns">
-                <div><h2>Workspace</h2>{activeApp && <button onClick={openStudioHome}><Grid2X2 size={18} /><span>All industry apps</span><ArrowRight size={15} /></button>}{[...navItems, ...shellPages].map((item) => { const Icon = item.icon; return <button key={item.id} onClick={() => { switchView(item.id); closeLauncher(); }}><Icon size={18} /><span>{item.label}</span><ArrowRight size={15} /></button>; })}</div>
-                <div><h2>Industry apps</h2>{availableApps.map(app => { const Icon = iconFor(app.iconKey); return <button key={app.id} onClick={() => { guideControl?.exit(); router.push(`/apps/${app.id}`); closeLauncher(); }}><Icon size={18} /><span>{app.name}<small className="launcher-detail"> · {app.catalog.length} use cases</small></span><ArrowRight size={15} /></button>; })}</div>
+                <div><h2>Workspace</h2>{activeApp && <button onClick={openStudioHome}><Grid2X2 size={18} /><span>All libraries</span><ArrowRight size={15} /></button>}{[...navItems, ...shellPages].map((item) => { const Icon = item.icon; return <button key={item.id} onClick={() => { switchView(item.id); closeLauncher(); }}><Icon size={18} /><span>{item.label}</span><ArrowRight size={15} /></button>; })}</div>
+                <div><h2>Use case libraries</h2>{availableApps.map(app => { const Icon = iconFor(app.iconKey); return <button key={app.id} onClick={() => { guideControl?.exit(); router.push(`/apps/${app.id}`); closeLauncher(); }}><Icon size={18} /><span>{app.name}<small className="launcher-detail"> · {app.catalog.length} use cases</small></span><ArrowRight size={15} /></button>; })}</div>
                 <div><h2>Cisco solutions</h2>
                   <button onClick={() => { switchView("controls"); closeLauncher(); }}><ShieldCheck size={18} /><span>AI Defense<small className="launcher-detail"> · {platform.defense.detail}</small></span><StatusDot tone={platform.defense.tone} /></button>
                   <button onClick={() => { switchView("telemetry"); closeLauncher(); }}><Activity size={18} /><span>Agent Observability<small className="launcher-detail"> · {platform.observability.detail}</small></span><StatusDot tone={platform.observability.tone} /></button>

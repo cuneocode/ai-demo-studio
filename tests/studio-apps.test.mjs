@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, existsSync, rmSync, writeFileSync } from 'no
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 import http from 'node:http';
-import { apps, validateCatalog } from '../config/apps.ts';
+import { apps, appById, appForDemo, validateCatalog } from '../config/apps.ts';
 import { demoDefinitions } from '../config/demos.ts';
 import { runtimes, runtimeForUseCase } from '../config/use-cases.ts';
 import { MODEL_USE_CASES, validateRegistry } from '../app/studio-models.ts';
@@ -19,13 +19,17 @@ import { handleStudioApi } from '../scripts/studio-api.ts';
 const baseline = JSON.parse(readFileSync(new URL('./fixtures/fsi-compatibility.json', import.meta.url), 'utf8'));
 const defaults = () => validateRegistry(JSON.parse(readFileSync(new URL('../config/studio-models.default.json', import.meta.url), 'utf8'))).registry;
 
-test('five app manifests retain the exact FSI catalog, identities, and isolated empty libraries', () => {
+test('seven libraries move vulnerability ownership and retain released demo identities', () => {
   assert.deepEqual(validateCatalog(), []);
-  assert.equal(apps.length, 5);
+  assert.equal(apps.length, 7);
   assert.equal(demoDefinitions.length, 10);
   assert.equal(runtimes.length, 8);
-  assert.deepEqual(apps[0].catalog.map(item => item.demoId), demoDefinitions.map(item => item.id));
-  for (const app of apps.slice(1)) { assert.deepEqual(app.catalog, []); assert.equal(app.context, null); assert.deepEqual(app.defaultStory, []); }
+  assert.deepEqual(appById('fsi').catalog.map(item => item.demoId), baseline.demos.filter(item => item.id !== 'code-vulnerability').map(item => item.id));
+  assert.equal(appForDemo('code-vulnerability').id, 'cyber-ai-foundry');
+  assert.deepEqual(appById('cyber-ai-foundry').catalog.map(item => item.demoId), ['code-vulnerability']);
+  assert.deepEqual(appById('horizontal').catalog, []);
+  for (const app of apps.filter(app => app.id !== 'fsi')) { assert.equal(app.context, null); assert.deepEqual(app.defaultStory, []); }
+  assert.deepEqual(apps.filter(app => !app.catalog.length).map(app => app.id), ['healthcare', 'manufacturing', 'retail', 'public-sector', 'horizontal']);
   for (const demo of demoDefinitions) {
     const old = baseline.demos.find(item => item.id === demo.id);
     assert.ok(old, demo.id);
@@ -54,6 +58,12 @@ test('deep routes, tab URLs, unknown memberships and legacy tour links are expli
   assert.equal(parseStudioRoute('/apps/unknown').valid, false);
   assert.equal(parseStudioRoute('/').view, 'apps');
   assert.equal(parseStudioRoute('/', '?guide=sar-support&step=sar.run').appId, 'fsi');
+  assert.equal(parseStudioRoute('/', '?guide=code-vulnerability&step=vulnerability.run').appId, 'cyber-ai-foundry');
+  assert.equal(parseStudioRoute('/apps/cyber-ai-foundry/demos/code-vulnerability').valid, true);
+  assert.equal(parseStudioRoute('/apps/fsi/demos/code-vulnerability').valid, false);
+  assert.equal(parseStudioRoute('/apps/horizontal/demos/code-vulnerability').valid, false);
+  assert.equal(parseStudioRoute('/apps/horizontal/library').valid, true);
+  assert.equal(studioPath(null, 'overview', 'code-vulnerability'), '/apps/cyber-ai-foundry/demos/code-vulnerability');
   assert.equal(studioPath('fsi', 'overview', 'sar-support'), '/apps/fsi/demos/sar-support');
   assert.throws(() => studioPath('healthcare', 'overview', 'sar-support'), /outside/);
 });
@@ -93,6 +103,34 @@ test('browser migration copies FSI data once, dual-writes, and tombstones preven
   assert.equal(data.get(appStorageKey('fsi', 'planner-assessment', 'sar-support')), 'assessment-original');
 });
 
+test('moving vulnerability state preserves saved runs, stats, and planner IDs once', () => {
+  const prefix = 'ai-demo-studio.v1:apps:fsi:demos:code-vulnerability:';
+  const target = name => appStorageKey('cyber-ai-foundry', name, 'code-vulnerability');
+  const data = new Map([
+    [prefix + 'last-run', 'saved-run'],
+    [prefix + 'run-ledger', '[{"id":"saved-run:scan"}]'],
+    [prefix + 'planner-assessment', 'saved-plan'],
+    ['fsi-vulnerability-last-run', 'older-run'],
+  ]);
+  const storage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
+  for (const name of ['last-run', 'run-ledger', 'planner-assessment']) assert.equal(readStored(storage, target(name)), data.get(prefix + name));
+  writeStored(storage, target('last-run'), 'new-run');
+  data.set(prefix + 'last-run', 'stale-run');
+  assert.equal(readStored(storage, target('last-run')), 'new-run');
+  removeStored(storage, target('last-run'));
+  assert.equal(readStored(storage, target('last-run')), null);
+  assert.equal(data.get(prefix + 'last-run'), 'stale-run');
+  assert.equal(readStored(storage, appStorageKey('horizontal', 'last-run', 'code-vulnerability')), null);
+  assert.equal(readStored(storage, appStorageKey('fsi', 'last-run', 'sar-support')), null);
+});
+
+test('cleared FSI vulnerability references do not revive older legacy values', () => {
+  const old = appStorageKey('fsi', 'last-run', 'code-vulnerability');
+  const data = new Map([[old + ':migrated', '1'], ['fsi-vulnerability-last-run', 'stale-run']]);
+  const storage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value) };
+  assert.equal(readStored(storage, appStorageKey('cyber-ai-foundry', 'last-run', 'code-vulnerability')), null);
+});
+
 test('installation adoption preserves the original Docker namespace across checkout moves', () => {
   const directory = mkdtempSync(path.join(tmpdir(), 'studio-installation-'));
   const file = path.join(directory, 'installation.json');
@@ -106,13 +144,19 @@ test('installation adoption preserves the original Docker namespace across check
 });
 
 test('app-aware CLI selects unique runtimes and rejects mixed scope before execution', () => {
-  assert.equal(selectRuntimes(['--app', 'fsi']).selected.length, 8);
+  assert.equal(selectRuntimes(['--app', 'fsi']).selected.length, 7);
+  assert.deepEqual(selectRuntimes(['--app', 'cyber-ai-foundry']).selected.map(runtime => runtime.id), ['vulnerability']);
+  assert.equal(selectRuntimes(['--app', 'horizontal']).selected.length, 0);
+  assert.throws(() => selectRuntimes(['--app', 'fsi', 'vulnerability']), /outside/);
+  assert.deepEqual(resolveScope('cyber-ai-foundry').useCaseIds, ['code-vulnerability']);
+  assert.deepEqual(resolveScope('cyber-ai-foundry').runtimeIds, ['vulnerability']);
+  assert.deepEqual(resolveScope('horizontal').runtimeIds, []);
   assert.equal(selectRuntimes(['--app', 'healthcare']).selected.length, 0);
   assert.equal(selectRuntimes(['sar', 'sar-support']).selected.length, 1);
   assert.throws(() => selectRuntimes(['--app', 'healthcare', 'sar']), /outside/);
   assert.throws(() => selectRuntimes(['--app', 'fsi', '--all']), /Choose/);
   assert.throws(() => scopedRuntimeIds(['sar', 'unknown'], resolveScope('fsi')), /outside/);
-  assert.throws(() => requestScope({ url: '/api/studio/status?app=fsi&app=healthcare' }), /one industry/);
+  assert.throws(() => requestScope({ url: '/api/studio/status?app=fsi&app=healthcare' }), /one use case library/);
   assert.throws(() => requestScope({ url: '/api/studio/status?app=fsi' }, { appId: 'healthcare' }), /conflicting/);
 });
 
@@ -123,7 +167,7 @@ test('restricted installations block live aliases, recordings, examples, and lif
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const base = `http://127.0.0.1:${server.address().port}`;
   try {
-    for (const path of ['/api/banking/health', '/api/wealth/health', '/api/research/health', '/api/interbank/sources/server', '/api/studio/recordings/sar', '/api/studio/examples/fraud/scenarios']) assert.equal((await fetch(base + path)).status, 403, path);
+    for (const path of ['/api/banking/health', '/api/wealth/health', '/api/research/health', '/api/vulnerability/health', '/api/vulnerability/health?app=cyber-ai-foundry', '/api/interbank/sources/server', '/api/studio/recordings/sar', '/api/studio/examples/fraud/scenarios']) assert.equal((await fetch(base + path)).status, 403, path);
     assert.equal((await fetch(base + '/api/studio/status?app=fsi')).status, 403);
     const empty = await fetch(base + '/api/studio/status?app=healthcare').then(response => response.json());
     assert.deepEqual(empty.services, []); assert.deepEqual(empty.interbank.runs, []); assert.deepEqual(empty.readiness, []);

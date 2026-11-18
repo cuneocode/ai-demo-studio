@@ -9,6 +9,7 @@ import { handleModels } from "./studio-models-api.ts";
 import { handleSettings } from "./studio-settings-api.ts";
 import { reviewedRecording } from "./recording-review.ts";
 import { handleStatus } from "./studio-status-api.ts";
+import { handleContent } from "./studio-content-api.ts";
 import { handlePlanner } from "./studio-planner-api.ts";
 import { runtimeForPath } from "../config/use-cases.ts";
 import { requestScope, ScopeError } from "./studio-scope.ts";
@@ -16,6 +17,9 @@ import { requestScope, ScopeError } from "./studio-scope.ts";
 export { startMissing, stopAll } from "./studio-services.ts";
 
 const ROUTES = {
+  "/api/studio/content/modules": handleContent,
+  "/api/studio/content": handleContent,
+  "/api/motion/content": handleContent,
   "/api/studio/catalog": async (request: IncomingMessage, response: ServerResponse) => { send(response, 200, requestScope(request)); },
   "/api/studio/models": (request: IncomingMessage, response: ServerResponse) => handleModels(request, response),
   "/api/studio/settings": (request: IncomingMessage, response: ServerResponse) => handleSettings(request, response, "settings"),
@@ -90,7 +94,21 @@ async function handleRecordings(request: IncomingMessage, response: ServerRespon
 
 /** Handles the request when it targets the studio API; returns false otherwise. */
 export function handleStudioApi(request: IncomingMessage, response: ServerResponse): boolean {
-  const path = request.url?.split("?")[0] ?? "";
+  let path = request.url?.split("?")[0] ?? "";
+  if (/^\/api\/(?:studio\/content(?:\/modules)?|motion\/content)\/$/.test(path)) path = path.slice(0, -1);
+  // Vite reserves the module query parameter. Canonical page URLs use content.
+  const pageUrl = new URL(request.url || "/", "http://studio.local");
+  const legacyModule = pageUrl.searchParams.get("module");
+  if (legacyModule && /^[a-z0-9][a-z0-9-]{0,79}$/.test(legacyModule) && (path === "/" || /^\/(?:apps|studio|select)(?:\/|$)/.test(path))) {
+    pageUrl.searchParams.set("content", pageUrl.searchParams.get("content") || legacyModule);
+    pageUrl.searchParams.delete("module");
+    response.writeHead(302, { location: pageUrl.pathname + pageUrl.search }); response.end(); return true;
+  }
+  const selected = /^\/select\/([a-z0-9][a-z0-9-]{0,79})\/?$/.exec(path);
+  if (path === "/studio" || path === "/studio/" || selected) {
+    response.writeHead(302, { location: selected ? `/?content=${selected[1]}` : "/" });
+    response.end(); return true;
+  }
   const runtime = runtimeForPath(path);
   if (runtime) {
     try {

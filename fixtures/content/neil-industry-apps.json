@@ -1,0 +1,47 @@
+{
+  "title": "Industry apps",
+  "headline": "Industry libraries",
+  "usecases": [
+    {
+      "id": "fsi",
+      "title": "Financial Services",
+      "url": "https://example.invalid/apps/fsi",
+      "repo": "example/ai-demo-studio",
+      "workspaces": [
+        {
+          "name": "SAR investigation",
+          "url": "https://example.invalid/apps/fsi/demos/sar-support"
+        }
+      ]
+    },
+    {
+      "id": "retail",
+      "title": "Retail",
+      "url": "https://example.invalid/apps/retail",
+      "workspaces": [
+        {
+          "name": "Store copilot",
+          "url": "https://example.invalid/apps/retail/demos/copilot"
+        }
+      ]
+    }
+  ],
+  "build": {
+    "views": {
+      "customer": {
+        "label": "Customer"
+      }
+    },
+    "guide": [
+      {
+        "route": "library",
+        "text": "Choose an industry library."
+      },
+      {
+        "route": "uc/fsi/demo",
+        "text": "Open Financial Services."
+      }
+    ]
+  },
+  "synthetic": true
+}

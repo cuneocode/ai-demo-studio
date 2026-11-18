@@ -160,10 +160,35 @@ data volumes and Interbank PKI/evidence were preserved.
 
 No image-build or planner validation gates remain open.
 
+## Cyber AI Foundry and Horizontal libraries, November 18, 2026
+
+Cyber AI Foundry owns Code vulnerability analysis. FSI retains nine use cases,
+including seven executable demos. Horizontal is an empty cross-industry library.
+The launcher and shared navigation use **Use case libraries** and **All libraries**.
+The existing demo, model-route, runtime, port, API, and backend storage identities
+remain stable. Browser references migrate from FSI to Cyber AI Foundry once.
+
+Validation passed the production build, 261 Node tests, TypeScript, lint, and
+whitespace checks. Affected browser coverage passed 41 distinct checks across
+library routing and scope enforcement, empty-library settings, desktop and narrow
+layouts, both themes, the continuous vulnerability architecture, retained
+execution, patch review, cancellation, saved-run restoration, stats deduplication,
+and planner-reference migration. Two external live planner checks were skipped;
+the planner contract tests used a browser fixture. Vulnerability execution and
+integration responses were mocked. The dev server was restarted before the
+successful browser runs.
+
+Source evidence regeneration completed with all 113 excerpt contents unchanged.
+Manual browser inspection confirmed the launcher and Cyber AI Foundry overview.
+No container build, live model run, hosted control registration, or integration
+delivery was performed. The external Foundry review inspected source at
+`fbee807b2f0c0f1f3d8e535bd52e695185118deb`; its adoption proposal is in
+[the vulnerability package](../demos/code-vulnerability/README.md#foundry-v3-adoption-proposal).
+
 ## Industry navigation refinement
 
 Inside an industry app, the sidebar now contains only its workspace and domain
-navigation. **All industry apps** at the top returns to the Studio homepage; the
+navigation. **All libraries** at the top returns to the Studio homepage; the
 AI Demo Studio logo also links there. The launcher retains industry switching
 and provides a searchable homepage entry.
 

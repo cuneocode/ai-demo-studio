@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Studio presentation content",
+  "type": "object",
+  "properties": {
+    "title": {"type":"string"}, "subtitle":{"type":"string"}, "headline":{"type":"string"},
+    "x-studio":{"type":"object","required":["schemaVersion"],"properties":{"schemaVersion":{"const":1}}},
+    "usecases":{"type":"array","items":{"type":"object","required":["id"],"properties":{"id":{"type":"string","pattern":"^[a-z0-9][a-z0-9-]{0,79}$"},"title":{"type":"string"},"tagline":{"type":"string"},"url":{"type":"string"},"repo":{"type":"string"},"specialist":{"type":"object"},"story":{"type":"array"},"workspaces":{"type":"array","items":{"type":"object","required":["name","url"],"properties":{"name":{"type":"string"},"url":{"type":"string"},"repo":{"type":"string"}}}},"x-studio":{"type":"object","properties":{"appId":{"type":"string"},"nativeDemoId":{"type":"string"},"category":{"type":"string"},"architectureId":{"type":"string"},"narrative":{"type":"object"},"presenter":{"type":"object"},"frame":{"type":"object"},"tours":{"type":"array"}}}}}},
+    "build":{"type":"object","properties":{"repo":{"type":"string"},"views":{"type":"object"},"guide":{"type":"array","items":{"type":"object","required":["route"],"properties":{"route":{"type":"string"},"text":{"type":"string"},"specialist":{"type":"string"}}}}}}
+  }
+}
