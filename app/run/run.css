@@ -50,8 +50,8 @@
 .rt-badge.sample{border-color:rgba(209,168,91,.5);background:rgba(58,47,23,.45);color:#f0d7a4}
 .rt-badge.none{border-color:rgba(255,107,121,.45);background:rgba(74,29,39,.45);color:#ffc2c9}
 
-.rt-replay{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:var(--font-body);color:var(--muted)}
-.rt-replay select{min-height:34px;padding:0 10px;border:1px solid #304353;border-radius:7px;background:#0d141e;color:var(--text);font-size:var(--font-body)}
+.rt-replay{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:100%;font-size:var(--font-body);color:var(--muted)}
+.rt-replay select{min-width:0;max-width:100%;min-height:34px;padding:0 10px;border:1px solid #304353;border-radius:7px;background:#0d141e;color:var(--text);font-size:var(--font-body)}
 
 /* Honest offline banner. */
 .demo-status{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:start;padding:12px 14px;border:1px solid rgba(209,168,91,.38);border-radius:10px;background:rgba(58,47,23,.32);color:#ecdcb4;font-size:var(--font-body);line-height:1.5}

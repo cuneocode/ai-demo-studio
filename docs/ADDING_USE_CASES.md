@@ -379,6 +379,23 @@ rejects a use case without a platform connection contract.
 Record the chosen reference, files changed, commands run, results and any remaining
 integration dependency in the completion report.
 
+## Live validation for existing demos
+
+Use the demo's documented synthetic scenario and configured installation. Start
+the required runtime through Studio and open its native workspace in Codex's
+built-in browser. Check the run quality and its evidence:
+
+- Record the scenario, outcome, model provider and model name reported for the
+  run. Check required tool calls and the human review or approval step.
+- Check AI Defense mode and an actual verdict at the application or gateway
+  boundary. Confirm the documented block or withholding behavior where applicable.
+- Check the run's own trace acknowledgement, then match its ID in the configured
+  Splunk destination when destination access is available. Record Agent
+  Observability and optional OTLP separately. A health check or configured badge
+  supplies readiness evidence.
+- Exercise replay and unavailable states separately. Record blocked prerequisites
+  and distinguish live behavior from recorded evidence.
+
 ## JSON catalogs and hosted workspaces
 
 For presentation updates or an already deployed external application, follow

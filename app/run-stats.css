@@ -1,5 +1,5 @@
 /* Shared live stats row: Splunk Agent Observability and Cisco AI Defense, beneath every use case demo. */
-.run-stats{display:grid;gap:12px;margin-top:18px;padding:16px;border:1px solid #263447;border-radius:12px;background:linear-gradient(180deg,#0f1722,#0c131d)}
+.run-stats{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:18px;padding:16px;border:1px solid #263447;border-radius:12px;background:linear-gradient(180deg,#0f1722,#0c131d)}
 .run-stats .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .run-stats-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
 .run-stats-kicker{color:#9bb8ff;font-size:12px;font-weight:750;letter-spacing:.09em}
@@ -18,7 +18,7 @@
 .run-stats-session button:hover:not(:disabled){border-color:#5f8ff2;color:#fff}
 .run-stats-session button:disabled{opacity:.5;cursor:default}
 .run-stats-row{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:12px}
-.run-stats-card{display:grid;align-content:start;gap:12px;min-width:0;padding:14px;border:1px solid #2a3a4e;border-radius:10px;background:#111a26}
+.run-stats-card{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:12px;min-width:0;padding:14px;border:1px solid #2a3a4e;border-radius:10px;background:#111a26}
 .run-stats-card>header{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px}
 .run-stats-card>header strong{display:block;color:var(--text);font-size:var(--font-body);font-weight:700}
 .run-stats-card>header small{display:block;margin-top:2px;color:var(--muted);font-size:13px;line-height:1.4}
@@ -29,7 +29,7 @@
 .run-stats-chip.state-running{border-color:#3f5f9f;background:#16264a;color:#c4d6ff}
 .run-stats-chip.state-off,.run-stats-chip.state-missing,.run-stats-chip.state-unknown,.run-stats-chip.state-not_instrumented{border-color:#4a5568;background:#171f2b;color:#c6cfdb}
 .run-stats-chip.state-illustrative,.run-stats-chip.state-recorded,.run-stats-chip.state-sample{border-color:#6b5a2e;background:#272010;color:#ead29c}
-.run-stats-notice{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;padding:10px 12px;border:1px dashed #3a4a60;border-radius:8px;color:#d3dbe7;font-size:var(--font-meta);line-height:1.45}
+.run-stats-notice{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;padding:10px 12px;border:1px dashed #3a4a60;border-radius:8px;color:#d3dbe7;font-size:var(--font-meta);line-height:1.45;overflow-wrap:anywhere}
 .run-stats-notice button{display:inline-flex;align-items:center;gap:5px;min-height:30px;padding:0 10px;border:1px solid #3f5f9f;border-radius:7px;background:#16264a;color:#c4d6ff;font:inherit;font-size:13px;font-weight:650;cursor:pointer}
 .run-stats-notice button:hover{border-color:#5f8ff2;color:#fff}
 .run-stats-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;margin:0}
@@ -56,5 +56,5 @@
 .run-stats-spin{animation:run-stats-spin 1s linear infinite}
 @keyframes run-stats-spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.run-stats-spin{animation:none}}
-@media (max-width:1180px){.run-stats-row{grid-template-columns:1fr}}
+@media (max-width:1180px){.run-stats-row{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:640px){.run-stats{padding:12px}.run-stats-session{margin-left:0}}

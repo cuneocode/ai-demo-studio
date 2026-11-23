@@ -781,6 +781,7 @@ kbd { border: 1px solid #344653; background: #17232e; color: var(--muted); font:
 .demo-replay-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; order: -1; }
 .demo-replay-primary { display: inline-flex; gap: 7px; align-items: center; padding: 10px 14px; border: 1px solid #647eff; background: #3453c9; color: white; border-radius: 7px; cursor: pointer; font: inherit; font-weight: 550; }
 .demo-replay-primary:disabled { opacity: .5; cursor: default; }
+.demo-fallback, .demo-recording-options { min-width: 0; max-width: 100%; }
 .demo-recording-options > summary { cursor: pointer; color: var(--muted); font-size: var(--font-meta); }
 .demo-recording-options[open] > summary { margin-bottom: 8px; }
 .demo-review { padding: 14px 16px; border: 1px solid #b88d48; border-radius: 8px; background: rgba(176,128,48,.10); color: var(--text, inherit); line-height: 1.65; font-size: var(--font-body); }

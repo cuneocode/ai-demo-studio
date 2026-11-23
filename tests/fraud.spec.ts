@@ -139,6 +139,26 @@ test("never dead: a replay is labelled recorded and cannot decide; a down servic
   await expect(page.locator(".side-nav").getByRole("button", { name: "Studio settings" })).toBeVisible();
 });
 
+test("recording choices and replay stats fit a narrow viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockFraud(page);
+  const panel = await openFraud(page);
+  const noPageOverflow = () => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
+
+  await panel.getByText("Fallback: recorded demo", { exact: true }).click();
+  await panel.getByText("Other recordings", { exact: true }).click();
+  const choices = panel.getByRole("combobox", { name: "Replay a recorded run" });
+  await expect(choices).toBeVisible();
+  expect(await noPageOverflow()).toBe(true);
+
+  await choices.selectOption("cpp-orbit-escalate-live");
+  const stats = panel.getByRole("region", { name: "Live run stats" });
+  await expect(stats.getByText("Replaying", { exact: true })).toBeVisible();
+  expect(await noPageOverflow()).toBe(true);
+  await expect(stats.getByText("Completed", { exact: true }).first()).toBeVisible({ timeout: 35_000 });
+  expect(await noPageOverflow()).toBe(true);
+});
+
 test("a run in progress survives a switch to the Architecture tab", async ({ page }) => {
   await mockFraud(page);
   const panel = await openFraud(page);

@@ -115,12 +115,21 @@ Hosted control registration is an explicit administrative action. Review the
 policies, create the intended project/stream, then select **Register hosted
 controls** for that package. Build and Start do not register tenant resources.
 
-## JSON presentation content
+## Choose a native demo or a JSON content pack
 
-Studio can load approved JSON catalogs and presentation copy through its existing
-frontend. Export installed packages for compatible consumers, or add links to
-external workspaces. See [content packages](docs/CONTENT_PACKAGES.md) for export,
-configuration, native bindings, session overrides, and Neil-format compatibility.
+| What you want to change | Where to work |
+| --- | --- |
+| Add a Studio-native workflow, or change an existing demo's execution, fixtures, or architecture | Edit `demos/<demo-id>/` and update the applicable registries. Follow [the use-case authoring guide](docs/ADDING_USE_CASES.md). |
+| Update the default story, workspace copy, or action tour | Edit the authored files in the owning demo package. |
+| Create a presentation variant of an installed demo | Add an approved JSON content pack and bind the entry with `x-studio.nativeDemoId`. The installed demo supplies execution, architecture, model routing, and integrations. |
+| Present an existing external application | Add an approved JSON entry with its workspace URL. Studio provides the presentation shell and link. |
+
+Set `STUDIO_CONTENT_ROOT` to a directory containing `approved.json` and
+`modules/<slug>/content.json`. Validate it with `npm run studio:content:validate`,
+start Studio with that environment setting, and open `/?content=<slug>`.
+Use `npm run studio:content:export` to seed a pack or export the installed catalog
+for a compatible consumer. See [JSON content packs](docs/CONTENT_PACKAGES.md)
+for the exact file layout, bindings, refresh, and export commands.
 
 ## Demo packages
 
@@ -239,6 +248,10 @@ points preserve compatibility. Studio uses the demo packages directly.
    stats, app/tab navigation, refresh, saved runs, themes, and independent container
    lifecycle. Update catalog/empty-library tests for the new membership while
    retaining the original FSI compatibility assertions.
+5. For an existing live workflow, run its established synthetic scenario and
+   capture the model provider and result, configured AI Defense enforcement, and
+   Splunk delivery evidence. Report preview or mocked checks separately. See
+   [live validation](docs/ADDING_USE_CASES.md#live-validation-for-existing-demos).
 
 A coding-agent request can start with:
 

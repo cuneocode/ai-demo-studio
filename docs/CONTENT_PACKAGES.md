@@ -5,6 +5,27 @@ TypeScript packages remain the authoring source for installed demos. JSON suppli
 catalog entries, presentation copy, guides, and approved workspace references.
 Native React components and backend registrations retain their existing contracts.
 
+## Edit and test a pack
+
+1. For an installed demo, keep its default authoring files in
+   `demos/<demo-id>/`. Export a starter pack when you want a presentation variant
+   with the existing narrative, presenter notes, or guides.
+2. Edit the module's `modules/<slug>/content.json` and its entry in
+   `approved.json`. Keep the module slug and its use-case IDs stable for shared
+   links. Use `x-studio.nativeDemoId` for an installed workspace or `url` for an
+   external application.
+3. Run `STUDIO_CONTENT_ROOT=.studio/content-export npm run studio:content:validate`
+   with the path to your pack. Launch Studio with the same value and visit
+   `/?content=<slug>`. Check the
+   intended library, copy, guide, and workspace in Codex's built-in browser.
+4. Refresh the content launch URL after editing the JSON. Open `/` without a
+   content query to check the bundled experience. If an in-memory override masks
+   the edit, clear it with `{"load":"default"}` as described below.
+
+For a native binding, also open the regular demo route and confirm both entry
+points launch the same installed workspace. Follow the demo's live verification
+steps when execution or integrations change.
+
 ## Export the installed catalog
 
 Use Node 24. Export into a new directory so existing packages are preserved:

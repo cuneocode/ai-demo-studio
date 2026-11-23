@@ -41,6 +41,13 @@ reference implementations, registration points, UI conventions, and acceptance c
 - Adding a demo to an existing app uses the generic routes. Adding an industry also requires extending `APP_IDS`, `config/apps.ts`, and app enablement/route tests. Verify enabled-app access, cross-app rejection, and the route `/apps/<app-id>/demos/<demo-id>`.
 - Update catalog/count and empty-library test assumptions when populating a vertical. Preserve original identity assertions in `tests/fixtures/fsi-compatibility.json`; add coverage for the new demo. Register new browser filenames in `playwright.config.ts`.
 
+## Updating demos and JSON content packs
+
+- Edit the owning demo package for workflow, runtime, fixture, architecture, and default presentation changes. Preserve demo and runtime IDs, routes, app-scoped saved-run keys, and existing integration bindings.
+- Use a [JSON content pack](docs/CONTENT_PACKAGES.md) for a presentation variant or a link to an external workspace. Bind variants of an installed demo with `x-studio.nativeDemoId`. Use the demo's installed app ID and verify its library membership. JSON can supply copy and review steps. Native workflow actions, diagrams, model routing, and integration behavior are authored in code.
+- Register pack files under `STUDIO_CONTENT_ROOT`, run `npm run studio:content:validate`, and open `/?content=<slug>` in Codex's built-in browser. Check the installed workspace, supported copy, and app-scoped permissions. Use `npm run studio:content:export` for a portable snapshot of the current native catalog.
+- For an existing live demo, exercise its established synthetic scenario through Studio. Check the actual model response and provider, the AI Defense verdict and enforcement at the documented boundary, and trace export acknowledgement or matching evidence at the configured Splunk destination. Use the demo guide to identify required and optional integrations. Preview, mocks, and readiness checks are separate validation results.
+
 ## Implementation and checks
 
 - Route models through shared Studio configuration and `services/llm/studio_models.py`. Keep host configuration and process management in the Node layer, outside browser code and the worker runtime.
