@@ -67,14 +67,13 @@ Studio proxies `/api/interbank/*` to loopback port 8088. Health is
 `http://localhost:4200/api/interbank/health`, or directly
 `http://127.0.0.1:8088/api/health`. An allowed investigation takes about 1 to 2
 minutes. Stop the stack explicitly; closing Studio leaves it running.
-Installed PKI, credentials, and evidence persist under the ignored
-`services/interbank/.runtime/` and `services/interbank/evidence/` directories
-relative to the repository root.
+Generated PKI and credentials persist in `.runtime/`. Saved investigations and
+telemetry persist in `evidence/`. Both directories are ignored and live beside
+this README.
 Curated fallback playback in `recorded/` works in preview without Docker.
 
-After upgrading a checkout that previously ran Interbank, run
-`npm run interbank:up` from that checkout. Studio recreates containers that still
-reference the old source bind mounts and reuses the installed PKI and evidence.
+After upgrading an older checkout, restart Interbank through Studio. The package
+generates fresh PKI and starts with an empty live run history.
 
 Optional source tools include `labctl.py kickoff allowed` and
 `npm run interbank:verify -- <run-id>` (append `blocked` for a denied run).

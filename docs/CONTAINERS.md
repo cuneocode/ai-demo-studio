@@ -106,10 +106,14 @@ translation.
 
 ## Upgrade an existing Interbank lab
 
+Restart Interbank through Studio to recreate its containers with package-local
+mounts. The lab generates new PKI and starts with an empty live run history.
+It stores new data in `demos/interbank-a2a/backend/.runtime/` and
+`demos/interbank-a2a/backend/evidence/`.
+
 The earlier lab used the fixed Compose project `interbank-a2a`. Verify that its
 Compose working directory belongs to this checkout before retiring it. Stop and
 remove that old project without deleting volumes, then start Interbank from Studio.
-Keep `services/interbank/.runtime/` and `evidence/`; the new project uses them.
 
 ```sh
 docker inspect interbank-a2a-demo-1 --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}'

@@ -1,4 +1,4 @@
-# Preserve these paths for existing Interbank installs.
+# Ignore local files left by older Interbank installations.
 .env
 .env.*
 .runtime/

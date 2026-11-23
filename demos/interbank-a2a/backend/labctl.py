@@ -33,10 +33,8 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
 
 ROOT = Path(__file__).resolve().parent
-# Compose mounts the checkout's existing runtime state at the package path.
 REPOSITORY = ROOT.parents[2]
-STATE = ROOT if os.getenv("STUDIO_CONTAINER") == "1" else REPOSITORY / "services" / "interbank"
-RUNTIME = STATE / ".runtime"
+RUNTIME = ROOT / ".runtime"
 PKI = RUNTIME / "pki"
 ROLES = RUNTIME / "roles"
 FSI_ENV = Path(os.environ.get("FSI_ENV", REPOSITORY / ".env"))

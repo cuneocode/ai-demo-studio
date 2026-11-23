@@ -1,7 +1,7 @@
 // Trusted host operator. Only registered Compose projects can be controlled by the dashboard.
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, statfsSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, statfsSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { createConnection } from "node:net";
 import { runtimes, useCasePackages, type RuntimeSpec } from "../config/use-cases.ts";
@@ -116,15 +116,14 @@ async function containers(spec: RuntimeSpec): Promise<Container[]> {
 async function prepare(spec: RuntimeSpec, job?: Job, initialize = true, build = true) {
   prepareContainerConfig(spec);
   if (spec.id !== "interbank") return;
-  // Keep existing bind-mounted PKI and evidence at their installed paths.
-  const storage = path.join(ROOT, "services", "interbank");
-  const directory = path.join(storage, ".runtime");
-  mkdirSync(directory, { recursive: true });
-  for (const relative of ["runs", "telemetry/bank-a", "telemetry/bank-b"]) mkdirSync(path.join(storage, "evidence", relative), { recursive: true });
-  for (const file of ["vendor.env", "model.env"]) if (!existsSync(path.join(directory, file))) writeFileSync(path.join(directory, file), "", { mode: 0o600 });
   // The Python services share one image. Build it once before the helper runs.
   if (build) await compose(spec, ["build", "bank-a-agent"], job);
-  if (initialize) await compose(spec, ["run", "--rm", "--no-deps", "setup"], job);
+  if (initialize) {
+    const storage = path.join(ROOT, spec.source);
+    mkdirSync(path.join(storage, ".runtime"), { recursive: true, mode: 0o700 });
+    for (const relative of ["runs", "telemetry/bank-a", "telemetry/bank-b"]) mkdirSync(path.join(storage, "evidence", relative), { recursive: true });
+    await compose(spec, ["run", "--rm", "--no-deps", "setup"], job);
+  }
 }
 
 /** Stop preserves named volumes and saved runs. Registration of hosted controls is explicit. */

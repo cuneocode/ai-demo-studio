@@ -9,10 +9,11 @@ For alternate presentation copy or review steps, [bind a JSON content pack](../.
 to this installed demo.
 
 The package’s `backend/` owns the upstream multi-container stack, dependency
-locks, recordings and notices. Installed PKI and evidence remain at their
-existing paths under `services/interbank/`.
+locks, recordings, and notices. The same backend directory holds ignored
+`.runtime/` for generated credentials and PKI, and `evidence/` for runs and
+telemetry.
 
 `deploy/compose.yaml` is the registered runtime package. The runtime ID remains
-`interbank`; project namespace, API mapping, ports, and data mounts remain stable.
+`interbank`; Studio manages the project namespace, API mapping, and ports.
 Use the dashboard or `npm run studio:containers -- prepare interbank`.
 Hosted control registration remains an explicit separate action.

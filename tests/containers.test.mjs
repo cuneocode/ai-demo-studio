@@ -7,6 +7,7 @@ import http from 'node:http';
 import { runtimes, useCasePackages, runtimeForPath, rewriteRuntimePath } from '../config/use-cases.ts';
 import { containerUrl, prepareContainerConfig } from '../scripts/studio-container-config.ts';
 import { composeArgs, perform, projectName, queueOperation, runtimeLogs } from '../scripts/studio-services.ts';
+import { ROOT } from '../scripts/studio-env.ts';
 
 test('all eight executable demos have independent registered stacks; illustrative modules stay explicit', () => {
   assert.equal(useCasePackages.length, 10);
@@ -14,10 +15,16 @@ test('all eight executable demos have independent registered stacks; illustrativ
   assert.equal(new Set(runtimes.map(spec => spec.id)).size, 8);
   assert.equal(new Set(runtimes.map(spec => spec.port)).size, 8);
   for (const spec of runtimes) {
-    const compose = readFileSync(new URL(`../${spec.id === "interbank" ? "demos/interbank-a2a/backend/compose.yaml" : spec.compose}`, import.meta.url), 'utf8');
+    const compose = readFileSync(path.join(ROOT, spec.id === 'interbank' ? `${spec.source}/compose.yaml` : spec.compose), 'utf8');
     assert.match(compose, /volumes:/);
     assert.ok(compose.includes('127.0.0.1:'));
     assert.ok(projectName(spec).endsWith(`-${spec.id}`));
+    if (spec.id === 'interbank') {
+      assert.deepEqual(spec.storage, ['.runtime', 'evidence']);
+      assert.match(compose, /\.\/\.runtime\/roles\/console:\/runtime:ro/);
+      assert.match(compose, /\.\/evidence:\/evidence/);
+      assert.doesNotMatch(compose, /services\/interbank/);
+    }
   }
   assert.deepEqual(useCasePackages.filter(item => !item.runtime).map(item => item.id), ['kyc-processing', 'transaction-llm']);
 });
@@ -77,6 +84,15 @@ test('operator scopes configuration, preserves stopped data, and refuses unregis
     await Promise.all([perform(spec, 'build'), perform(spec, 'build')]);
     const queued = readFileSync(calls, 'utf8').trim().split('\n').map(JSON.parse);
     assert.deepEqual(queued.map(args => args.includes('build') ? 'build' : args[0]), ['info', 'build', 'info', 'build']);
+    const backend = path.join(directory, 'interbank-backend');
+    const interbank = { ...runtimes.find(item => item.id === 'interbank'), source: path.relative(ROOT, backend), port: spec.port };
+    await perform(interbank, 'build');
+    assert.equal(existsSync(backend), false);
+    writeFileSync(owned, JSON.stringify([{ State: 'running', Labels: 'com.docker.compose.service=demo' }]));
+    await perform(interbank, 'restart');
+    for (const directory of ['.runtime', 'evidence/runs', 'evidence/telemetry/bank-a', 'evidence/telemetry/bank-b']) {
+      assert.ok(existsSync(path.join(backend, directory)));
+    }
   } finally {
     await new Promise(resolve => server.close(resolve));
     for (const key of Object.keys(process.env)) if (!(key in previous)) delete process.env[key];

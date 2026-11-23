@@ -32,9 +32,9 @@ Healthcare, Manufacturing, Retail, and Public Sector. Add a reviewed workflow wi
 Market Research and Advisor Prep declare the shared `services/wealth` engine and
 image. Each has its own adapter, Compose package, port, model route, and data
 volume. Interbank's package includes its upstream multi-container Compose
-blueprint from its own `backend/`. Its local PKI and historical evidence stay
-in `services/interbank/.runtime/` and `services/interbank/evidence/` so existing
-bind mounts continue to work. Illustrative demos have no backend or Compose stack.
+blueprint from its own `backend/`. Generated PKI and live evidence persist in
+ignored directories alongside the blueprint. Illustrative demos have no backend
+or Compose stack.
 
 Compatibility exports in `app/`, service directory symlinks, and forwarding
 Compose files in `use-cases/` preserve existing imports and source-development

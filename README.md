@@ -229,8 +229,8 @@ services/llm/               Shared model routing
 ```
 
 Illustrative demos omit the backend and deployment stack. Research and Advisory
-share `services/wealth/`. Interbank’s upstream stack lives in
-`demos/interbank-a2a/backend/`. Existing service symlinks and Compose entry
+share `services/wealth/`. Interbank’s upstream stack and ignored local state live
+in `demos/interbank-a2a/backend/`. Existing service symlinks and Compose entry
 points preserve compatibility. Studio uses the demo packages directly.
 
 1. Choose an industry, stable demo ID, reference workflow, inputs, human decisions,

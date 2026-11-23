@@ -16,7 +16,7 @@ x-python: &python
   security_opt: [no-new-privileges:true]
   tmpfs: ["/tmp:rw,noexec,nosuid,size=128m"]
   restart: unless-stopped
-  env_file: [{path: ../../../services/interbank/.runtime/vendor.env, format: raw}]
+  env_file: [{path: ./.runtime/vendor.env, format: raw, required: false}]
 
 x-agent-env: &agent-env
   SPLUNK_AO_HOME_DIR: /tmp/.splunk
@@ -38,7 +38,7 @@ x-collector: &collector
   image: quay.io/signalfx/splunk-otel-collector:0.161.0@sha256:6cc58d3dca1e76464a043e060aca36fb44e0c7e283e7ad900aec873646014b84
   user: "${LAB_UID:-1000}:${LAB_GID:-1000}"
   command: ["--config=/etc/otel/collector.yaml"]
-  env_file: [{path: ../../../services/interbank/.runtime/vendor.env, format: raw}]
+  env_file: [{path: ./.runtime/vendor.env, format: raw, required: false}]
   restart: unless-stopped
 
 services:
@@ -53,14 +53,13 @@ services:
     command: [python, labctl.py, prepare]
     environment:
       SPLUNK_AO_HOME_DIR: /tmp/.splunk
-      STUDIO_CONTAINER: "1"
       FSI_ENV: /run/studio/source.env
       EXTRA_CA_FILE: /run/studio/ca.pem
       SSL_CERT_FILE: /run/studio/ca.pem
       PYTHONPATH: /app
     volumes:
       - ./labctl.py:/workspace/demos/interbank-a2a/backend/labctl.py:ro
-      - ../../../services/interbank/.runtime:/workspace/demos/interbank-a2a/backend/.runtime
+      - ./.runtime:/workspace/demos/interbank-a2a/backend/.runtime
       - ${STUDIO_RUNTIME_DIR:-../../../.studio/runtime}/models:/workspace/.studio:ro
       - ${STUDIO_RUNTIME_DIR:-../../../.studio/runtime}/interbank.env:/run/studio/source.env:ro
       - ${STUDIO_RUNTIME_DIR:-../../../.studio/runtime}/ca.pem:/run/studio/ca.pem:ro
@@ -68,7 +67,7 @@ services:
   bank-a-agent:
     <<: *python
     command: bank_a.agent
-    env_file: [{path: ../../../services/interbank/.runtime/vendor.env, format: raw}, {path: ../../../services/interbank/.runtime/model.env, format: raw}]
+    env_file: [{path: ./.runtime/vendor.env, format: raw, required: false}, {path: ./.runtime/model.env, format: raw, required: false}]
     environment:
       <<: *agent-env
       ORGANIZATION: bank-a
@@ -81,7 +80,7 @@ services:
       TLS_KEY_FILE: /runtime/agent.key
       TLS_CLIENT_CA_FILE: /runtime/bank-a-ca.crt
       GATEWAY_JWKS_FILE: /runtime/gateway-jwks.json
-    volumes: [../../../services/interbank/.runtime/roles/bank-a-agent:/runtime:ro, "${STUDIO_RUNTIME_DIR:-../../../.studio/runtime}/models:/studio:ro", ../../../config:/config:ro]
+    volumes: [./.runtime/roles/bank-a-agent:/runtime:ro, "${STUDIO_RUNTIME_DIR:-../../../.studio/runtime}/models:/studio:ro", ../../../config:/config:ro]
     # A studio model endpoint on this machine (Sparky's vLLM) is host.docker.internal.
     extra_hosts: ["host.docker.internal:host-gateway"]
     networks: [bank-a-internal, bank-a-egress, events]
@@ -96,7 +95,7 @@ services:
     command: ["-f", "/config/gateway.yaml"]
     volumes:
       - ./gateways/bank-a.yaml:/config/gateway.yaml:ro
-      - ../../../services/interbank/.runtime/roles/bank-a-gateway:/runtime:ro
+      - ./.runtime/roles/bank-a-gateway:/runtime:ro
     networks: [bank-a-internal, bank-a-console, bank-a-policy, bank-a-telemetry, interbank]
     depends_on: [policy-a, otel-collector-a]
 
@@ -114,14 +113,14 @@ services:
     <<: *collector
     volumes:
       - ./otel/collector.yaml:/etc/otel/collector.yaml:ro
-      - ../../../services/interbank/evidence/telemetry/bank-a:/evidence
+      - ./evidence/telemetry/bank-a:/evidence
     networks: [bank-a-telemetry, bank-a-egress]
 
   # ---------------------------------------------------------------- Bank B ----
   bank-b-agent:
     <<: *python
     command: bank_b.agent
-    env_file: [{path: ../../../services/interbank/.runtime/vendor.env, format: raw}, {path: ../../../services/interbank/.runtime/model.env, format: raw}]
+    env_file: [{path: ./.runtime/vendor.env, format: raw, required: false}, {path: ./.runtime/model.env, format: raw, required: false}]
     environment:
       <<: *agent-env
       ORGANIZATION: bank-b
@@ -134,7 +133,7 @@ services:
       TLS_KEY_FILE: /runtime/agent.key
       TLS_CLIENT_CA_FILE: /runtime/bank-b-ca.crt
       GATEWAY_JWKS_FILE: /runtime/gateway-jwks.json
-    volumes: [../../../services/interbank/.runtime/roles/bank-b-agent:/runtime:ro, "${STUDIO_RUNTIME_DIR:-../../../.studio/runtime}/models:/studio:ro", ../../../config:/config:ro]
+    volumes: [./.runtime/roles/bank-b-agent:/runtime:ro, "${STUDIO_RUNTIME_DIR:-../../../.studio/runtime}/models:/studio:ro", ../../../config:/config:ro]
     extra_hosts: ["host.docker.internal:host-gateway"]
     networks: [bank-b-internal, bank-b-egress, events]
     healthcheck:
@@ -146,7 +145,7 @@ services:
     command: ["-f", "/config/gateway.yaml"]
     volumes:
       - ./gateways/bank-b.yaml:/config/gateway.yaml:ro
-      - ../../../services/interbank/.runtime/roles/bank-b-gateway:/runtime:ro
+      - ./.runtime/roles/bank-b-gateway:/runtime:ro
     networks: [bank-b-internal, bank-b-policy, bank-b-telemetry, interbank]
     depends_on: [policy-b, otel-collector-b]
 
@@ -164,7 +163,7 @@ services:
     <<: *collector
     volumes:
       - ./otel/collector.yaml:/etc/otel/collector.yaml:ro
-      - ../../../services/interbank/evidence/telemetry/bank-b:/evidence
+      - ./evidence/telemetry/bank-b:/evidence
     networks: [bank-b-telemetry, bank-b-egress]
 
   # ------------------------------------------------- operations console + UI ----
@@ -186,10 +185,10 @@ services:
       STUDIO_MODELS_FILE: /studio/models.json
       STUDIO_MODELS_DEFAULT_FILE: /config/studio-models.default.json
     volumes:
-      - ../../../services/interbank/.runtime/roles/console:/runtime:ro
+      - ./.runtime/roles/console:/runtime:ro
       - ${STUDIO_RUNTIME_DIR:-../../../.studio/runtime}/models:/studio:ro
       - ../../../config:/config:ro
-      - ../../../services/interbank/evidence:/evidence
+      - ./evidence:/evidence
       - ./gateways:/app/gateways:ro
       - ./otel:/app/otel:ro
       - ./compose.yaml:/app/compose.yaml:ro

@@ -23,7 +23,7 @@ reference implementations, registration points, UI conventions, and acceptance c
 - `app/studio/`: shared platform shell, routes, retained workspaces, app-scoped storage, workspace frames, and explicit lazy workspace registry. `app/page.tsx` is a route wrapper.
 - `app/`: shared UI, run components, narrative/presenter indexes, settings, and guides. Demo-specific implementations belong in their packages.
 - `app/map/`: shared architecture registries, rendering, layout, and navigation. Authored topology, evidence, and editable exports live in the demo packages.
-- `services/common/` and `services/llm/`: shared run handling and model routing. `services/wealth/` is the shared Research/Advisory engine. Interbank owns its upstream stack under `demos/interbank-a2a/backend/`.
+- `services/common/` and `services/llm/`: shared run handling and model routing. `services/wealth/` is the shared Research/Advisory engine. Interbank owns its upstream stack and ignored local state under `demos/interbank-a2a/backend/`.
 - Legacy `app/` demo exports, `services/` symlinks, and `use-cases/` Compose forwarding files preserve existing integrations. Edit canonical package files and preserve compatibility paths. New demos need no legacy wrappers.
 - `scripts/`: local orchestration, settings/status APIs, doctor checks, and evidence generation.
 - `config/`: committed non-secret defaults. `fixtures/`: shared synthetic inputs and the fixture manifest. The owning demo supplies its own fixtures.
@@ -33,7 +33,7 @@ reference implementations, registration points, UI conventions, and acceptance c
 ## Adding an industry demo
 
 - Read [docs/ADDING_USE_CASES.md](docs/ADDING_USE_CASES.md) and follow its registration map. Establish the target industry, stable demo/runtime IDs, live or illustrative behavior, human decisions, synthetic inputs, and closest reference before implementation.
-- Keep domain UI, SDK dependencies, fixtures, Dockerfile, and Compose in `demos/<demo-id>/`. Share model endpoints, integration configuration, and platform controls through the existing contracts. Keep domain-specific dependencies isolated from other backends.
+- Keep domain UI, SDK dependencies, fixtures, Dockerfile, and Compose in `demos/<demo-id>/`. Use demo-owned named volumes or ignored package directories for live state. Share model endpoints, integration configuration, and platform controls through the existing contracts. Keep domain-specific dependencies isolated from other backends.
 - Register the definition in `config/demos.ts` and membership/category in `verticals/<app-id>/app.ts`. Register package workspace copy, narrative, presenter notes, tour, architecture, and live adapter in their explicit indexes. Asset paths in metadata do not load components or register stories.
 - For a new live workspace, extend `WorkspaceKey`, the lazy adapter map, and `UseCaseFrame.liveExperience`. Register `RuntimeSpec` in `config/use-cases.ts`. `useCasePackages`, proxies, service discovery, and `MODEL_USE_CASES` derive from those definitions. The authoring guide lists the remaining readiness, recording, and guide adapters.
 - Inherit the shared shell, tabs, model routes, credentials, AI Defense, and observability settings. Implement actual inspection, verdict enforcement, and telemetry in the calling runtime. Declaring `sharedBindings` alone establishes no integration.
