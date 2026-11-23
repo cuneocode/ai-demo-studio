@@ -61,7 +61,7 @@ integration state accurate.
 | Fraud GPU scorer | `FRAUD_SCORE_URL` | Separate scoring HTTP service, default `http://127.0.0.1:8000` |
 
 Vulnerability uses native `splunk-ao` with aliases from shared `GALILEO_*`
-settings; its [guide](../services/vulnerability/README.md) documents native
+settings; its [guide](../demos/code-vulnerability/backend/README.md) documents native
 `SPLUNK_AO_*` overrides. Interbank requires the root console URL and control URL
 explicitly and creates its own named observability project/stream.
 

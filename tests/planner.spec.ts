@@ -72,7 +72,7 @@ test("completed recorded usage reaches initialization without production assumpt
   await openCase(page);
   await replaySar(page);
   await openPlanner(page);
-  const { result } = JSON.parse(readFileSync("services/sar/data/recorded/structuring-harbor.json", "utf8"));
+  const { result } = JSON.parse(readFileSync("demos/sar-support/backend/data/recorded/structuring-harbor.json", "utf8"));
   const workload = (await seedOf(page)).workloads[0];
   expect(workload).toMatchObject({
     modelId: "zai-org/GLM-5.3",

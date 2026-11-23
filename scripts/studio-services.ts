@@ -116,9 +116,11 @@ async function containers(spec: RuntimeSpec): Promise<Container[]> {
 async function prepare(spec: RuntimeSpec, job?: Job, initialize = true, build = true) {
   prepareContainerConfig(spec);
   if (spec.id !== "interbank") return;
-  const directory = path.join(ROOT, "services/interbank/.runtime");
+  // Keep existing bind-mounted PKI and evidence at their installed paths.
+  const storage = path.join(ROOT, "services", "interbank");
+  const directory = path.join(storage, ".runtime");
   mkdirSync(directory, { recursive: true });
-  for (const relative of ["runs", "telemetry/bank-a", "telemetry/bank-b"]) mkdirSync(path.join(ROOT, "services/interbank/evidence", relative), { recursive: true });
+  for (const relative of ["runs", "telemetry/bank-a", "telemetry/bank-b"]) mkdirSync(path.join(storage, "evidence", relative), { recursive: true });
   for (const file of ["vendor.env", "model.env"]) if (!existsSync(path.join(directory, file))) writeFileSync(path.join(directory, file), "", { mode: 0o600 });
   // The Python services share one image. Build it once before the helper runs.
   if (build) await compose(spec, ["build", "bank-a-agent"], job);

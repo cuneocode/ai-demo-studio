@@ -32,8 +32,10 @@ if (live) {
 }
 if (args.includes('--source')) {
   row(spawnSync('uv', ['--version'], { stdio: 'ignore', timeout: 5000 }).status === 0, 'uv for source development', 'Install uv');
-  for (const directory of new Set(runtimes.filter(spec => spec.id !== 'interbank').map(spec => spec.directory))) {
-    row(existsSync(`${root}services/${directory}/.venv/bin/python`), `${directory} development environment`, `npm run ${directory}:install`);
+  for (const spec of new Map(runtimes.map(item => [item.directory, item])).values()) {
+    const command = spec.id === 'interbank'
+      ? `cd ${spec.source} && uv sync --frozen` : `npm run ${spec.directory}:install`;
+    row(existsSync(`${root}${spec.source}/.venv/bin/python`), `${spec.directory} development environment`, command);
   }
 }
 console.log(`\nStudio prerequisites: ${ready ? 'ready' : 'complete the required checks above'}`);

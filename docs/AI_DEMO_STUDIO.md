@@ -25,20 +25,23 @@ Healthcare, Manufacturing, Retail, and Public Sector. Add a reviewed workflow wi
 | Runtime identity, environment allowlist, bindings and storage | `config/use-cases.ts` |
 | Shared browser shell and retained workspace sessions | `app/studio/` |
 | Shared Python run handling and model routing | `services/common/`, `services/llm/` |
-| Shared architecture rendering and source registration | `app/map/` |
+| Demo architecture, evidence, and draw.io export | `demos/<demo>/architecture/` |
+| Demo fixtures | `demos/<demo>/fixtures/` or the backend data directory |
+| Shared architecture rendering and registries | `app/map/` |
 
 Market Research and Advisor Prep declare the shared `services/wealth` engine and
 image. Each has its own adapter, Compose package, port, model route, and data
 volume. Interbank's package includes its upstream multi-container Compose
-blueprint from `services/interbank`; its PKI, evidence, gateways, policies, and
-collectors retain their existing paths and ownership. Illustrative demos have
-no backend or Compose stack.
+blueprint from its own `backend/`. Its local PKI and historical evidence stay
+in `services/interbank/.runtime/` and `services/interbank/evidence/` so existing
+bind mounts continue to work. Illustrative demos have no backend or Compose stack.
 
 Compatibility exports in `app/`, service directory symlinks, and forwarding
 Compose files in `use-cases/` preserve existing imports and source-development
 commands. Maintain the canonical package files. Keep compatibility entries until
 existing integrations have moved to their canonical paths. Preserve symlinks when
 copying the checkout; Git clones retain them on supported development systems.
+The public diagram URLs point to each package’s editable export through symlinks.
 
 ## URLs and navigation
 

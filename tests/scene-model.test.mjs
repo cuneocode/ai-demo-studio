@@ -1,15 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { catalogs } from "../app/map/catalog.ts";
-import { BRAHE_GROUPS, projectBraheSystem } from "../app/map/brahe-system.ts";
+import { BRAHE_GROUPS, projectBraheSystem } from "../demos/brahe-bank/architecture/system.ts";
 import { continuousSystems } from "../app/map/continuous.ts";
-import { INTERBANK_GROUPS, collapseInterbankGroup, interbankStates, normalizeInterbankExpansion, projectInterbankSystem } from "../app/map/interbank-system.ts";
+import { INTERBANK_GROUPS, collapseInterbankGroup, interbankStates, normalizeInterbankExpansion, projectInterbankSystem } from "../demos/interbank-a2a/architecture/system.ts";
 import { evidence } from "../app/map/evidence.ts";
 import { collapseGenericGroup, coreGroupId, normalizeGenericExpansion, primaryGroupId, projectGenericSystem } from "../app/map/generic-system.ts";
 import { prepareLayout } from "../app/map/layout.ts";
 import { initialNav, reduceNav } from "../app/map/navigation.ts";
 import { edgeRelevanceFor, focusRoleFor, relevanceForBindingIds, resolveNodeBindings, routeIssues, routeScene, sourceActionsForNode, sourceRefsForNode, validateCase } from "../app/map/scene-model.ts";
-import sourceArtifacts from "../app/map/source-artifacts.json" with { type: "json" };
+import { artifacts } from "../app/map/source-artifacts.ts";
 import { frameScene } from "../app/map/viewport.ts";
 
 const evidenceIds = new Set(Object.keys(evidence));
@@ -228,7 +228,7 @@ test("canonical bindings drive attribution, focus, modes, and evidence", () => {
   assert.equal(brahe.scenes["brahe.observe"].nodes.some((node) => node.bindingIds?.includes(scopeBinding)), true);
   assert.equal(scope.nodes.some((node) => node.bindingIds?.includes(scopeBinding)), true);
   for (const binding of brahe.bindings) {
-    for (const id of binding.evidenceRefIds) assert.ok(sourceArtifacts.artifacts[id], `${binding.id} evidence ${id} was not captured`);
+    for (const id of binding.evidenceRefIds) assert.ok(artifacts[id], `${binding.id} evidence ${id} was not captured`);
   }
   assert.ok(sourceRefsForNode(brahe, service, "implemented").includes("brahe.controls.remote-call"));
   assert.equal(sourceActionsForNode(brahe, service, "implemented")[0].label, "Call");

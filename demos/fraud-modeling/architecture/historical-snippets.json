@@ -1,0 +1,10 @@
+{
+  "fraud.score": {
+    "excerpt": "async def score(request: ScoreRequest):\n    case = get_case(request.case_id)\n    if not case:\n        raise HTTPException(404, \"Unknown case.\")\n    if scorer.requested != \"fixture\":\n        await scorer.resolve()\n    if not scorer.ready:\n        raise HTTPException(503, scorer.detail)\n    started = time.monotonic()\n    run = SecurityRun()\n    token: Token = security_run.set(run)\n    try:\n        try:\n            result = await scorer.score(case)\n        except ScoreError as exc:\n            raise HTTPException(502, str(exc)) from None\n        cut = threshold()\n        narrative = {\"status\": \"disabled\", \"text\": None, \"security\": run.summary()}\n        if request.include_narrative:\n            narrative = await explain(case, result)\n        return {\n            \"case\": public_case(case),\n            \"probability\": result[\"probability\"],\n            \"threshold\": cut,\n            \"decision\": decision_for(result[\"probability\"], cut),\n            \"shap\": result[\"shap\"],\n            \"backend\": scorer.backend,\n            \"narrative\": narrative,\n            \"security\": narrative[\"security\"],\n            \"telemetry\": {\"splunk\": telemetry.delivery(case[\"id\"])},\n            \"duration_ms\": round((time.monotonic() - started) * 1000),\n        }",
+    "revision": "11f54cb"
+  },
+  "fraud.narrative": {
+    "excerpt": "    try:\n        await defense.inspect(messages, \"narrative_input\")\n        text = await _complete(config, messages)\n        await defense.inspect([{\"role\": \"assistant\", \"content\": text}], \"narrative_output\")\n    except DefenseBlocked:\n        return {\"status\": \"blocked\", \"text\": None, \"security\": run.summary()}\n    except DefenseUnavailable:\n        return {\"status\": \"unavailable\", \"text\": None, \"security\": run.summary()}\n    except Exception:\n        return {\"status\": \"unavailable\", \"text\": None, \"security\": run.summary()}\n    return {\"status\": \"generated\", \"text\": text, \"security\": run.summary()}",
+    "revision": "11f54cb"
+  }
+}

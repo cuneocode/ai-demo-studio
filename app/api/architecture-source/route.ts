@@ -3,22 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { evidence } from "../../map/evidence.ts";
-import captured from "../../map/source-artifacts.json" with { type: "json" };
-
-type Artifact = {
-  id: string;
-  path: string;
-  symbol: string;
-  revision: string;
-  start: number;
-  end: number;
-  hash: string;
-  highlightLines: number[];
-  html: string;
-  proves: string;
-};
-
-const artifacts = (captured as { artifacts: Record<string, Artifact> }).artifacts;
+import { artifacts } from "../../map/source-artifacts.ts";
 
 function repositoryRoot(relativeFile: string) {
   const starts = [process.cwd()];

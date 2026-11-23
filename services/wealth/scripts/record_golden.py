@@ -1,4 +1,4 @@
-"""Record a golden run from the running wealth service into data/recorded/ (after a person reviews it).
+"""Record a golden run from the running wealth service into the owning demo package (after a person reviews it).
 
     cd services/wealth && .venv/bin/python scripts/record_golden.py research HCYN
     cd services/wealth && .venv/bin/python scripts/record_golden.py research KSTL --scenario restricted --name research-kstl-restricted
@@ -26,7 +26,7 @@ SERVICE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SERVICE.parent / "common"))
 from runs import SCHEMA_VERSION, redact
 
-RECORDED = SERVICE / "data" / "recorded"
+from runlog import RECORDINGS
 
 
 def main() -> int:
@@ -54,7 +54,7 @@ def main() -> int:
         name = args.name or f"advisory-{record['id']}"
         payload = {"household_id": record["id"], "run_id": run_id}
         if args.with_research:
-            attached = json.loads((RECORDED / f"{args.with_research}.json").read_text(encoding="utf-8"))
+            attached = json.loads((RECORDINGS["research"] / f"{args.with_research}.json").read_text(encoding="utf-8"))
             payload["research"] = attached["result"]
         response = client.post("/api/wealth/advisory/brief", json=payload)
         title = f"{record['name']} · {record.get('scenario') or 'meeting prep'}"
@@ -85,10 +85,11 @@ def main() -> int:
         "note": "Recorded from a live run of the wealth service. Synthetic client, fictional or public market data.",
         "run": {key: value for key, value in page["run"].items() if key != "result"}, "events": events, "result": body,
     }
-    RECORDED.mkdir(parents=True, exist_ok=True)
-    path = RECORDED / f"{name}.json"
+    destination = RECORDINGS[args.kind]
+    destination.mkdir(parents=True, exist_ok=True)
+    path = destination / f"{name}.json"
     path.write_text(json.dumps(redact(doc), indent=1, default=str) + "\n", encoding="utf-8")
-    print(f"Recorded {len(events)} events to {path.relative_to(SERVICE)}")
+    print(f"Recorded {len(events)} events to {path.relative_to(SERVICE.parents[1])}")
     return 0
 
 

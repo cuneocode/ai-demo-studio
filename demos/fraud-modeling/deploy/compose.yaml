@@ -1,6 +1,6 @@
 # Managed by the trusted Studio operator. Configuration is prepared by studio:containers.
 include:
-  - path: ../../../services/fraud/compose.yaml
+  - path: ../backend/compose.yaml
 services:
   api:
     image: fsi-studio/fraud:local

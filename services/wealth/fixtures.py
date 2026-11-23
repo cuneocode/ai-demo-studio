@@ -5,7 +5,7 @@
 * fixtures/halcyon/market/<T>.json: fictional issuers (HCYN and its restricted-list peer).
   These are served from the fixture only; Yahoo is never asked for them (source kind "fictional").
 * fixtures/halcyon/{house-view,restricted-list,earnings-event,news}.json: research context.
-* fixtures/households/*.json: synthetic advisory clients and the book summary.
+* demos/client-advisory/fixtures/households/*.json: synthetic advisory clients and the book summary.
 """
 from __future__ import annotations
 
@@ -22,6 +22,12 @@ HOUSEHOLD_ID = re.compile(r"^[a-z][a-z0-9-]{1,60}$")
 def fixtures_root() -> Path:
     override = os.getenv("STUDIO_FIXTURES")
     return Path(override) if override else SERVICE.parents[1] / "fixtures"
+
+
+def households_dir() -> Path:
+    if os.getenv("STUDIO_FIXTURES"):
+        return fixtures_root() / "households"
+    return SERVICE.parents[1] / "demos" / "client-advisory" / "fixtures" / "households"
 
 
 def _read(path: Path):
@@ -101,7 +107,7 @@ def earnings_event(ticker: str) -> dict | None:
 
 
 def affected_households(ticker: str) -> dict | None:
-    book = _dict(fixtures_root() / "households" / "book-summary.json")
+    book = _dict(households_dir() / "book-summary.json")
     if not book:
         return None
     symbol = ticker.upper()
@@ -132,7 +138,7 @@ def research_context(ticker: str) -> dict:
 # -------------------------------------------------------------- households ----
 
 def _household_paths() -> list[Path]:
-    folder = fixtures_root() / "households"
+    folder = households_dir()
     if not folder.is_dir():
         return []
     return [path for path in sorted(folder.glob("*.json")) if path.stem != "book-summary"]

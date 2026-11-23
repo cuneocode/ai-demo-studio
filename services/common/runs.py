@@ -4,7 +4,7 @@ A run is an ordered list of events: plan, tool calls, model calls, guardrail and
 verdicts, human decisions, and the result. The studio polls
 GET /api/<svc>/runs/{id}?after=n while the run executes, and replays recorded runs
 (services/<svc>/data/recorded/<name>.json) at their original pacing when the live
-path is down. The event shape is a superset of services/interbank/lab/events.py, so
+path is down. The event shape is a superset of demos/interbank-a2a/backend/lab/events.py, so
 the same timeline renders either.
 
 Two ways to run:
@@ -104,11 +104,13 @@ class RunStore:
     """Runs persisted as metadata and an append-only event journal in the package's data volume."""
 
     def __init__(self, service: str, *, component: str, cache_dir: Path | None = None,
-                 recordings_dir: Path | None = None, keep: int = 50):
+                 recordings_dir: Path | None = None, keep: int = 50,
+                 recording_sources: tuple[Path, ...] = ()):
         self.service = service
         self.component = component
         self.cache_dir = cache_dir
         self.recordings_dir = recordings_dir
+        self.recording_sources = ((recordings_dir,) if recordings_dir else ()) + recording_sources
         self.keep = keep
         self._runs: dict[str, Run] = {}
         self._restore()
@@ -244,25 +246,28 @@ class RunStore:
 
     # ----------------------------------------------------------- recordings ----
     def recordings(self) -> list[dict]:
-        if not self.recordings_dir or not self.recordings_dir.is_dir():
-            return []
+        names = {path.stem for directory in self.recording_sources for path in directory.glob("*.json")}
         items = []
-        for path in sorted(self.recordings_dir.glob("*.json")):
-            doc = _read_json(path)
+        for name in sorted(names):
+            doc = self.recording(name)
             if not doc:
                 continue
             events = doc.get("events") or []
             items.append({
-                "name": path.stem, "title": doc.get("title") or path.stem, "scenario": doc.get("scenario"),
+                "name": name, "title": doc.get("title") or name, "scenario": doc.get("scenario"),
                 "recorded_at": doc.get("recorded_at"), "served_by": doc.get("served_by"),
                 "events": len(events), "duration_ms": _duration_ms(events), "synthetic": bool(doc.get("synthetic")),
             })
         return items
 
     def recording(self, name: str) -> dict | None:
-        if not self.recordings_dir or not RECORDING.fullmatch(name):
+        if not RECORDING.fullmatch(name):
             return None
-        return _read_json(self.recordings_dir / f"{name}.json")
+        for directory in self.recording_sources:
+            doc = _read_json(directory / f"{name}.json")
+            if doc:
+                return doc
+        return None
 
     def record_golden(self, run_id: str, name: str, *, title: str = "", synthetic: bool = False) -> Path:
         """Copies a finished run into data/recorded/ after a person has reviewed it."""

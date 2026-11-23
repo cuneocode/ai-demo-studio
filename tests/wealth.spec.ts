@@ -15,8 +15,8 @@ const STATUS = {
 
 const json = (path: string) => JSON.parse(readFileSync(resolve(path), "utf8"));
 const RECORDINGS = ["research-hcyn", "research-kstl-restricted", "research-hcyn-poisoned", "research-jpm-bank", "advisory-chuck-robbins", "advisory-okafor", "advisory-priya-raman"];
-const RECORDED = Object.fromEntries(RECORDINGS.map((name) => [name, reviewedRecording("wealth", name, json(`services/wealth/data/recorded/${name}.json`)) as ReturnType<typeof json>]));
-const HOUSEHOLDS = ["chuck-robbins", "okafor", "priya-raman"].map((id) => json(`fixtures/households/${id}.json`));
+const RECORDED = Object.fromEntries(RECORDINGS.map((name) => [name, reviewedRecording("wealth", name, json(`demos/${name.startsWith("research-") ? "market-research" : "client-advisory"}/fixtures/recorded/${name}.json`)) as ReturnType<typeof json>]));
+const HOUSEHOLDS = ["chuck-robbins", "okafor", "priya-raman"].map((id) => json(`demos/client-advisory/fixtures/households/${id}.json`));
 
 const OPENAI_FALLBACK = {
   provider: "openai", label: "OpenAI API", model: "gpt-5.6-luna", kind: "openai", private: false, external: true,

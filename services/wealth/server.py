@@ -2,7 +2,7 @@
 
 Localhost only. No CORS. Every POST accepts an optional client-chosen run_id and emits the shared run
 timeline (services/common/runs.py) while it works; GET /api/wealth/runs/{id}?after=n streams it and
-GET /api/wealth/recordings serves the recorded golden runs in data/recorded/.
+GET /api/wealth/recordings serves the recorded golden runs from the demo packages.
 
 Publishing a house-view update and approving a meeting brief are separate requests: each one re-checks
 the stored run (or, for a recorded run, the posted result, labelled as such) through Agent Control and
@@ -346,7 +346,7 @@ ORIGIN_LABEL = {"run": "Checked on this run", "recorded": "Checked on the record
 
 
 def _stored(run_id: str | None, posted: dict | None, service: str, recording: str | None = None) -> tuple[dict, str, str | None]:
-    """The run's own stored result, a golden recording from data/recorded/, or (last) a result the browser posted."""
+    """The run's own stored result, a golden recording from the demo packages, or (last) a result the browser posted."""
     run = store.get(run_id) if run_id else None
     if run and run.result:
         return run.result, "run", run.id

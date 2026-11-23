@@ -41,17 +41,8 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
-/services/banking/.venv/
-/services/fraud/.venv/
-/services/fraud/.cache/
-/services/briefing/.venv/
-/services/briefing/.cache/
 /services/wealth/.venv/
 /services/wealth/.cache/
-/services/sar/.venv/
-/services/sar/.cache/
-/services/vulnerability/.venv/
-/services/vulnerability/.cache/
 __pycache__/
 .pytest_cache/
 .ruff_cache/

@@ -5,7 +5,7 @@ NVIDIA's `financial-fraud-training` image on IBM TabFormer (synthetic card trans
 and serving run on Sparky (NVIDIA DGX Spark, GB10, aarch64). The Mac uses the live sidecar through
 an SSH tunnel, or replays recorded scores.
 
-Everything generated lives in the git-ignored `services/fraud/.cache/`. Never commit raw data,
+Everything generated lives in the git-ignored `demos/fraud-modeling/backend/.cache/`. Never commit raw data,
 graphs, or weights.
 
 ## Setup and startup
@@ -26,7 +26,7 @@ stack's data volume; closing Studio leaves its containers running. Credentials
 come from the operator's scoped root configuration and shared model settings.
 
 For optional source development, install with `npm run fraud:install`, run
-`(cd services/fraud && .venv/bin/python -m uvicorn server:app --host 127.0.0.1 --port 8012)`
+`(cd demos/fraud-modeling/backend && .venv/bin/python -m uvicorn server:app --host 127.0.0.1 --port 8012)`
 and `npm run dev` in separate terminals. Stop each with Ctrl+C. Source tests use
 `npm run fraud:test`. Container data and source-mode `.cache/` are separate.
 
@@ -90,8 +90,8 @@ Prerequisites:
 ```bash
 # on Sparky, in a checkout of this branch
 export NGC_API_KEY=...            # from your NGC account; do not echo it
-nohup services/fraud/scripts/sparky_m4.sh > services/fraud/.cache/m4.log 2>&1 &
-tail -f services/fraud/.cache/m4.log
+nohup demos/fraud-modeling/backend/scripts/sparky_m4.sh > demos/fraud-modeling/backend/.cache/m4.log 2>&1 &
+tail -f demos/fraud-modeling/backend/.cache/m4.log
 ```
 
 `sparky_m4.sh` runs these steps. A step whose output already exists is skipped; `FORCE=1` reruns
@@ -130,8 +130,8 @@ If a future image tag has no arm64 build, the fallback is a native aarch64 envir
 - **Recorded:** copy the small artifacts back. Do not copy the graph or weights.
 
   ```bash
-  rsync -av Sparky:<repo>/services/fraud/.cache/{studio_cases.json,scores.json,model_card.json,backtest.json,bench.json} \
-    services/fraud/.cache/
+  rsync -av Sparky:<repo>/demos/fraud-modeling/backend/.cache/{studio_cases.json,scores.json,model_card.json,backtest.json,bench.json} \
+    demos/fraud-modeling/backend/.cache/
   ```
 
   `scores.json` is keyed by the case ids in `studio_cases.json`. Copy both together.
@@ -194,10 +194,10 @@ filled in by hand.
 ## Tests for the scripts
 
 ```bash
-uv run --no-project --with numpy --with pandas --with pytest pytest services/fraud/scripts/tests
+uv run --no-project --with numpy --with pandas --with pytest pytest demos/fraud-modeling/backend/scripts/tests
 # plus the torch/xgboost engine smoke test (macOS: xgboost needs libomp; torch ships one)
 DYLD_LIBRARY_PATH=$(uv run --no-project --with torch python -c "import torch,os;print(os.path.dirname(torch.__file__)+'/lib')") \
-  uv run --no-project --with numpy --with pandas --with pytest --with torch --with xgboost pytest services/fraud/scripts/tests
+  uv run --no-project --with numpy --with pandas --with pytest --with torch --with xgboost pytest demos/fraud-modeling/backend/scripts/tests
 ```
 
 ## Stop GPU scoring

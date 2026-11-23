@@ -24,7 +24,7 @@ stack's data volume; closing Studio leaves its containers running. Credentials
 come from the operator's scoped root configuration and shared model settings.
 
 For optional source development, install with `npm run sar:install`, run
-`(cd services/sar && .venv/bin/python -m uvicorn server:app --host 127.0.0.1 --port 8015)`
+`(cd demos/sar-support/backend && .venv/bin/python -m uvicorn server:app --host 127.0.0.1 --port 8015)`
 and `npm run dev` in separate terminals. Stop each with Ctrl+C. Source tests use
 `npm run sar:test`. Container data and source-mode `.cache/` are separate.
 
@@ -60,7 +60,7 @@ OTLP export uses the shared Splunk realm/token or collector settings.
 
 ## Storage, fallback, and tests
 
-Synthetic scenarios are in `fixtures/studio/sar-scenarios.json`. The service stores
+Synthetic scenarios are in `demos/sar-support/fixtures/presentation-scenarios.json`. The service stores
 working runs in its named volume at `.cache/` and reads curated recordings from `data/recorded/`.
 **Fallback: recorded demo** preserves the recorded run and produces no new model
 calls or exports. Sample execution is labelled separately.

@@ -22,7 +22,7 @@ stack's data volume; closing Studio leaves its containers running. Credentials
 come from the operator's scoped root configuration and shared model settings.
 
 For optional source development, install with `npm run briefing:install`, run
-`(cd services/briefing && .venv/bin/python -m uvicorn server:app --host 127.0.0.1 --port 8013)`
+`(cd demos/company-briefing/backend && .venv/bin/python -m uvicorn server:app --host 127.0.0.1 --port 8013)`
 and `npm run dev` in separate terminals. Stop each with Ctrl+C. Source tests use
 `npm run briefing:test`. Container data and source-mode `.cache/` are separate.
 

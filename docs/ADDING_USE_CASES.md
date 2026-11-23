@@ -26,6 +26,8 @@ demos/<demo-id>/
     Workspace.tsx           Default-exported adapter using WorkspaceProps
     <Component>.tsx         Domain interaction
     <styles>.css            Scoped styles, imported by the component
+  fixtures/                 Demo-specific inputs and presentation cards
+  architecture/             Catalog, topology, platform paths and source evidence
   backend/                  Dedicated live backend
     pyproject.toml
     uv.lock
@@ -38,8 +40,8 @@ demos/<demo-id>/
 ```
 
 Illustrative demos have no runtime, backend, or Compose stack. Research and
-Advisory explicitly reuse `services/wealth/`; Interbank retains its upstream
-multi-container implementation in `services/interbank/`. Existing `app/` demo
+Advisory share `services/wealth/`. Interbank keeps its upstream multi-container
+implementation inside its package’s `backend/`. Existing `app/` demo
 exports, `services/` symlinks, and `use-cases/` Compose forwarding files preserve
 older integrations. New packages need no compatibility wrappers.
 
@@ -52,7 +54,7 @@ browser tests before implementing. Adapt its workflow and shared structures.
 | --- | --- | --- |
 | Case review with source records, findings, and human decisions | [SAR package](../demos/sar-support/README.md), [adapter](../demos/sar-support/ui/Workspace.tsx), [UI](../demos/sar-support/ui/SarInvestigation.tsx), [backend](../demos/sar-support/backend/server.py), [browser flow](../tests/sar.spec.ts) | `OperatorWorkspace`, source inputs, background runs, approvals, stats, recorded fallback |
 | Conversational assistant | [Banking package](../demos/brahe-bank/README.md), [adapter](../demos/brahe-bank/ui/Workspace.tsx), [UI](../demos/brahe-bank/ui/BankingDemo.tsx), [backend](../demos/brahe-bank/backend/server.py), [browser flow](../tests/banking.spec.ts) | Embedded chat, sessions, tool evidence, control verdicts, measured turn stats |
-| Agents across service boundaries | [Interbank package](../demos/interbank-a2a/README.md), [UI](../demos/interbank-a2a/ui/InterbankDemo.tsx), [backend guide](../services/interbank/README.md), [browser flow](../tests/interbank.spec.ts) | Multiple containers, A2A timeline, shared trace identity, gateway boundaries |
+| Agents across service boundaries | [Interbank package](../demos/interbank-a2a/README.md), [UI](../demos/interbank-a2a/ui/InterbankDemo.tsx), [backend guide](../demos/interbank-a2a/backend/README.md), [browser flow](../tests/interbank.spec.ts) | Multiple containers, A2A timeline, shared trace identity, gateway boundaries |
 
 Choose `fsi`, `healthcare`, `manufacturing`, `retail`, `public-sector`,
 `cyber-ai-foundry`, or `horizontal` as the owning app. Cyber AI Foundry groups
@@ -93,7 +95,7 @@ The `assets` paths describe ownership; they do not dynamically import files.
 | Audience story | Export the package narrative using `DemoNarrative`, then import/index it in `authoredNarratives` in [app/demo-narratives.ts](../app/demo-narratives.ts). Preserve stakeholder need, workflow change with human ownership, and operational outcome in that order. Include Cisco contributions, proposed deployment options, and evidence-backed references. |
 | Presenter guidance | Author package `presenter-notes.ts`, then import/index its notes in [app/presenter-notes.ts](../app/presenter-notes.ts). Align the problem, AI workflow, Cisco contributions, and handoffs with actual execution. |
 | Guided tour | Author package `tours.ts`, import its tours into `ALL` in [app/guide/tours/index.ts](../app/guide/tours/index.ts), and declare [anchors](../app/guide/anchors.ts). Extend service/action/condition types and handlers when introducing a new runtime or interaction. Existing `LIVE_RUNS` rewriting is specific to existing replay steps; inspect it before reusing those semantics. |
-| Architecture | Author the catalog/scenes in [app/map/catalog.ts](../app/map/catalog.ts) and the reference's supporting definitions, including [architecture-zoom.ts](../app/architecture-zoom.ts) where used. Declare platform paths in [platform-connections.ts](../app/map/drawio/platform-connections.ts), model callers in [implementation-views.ts](../app/map/drawio/implementation-views.ts), and source evidence in [evidence.ts](../app/map/evidence.ts). [drawio/registry.ts](../app/map/drawio/registry.ts) composes the catalog into the shared viewer. Follow [ARCHITECTURE_MAPS.md](../ARCHITECTURE_MAPS.md). |
+| Architecture | Author `catalog.ts`, `system-map.ts` or custom `pages.ts`, `platform.ts`, and source `evidence.ts` under the demo’s `architecture/`. Register the package in the [catalog](../app/map/catalog.ts), [platform registry](../app/map/drawio/platform-registry.ts), and [evidence index](../app/map/evidence.ts). Follow [ARCHITECTURE_MAPS.md](../ARCHITECTURE_MAPS.md). |
 | Offline inputs and recordings | Register explicit canonical directories/paths in `RECORDINGS` and `EXAMPLES` in [scripts/studio-api.ts](../scripts/studio-api.ts). Update example ownership checks for the new runtime. The existing recording-service URL matcher accepts letters only; extend and test it if the runtime ID includes other characters. Preserve app scope, reviewed provenance, and curated synthetic data. Verify access with the live stack stopped. |
 | Tests and documentation | Add package/backend guides, backend tests and test command, and meaningful browser flows. Register a new browser filename in [playwright.config.ts](../playwright.config.ts). Update affected catalog/count/empty-library assertions and the root README demo table. Preserve the original FSI compatibility baseline. |
 
@@ -103,14 +105,12 @@ persistent platform shell is [StudioApplication.tsx](../app/studio/StudioApplica
 A new package should load through the workspace registry. Shared platform changes
 belong in shared code when the workflow requires a reusable capability.
 
-For the standard generic architecture, add the demo to both `catalogs` in
-`app/map/catalog.ts` and `zoomMaps` in `app/architecture-zoom.ts`. Add its system
-summary in `app/map/drawio/generic-pages.ts` and runtime description in
-`app/map/drawio/platform-views.ts`. Register concrete `modelConsumers` and
-`callSources` in `implementation-views.ts`, plus the inspection, control, and
-telemetry callers required by its platform contract. These mappings refer to
-actual scope/cell identities. Copying a catalog ID without the corresponding
-topology and caller mappings leaves the generated architecture incomplete.
+For a generic diagram, index the package’s system map in `app/architecture-zoom.ts`.
+Declare the runtime description, concrete model consumers, source references, and
+inspection, control and telemetry callers in the package’s platform definition.
+Use actual scope and cell IDs. Register any captured evidence in
+`app/map/source-artifacts.ts` and publish the editable export at
+`public/diagrams/<demo-id>.drawio` using a symlink to the package file.
 
 ## Example: add a Manufacturing workflow
 

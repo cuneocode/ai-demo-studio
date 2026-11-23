@@ -2,7 +2,7 @@
 
 Every tool, deterministic or agent-called, goes through record_tool(): one agent.tool_call and one
 tool.result on the run timeline, a tool span on the Galileo trace (Splunk Agent Observability) when
-one is open, and a count for the stats row. The Deep Agent harness matches services/briefing/agent.py:
+one is open, and a count for the stats row. The Deep Agent harness matches demos/company-briefing/backend/agent.py:
 no shell tool and no general-purpose subagent.
 """
 from __future__ import annotations

@@ -1,7 +1,7 @@
 """Record a golden SAR investigation from the running service into data/recorded/ (after a person reviews it).
 
-    cd services/sar && .venv/bin/python scripts/record_golden.py mule-reyes
-    cd services/sar && .venv/bin/python scripts/record_golden.py explained-novak --decision no_file
+    cd demos/sar-support/backend && .venv/bin/python scripts/record_golden.py mule-reyes
+    cd demos/sar-support/backend && .venv/bin/python scripts/record_golden.py explained-novak --decision no_file
 
 Runs one live investigation (paid model calls when the chain answers from a hosted provider), plays the
 investigator and a separate second-line QA reviewer, and saves the run's events and result in the

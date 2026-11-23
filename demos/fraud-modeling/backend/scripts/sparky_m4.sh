@@ -2,9 +2,9 @@
 # End-to-end M4 run on Sparky (DGX Spark, aarch64): preprocess -> train -> cases ->
 # backtest -> bench -> serve -> record scores -> model card. Steps whose outputs
 # exist are skipped; FORCE=1 reruns everything. Long-running: start with
-#   nohup services/fraud/scripts/sparky_m4.sh > services/fraud/.cache/m4.log 2>&1 &
+#   nohup demos/fraud-modeling/backend/scripts/sparky_m4.sh > demos/fraud-modeling/backend/.cache/m4.log 2>&1 &
 # Needs NGC_API_KEY in the environment (never echoed). Downloads IBM TabFormer
-# (synthetic, ~266 MB tgz) to services/fraud/.cache/raw/ when missing.
+# (synthetic, ~266 MB tgz) to demos/fraud-modeling/backend/.cache/raw/ when missing.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CACHE="$ROOT/.cache"
@@ -24,7 +24,7 @@ if [[ -n "${NGC_API_KEY:-}" ]]; then
 fi
 if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
   if ! docker manifest inspect "$IMAGE" | grep -q '"architecture": "arm64"'; then
-    echo "No linux/arm64 manifest for $IMAGE; see services/fraud/README.md (aarch64 options)." >&2
+    echo "No linux/arm64 manifest for $IMAGE; see demos/fraud-modeling/backend/README.md (aarch64 options)." >&2
     exit 2
   fi
   docker pull "$IMAGE"

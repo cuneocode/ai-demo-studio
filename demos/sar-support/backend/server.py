@@ -3,7 +3,7 @@
 POST /api/sar/runs starts an investigation (the shared runs router, services/common/runs.py);
 GET /api/sar/runs/{id}?after=n streams it. The investigator and QA answer through
 /runs/{id}/review and /runs/{id}/qa. Recorded golden runs: GET /api/sar/recordings.
-All case data is synthetic (fixtures/sar/). Nothing is filed anywhere.
+All case data is synthetic (demos/sar-support/fixtures/cases-data/). Nothing is filed anywhere.
 """
 from __future__ import annotations
 

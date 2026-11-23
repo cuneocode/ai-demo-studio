@@ -4,9 +4,9 @@ import { readStored, writeStored, appStorageKey } from "./storage.ts";
 
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, lazy, Suspense, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import DemoCustomerContext from "../DemoCustomerContext";
+import DemoCustomerContext from "../../verticals/fsi/DemoCustomerContext";
 const CompanyBriefing = lazy(() => import("../CompanyBriefing"));
-import { vulnerabilityStory } from "../vulnerability-story";
+import { vulnerabilityStory } from "../../demos/code-vulnerability/narrative.ts";
 import ArchitectureMap from "../ArchitectureMap";
 import CapacityPlanning from "../CapacityPlanning";
 import StudioSettings from "../StudioSettings";
@@ -20,9 +20,9 @@ import { StudioNavContext, USE_CASE_TABS, type UseCaseTab as CaseTab } from "../
 import { IllustrativeRunStats, type ObservedRun } from "../RunStats";
 import { PlanningRunContext } from "../planning-evidence";
 import { setTheme, useTheme } from "../theme";
-import { loadCompanyProfile, type StoredCompanyProfile } from "../company-profile";
-import { loadResearchNote, switcherContextLabel, type StoredResearchNote } from "../research-note";
-import { loadAdvisoryBrief, type StoredAdvisoryBrief } from "../advisory-brief";
+import { loadCompanyProfile, type StoredCompanyProfile } from "../../verticals/fsi/company-profile";
+import { loadResearchNote, switcherContextLabel, type StoredResearchNote } from "../../verticals/fsi/wealth/research-note";
+import { loadAdvisoryBrief, type StoredAdvisoryBrief } from "../../demos/client-advisory/ui/advisory-brief";
 import { GuidedTourProvider, useGuide, useGuideControls, useGuideHost, type GuideControl } from "../guide/GuidedTour";
 import { guideAnchor } from "../guide/anchors";
 import { LIFECYCLE_TOUR_ID, TOURS, mainTourFor } from "../guide/tours";

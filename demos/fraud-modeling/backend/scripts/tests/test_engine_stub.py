@@ -2,7 +2,7 @@
 
 Skipped unless torch and xgboost are importable:
   uv run --no-project --with numpy --with pandas --with pytest --with torch --with xgboost \
-    pytest services/fraud/scripts/tests
+    pytest demos/fraud-modeling/backend/scripts/tests
 """
 from __future__ import annotations
 

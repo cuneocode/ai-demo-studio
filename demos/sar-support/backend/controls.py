@@ -1,6 +1,6 @@
 """SAR policies: hosted Splunk Agent Control when registered, the same rules locally otherwise.
 
-Banking pattern (services/banking/runtime_controls.py): deterministic code computes a typed
+Banking pattern (demos/brahe-bank/backend/runtime_controls.py): deterministic code computes a typed
 verdict, and a server-managed JSON control with a deny action enforces it. Only verdict
 booleans reach the control service, never case data.
 
@@ -109,7 +109,7 @@ class Controls:
             missing = self._missing()
             if missing:
                 self.detail = (f"SAR controls are not registered on the Agent Control tenant ({', '.join(missing)}); "
-                               "running the same rules as local checks. Register them with services/sar/setup_controls.py.")
+                               "running the same rules as local checks. Register them with demos/sar-support/backend/setup_controls.py.")
                 return
             self.mode = "hosted"
             self.detail = "Hosted Splunk Agent Control: SAR controls bound to the studio log stream."

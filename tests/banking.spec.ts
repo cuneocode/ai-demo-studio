@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 
-const RECORDED = JSON.parse(readFileSync(resolve("services/banking/data/recorded/scripted-prompts.json"), "utf8"));
+const RECORDED = JSON.parse(readFileSync(resolve("demos/brahe-bank/backend/data/recorded/scripted-prompts.json"), "utf8"));
 
 const STATUS = {
   checkedAt: "2026-10-12T12:00:00.000Z",

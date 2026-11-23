@@ -3,7 +3,7 @@
     cd services/wealth && .venv/bin/python scripts/build_fixtures.py
 
 Writes fixtures/halcyon/market/HCYN.json and KSTL.json (fictional issuers, synthetic prices in the
-wealth snapshot format) and fixtures/households/book-summary.json (240 synthetic households: 214 hold
+wealth snapshot format) and demos/client-advisory/fixtures/households/book-summary.json (240 synthetic households: 214 hold
 HCYN, 31 above 10%, 6 executives or affiliates). The SPY benchmark is the real public series from the
 committed NVDA snapshot (data/snapshots/NVDA.json), cut at the fictional as-of date.
 """
@@ -17,7 +17,7 @@ from pathlib import Path
 SERVICE = Path(__file__).resolve().parents[1]
 REPO = SERVICE.parents[1]
 MARKET = REPO / "fixtures" / "halcyon" / "market"
-BOOK = REPO / "fixtures" / "households" / "book-summary.json"
+BOOK = REPO / "demos" / "client-advisory" / "fixtures" / "households" / "book-summary.json"
 AS_OF = "2026-10-08"
 FETCHED = f"{AS_OF}T21:00:00+00:00"
 

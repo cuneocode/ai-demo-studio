@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { reviewedRecording } from '../scripts/recording-review.ts';
 const read = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
 test('research review removes the false claim without changing original evidence', () => {
-  const original = read('../services/wealth/data/recorded/research-hcyn.json');
+  const original = read('../demos/market-research/fixtures/recorded/research-hcyn.json');
   const before = JSON.stringify(original);
   const reviewed = reviewedRecording('wealth', 'research-hcyn', original);
   assert.equal(JSON.stringify(original), before);
@@ -17,7 +17,7 @@ test('research review removes the false claim without changing original evidence
   assert.deepEqual(reviewed.events, original.events);
 });
 test('interbank review distinguishes the pending v3 change from active v2', () => {
-  const original = read('../services/interbank/recorded/trd-847-allowed.json');
+  const original = read('../demos/interbank-a2a/backend/recorded/trd-847-allowed.json');
   const reviewed = reviewedRecording('interbank', 'trd-847-allowed', original);
   assert.match(reviewed.review, /active v2/);
   assert.match(reviewed.review, /2026-10-01/);

@@ -247,7 +247,7 @@ test("use case tabs are a keyboard tablist and opening another case resets to th
 });
 
 test("a run started in the demo keeps going across workspace tabs and is intact on return", async ({ page }) => {
-  const golden = JSON.parse(readFileSync("services/fraud/data/recorded/cpp-orbit-scripted.json", "utf8")) as { run: Record<string, unknown>; events: { kind: string }[] };
+  const golden = JSON.parse(readFileSync("demos/fraud-modeling/backend/data/recorded/cpp-orbit-scripted.json", "utf8")) as { run: Record<string, unknown>; events: { kind: string }[] };
   const pause = golden.events.findIndex((event) => event.kind === "hitl.request");
   let startedAt = 0;
   let served = false;

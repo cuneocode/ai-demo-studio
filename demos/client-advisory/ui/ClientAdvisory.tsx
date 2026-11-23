@@ -4,13 +4,13 @@ import { SourceInputs } from "../../../app/SourceInputs";
 
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { ArrowRight, Ban, Briefcase, Check, CircleAlert, FileText, History, Landmark, Loader2, Lock, NotebookPen, Play, ShieldAlert, ShieldCheck, UserCheck, Users } from "lucide-react";
-import type { StoredCompanyProfile } from "../../../app/company-profile";
-import DemoCustomerContext from "../../../app/DemoCustomerContext";
+import type { StoredCompanyProfile } from "../../../verticals/fsi/company-profile";
+import DemoCustomerContext from "../../../verticals/fsi/DemoCustomerContext";
 import {
   ADVISOR, LINE_SECTIONS, RECORDED_HOUSEHOLDS, SUPERVISOR, briefingPayload, fetchHouseholds, formatMoney, normalizeApproval, normalizeMeetingPrep,
   saveAdvisoryBrief, type ApprovalState, type HouseholdCard, type MeetingPrep, type NextBestAction, type StoredAdvisoryBrief,
-} from "../../../app/advisory-brief";
-import { IMPACT_LABEL, loadWealthRecording, parseApiError, rawResearchNote, type EvidenceItem, type StoredResearchNote } from "../../../app/research-note";
+} from "./advisory-brief";
+import { IMPACT_LABEL, loadWealthRecording, parseApiError, rawResearchNote, type EvidenceItem, type StoredResearchNote } from "../../../verticals/fsi/wealth/research-note";
 import DemoWorkflow from "../../../app/DemoWorkflow";
 import { OperatorWorkspace, OperatorEmpty, ExecutionSummary } from "../../../app/OperatorWorkspace";
 import RunStats, { startRun, useRunLedger } from "../../../app/RunStats";
@@ -18,13 +18,13 @@ import { newRunId } from "../../../app/run/events";
 import ProvenanceBadge, { type Provenance } from "../../../app/run/ProvenanceBadge";
 import RunTimeline from "../../../app/run/RunTimeline";
 import { useRun } from "../../../app/run/useRun";
-import { useHandoffs } from "../../../app/lifecycle-handoff";
+import { useHandoffs } from "../../../verticals/fsi/lifecycle-handoff";
 import { useStudioNav } from "../../../app/studio-nav";
 import { guideAnchor, guideSafeAnchor } from "../../../app/guide/anchors";
 import { useGuideActions } from "../../../app/guide/GuidedTour";
-import { ClaimRow, EvidenceCard, PolicyList, type Focus } from "../../../app/wealth-evidence";
-import { observeRecordedWealth, observeWealth, wealthService, wealthStats, type WealthService } from "../../../app/wealth-stats";
-import "../../../app/research.css";
+import { ClaimRow, EvidenceCard, PolicyList, type Focus } from "../../../verticals/fsi/wealth/wealth-evidence";
+import { observeRecordedWealth, observeWealth, wealthService, wealthStats, type WealthService } from "../../../verticals/fsi/wealth/wealth-stats";
+import "../../../verticals/fsi/wealth/research.css";
 import "./advisory.css";
 
 type Props = {

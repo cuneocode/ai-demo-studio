@@ -58,7 +58,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === fileURLToPath(new URL(
   await writeFile(new URL("../public/diagrams/canvas-layout.js", import.meta.url), await renderCanvasRuntime());
   await writeFile(new URL("../public/diagrams/components.js", import.meta.url), await renderComponentRuntime());
   for (const definition of Object.values(architectureDiagrams)) {
-    await writeFile(new URL(`../public${definition.asset}`, import.meta.url), await renderDrawio(definition));
-    console.log(`Updated public${definition.asset} (one canvas, ${definition.pages.length} scopes)`);
+    await writeFile(new URL(`../${definition.sourceAsset}`, import.meta.url), await renderDrawio(definition));
+    console.log(`Updated ${definition.sourceAsset} (one canvas, ${definition.pages.length} scopes)`);
   }
 }

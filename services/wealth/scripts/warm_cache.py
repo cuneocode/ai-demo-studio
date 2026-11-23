@@ -2,8 +2,8 @@
 
     cd services/wealth && .venv/bin/python scripts/warm_cache.py [--refresh] [--peers] [--commit-fixtures] [TICKER ...]
 
-Without tickers it warms the example chips (app/research-note.ts EXAMPLE_RESEARCH_TICKERS) and every
-holding in the synthetic households (fixtures/households). Fictional issuers are skipped: they are
+Without tickers it warms the example chips (demos/market-research/fixtures/research-scenarios.ts EXAMPLE_RESEARCH_TICKERS) and every
+holding in the synthetic households (demos/client-advisory/fixtures/households). Fictional issuers are skipped: they are
 served from fixtures/halcyon/market and never fetched. --peers also warms each discovered peer.
 --commit-fixtures writes a trimmed copy of each public snapshot to data/snapshots/, the committed
 offline fallback (public market data only, no keys).
@@ -20,9 +20,9 @@ SERVICE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SERVICE))
 
 from cache import get_snapshot  # noqa: E402
-from fixtures import SNAPSHOTS, fictional_tickers, fixtures_root  # noqa: E402
+from fixtures import SNAPSHOTS, fictional_tickers, households_dir  # noqa: E402
 
-CHIPS = SERVICE.parents[1] / "app" / "research-note.ts"
+CHIPS = SERVICE.parents[1] / "demos" / "market-research" / "fixtures" / "research-scenarios.ts"
 NOT_SECURITIES = {"CASH"}
 
 
@@ -37,7 +37,7 @@ def chip_tickers() -> list[str]:
 
 def household_tickers() -> list[str]:
     found: list[str] = []
-    for path in sorted((fixtures_root() / "households").glob("*.json")):
+    for path in sorted(households_dir().glob("*.json")):
         if path.stem == "book-summary":
             continue
         record = json.loads(path.read_text(encoding="utf-8"))

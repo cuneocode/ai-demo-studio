@@ -1,6 +1,6 @@
-import type { StoredCompanyProfile } from "../company-profile";
-import type { StoredResearchNote } from "../research-note";
-import type { StoredAdvisoryBrief } from "../advisory-brief";
+import type { StoredCompanyProfile } from "../../verticals/fsi/company-profile";
+import type { StoredResearchNote } from "../../verticals/fsi/wealth/research-note";
+import type { StoredAdvisoryBrief } from "../../demos/client-advisory/ui/advisory-brief";
 
 export type WorkspaceProps = {
   inStory: boolean; onBack: () => void; onAdd: () => void;

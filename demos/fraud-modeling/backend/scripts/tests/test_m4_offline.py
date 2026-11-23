@@ -1,7 +1,7 @@
 """Offline checks for the M4 scripts on a synthetic TabFormer-shaped CSV.
 
 Run: uv run --no-project --with numpy --with pandas --with pytest \
-       pytest services/fraud/scripts/tests
+       pytest demos/fraud-modeling/backend/scripts/tests
 """
 from __future__ import annotations
 

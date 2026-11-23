@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { ANCHORS, ANCHOR_PREFIXES } from "../app/guide/anchors.ts";
 import { LIFECYCLE_TOUR_ID, TOURS, mainTourFor } from "../app/guide/tours/index.ts";
 import { presenterNotes } from "../app/presenter-notes.ts";
-import { RESEARCH_SCENARIOS } from "../app/research-note.ts";
+import { RESEARCH_SCENARIOS } from "../demos/market-research/fixtures/research-scenarios.ts";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const tours = Object.values(TOURS);
@@ -93,7 +93,7 @@ test("auto actions only touch anchors marked data-guide-safe", () => {
 });
 
 test("recordings a tour names are committed", () => {
-  const dirs = ["services/fraud/data/recorded", "services/sar/data/recorded", "services/wealth/data/recorded", "services/banking/data/recorded", "services/briefing/data/recorded", "services/interbank/recorded"];
+  const dirs = ["demos/fraud-modeling/backend/data/recorded", "demos/sar-support/backend/data/recorded", "demos/market-research/fixtures/recorded", "demos/client-advisory/fixtures/recorded", "demos/brahe-bank/backend/data/recorded", "demos/company-briefing/backend/data/recorded", "demos/interbank-a2a/backend/recorded"];
   const exists = (name) => dirs.some((dir) => existsSync(join(ROOT, dir, `${name}.json`)));
   for (const tour of tours) {
     if (tour.recording) assert.ok(exists(tour.recording), `${tour.id}: recording ${tour.recording} is not committed`);
@@ -101,7 +101,7 @@ test("recordings a tour names are committed", () => {
       const arg = step.replay?.arg;
       if (!arg) continue;
       if (tour.useCaseId === "brahe-bank") {
-        const turns = JSON.parse(readFileSync(join(ROOT, "services/banking/data/recorded", `${tour.recording}.json`), "utf8")).result.turns.map((turn) => turn.id);
+        const turns = JSON.parse(readFileSync(join(ROOT, "demos/brahe-bank/backend/data/recorded", `${tour.recording}.json`), "utf8")).result.turns.map((turn) => turn.id);
         assert.ok(turns.includes(arg), `${tour.id} › ${step.id}: ${tour.recording} has no turn ${arg}`);
       } else if (tour.useCaseId === "market-research") {
         const scenario = RESEARCH_SCENARIOS.find((item) => item.id === arg);

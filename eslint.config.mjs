@@ -14,7 +14,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "services/**/.venv/**",
     // The interbank lab's standalone dashboard has its own toolchain and builds in Docker.
-    "services/interbank/demo/ui/**",
+    "demos/interbank-a2a/backend/demo/ui/**",
     "output/**",
     "public/vendor/**",
   ]),

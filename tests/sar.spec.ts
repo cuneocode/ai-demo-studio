@@ -4,7 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 /* SAR investigation, served from the committed golden recordings: every /api/sar call is mocked, so no model or AI Defense call is made. */
 
-const RECORDED = join(process.cwd(), "services/sar/data/recorded");
+const RECORDED = join(process.cwd(), "demos/sar-support/backend/data/recorded");
 type Recording = {
   name: string; title: string; scenario: string; recorded_at: string; served_by: unknown; synthetic: boolean; card: Record<string, unknown>;
   run: Record<string, unknown>; events: { id: string; kind: string; data?: Record<string, unknown> }[]; result: Record<string, unknown>;

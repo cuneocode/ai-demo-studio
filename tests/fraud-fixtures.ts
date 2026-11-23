@@ -4,7 +4,7 @@ import type { Page } from "@playwright/test";
 
 /* Card fraud triage, served from the committed golden recordings so every run is deterministic and needs no model. */
 
-const DATA = join(process.cwd(), "services/fraud/data");
+const DATA = join(process.cwd(), "demos/fraud-modeling/backend/data");
 const SCENARIOS = JSON.parse(readFileSync(join(DATA, "scenarios.json"), "utf8"));
 type Recording = { name: string; title: string; scenario: string; recorded_at: string; served_by: unknown; synthetic: boolean; run: Record<string, unknown>; events: { kind: string; data?: Record<string, unknown> }[] };
 const RECORDINGS: Recording[] = readdirSync(join(DATA, "recorded")).filter((file) => file.endsWith(".json"))

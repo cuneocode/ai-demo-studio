@@ -1,17 +1,5 @@
+# Preserve these paths for existing Interbank installs.
 .env
 .env.*
-!.env.example
 .runtime/
-.venv/
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.ruff_cache/
-evidence/runs/*
-!evidence/runs/.gitkeep
-*.sqlite
-*.sqlite-shm
-*.sqlite-wal
 evidence/
-node_modules/
-demo/ui/dist/

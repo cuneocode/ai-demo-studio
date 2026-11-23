@@ -312,7 +312,7 @@ def test_escalation_builds_the_sar_handoff(client):
     payment = handoff["transactions"][-1]
     assert (payment["amount"], payment["merchant"], payment["channel"]) == (286.4, "Orbit Digital Goods", "card_not_present")
     assert payment["at"].startswith("2026-10-02")
-    customer = json.loads((next(parent for parent in Path(__file__).resolve().parents if (parent / "config" / "studio-models.default.json").is_file()) / "fixtures" / "customers" / "lifecycle-customer.json").read_text())
+    customer = json.loads((next(parent for parent in Path(__file__).resolve().parents if (parent / "config" / "studio-models.default.json").is_file()) / "verticals" / "fsi" / "fixtures" / "lifecycle-customer.json").read_text())
     assert customer["id"] == handoff["customerId"]
 
 

@@ -48,12 +48,18 @@ test("JSON deep links render the shell while native membership stays enforced", 
 
 test("wealth UI and service messages carry no env-var names, script paths, or raw divergence ids (U6)", async () => {
   const banned = /FRED_API_KEY|serve\.sh|BEAT_VS_SPY/;
-  const ui = ["MarketResearch.tsx", "ClientAdvisory.tsx", "research-note.ts", "advisory-brief.ts", "wealth-stats.ts", "wealth-evidence.tsx"];
-  for (const name of ui) {
-    const uiPath = name === "MarketResearch.tsx" ? "demos/market-research/ui/MarketResearch.tsx" : name === "ClientAdvisory.tsx" ? "demos/client-advisory/ui/ClientAdvisory.tsx" : `app/${name}`;
+  const ui = [
+    "demos/market-research/ui/MarketResearch.tsx",
+    "demos/client-advisory/ui/ClientAdvisory.tsx",
+    "demos/client-advisory/ui/advisory-brief.ts",
+    "verticals/fsi/wealth/research-note.ts",
+    "verticals/fsi/wealth/wealth-stats.ts",
+    "verticals/fsi/wealth/wealth-evidence.tsx",
+  ];
+  for (const uiPath of ui) {
     const source = await readFile(new URL(uiPath, templateRoot), "utf8");
-    assert.doesNotMatch(source, banned, name);
-    assert.doesNotMatch(source, /NIM meeting brief|Entitled context|ENTITLED CONTEXT|>Conflicts</, name);
+    assert.doesNotMatch(source, banned, uiPath);
+    assert.doesNotMatch(source, /NIM meeting brief|Entitled context|ENTITLED CONTEXT|>Conflicts</, uiPath);
   }
   const service = new URL("services/wealth/", templateRoot);
   const python = ["server.py", "cache.py", "research.py", "advisory.py", "research_agent.py", "advisory_agent.py", "nim.py", "security.py", "providers/fred.py", "tools/conflicts.py"];
@@ -62,10 +68,12 @@ test("wealth UI and service messages carry no env-var names, script paths, or ra
     const source = (await readFile(new URL(name, service), "utf8")).replace(/os\.getenv\(\s*"[A-Z_]+"[^)]*\)/g, "");
     assert.doesNotMatch(source, banned, name);
   }
-  const recorded = new URL("data/recorded/", service);
-  for (const name of (await readdir(recorded)).filter((file) => file.endsWith(".json"))) {
-    const doc = await readFile(new URL(name, recorded), "utf8");
-    assert.doesNotMatch(doc, banned, name);
-    assert.doesNotMatch(doc, /[A-Z][A-Z0-9]+_API_KEY/, name);
+  for (const id of ["market-research", "client-advisory"]) {
+    const recorded = new URL(`demos/${id}/fixtures/recorded/`, templateRoot);
+    for (const name of (await readdir(recorded)).filter(file => file.endsWith(".json"))) {
+      const doc = await readFile(new URL(name, recorded), "utf8");
+      assert.doesNotMatch(doc, banned, name);
+      assert.doesNotMatch(doc, /[A-Z][A-Z0-9]+_API_KEY/, name);
+    }
   }
 });

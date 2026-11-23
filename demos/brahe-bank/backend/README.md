@@ -20,7 +20,7 @@ stack's data volume; closing Studio leaves its containers running. Credentials
 come from the operator's scoped root configuration and shared model settings.
 
 For optional source development, install with `npm run banking:install`, run
-`(cd services/banking && .venv/bin/python -m uvicorn server:app --host 127.0.0.1 --port 8011)`
+`(cd demos/brahe-bank/backend && .venv/bin/python -m uvicorn server:app --host 127.0.0.1 --port 8011)`
 and `npm run dev` in separate terminals. Stop each with Ctrl+C. Source tests use
 `npm run banking:test`. Container data and source-mode `.cache/` are separate.
 
@@ -88,7 +88,7 @@ the application then fails closed rather than quietly serving unguarded answers.
 Manual live verification (uses fictional inputs and real provider calls):
 
 ```sh
-PYTHONPATH=services/banking services/banking/.venv/bin/python services/banking/tests/live_controls.py
+PYTHONPATH=demos/brahe-bank/backend demos/brahe-bank/backend/.venv/bin/python demos/brahe-bank/backend/tests/live_controls.py
 ```
 
 Live tests cover off-topic blocking, AI Defense short-circuiting, invented score

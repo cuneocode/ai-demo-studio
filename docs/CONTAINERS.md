@@ -8,7 +8,7 @@ workflows in `demos/<demo-id>/`, then register membership in
 `verticals/<app-id>/app.ts`. Existing `services/` symlinks and `use-cases/`
 forwarding files support previous commands; canonical UI and deployment files
 live in each demo package. The shared Wealth engine and upstream Interbank
-blueprint retain their declared implementation boundaries.
+blueprint retain their implementation boundaries. The Interbank blueprint lives in its demo’s backend.
 
 Studio is a trusted local operator. It owns credentials, model routing, dashboard
 navigation, and Compose lifecycle commands. Each executable use case owns a Compose
@@ -130,8 +130,8 @@ covers the runtime package.
 
 1. Create `demos/<demo-id>/backend/` with its source, tests, pinned dependencies,
    and `uv.lock` for a Python backend. Pin upstream revisions/images and retain
-   notices. A declared shared engine or upstream multi-container blueprint can
-   retain its existing implementation boundary.
+   notices. A shared engine can keep its own package. Keep a demo’s upstream
+   blueprint and deployment adapter within the demo package.
 2. Add `deploy/Dockerfile` and `deploy/compose.yaml` to the package. Start from
    [SAR's Dockerfile](../demos/sar-support/deploy/Dockerfile) and
    [Compose file](../demos/sar-support/deploy/compose.yaml) for a dedicated Python

@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { SourceInspector } from "../../../app/map/inspector.tsx";
-import { interbankEvidence } from "../../../app/map/interbank-evidence.ts";
+import { interbankEvidence } from "../architecture/interbank-evidence.ts";
 import RunStats, { defenseFacts, useRunLedger, type Integration, type ObservedRun, type StatsCard } from "../../../app/RunStats";
 import { servedByFromEvents, type Recording, type RecordingMeta, type RunEvent } from "../../../app/run/events";
 import { useRun, useStickToBottom } from "../../../app/run/useRun";
@@ -40,7 +40,7 @@ type Lane = "a" | "wire" | "b";
 type Line = TimelineLine & { event: LabEvent; sources: string[] };
 type InterbankDemoProps = { onBack: () => void; onAdd: () => void; inStory: boolean; embedded?: boolean };
 
-/** Committed lab runs (services/interbank/recorded), served by the studio itself so they replay with the lab down. */
+/** Committed lab runs (demos/interbank-a2a/backend/recorded), served by the studio itself so they replay with the lab down. */
 const RECORDINGS_API = "/api/studio/recordings/interbank";
 
 const BANKS = {

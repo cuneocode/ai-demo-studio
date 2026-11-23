@@ -2,7 +2,7 @@
 
 Code computes each verdict (is the action reversible or analyst-approved; is the note free of a full card
 number or SSN). Only the verdict booleans reach Agent Control, where server-managed JSON controls deny when
-one is false: the same pattern as services/banking/runtime_controls.py and services/wealth/controls.py, on
+one is false: the same pattern as demos/brahe-bank/backend/runtime_controls.py and services/wealth/controls.py, on
 the same tenant settings. setup_controls.py creates and binds these controls; startup never does.
 
 When the controls are not bound or Agent Control is unreachable, the same verdicts are enforced locally and
@@ -143,7 +143,7 @@ class FraudControls:
         for name, expected in definitions().items():
             actual = configured.get(name, {}).get("control", {})
             if not actual:
-                raise RuntimeError("fraud controls are not bound to this log stream (run services/fraud/setup_controls.py)")
+                raise RuntimeError("fraud controls are not bound to this log stream (run demos/fraud-modeling/backend/setup_controls.py)")
             if any(actual.get(key) != expected[key] for key in ("enabled", "execution")) or actual.get("action", {}).get("decision") != "deny":
                 raise RuntimeError(f"control {name} is disabled or does not deny")
             if any((actual.get("scope") or {}).get(key) != expected["scope"][key] for key in ("step_names", "stages", "step_types")):

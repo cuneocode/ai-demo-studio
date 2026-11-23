@@ -27,9 +27,13 @@ export function statusWith(serviceId: string, patch: Record<string, unknown>) {
   return { ...STATUS_LIVE, services: STATUS_LIVE.services.map((service) => ((service.id === serviceId || (serviceId === "wealth" && ["research", "advisory"].includes(service.id))) ? { ...service, ...patch } : service)) };
 }
 
-const RECORDED_DIRS: Record<string, string> = {
-  banking: "services/banking/data/recorded", briefing: "services/briefing/data/recorded", fraud: "services/fraud/data/recorded",
-  sar: "services/sar/data/recorded", wealth: "services/wealth/data/recorded", interbank: "services/interbank/recorded",
+const RECORDED_DIRS: Record<string, string[]> = {
+  banking: ["demos/brahe-bank/backend/data/recorded"],
+  briefing: ["demos/company-briefing/backend/data/recorded"],
+  fraud: ["demos/fraud-modeling/backend/data/recorded"],
+  sar: ["demos/sar-support/backend/data/recorded"],
+  wealth: ["demos/client-advisory/fixtures/recorded", "demos/market-research/fixtures/recorded"],
+  interbank: ["demos/interbank-a2a/backend/recorded"],
 };
 
 function listing(dir: string) {
@@ -61,11 +65,11 @@ export async function mockStudio(page: Page, status: object = STATUS_LIVE) {
     const parts = new URL(route.request().url()).pathname.split("/").filter(Boolean);
     const service = parts[1] === "studio" ? parts[3] : parts[1];
     const name = parts[1] === "studio" ? parts[4] : parts[3];
-    const dir = RECORDED_DIRS[service];
-    if (!dir) return route.fulfill({ status: 404, json: { detail: "No recordings." } });
-    if (!name) return route.fulfill({ json: { recordings: listing(dir) } });
-    const file = resolve(dir, `${decodeURIComponent(name)}.json`);
-    return existsSync(file) ? route.fulfill({ json: reviewedRecording(service, name, JSON.parse(readFileSync(file, "utf8"))) }) : route.fulfill({ status: 404, json: { detail: "Not found." } });
+    const dirs = RECORDED_DIRS[service];
+    if (!dirs) return route.fulfill({ status: 404, json: { detail: "No recordings." } });
+    if (!name) return route.fulfill({ json: { recordings: dirs.flatMap(listing) } });
+    const file = dirs.map(dir => resolve(dir, `${decodeURIComponent(name)}.json`)).find(existsSync);
+    return file ? route.fulfill({ json: reviewedRecording(service, name, JSON.parse(readFileSync(file, "utf8"))) }) : route.fulfill({ status: 404, json: { detail: "Not found." } });
   });
   await page.route(/\/api\/studio\/status(?:\?.*)?$/, (route) => route.fulfill({ json: status }));
   return paid;

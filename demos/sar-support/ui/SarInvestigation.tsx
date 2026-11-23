@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import DemoWorkflow from "../../../app/DemoWorkflow";
 import { OperatorWorkspace, OperatorEmpty, ExecutionSummary } from "../../../app/OperatorWorkspace";
-import { useHandoffs } from "../../../app/lifecycle-handoff";
+import { useHandoffs } from "../../../verticals/fsi/lifecycle-handoff";
 import RunStats, { startRun, useRunLedger, type ObservedRun } from "../../../app/RunStats";
 import { newRunId, type RunEvent } from "../../../app/run/events";
 import ProvenanceBadge, { type Provenance } from "../../../app/run/ProvenanceBadge";
@@ -51,7 +51,7 @@ import {
   type SarPackage,
   type ScenarioCard,
   type Section,
-} from "../../../app/sar-case";
+} from "./sar-case";
 import { useStudioNav } from "../../../app/studio-nav";
 import { guideAnchor, guideSafeAnchor } from "../../../app/guide/anchors";
 import { useGuideActions } from "../../../app/guide/GuidedTour";

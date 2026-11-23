@@ -86,8 +86,9 @@ SVGs so icons travel with the `.drawio` file.
 
 - `app/map/drawio/registry.ts` registers each catalog, authored scope templates,
   and editable asset. `ArchitectureMap.tsx` always uses `DrawioExplorer`.
-- The templates in `brahe-pages.ts`, `interbank-pages.ts`, and `generic-pages.ts`
-  describe nested scopes. The generator composes them into one draw.io diagram.
+- Each demo authors its catalog, system map or custom pages, platform paths, and
+  evidence under `demos/<demo-id>/architecture/`. Shared templates and the
+  generator compose those scopes into one draw.io diagram.
   Keep the running viewer on that single diagram throughout navigation.
 - `canvas.ts` assigns each scope to an owning cell and resolves repeated context
   occurrences to ancestor cells. Explicit `owner` and `aliases` declarations
@@ -111,8 +112,9 @@ SVGs so icons travel with the `.drawio` file.
   application judges, hosted inspection, and policy services inside their owners.
 
 Run `npm run map:drawio` after changing scope templates, composition, topology,
-labels, or layout. Commit `public/diagrams/*.drawio` and the generated
-`public/diagrams/canvas-layout.js` and `components.js` with the source changes. Each `.drawio` file
+labels, or layout. Commit the exports under `demos/<demo-id>/architecture/` and
+updates to the shared public viewer scripts with the source changes. The stable
+public URLs resolve to their package exports. Each `.drawio` file
 contains one diagram with native collapsible groups and alternate bounds.
 **Editable diagram** downloads it for draw.io. Regeneration replaces direct
 edits to an exported file; carry lasting changes into the scope definitions.
@@ -124,7 +126,7 @@ It respects reduced motion. Theme changes update styles in place. Diagram
 rendering uses local assets.
 
 When linked source excerpts change, run `npm run map:sources` and commit the
-updated evidence artifacts.
+updated evidence artifacts in their owning packages.
 
 ## Verification
 

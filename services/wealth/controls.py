@@ -2,7 +2,7 @@
 
 Code computes each verdict (services/wealth/compliance.py, the claim verifier, the human decision);
 only the verdict booleans reach Agent Control, where server-managed JSON controls deny when one is
-false. This mirrors the banking demo (services/banking/runtime_controls.py) and reuses its tenant
+false. This mirrors the banking demo (demos/brahe-bank/backend/runtime_controls.py) and reuses its tenant
 settings. scripts/setup_controls.py creates and binds these controls; normal startup never does.
 
 When hosted controls are not bound or not reachable, the same verdicts are enforced locally and every

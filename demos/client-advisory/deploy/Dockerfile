@@ -20,7 +20,9 @@ COPY --chown=10001:10001 ${SOURCE_DIR}/ ./
 COPY --chown=10001:10001 services/common/ /app/services/common/
 COPY --chown=10001:10001 services/llm/studio_models.py /app/services/llm/studio_models.py
 COPY --chown=10001:10001 config/studio-models.default.json /app/config/studio-models.default.json
-COPY --chown=10001:10001 fixtures/ /app/fixtures/
+COPY --chown=10001:10001 fixtures/halcyon/ /app/fixtures/halcyon/
+COPY --chown=10001:10001 demos/client-advisory/fixtures/ /app/demos/client-advisory/fixtures/
+COPY --chown=10001:10001 demos/market-research/fixtures/ /app/demos/market-research/fixtures/
 ENV STUDIO_CONTAINER=1 STUDIO_MODELS_FILE=/run/studio/models/models.json \
     SSL_CERT_FILE=/run/studio/ca.pem REQUESTS_CA_BUNDLE=/run/studio/ca.pem
 EXPOSE 8000

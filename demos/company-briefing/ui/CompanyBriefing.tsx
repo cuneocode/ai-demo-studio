@@ -14,7 +14,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import CompanyBriefingRuntime from "../../../app/CompanyBriefingRuntime";
+import CompanyBriefingRuntime from "./CompanyBriefingRuntime";
 import {
   EXAMPLE_TICKERS,
   MAX_UPLOAD_BYTES,
@@ -34,14 +34,14 @@ import {
   type CompanyBriefingRecord,
   type IssuerCandidate,
   type StoredCompanyProfile,
-} from "../../../app/company-profile";
+} from "../../../verticals/fsi/company-profile";
 import ProvenanceBadge from "../../../app/run/ProvenanceBadge";
 import { guideAnchor } from "../../../app/guide/anchors";
 import { useGuideActions } from "../../../app/guide/GuidedTour";
 import { loadRecording, useRecordings } from "../../../app/run/ReplayPicker";
 import type { ServedBy } from "../../../app/run/events";
 import RunStats, { defenseFacts, defenseFrom, defenseIntegration, DEFENSE_TILES, servedByFrom, traceFacts, usageFrom, startRun, useRunLedger, type ObservedRun, type StatsCard } from "../../../app/RunStats";
-import "../../../app/briefing.css";
+import "./briefing.css";
 
 type CompanyBriefingProps = {
   embedded?: boolean;

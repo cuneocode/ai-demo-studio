@@ -31,5 +31,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "services/interbank/demo/ui"]
+  "exclude": ["node_modules", "demos/interbank-a2a/backend/demo/ui"]
 }

@@ -1,8 +1,8 @@
 """Record the scripted Brahe Bank prompts from the running studio into data/recorded/ (after a person reviews it).
 
-    cd services/banking && .venv/bin/python scripts/record_golden.py
+    cd demos/brahe-bank/backend && .venv/bin/python scripts/record_golden.py
 
-Posts each prompt in app/banking-scenarios.json as its own fresh conversation to POST /api/banking/chat
+Posts each prompt in demos/brahe-bank/fixtures/banking-scenarios.json as its own fresh conversation to POST /api/banking/chat
 through the studio, so every turn is a real call: AI Defense, Agent Control, and the model chain (a paid
 model call when the chain answers from a hosted provider). Refusals (403, 422) are kept with the
 security, controls and telemetry summaries the service returned. Writes one recording,
@@ -20,12 +20,11 @@ from pathlib import Path
 import httpx
 
 SERVICE = Path(__file__).resolve().parents[1]
-REPO = next(parent for parent in Path(__file__).resolve().parents if (parent / "config" / "studio-models.default.json").is_file())
 sys.path.insert(0, str((next(parent for parent in Path(__file__).resolve().parents if (parent / "config" / "studio-models.default.json").is_file()) / "services" / "common")))
 from runs import RECORDING, SCHEMA_VERSION, redact  # noqa: E402
 
 RECORDED = SERVICE / "data" / "recorded"
-SCENARIOS = REPO / "app" / "banking-scenarios.json"
+SCENARIOS = SERVICE.parent / "fixtures" / "banking-scenarios.json"
 
 
 def main() -> int:

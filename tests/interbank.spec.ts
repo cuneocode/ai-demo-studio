@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 
-const recording = (name: string) => JSON.parse(readFileSync(resolve(`services/interbank/recorded/${name}.json`), "utf8"));
+const recording = (name: string) => JSON.parse(readFileSync(resolve(`demos/interbank-a2a/backend/recorded/${name}.json`), "utf8"));
 const RECORDED = { "trd-847-allowed": recording("trd-847-allowed"), "trd-847-blocked": recording("trd-847-blocked") } as Record<string, { name: string; title: string; recorded_at: string; events: unknown[]; run: { report: string } }>;
 
 const STATUS = {

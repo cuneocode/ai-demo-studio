@@ -30,7 +30,7 @@ Run `npm run wealth:test` after installing the source environment.
 Load a company, inspect financials, earnings, peers, and news, then analyze its
 immutable evidence packet. The result is a cited 12-month outlook with a
 Buy/Hold/Sell assessment, drivers, and risks. The initial NVDA packet is bundled
-in `data/research/NVDA.json`. Other tickers and **Refresh latest** need Yahoo and
+in the Market Research package’s `fixtures/NVDA.json`. Other tickers and **Refresh latest** need Yahoo and
 news access. Data gaps and dates remain visible.
 
 Configure `AIDEFENSE_API_KEY` and `AIDEFENSE_REGION` to include inspected news.
@@ -78,7 +78,7 @@ checks. Confirm the control source and trace delivery in the run's Runtime detai
 ## Storage, fallback, and tests
 
 Working caches and saved runs live under `.cache/` in each stack's named volume. Bundled source snapshots are
-in `data/snapshots/`; curated recordings are in `data/recorded/`. Recorded advisory
+in `data/snapshots/`; curated recordings live under each demo’s `fixtures/recorded/`. Recorded advisory
 and older research runs preserve their original counts and create no new calls.
 Use the explicit recorded fallback controls where available.
 

@@ -16,16 +16,6 @@ export function genericDiagram(catalog: Catalog): { catalog: Catalog; pages: Dia
   const sceneId = `${catalog.id}.drawio.system`;
   const system = { ...projectGenericSystem(catalog, [primaryGroupId(catalog.id)], mode), id: sceneId };
   const scenes = { ...catalog.scenes, [sceneId]: system };
-  const summaries: Record<string, string> = {
-    "code-vulnerability": "The service runs Visa DeepAgents, validates finding evidence, and stages reviewed patches. Reviewers control adoption and local evidence preparation.",
-    "fraud-modeling": "GraphSAGE and XGBoost score first. The triage agent uses the score and evidence to support the analyst's disposition.",
-    "company-briefing": "Filing sources feed a supervisor and theme specialists. Grounding checks support the presenter's accept decision.",
-    "market-research": "Screen company evidence, draft a structured recommendation, and verify cited facts before review.",
-    "client-advisory": "Rules check suitability and size actions before the meeting brief is drafted. The advisor and supervisor approve release.",
-    "kyc-processing": "Document models suggest fields, registry checks supply context, and an analyst owns the onboarding decision.",
-    "sar-support": "The investigation agent gathers evidence, drafts a cited narrative, and submits it for investigator and QA review.",
-    "transaction-llm": "The payment pipeline validates proposed fields while an exception agent handles uncertain cases. Operations accepts the enrichment.",
-  };
   const role = (kind?: ZoomBox["kind"]): DiagramCell["role"] => kind === "ai" ? "agent" : kind === "human" ? "activity" : kind === "failure" ? "output" : "service";
   const primary = root.nodes.find((node) => node.drillInto) ?? root.nodes.find((node) => node.emphasis === "assisted") ?? root.nodes[1];
   const cell = (id: string, label: string, scene: string, instanceId: string, extra: Partial<DiagramCell> = {}): DiagramCell => ({
@@ -43,7 +33,7 @@ export function genericDiagram(catalog: Catalog): { catalog: Catalog; pages: Dia
     edges: root.relationships.map((edge) => ({ id: edge.id, from: edge.sourceInstanceId, to: edge.targetInstanceId, label: edge.label ?? "Next", relationshipIds: edge.modelRelationshipIds, kind: "request" })),
     note: mode === "proposed" ? "Proposed workflow. This use case has no running service in Studio." : "Select the assisted step to explore the system and its components.",
   }, {
-    id: "system", title: "System architecture", level: 1, parentId: "journey", purpose: summaries[catalog.id], autoLayout: true,
+    id: "system", title: "System architecture", level: 1, parentId: "journey", purpose: map.summary ?? map.note, autoLayout: true,
     layers: [...new Set(map.cores.map((core) => layerFor(core.id)).filter((layer): layer is DiagramLayer => Boolean(layer)))],
     cells: map.cores.map((core) => cell(core.id, core.title, sceneId, `${catalog.id}.core.${core.id}`, {
       role: role(core.kind), caption: compactCaption(core.subtitle), targetPageId: map.interiors[core.id] ? core.id : undefined, layer: layerFor(core.id),
@@ -78,6 +68,6 @@ export function genericDiagram(catalog: Catalog): { catalog: Catalog; pages: Dia
       note: root.modes.length === 1 && mode === "proposed" ? "Proposed design. Select a component for its intended behavior." : "Select a component for implementation details and available source evidence.",
     });
   }
-  pages[1] = systemLayout(catalog.id, pages[1]);
+  pages[1] = systemLayout(pages[1], map.layout);
   return { catalog: { ...catalog, scenes }, pages };
 }

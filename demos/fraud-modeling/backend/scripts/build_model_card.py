@@ -112,7 +112,7 @@ def main() -> None:
         "hardware": hardware,
         "provenance": {
             "git_sha": git("rev-parse", "HEAD"),
-            "git_dirty": bool(git("status", "--porcelain", "--", "services/fraud/scripts")),
+            "git_dirty": bool(git("status", "--porcelain", "--", "demos/fraud-modeling/backend/scripts")),
             "host_label": "Sparky · NVIDIA DGX Spark (GB10) · dev box, not Cisco hardware",
         },
         "missing": missing,

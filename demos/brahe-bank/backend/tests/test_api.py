@@ -130,7 +130,7 @@ def test_recorded_scripted_prompts_are_served_read_only(client):
     assert meta["synthetic"] is True and meta["recorded_at"]
     doc = client.get("/api/banking/recordings/scripted-prompts").json()
     turns = {turn["id"]: turn for turn in doc["result"]["turns"]}
-    scripted = json.loads((next(parent for parent in Path(__file__).resolve().parents if (parent / "config" / "studio-models.default.json").is_file()) / "app" / "banking-scenarios.json").read_text())
+    scripted = json.loads((Path(__file__).resolve().parents[2] / "fixtures" / "banking-scenarios.json").read_text())
     assert set(turns) == {item["id"] for item in scripted}
     assert all(turn["status"] == item["httpStatus"] for item in scripted for turn in [turns[item["id"]]])
     assert turns["success"]["body"]["answer"] and turns["ai-defense"]["body"]["security"]["event_ids"]

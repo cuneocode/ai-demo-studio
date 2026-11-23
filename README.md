@@ -133,7 +133,7 @@ configuration, native bindings, session overrides, and Neil-format compatibility
 | Advisor meeting prep | `advisory` / 8017 | Model and holdings/context; hosted client-data inference requires AI Defense | [Wealth](services/wealth/README.md) |
 | SAR investigation | `sar` / 8015 | Model; hosted client-data inference requires AI Defense | [SAR](demos/sar-support/backend/README.md) |
 | Code vulnerability analysis | `vulnerability` / 8016 | Model; pinned Visa harness is included in its image | [Vulnerability](demos/code-vulnerability/backend/README.md) |
-| Interbank settlement investigation | `interbank` / 8088 | Model, AI Defense, Agent Observability, explicit hosted control setup | [Interbank](services/interbank/README.md) |
+| Interbank settlement investigation | `interbank` / 8088 | Model, AI Defense, Agent Observability, explicit hosted control setup | [Interbank](demos/interbank-a2a/backend/README.md) |
 | KYC processing | Illustrative package | Proposed workflow with no executable backend | Library story and architecture |
 | Transaction intelligence | Illustrative package | Proposed workflow with no executable backend | Library story and architecture |
 
@@ -208,6 +208,8 @@ demos/<demo-id>/
   presenter-notes.ts         Presenter guidance
   tours.ts                  Guided walkthrough, when applicable
   ui/                       Workspace.tsx adapter, components, scoped styles
+  fixtures/                 Demo-specific synthetic inputs and scenario cards
+  architecture/             Topology, source evidence and editable draw.io export
   backend/                  Dedicated backend, locked dependencies, tests, data
   deploy/                   Dockerfile and compose.yaml for a live runtime
 config/demos.ts             Definition index
@@ -218,9 +220,9 @@ services/llm/               Shared model routing
 ```
 
 Illustrative demos omit the backend and deployment stack. Research and Advisory
-explicitly share `services/wealth/`; Interbank retains its upstream implementation
-in `services/interbank/`. Existing service symlinks and `use-cases/` Compose files
-preserve compatibility. New demo source belongs in its canonical package.
+share `services/wealth/`. Interbank’s upstream stack lives in
+`demos/interbank-a2a/backend/`. Existing service symlinks and Compose entry
+points preserve compatibility. Studio uses the demo packages directly.
 
 1. Choose an industry, stable demo ID, reference workflow, inputs, human decisions,
    and live or illustrative behavior. Keep new verticals free of FSI-specific

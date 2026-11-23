@@ -2,7 +2,7 @@ import { demoDefinitions } from "../config/demos.ts";
 /**
  * Model backends: the ordered chain of OpenAI-compatible endpoints each live use case
  * tries, first healthy one wins. Saved to .studio/models.json (git-ignored) and read
- * per request by services/llm/studio_models.py and services/interbank/lab/models.py.
+ * per request by services/llm/studio_models.py and demos/interbank-a2a/backend/lab/models.py.
  * Without a saved file, config/studio-models.default.json applies to both the studio
  * and the services. A provider stores the name of its key variable, never the key.
  */

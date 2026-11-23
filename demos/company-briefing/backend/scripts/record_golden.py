@@ -1,6 +1,6 @@
 """Record one company-briefing extract from the running studio into data/recorded/ (after a person reviews it).
 
-    cd services/briefing && .venv/bin/python scripts/record_golden.py
+    cd demos/company-briefing/backend && .venv/bin/python scripts/record_golden.py
 
 Uploads the fictional Halcyon Interconnect annual report (fixtures/halcyon/annual-report-fy2025.html)
 to POST /api/briefing/analyze through the studio with refresh=true, so the Deep Agent really runs:

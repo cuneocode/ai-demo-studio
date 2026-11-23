@@ -1,7 +1,7 @@
 """Records the committed golden triage runs in data/recorded/ through the real /runs API.
 
-    cd services/fraud && .venv/bin/python record_runs.py            # scripted goldens (no model)
-    cd services/fraud && .venv/bin/python record_runs.py --live     # plus live-agent goldens (Studio model chain)
+    cd demos/fraud-modeling/backend && .venv/bin/python record_runs.py            # scripted goldens (no model)
+    cd demos/fraud-modeling/backend && .venv/bin/python record_runs.py --live     # plus live-agent goldens (Studio model chain)
 
 Scores come from whichever scorer answers (live sidecar, recorded Sparky scores, or sample scores) and are
 labelled as such inside the recording. AI Defense and Agent Control verdicts are real when configured in .env.

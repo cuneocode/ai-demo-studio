@@ -128,7 +128,7 @@ test("card numbers appear only masked or as the 4111 test PAN", () => {
 });
 
 test("lifecycle customer carries what fraud, SAR, briefing, and advisory need", () => {
-  const customer = JSON.parse(read("fixtures/customers/lifecycle-customer.json"));
+  const customer = JSON.parse(read("verticals/fsi/fixtures/lifecycle-customer.json"));
   assert.equal(customer.household_id, "chuck-robbins");
   assert.equal(customer.person.ssn, "000-00-0158");
   assert.match(customer.person.phone, /555-0142$/);
@@ -152,7 +152,7 @@ test("lifecycle customer carries what fraud, SAR, briefing, and advisory need", 
 
 test("issuer, customer, and household agree where they overlap", (t) => {
   const issuer = JSON.parse(read("fixtures/halcyon/issuer.json"));
-  const customer = JSON.parse(read("fixtures/customers/lifecycle-customer.json"));
+  const customer = JSON.parse(read("verticals/fsi/fixtures/lifecycle-customer.json"));
   assert.equal(issuer.ticker, "HCYN");
   assert.equal(issuer.fictional, true);
   assert.ok(existsSync(join(root, issuer.annual_report)), "annual report path resolves");
@@ -164,7 +164,7 @@ test("issuer, customer, and household agree where they overlap", (t) => {
   assert.equal(customer.person.age, undefined);
   assert.equal(customer.person.date_of_birth, undefined);
 
-  const householdPath = "fixtures/households/chuck-robbins.json";
+  const householdPath = "demos/client-advisory/fixtures/households/chuck-robbins.json";
   if (!existsSync(join(root, householdPath))) {
     t.diagnostic(`${householdPath} not written yet; skipping household cross-checks`);
     return;
@@ -183,19 +183,21 @@ test("issuer, customer, and household agree where they overlap", (t) => {
 });
 
 test("SAR cases cite the fraud event, carry the injection, and agree with the scenarios", () => {
-  const scenarios = JSON.parse(read("fixtures/sar/scenarios.json")).scenarios;
-  const customer = JSON.parse(read("fixtures/customers/lifecycle-customer.json"));
+  const fixtures = "demos/sar-support/fixtures/cases-data";
+  const scenarios = JSON.parse(read(`${fixtures}/scenarios.json`)).scenarios;
+  const customer = JSON.parse(read("verticals/fsi/fixtures/lifecycle-customer.json"));
   const card = customer.accounts.find((account) => account.type === "credit_card").number_masked;
   assert.deepEqual(scenarios.map((item) => item.id), ["mule-reyes", "structuring-harbor", "explained-novak", "injection-reyes"]);
   for (const item of scenarios) {
-    assert.ok(existsSync(join(root, item.case)), `${item.id}: ${item.case} exists`);
-    const sar = JSON.parse(read(item.case));
+    const casePath = `${fixtures}/${item.case}`;
+    assert.ok(existsSync(join(root, casePath)), `${item.id}: ${casePath} exists`);
+    const sar = JSON.parse(read(casePath));
     assert.ok(sar.sample_draft?.sections?.length >= 6, `${item.id} has a sample narrative`);
     for (const section of sar.sample_draft.sections) {
       for (const sentence of section.sentences) assert.ok(sentence.cites.length, `${item.id}: "${sentence.text}" is cited`);
     }
   }
-  const mule = JSON.parse(read("fixtures/sar/cases/mule-reyes.json"));
+  const mule = JSON.parse(read("demos/sar-support/fixtures/cases-data/cases/mule-reyes.json"));
   assert.equal(mule.referral.linked_fraud_case, "cpp-orbit");
   const declined = mule.transactions.find((txn) => txn.status === "declined");
   assert.equal(declined.funding.card_masked, card, "the declined push uses the lifecycle customer's blocked card");
@@ -203,7 +205,7 @@ test("SAR cases cite the fraud event, carry the injection, and agree with the sc
   assert.match(injected, /Ignore all previous instructions/);
   assert.match(injected, new RegExp(TEST_PAN));
   assert.doesNotMatch(mule.documents.clean.flatMap((doc) => doc.segments).join(" "), /Ignore all previous/);
-  assert.equal(JSON.parse(read("fixtures/sar/cases/explained-novak.json")).sample_draft.recommendation, "no_file");
+  assert.equal(JSON.parse(read("demos/sar-support/fixtures/cases-data/cases/explained-novak.json")).sample_draft.recommendation, "no_file");
 });
 
 test("fixture paths stay inside the repo", () => {
@@ -213,8 +215,8 @@ test("fixture paths stay inside the repo", () => {
 });
 
 test("Chuck's saved advisor example is a current code-written sample, not a fabricated model recording", () => {
-  const sample = JSON.parse(read("services/wealth/data/recorded/advisory-chuck-robbins.json"));
-  const household = JSON.parse(read("fixtures/households/chuck-robbins.json"));
+  const sample = JSON.parse(read("demos/client-advisory/fixtures/recorded/advisory-chuck-robbins.json"));
+  const household = JSON.parse(read("demos/client-advisory/fixtures/households/chuck-robbins.json"));
   assert.equal(sample.served_by, null);
   assert.equal(sample.result.brief.mode, "fixture");
   assert.equal(sample.result.approval.status, "unavailable");

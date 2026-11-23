@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 
-const RECORDED = JSON.parse(readFileSync(resolve("services/briefing/data/recorded/halcyon-annual-report.json"), "utf8"));
+const RECORDED = JSON.parse(readFileSync(resolve("demos/company-briefing/backend/data/recorded/halcyon-annual-report.json"), "utf8"));
 
 const STATUS = {
   checkedAt: "2026-10-12T12:00:00.000Z",

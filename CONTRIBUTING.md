@@ -68,7 +68,7 @@ compiled CSS cache.
 Interbank's Python tests use a separate environment:
 
 ```sh
-cd services/interbank
+cd demos/interbank-a2a/backend
 uv sync --frozen
 uv run --frozen pytest tests -q
 ```

@@ -1,6 +1,6 @@
 """Explicit administrative operation: create and bind ONLY the fraud triage controls (controls.definitions()).
 
-    cd services/fraud && .venv/bin/python setup_controls.py
+    cd demos/fraud-modeling/backend && .venv/bin/python setup_controls.py
 
 Run after reviewing the definitions. Normal service startup never runs this. Existing controls with the
 same name must match exactly or the script refuses to overwrite them; unrelated controls are untouched.

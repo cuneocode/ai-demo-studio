@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { architectureDiagrams } from "../app/map/drawio/registry.ts";
 import { catalogs } from "../app/map/catalog.ts";
 import { diagramNode } from "../app/map/drawio/model.ts";
@@ -21,7 +21,7 @@ test("every architecture uses the shared continuous draw.io canvas", () => {
   assert.deepEqual(Object.keys(architectureDiagrams), Object.keys(catalogs));
   assert.equal(Object.keys(architectureDiagrams).length, 10);
 });
-test("all ten architectures expose connected Security, Observability, and AI Infrastructure views", () => {
+test("every architecture exposes connected Security, Observability, and AI Infrastructure views", () => {
   for (const [caseId, { pages, catalog }] of Object.entries(architectureDiagrams)) {
     const system = pages.find(page => page.id === "system");
     assert.deepEqual(system.layers, requiredLayers, caseId);
@@ -75,7 +75,10 @@ for (const [caseId, definition] of Object.entries(architectureDiagrams)) {
     }
   });
   test(`${caseId}: export contains one diagram with native collapsible groups`, async () => {
-    const xml = readFileSync(new URL(`../public${definition.asset}`, import.meta.url), "utf8");
+    const source = new URL(`../${definition.sourceAsset}`, import.meta.url);
+    const published = new URL(`../public${definition.asset}`, import.meta.url);
+    assert.equal(realpathSync(published), realpathSync(source));
+    const xml = readFileSync(source, "utf8");
     assert.equal(xml, await renderDrawio(definition));
     assert.equal((xml.match(/<diagram\b/g) ?? []).length, 1);
     assert.match(xml, /<diagram id="architecture"/);

@@ -1,6 +1,6 @@
 """Synthetic case files and the evidence ledger every narrative sentence must cite.
 
-Fixtures live at the repo root in fixtures/sar/ (scenarios, cases, typologies, adverse media).
+Package fixtures supply scenarios, cases, typologies, and adverse-media evidence.
 Every fact the agent can see is an evidence item with a stable id; tools return those items,
 and citations.py checks the narrative against them.
 """
@@ -16,8 +16,7 @@ from pathlib import Path
 from facts import extract
 from typologies import credits, debits, evaluate, posted
 
-ROOT = next(parent for parent in Path(__file__).resolve().parents if (parent / "config" / "studio-models.default.json").is_file())
-FIXTURES = ROOT / "fixtures" / "sar"
+FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "cases-data"
 DEADLINE_DAYS = 30
 
 TYPE_LABEL = {
@@ -55,9 +54,9 @@ def scenario(scenario_id: str | None) -> dict | None:
 
 @lru_cache(maxsize=8)
 def load_case(path: str) -> dict:
-    resolved = (ROOT / path).resolve()
+    resolved = (FIXTURES / path).resolve()
     if FIXTURES not in resolved.parents:
-        raise ValueError("Case files must live in fixtures/sar/.")
+        raise ValueError("Case files must live in the SAR package fixture directory.")
     return _json(resolved)
 
 

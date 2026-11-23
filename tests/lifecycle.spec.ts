@@ -7,7 +7,7 @@ import { mockFraud } from "./fraud-fixtures";
  * Real container execution and trace delivery are verified separately. */
 
 const TIPPING_OFF = /\bSARs?\b|suspicious activity|escalat|investigat|referral|FinCEN|money mule/i;
-const ADVISORY_RECORDING = JSON.parse(readFileSync(join(process.cwd(), "services/wealth/data/recorded/advisory-chuck-robbins.json"), "utf8"));
+const ADVISORY_RECORDING = JSON.parse(readFileSync(join(process.cwd(), "demos/client-advisory/fixtures/recorded/advisory-chuck-robbins.json"), "utf8"));
 
 async function freshStudio(page: Page) {
   await page.goto("/apps/fsi", { waitUntil: "networkidle" });
@@ -23,7 +23,7 @@ async function openFromLibrary(page: Page, title: string) {
 test("fraud escalation reaches the SAR inbox, and meeting prep sees only the reissued card", async ({ page }) => {
   test.setTimeout(150_000);
   await mockFraud(page);
-  const households = JSON.parse(readFileSync(join(process.cwd(), "fixtures/studio/wealth-households.json"), "utf8"));
+  const households = JSON.parse(readFileSync(join(process.cwd(), "demos/client-advisory/fixtures/presentation-households.json"), "utf8"));
   await page.route("**/api/advisory/households", route => route.fulfill({ json: households }));
   await page.route("**/api/advisory/health", route => route.fulfill({ json: {
     ready: true, nim: { status: "ok", label: "Mock private model", private: true },

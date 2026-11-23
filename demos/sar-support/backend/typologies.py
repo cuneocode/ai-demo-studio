@@ -1,6 +1,6 @@
 """Deterministic typology indicators: money mule, structuring, funnel account.
 
-Rules and thresholds come from fixtures/sar/typologies.json. No model is involved; the
+Rules and thresholds come from demos/sar-support/fixtures/cases-data/typologies.json. No model is involved; the
 agent cites these results, and the recommendation must agree with them.
 """
 from __future__ import annotations

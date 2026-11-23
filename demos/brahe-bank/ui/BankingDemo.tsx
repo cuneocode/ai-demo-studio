@@ -24,7 +24,7 @@ import {
   X,
 } from "lucide-react";
 import "./banking.css";
-import BankingRuntimeDetails from "../../../app/BankingRuntimeDetails";
+import BankingRuntimeDetails from "./BankingRuntimeDetails";
 import RunStats, { agentTraceIntegration, defenseFacts, defenseFrom, defenseIntegration, DEFENSE_TILES, servedByFrom, traceFacts, usageFrom, startRun, useRunLedger, type ObservedRun, type StatsCard } from "../../../app/RunStats";
 import ProvenanceBadge from "../../../app/run/ProvenanceBadge";
 import { loadRecording, useRecordings } from "../../../app/run/ReplayPicker";
@@ -33,7 +33,7 @@ import { readStored, writeStored, appStorageKey } from "../../../app/studio/stor
 import { useStudioNav } from "../../../app/studio-nav";
 import { guideAnchor } from "../../../app/guide/anchors";
 import { useGuideActions } from "../../../app/guide/GuidedTour";
-import suggestions from "./banking-scenarios.json";
+import suggestions from "../fixtures/banking-scenarios.json";
 
 type TraceStep = { name: string; kind: string };
 type Source = { title: string; text: string };
@@ -60,7 +60,7 @@ function answerText(text: string) {
 export type BankingDemoProps = { onBack: () => void; onAdd: () => void; inStory: boolean; embedded?: boolean };
 
 const BANKING_API = "/api/banking";
-/** One scripted prompt as services/banking/scripts/record_golden.py captured it from the live service. */
+/** One scripted prompt as demos/brahe-bank/backend/scripts/record_golden.py captured it from the live service. */
 type RecordedBody = Omit<TurnBody, "telemetry" | "security"> & { telemetry?: ResponseTelemetry; security?: NonNullable<ResponseTelemetry["security"]>; answer?: string; detail?: string; sources?: Source[] };
 type RecordedTurn = { id: string; label: string; prompt: string; expected?: string; status: number; body: RecordedBody };
 type ReplayTurn = { key: string; recordedAt: string; turn: RecordedTurn };

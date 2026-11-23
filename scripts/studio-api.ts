@@ -11,7 +11,7 @@ import { reviewedRecording } from "./recording-review.ts";
 import { handleStatus } from "./studio-status-api.ts";
 import { handleContent } from "./studio-content-api.ts";
 import { handlePlanner } from "./studio-planner-api.ts";
-import { runtimeForPath } from "../config/use-cases.ts";
+import { runtimeById, runtimeForPath } from "../config/use-cases.ts";
 import { requestScope, ScopeError } from "./studio-scope.ts";
 
 export { startMissing, stopAll } from "./studio-services.ts";
@@ -31,16 +31,18 @@ const ROUTES = {
 
 // Serve committed recordings without requiring the corresponding live services.
 // Read-only; same list shape and name rule as services/common/runs.py.
-const RECORDINGS: Record<string, URL> = Object.fromEntries(
-  ["banking", "fraud", "briefing", "wealth", "sar", "interbank"].map((id) => [id,
-    new URL(`../services/${id}/${id === "interbank" ? "" : "data/"}recorded/`, import.meta.url)]),
-);
+const RECORDINGS: Record<string, URL[]> = Object.fromEntries([
+  ...["banking", "fraud", "briefing", "sar", "interbank"].map(id => [
+    id, [new URL(`../${runtimeById(id)!.source}/${id === "interbank" ? "" : "data/"}recorded/`, import.meta.url)],
+  ]),
+  ["wealth", ["client-advisory", "market-research"].map(id => new URL(`../demos/${id}/fixtures/recorded/`, import.meta.url))],
+]);
 // Only committed demo data is exposed. Never proxy arbitrary paths into the filesystem.
 const EXAMPLES: Record<string, string> = {
-  "/api/studio/examples/fraud/scenarios": "../services/fraud/data/scenarios.json",
-  "/api/studio/examples/fraud/cases": "../services/fraud/data/cases.json",
-  "/api/studio/examples/wealth/households": "../fixtures/studio/wealth-households.json",
-  "/api/studio/examples/sar/scenarios": "../fixtures/studio/sar-scenarios.json",
+  "/api/studio/examples/fraud/scenarios": "../demos/fraud-modeling/backend/data/scenarios.json",
+  "/api/studio/examples/fraud/cases": "../demos/fraud-modeling/backend/data/cases.json",
+  "/api/studio/examples/wealth/households": "../demos/client-advisory/fixtures/presentation-households.json",
+  "/api/studio/examples/sar/scenarios": "../demos/sar-support/fixtures/presentation-scenarios.json",
 };
 async function handleExample(request: IncomingMessage, response: ServerResponse, path: string) {
   if (request.method !== "GET") return send(response, 405, { error: "Method not allowed." });
@@ -55,21 +57,22 @@ const RECORDINGS_PATH = /^\/api\/studio\/recordings\/([a-z]+)(?:\/([^/]+))?$/;
 
 type Json = Record<string, unknown>;
 
-async function readRecording(directory: URL, name: string): Promise<Json | null> {
-  try {
-    const value = JSON.parse(await readFile(fileURLToPath(new URL(`${name}.json`, directory)), "utf8"));
-    return value && typeof value === "object" && !Array.isArray(value) ? value as Json : null;
-  } catch {
-    return null;
+async function readRecording(directories: URL[], name: string): Promise<Json | null> {
+  for (const directory of directories) {
+    try {
+      const value = JSON.parse(await readFile(fileURLToPath(new URL(`${name}.json`, directory)), "utf8"));
+      if (value && typeof value === "object" && !Array.isArray(value)) return value as Json;
+    } catch { /* Try the next source. */ }
   }
+  return null;
 }
 
-async function recordingMetas(directory: URL) {
-  let names: string[] = [];
-  try { names = (await readdir(fileURLToPath(directory))).filter((file) => file.endsWith(".json")).map((file) => file.slice(0, -5)).sort(); } catch { /* none yet */ }
+async function recordingMetas(directories: URL[]) {
+  const files = await Promise.all(directories.map(directory => readdir(fileURLToPath(directory)).catch(() => [])));
+  const names = new Set(files.flat().filter(file => file.endsWith(".json")).map(file => file.slice(0, -5)));
   const items = [];
-  for (const name of names.filter((item) => RECORDING.test(item))) {
-    const doc = await readRecording(directory, name);
+  for (const name of [...names].filter(item => RECORDING.test(item)).sort()) {
+    const doc = await readRecording(directories, name);
     if (!doc) continue;
     const events = Array.isArray(doc.events) ? doc.events as Json[] : [];
     const stamps = events.map((event) => event?.ns).filter((ns): ns is number => typeof ns === "number");
@@ -85,10 +88,10 @@ async function handleRecordings(request: IncomingMessage, response: ServerRespon
   if (request.method !== "GET") return send(response, 405, { error: "Method not allowed." });
   const scope = requestScope(request);
   if (!scope.runtimeIds.includes(service) && !(service === "wealth" && scope.runtimeIds.some(id => ["research", "advisory"].includes(id)))) throw new ScopeError("These recordings are outside this app's library.", 403);
-  const directory = RECORDINGS[service];
-  if (!directory) return send(response, 404, { error: "No recordings for that service." });
-  if (name === undefined) return send(response, 200, { recordings: await recordingMetas(directory) });
-  const doc = RECORDING.test(name) ? await readRecording(directory, name) : null;
+  const directories = RECORDINGS[service];
+  if (!directories) return send(response, 404, { error: "No recordings for that service." });
+  if (name === undefined) return send(response, 200, { recordings: await recordingMetas(directories) });
+  const doc = RECORDING.test(name) ? await readRecording(directories, name) : null;
   return doc ? send(response, 200, reviewedRecording(service, name, doc)) : send(response, 404, { error: "Unknown recording." });
 }
 

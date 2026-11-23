@@ -1,7 +1,7 @@
 """Manual live regression for the exact UI presets; real model/API calls.
 
-Run from the project root with services/banking/.venv/bin/python
-services/banking/tests/live_scenarios.py. Each preset starts a fresh conversation.
+Run from the project root with demos/brahe-bank/backend/.venv/bin/python
+demos/brahe-bank/backend/tests/live_scenarios.py. Each preset starts a fresh conversation.
 No policy overrides or canned responses; mismatched outcomes fail the test.
 """
 import json
@@ -12,7 +12,7 @@ import httpx
 
 
 def main():
-    cases = json.loads((next(parent for parent in Path(__file__).resolve().parents if (parent / "config" / "studio-models.default.json").is_file()) / "app/banking-scenarios.json").read_text())
+    cases = json.loads((Path(__file__).resolve().parents[2] / "fixtures" / "banking-scenarios.json").read_text())
     with httpx.Client(base_url=os.getenv("BANKING_TEST_URL", "http://127.0.0.1:8011"), timeout=150) as client:
         for case in cases:
             response = client.post("/api/banking/chat", json={"message": case["prompt"]})

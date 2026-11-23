@@ -129,7 +129,7 @@ test('Research evidence binds immutable packets to accepted fields and article t
  const graph=researchKnowledge();
  assert.match(graph.nodes.find(node=>node.id==='market').detail,/immutable packet id/);
  assert.match(graph.nodes.find(node=>node.id==='evidence').detail,/value, unit and display string/);
- assert.match(graph.note,/services\/wealth\/data\/research\/NVDA.json/);
+ assert.match(graph.note,/demos\/market-research\/fixtures\/NVDA\.json/);
  assert.match(graph.note,/hash identifies the exact packet/);
  assert.ok(!graph.nodes.some(node=>/embedding model|vector index|tavily/i.test(`${node.title} ${node.detail}`)));
 });

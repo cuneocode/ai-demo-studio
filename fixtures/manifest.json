@@ -18,7 +18,7 @@
       "synthetic": true
     },
     {
-      "path": "fixtures/customers/lifecycle-customer.json",
+      "path": "verticals/fsi/fixtures/lifecycle-customer.json",
       "description": "Shared lifecycle customer Chuck Robbins: fake PII, KYC, accounts (checking, card ****1188, brokerage linked to household chuck-robbins), the cpp-orbit fraud event, and an empty SAR alerts list.",
       "owner": "shell",
       "demos": ["fraud-modeling", "sar", "company-briefing", "market-research", "client-advisory"],
@@ -67,126 +67,126 @@
       "synthetic": true
     },
     {
-      "path": "fixtures/households/chuck-robbins.json",
+      "path": "demos/client-advisory/fixtures/households/chuck-robbins.json",
       "description": "Advisory household for Chuck Robbins: holdings, accounts, IPS, estate, goals, CRM notes, service events.",
       "owner": "wealth",
       "demos": ["client-advisory"],
       "synthetic": true
     },
     {
-      "path": "fixtures/households/okafor.json",
+      "path": "demos/client-advisory/fixtures/households/okafor.json",
       "description": "Second advisory household in the advisor's book.",
       "owner": "wealth",
       "demos": ["client-advisory"],
       "synthetic": true
     },
     {
-      "path": "fixtures/households/priya-raman.json",
+      "path": "demos/client-advisory/fixtures/households/priya-raman.json",
       "description": "Third advisory household in the advisor's book.",
       "owner": "wealth",
       "demos": ["client-advisory"],
       "synthetic": true
     },
     {
-      "path": "fixtures/households/book-summary.json",
+      "path": "demos/client-advisory/fixtures/households/book-summary.json",
       "description": "Advisor book summary across households.",
       "owner": "wealth",
       "demos": ["client-advisory"],
       "synthetic": true
     },
     {
-      "path": "services/fraud/data/fixture_scores.json",
+      "path": "demos/fraud-modeling/backend/data/fixture_scores.json",
       "description": "Sample fraud scores for the studio cases, keyed by case id; used when the scoring model is offline.",
       "owner": "fraud",
       "demos": ["fraud-modeling"],
       "synthetic": true
     },
     {
-      "path": "services/fraud/data/scenarios.json",
+      "path": "demos/fraud-modeling/backend/data/scenarios.json",
       "description": "Card fraud triage scenario cards (CPP at Orbit Digital Goods for card ****1188, card testing, illustrative ATO, a clean control, two attacks) and the illustrative mule/ACH note.",
       "owner": "fraud",
       "demos": ["fraud-modeling", "sar"],
       "synthetic": true
     },
     {
-      "path": "services/fraud/data/recorded/cpp-orbit-live.json",
+      "path": "demos/fraud-modeling/backend/data/recorded/cpp-orbit-live.json",
       "description": "Golden triage run for the cpp-orbit event on card ****1188: live triage agent (labelled model fallback), block and reissue, approved proactive reissue.",
       "owner": "fraud",
       "demos": ["fraud-modeling"],
       "synthetic": true
     },
     {
-      "path": "services/fraud/data/recorded/cpp-orbit-scripted.json",
+      "path": "demos/fraud-modeling/backend/data/recorded/cpp-orbit-scripted.json",
       "description": "Golden triage run for the cpp-orbit event with a scripted investigation (no model).",
       "owner": "fraud",
       "demos": ["fraud-modeling"],
       "synthetic": true
     },
     {
-      "path": "services/fraud/data/recorded/attack-dispute-injection-live.json",
+      "path": "demos/fraud-modeling/backend/data/recorded/attack-dispute-injection-live.json",
       "description": "Golden triage run where AI Defense blocks an instruction injected into the cardholder dispute note; live triage agent.",
       "owner": "fraud",
       "demos": ["fraud-modeling"],
       "synthetic": true
     },
     {
-      "path": "services/fraud/data/recorded/attack-note-pii-scripted.json",
+      "path": "demos/fraud-modeling/backend/data/recorded/attack-note-pii-scripted.json",
       "description": "Golden triage run where a full card number and SSN in the analyst note are blocked, masked, and the case is escalated with a SAR handoff.",
       "owner": "fraud",
       "demos": ["fraud-modeling", "sar"],
       "synthetic": true
     },
     {
-      "path": "fixtures/sar/cases/mule-reyes.json",
+      "path": "demos/sar-support/fixtures/cases-data/cases/mule-reyes.json",
       "description": "SAR money-mule case: Kendall Reyes, a new checking account receiving P2P credits funded by cards from the cpp-orbit compromise (including the lifecycle customer's ****1188), cashed out by ATM and crypto. Carries a clean and an injected explanation letter, and a sample narrative.",
       "owner": "sar",
       "demos": ["sar"],
       "synthetic": true
     },
     {
-      "path": "fixtures/sar/cases/structuring-harbor.json",
+      "path": "demos/sar-support/fixtures/cases-data/cases/structuring-harbor.json",
       "description": "SAR structuring case: Harbor Lane Auto Detailing LLC, sub-$10,000 cash deposits across branches followed by an international wire, with a teller note and a sample narrative.",
       "owner": "sar",
       "demos": ["sar"],
       "synthetic": true
     },
     {
-      "path": "fixtures/sar/cases/explained-novak.json",
+      "path": "demos/sar-support/fixtures/cases-data/cases/explained-novak.json",
       "description": "SAR control case: Gabriel Novak, a large wire explained by a documented home sale; the expected outcome is no SAR.",
       "owner": "sar",
       "demos": ["sar"],
       "synthetic": true
     },
     {
-      "path": "fixtures/sar/typologies.json",
+      "path": "demos/sar-support/fixtures/cases-data/typologies.json",
       "description": "Typology catalogue for the SAR demo: money mule, structuring, and funnel account indicators with thresholds and match rules.",
       "owner": "sar",
       "demos": ["sar"],
       "synthetic": true
     },
     {
-      "path": "fixtures/sar/adverse-media.json",
+      "path": "demos/sar-support/fixtures/cases-data/adverse-media.json",
       "description": "Allowlisted adverse-media source for the SAR demo (FinCrime Wire, fictional) with articles on fictional entities.",
       "owner": "sar",
       "demos": ["sar"],
       "synthetic": true
     },
     {
-      "path": "fixtures/sar/scenarios.json",
+      "path": "demos/sar-support/fixtures/cases-data/scenarios.json",
       "description": "SAR scenario cards: mule, structuring, explained activity, and the prompt-injection variant of the mule case.",
       "owner": "sar",
       "demos": ["sar"],
       "synthetic": true
     },
     {
-      "path": "fixtures/studio/sar-scenarios.json",
+      "path": "demos/sar-support/fixtures/presentation-scenarios.json",
       "owner": "shell",
       "description": "Presentation cards derived from SAR synthetic case fixtures; served without Python.",
       "demos": ["sar-support"],
       "synthetic": true
     },
     {
-      "path": "fixtures/studio/wealth-households.json",
+      "path": "demos/client-advisory/fixtures/presentation-households.json",
       "owner": "shell",
       "description": "Presentation cards derived from hypothetical households; served without Python.",
       "demos": ["client-advisory"],

@@ -30,7 +30,7 @@ const runtimeDefinitions = [
   runtime("research", "Market research", "wealth", 8014, "/api/research", "market-research", ["WEALTH_", "FRED_API_KEY"], "/api/wealth"),
   runtime("advisory", "Advisor meeting prep", "wealth", 8017, "/api/advisory", "client-advisory", ["WEALTH_", "FRED_API_KEY"], "/api/wealth"),
   runtime("sar", "SAR investigation", "sar", 8015, "/api/sar", "sar-support", ["SAR_"]),
-  { ...runtime("interbank", "Interbank settlement investigation", "interbank", 8088, "/api/interbank", "interbank-a2a", ["MODEL_REASONING_EFFORT"], "/api"), buildIdentity: "interbank-a2a-demo:0.2.0", compose: "demos/interbank-a2a/deploy/compose.yaml", source: "services/interbank", dockerfile: "services/interbank/Dockerfile", storage: ["pki", "evidence", ".runtime"], service: "demo", controls: ["python", "-m", "tools.setup_controls"] }
+  { ...runtime("interbank", "Interbank settlement investigation", "interbank", 8088, "/api/interbank", "interbank-a2a", ["MODEL_REASONING_EFFORT"], "/api"), buildIdentity: "interbank-a2a-demo:0.2.0", compose: "demos/interbank-a2a/deploy/compose.yaml", source: "demos/interbank-a2a/backend", dockerfile: "demos/interbank-a2a/backend/Dockerfile", storage: ["pki", "evidence", ".runtime"], service: "demo", controls: ["python", "-m", "tools.setup_controls"] }
 ];
 
 export const useCasePackages: UseCasePackage[] = demoDefinitions.map(demo => ({

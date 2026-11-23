@@ -1,14 +1,14 @@
 import type { Tour } from "../types";
-import { vulnerabilityTour } from "./vulnerability.ts";
-import { advisoryPriyaTour, advisoryTour } from "./advisory.ts";
-import { bankingScopeTour, bankingTour } from "./banking.ts";
-import { briefingTour } from "./briefing.ts";
-import { interbankKickoffTour, interbankTour } from "./interbank.ts";
-import { fraudDisputeTour, fraudPiiTour, fraudTour } from "./fraud.ts";
-import { kycTour } from "./kyc.ts";
-import { LIFECYCLE_TOUR_ID, lifecycleTour } from "./lifecycle.ts";
-import { researchTour } from "./research.ts";
-import { sarInjectionTour, sarTour } from "./sar.ts";
+import { vulnerabilityTour } from "../../../demos/code-vulnerability/tours.ts";
+import { advisoryPriyaTour, advisoryTour } from "../../../demos/client-advisory/tours.ts";
+import { bankingScopeTour, bankingTour } from "../../../demos/brahe-bank/tours.ts";
+import { briefingTour } from "../../../demos/company-briefing/tours.ts";
+import { interbankKickoffTour, interbankTour } from "../../../demos/interbank-a2a/tours.ts";
+import { fraudDisputeTour, fraudPiiTour, fraudTour } from "../../../demos/fraud-modeling/tours.ts";
+import { kycTour } from "../../../demos/kyc-processing/tours.ts";
+import { LIFECYCLE_TOUR_ID, lifecycleTour } from "../../../verticals/fsi/tours.ts";
+import { researchTour } from "../../../demos/market-research/tours.ts";
+import { sarInjectionTour, sarTour } from "../../../demos/sar-support/tours.ts";
 
 export { LIFECYCLE_TOUR_ID };
 

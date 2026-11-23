@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ArrowUpRight, FileText, Loader2, Play, Search, ShieldCheck, X } from "lucide-react";
-import type { StoredCompanyProfile } from "../../../app/company-profile";
-import type { EvidenceItem, StoredResearchNote } from "../../../app/research-note";
-import { parseApiError } from "../../../app/research-note";
+import type { StoredCompanyProfile } from "../../../verticals/fsi/company-profile";
+import type { EvidenceItem, StoredResearchNote } from "../../../verticals/fsi/wealth/research-note";
+import { parseApiError } from "../../../verticals/fsi/wealth/research-note";
 import RunStats, { startRun, useRunLedger } from "../../../app/RunStats";
 import { newRunId, type ServedBy } from "../../../app/run/events";
 import RunTimeline from "../../../app/run/RunTimeline";
@@ -12,7 +12,7 @@ import ProvenanceBadge from "../../../app/run/ProvenanceBadge";
 import { useRun } from "../../../app/run/useRun";
 import { useStudioNav } from "../../../app/studio-nav";
 import { guideAnchor } from "../../../app/guide/anchors";
-import { observeWealth, wealthService, wealthStats, type WealthService } from "../../../app/wealth-stats";
+import { observeWealth, wealthService, wealthStats, type WealthService } from "../../../verticals/fsi/wealth/wealth-stats";
 import "./market-research.css";
 
 type Props = { embedded?: boolean; inStory?: boolean; companyProfile?: StoredCompanyProfile | null; note?: StoredResearchNote | null; onNoteChange?: (note: StoredResearchNote | null) => void };
