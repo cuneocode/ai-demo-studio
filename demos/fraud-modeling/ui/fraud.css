@@ -1,4 +1,4 @@
-/* Card fraud triage (app/FraudDemo.tsx). Dark colours; the light theme is derived by scripts/postcss-light-theme.mjs. */
+/* Card fraud triage. The light theme is derived by scripts/postcss-light-theme.mjs. */
 .fraud-demo { display: flex; flex-direction: column; gap: 16px; }
 .fraud-demo .fraud-status { margin: 0; }
 .fraud-demo .fx-muted { margin: 0; color: var(--muted); font-size: var(--font-meta); line-height: 1.45; }

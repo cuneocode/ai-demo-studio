@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { apps } from '../config/apps.ts';
 import { demoDefinitions } from '../config/demos.ts';
 import { demoNarratives } from '../app/demo-narratives.ts';
-import { vulnerabilityStory } from '../app/vulnerability-story.ts';
+import { vulnerabilityStory } from '../demos/code-vulnerability/narrative.ts';
 import { presenterNotes } from '../app/presenter-notes.ts';
 import { useCaseFrames } from '../app/studio/frames.ts';
 import { TOURS } from '../app/guide/tours/index.ts';

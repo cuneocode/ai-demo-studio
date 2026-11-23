@@ -18,7 +18,8 @@ dist
 **/.ruff_cache
 **/.runtime
 **/evidence/telemetry
-services/interbank/evidence/
+services/interbank
+demos/interbank-a2a/backend/evidence
 **/node_modules
 **/ui/dist
 artifacts

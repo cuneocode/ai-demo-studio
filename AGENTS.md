@@ -24,7 +24,7 @@ reference implementations, registration points, UI conventions, and acceptance c
 - `app/`: shared UI, run components, narrative/presenter indexes, settings, and guides. Demo-specific implementations belong in their packages.
 - `app/map/`: shared architecture registries, rendering, layout, and navigation. Authored topology, evidence, and editable exports live in the demo packages.
 - `services/common/` and `services/llm/`: shared run handling and model routing. `services/wealth/` is the shared Research/Advisory engine. Interbank owns its upstream stack and ignored local state under `demos/interbank-a2a/backend/`.
-- Legacy `app/` demo exports, `services/` symlinks, and `use-cases/` Compose forwarding files preserve existing integrations. Edit canonical package files and preserve compatibility paths. New demos need no legacy wrappers.
+- Import demo code directly from its package and use the registered package paths for runtime tooling. Keep stable Studio routes, API mappings, and public diagram URLs.
 - `scripts/`: local orchestration, settings/status APIs, doctor checks, and evidence generation.
 - `config/`: committed non-secret defaults. `fixtures/`: shared synthetic inputs and the fixture manifest. The owning demo supplies its own fixtures.
 - `tests/`: Node tests and Playwright browser flows. Each backend owns its Python tests and lockfile.

@@ -5,6 +5,8 @@ import { join } from "node:path";
 import { ANCHORS, ANCHOR_PREFIXES } from "../app/guide/anchors.ts";
 import { LIFECYCLE_TOUR_ID, TOURS, mainTourFor } from "../app/guide/tours/index.ts";
 import { presenterNotes } from "../app/presenter-notes.ts";
+import { demoDefinitions } from "../config/demos.ts";
+import { runtimes } from "../config/use-cases.ts";
 import { RESEARCH_SCENARIOS } from "../demos/market-research/fixtures/research-scenarios.ts";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -12,14 +14,16 @@ const tours = Object.values(TOURS);
 
 function walk(dir, out = []) {
   for (const name of readdirSync(dir)) {
-    if (name === "node_modules" || name.startsWith(".")) continue;
+    if (["node_modules", "evidence", "recorded"].includes(name) || name.startsWith(".")) continue;
     const path = join(dir, name);
     if (statSync(path).isDirectory()) walk(path, out);
     else if (/\.(tsx?|json)$/.test(name)) out.push(path);
   }
   return out;
 }
-const appFiles = [...walk(join(ROOT, "app")), ...readdirSync(join(ROOT, "demos")).flatMap(id => { const dir = join(ROOT, "demos", id, "ui"); return existsSync(dir) ? walk(dir) : []; })].filter((path) => !path.includes("/guide/tours/") && !path.endsWith("/guide/anchors.ts"));
+const demoDirs = demoDefinitions.map(({ id }) => join(ROOT, "demos", id));
+const packageFiles = (subdir) => demoDirs.map(dir => join(dir, subdir)).filter(existsSync).flatMap(dir => walk(dir));
+const appFiles = [...walk(join(ROOT, "app")), ...packageFiles("ui")].filter((path) => !path.includes("/guide/tours/") && !path.endsWith("/guide/anchors.ts"));
 const appSource = appFiles.map((path) => readFileSync(path, "utf8")).join("\n");
 const componentSource = appFiles.filter((path) => path.endsWith(".tsx")).map((path) => readFileSync(path, "utf8")).join("\n");
 
@@ -63,12 +67,11 @@ test("every declared anchor is rendered by a component (anchor drift)", () => {
 });
 
 test("per-item anchors name items that exist", () => {
-  const data = [appSource, ...walk(join(ROOT, "services")).filter((path) => !path.includes(".venv") && /\.json$/.test(path) && !path.includes("/recorded/")).map((path) => readFileSync(path, "utf8")), ...readdirSync(join(ROOT, "services")).flatMap((service) => {
-    const dir = join(ROOT, "services", service);
-    if (!statSync(dir).isDirectory()) return [];
-    const tests = join(dir, "tests");
-    return [dir, ...(existsSync(tests) ? [tests] : [])].flatMap((folder) => readdirSync(folder).filter((name) => name.endsWith(".py")).map((name) => readFileSync(join(folder, name), "utf8")));
-  })].join("\n");
+  const backendDirs = [...new Set(runtimes.map(runtime => runtime.source))].map(source => join(ROOT, source));
+  const jsonFiles = backendDirs.flatMap(dir => walk(dir)).filter(file => file.endsWith(".json"));
+  const pythonFiles = backendDirs.flatMap(dir => [dir, join(dir, "tests")].filter(existsSync))
+    .flatMap(dir => readdirSync(dir).filter(name => name.endsWith(".py")).map(name => join(dir, name)));
+  const data = [appSource, ...[...packageFiles("fixtures"), ...jsonFiles, ...pythonFiles].map(file => readFileSync(file, "utf8"))].join("\n");
   for (const tour of tours) for (const step of allSteps(tour)) for (const id of anchorsOf(step)) {
     const prefix = prefixOf(id);
     if (!prefix || prefix === "library.guide") continue;

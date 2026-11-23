@@ -1,3 +1,0 @@
-# Compatibility entry point for the Interbank stack.
-include:
-  - ../../demos/interbank-a2a/deploy/compose.yaml

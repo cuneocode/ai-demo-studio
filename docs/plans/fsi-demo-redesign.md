@@ -3,6 +3,8 @@
 
 Status: **built through M3, final integration pass done** (see [As built](#as-built-2026-10-09)) · Branch: `studio-integration` ([PR #1](https://github.com/cuneocode/ai-demo-studio/pull/1)) · Date: 2026-10-09
 Scope: *Transaction fraud scoring*, *Wealth market research*, *Client advisory*, plus the platform pieces they share and the client-lifecycle story they belong to.
+Use the [current source map](../AI_DEMO_STUDIO.md#application-model) for package paths. File and line references below describe the planning branch.
+
 Inputs: three expert reviews (financial-services domain, UI/UX, AI solution), checked against the code. Every `file:line` below was re-read on this branch; where a review was wrong or out of date, §0.3 corrects it.
 
 > **North star (from the user):** each demo shows a **real business use case**, how **accelerated compute and/or AI transforms it**, and then where **Cisco adds real infrastructure, observability, and/or security value** in that transformed workflow. Models always come from **Studio settings**, the same way for every demo: *Sparky when it's up, otherwise the OpenAI model*.

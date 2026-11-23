@@ -5,7 +5,7 @@ import { readStored, writeStored, appStorageKey } from "./storage.ts";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, lazy, Suspense, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import DemoCustomerContext from "../../verticals/fsi/DemoCustomerContext";
-const CompanyBriefing = lazy(() => import("../CompanyBriefing"));
+const CompanyBriefing = lazy(() => import("../../demos/company-briefing/ui/CompanyBriefing"));
 import { vulnerabilityStory } from "../../demos/code-vulnerability/narrative.ts";
 import ArchitectureMap from "../ArchitectureMap";
 import CapacityPlanning from "../CapacityPlanning";

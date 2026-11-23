@@ -36,12 +36,10 @@ blueprint from its own `backend/`. Generated PKI and live evidence persist in
 ignored directories alongside the blueprint. Illustrative demos have no backend
 or Compose stack.
 
-Compatibility exports in `app/`, service directory symlinks, and forwarding
-Compose files in `use-cases/` preserve existing imports and source-development
-commands. Maintain the canonical package files. Keep compatibility entries until
-existing integrations have moved to their canonical paths. Preserve symlinks when
-copying the checkout; Git clones retain them on supported development systems.
-The public diagram URLs point to each package’s editable export through symlinks.
+Import demo code directly from its package. Source development uses the package
+backend, and Studio’s container commands resolve the deployment path through
+`config/use-cases.ts`. The public diagram URLs point to each package’s editable
+export through symlinks. Preserve those symlinks when copying the checkout.
 
 ## URLs and navigation
 

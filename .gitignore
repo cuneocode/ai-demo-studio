@@ -57,3 +57,6 @@ __pycache__/
 # Demo package source environments and local data
 /demos/**/.venv/
 /demos/**/.cache/
+
+# Local data left by older Interbank installations
+/services/interbank/

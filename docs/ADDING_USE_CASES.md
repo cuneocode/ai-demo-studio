@@ -41,9 +41,8 @@ demos/<demo-id>/
 
 Illustrative demos have no runtime, backend, or Compose stack. Research and
 Advisory share `services/wealth/`. Interbank keeps its upstream multi-container
-implementation inside its package’s `backend/`. Existing `app/` demo
-exports, `services/` symlinks, and `use-cases/` Compose forwarding files preserve
-older integrations. New packages need no compatibility wrappers.
+implementation inside its package’s `backend/`. Use package paths for imports,
+source development, and runtime registration.
 
 ## Choose a reference and target industry
 

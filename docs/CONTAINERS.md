@@ -3,12 +3,11 @@
 ## Industry app and demo package ownership
 
 Read [AI Demo Studio platform](AI_DEMO_STUDIO.md) for the current source map,
-scoped host API contract, compatibility paths, and app-aware CLI. Author new
+scoped host API contract and app-aware CLI. Author new
 workflows in `demos/<demo-id>/`, then register membership in
-`verticals/<app-id>/app.ts`. Existing `services/` symlinks and `use-cases/`
-forwarding files support previous commands; canonical UI and deployment files
-live in each demo package. The shared Wealth engine and upstream Interbank
-blueprint retain their implementation boundaries. The Interbank blueprint lives in its demo’s backend.
+`verticals/<app-id>/app.ts`. Each package owns its UI and deployment files.
+Market Research and Advisor Prep use the shared Wealth engine. Interbank’s
+upstream blueprint lives in its package backend.
 
 Studio is a trusted local operator. It owns credentials, model routing, dashboard
 navigation, and Compose lifecycle commands. Each executable use case owns a Compose
@@ -117,7 +116,7 @@ remove that old project without deleting volumes, then start Interbank from Stud
 
 ```sh
 docker inspect interbank-a2a-demo-1 --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}'
-docker compose --project-name interbank-a2a --file services/interbank/compose.yaml down
+docker compose --project-name interbank-a2a --file demos/interbank-a2a/deploy/compose.yaml down
 npm run studio:containers -- start interbank
 ```
 

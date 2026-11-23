@@ -140,7 +140,7 @@ registrations and the common experience contract.
 | Status and operations | [studio-status-api.ts](../../scripts/studio-status-api.ts) probes the registered services and Interbank. [StudioShell.tsx](../../app/StudioShell.tsx) derives Controls and Telemetry rows from the complete live model catalog. These views need an explicit app scope. |
 | Browser state | Theme, sidebar, guide position/preferences, company profile, research notes, advisory briefs, handoffs, planner assessment references, and the vulnerability last-run reference use several FSI storage key formats. |
 | Container identity | [studio-services.ts](../../scripts/studio-services.ts) uses `fsi-<checkout path hash>-<runtime id>` for Compose project names. Changing the prefix or checkout path changes ownership and default named-volume identity. |
-| Runtime reuse | [research](../../use-cases/research/compose.yaml) and [advisory](../../use-cases/advisory/compose.yaml) share the Wealth image while keeping separate runtime IDs, ports, and volumes. This is an existing pattern for code reuse with independent state. |
+| Runtime reuse | [Research](../../demos/market-research/deploy/compose.yaml) and [Advisory](../../demos/client-advisory/deploy/compose.yaml) share the Wealth image while keeping separate runtime IDs, ports, and volumes. This is an existing pattern for code reuse with independent state. |
 | Runtime exceptions | Interbank has a multi-container contract, separate readiness fields, PKI, and bind-mounted evidence. [Banking conversations](../CONTAINERS.md) have a process-local lifetime. Preserve these distinctions. |
 | Architecture and evidence | [draw.io registration](../../app/map/drawio/registry.ts), [platform connections](../../app/map/drawio/platform-connections.ts), and [source capture](../../scripts/highlight-evidence.ts) depend on stable IDs, paths, and excerpts. File moves have generated-asset consequences. |
 | Offline access | [studio-api.ts](../../scripts/studio-api.ts) serves recordings and synthetic examples through separate allowlists. Runtime registration alone does not register offline evidence. |
@@ -222,7 +222,6 @@ config/
   use-cases.ts                     Runtime contract and compatibility adapters
   studio-models.default.json
 services/                          Shared common/model code and declared shared engines
-use-cases/                         Legacy Compose locations during package migration
 fixtures/                          Shared reviewed inputs; demo inputs move by package
 public/diagrams/                   Generated assets with stable names
 public/vendor/drawio/              Shared local viewer, symbols, and licenses

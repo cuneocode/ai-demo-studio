@@ -1,3 +1,0 @@
-# Compatibility entry point. Runtime ownership and volumes are unchanged.
-include:
-  - ../../demos/company-briefing/deploy/compose.yaml

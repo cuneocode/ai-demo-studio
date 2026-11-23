@@ -1,3 +1,0 @@
-# Compatibility entry point.
-include:
-  - ../../demos/client-advisory/deploy/compose.yaml
